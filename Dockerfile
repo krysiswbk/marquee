@@ -6,7 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     DATA_DIR=/config
 
 WORKDIR /app
-RUN apk add --no-cache su-exec
+RUN apk add --no-cache su-exec curl
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 COPY cast ./cast

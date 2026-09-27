@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Marquee — Kiosk Cast</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#110d1c}
+iframe{position:absolute;left:0;top:0;width:1500px;height:1000px;border:0;transform-origin:0 0;visibility:hidden}
+#receiver-status{position:fixed;inset:0;display:grid;place-items:center;color:#e5a83b;font:600 22px system-ui,sans-serif;letter-spacing:.04em;background:#110d1c}
+#receiver-status[hidden]{display:none}
+</style>
+<iframe id="kiosk" title="Marquee kiosk" allow="autoplay; fullscreen"></iframe>
+<div id="receiver-status" role="status" aria-live="polite">Connecting to Marquee…</div>
+<script>
+// Render the actual kiosk document at the household kiosk's reference viewport.
+// Scaling the frame preserves every vw/vh, breakpoint, font and layout decision.
+const frame=document.getElementById('kiosk'),status=document.getElementById('receiver-status'),width=1500,height=1000;
+let loadedAt=0,retries=0;
+function showStatus(text){status.textContent=text;status.hidden=!text;}
+function fit(){
+ const scale=Math.min(innerWidth/width,innerHeight/height);
+ frame.style.transform=`translate(${(innerWidth-width*scale)/2}px,${(innerHeight-height*scale)/2}px) scale(${scale})`;
+}
+function matte(){
+ try{document.body.style.background=getComputedStyle(frame.contentDocument.body).backgroundColor;}catch(_){}
+}
+const url=new URL(location.href);url.pathname='/kiosk';url.searchParams.delete('receiver');
+frame.addEventListener('load',()=>{
+  fit(); frame.style.visibility='visible'; matte(); loadedAt=Date.now();
+  setTimeout(()=>{
+    try {
+      const body=frame.contentDocument?.body;
+      if (!body || (!body.children.length && !body.textContent.trim())) throw Error('empty dashboard');
+      showStatus(''); retries=0;
+    } catch (_) { showStatus('Reconnecting to Marquee…'); }
+  },1200);
+});
+frame.addEventListener('error',()=>showStatus('Reconnecting to Marquee…'));
+window.addEventListener('resize',fit);fit();frame.src=url.pathname+url.search;
+setInterval(()=>{
+  matte();
+  if (loadedAt && Date.now()-loadedAt>5000 && status.hidden===false) {
+    const retry=new URL(frame.src); retry.searchParams.set('retry',String(++retries)); frame.src=retry.toString();
+  }
+},2000);
+</script>
+</html>

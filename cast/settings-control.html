@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Marquee — Settings</title>
+  <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🎬</text></svg>'>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+  <link rel="stylesheet" href="/settings-control.css">
+  <style>.mode-state{display:inline-block;margin-top:7px;color:var(--amber);font-size:12px;font-weight:750}.workspace-nav{display:flex;align-items:center;gap:3px;margin:14px 0 0;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:thin}.workspace-nav a{display:flex;align-items:center;min-height:44px;padding:9px 12px;color:var(--mut);font-size:14px;font-weight:700;text-decoration:none;white-space:nowrap}.workspace-nav a[aria-current=page]{color:var(--amber);box-shadow:inset 0 -2px var(--amber)}.workspace-nav .view-display{margin-left:auto;color:var(--amber)}.product-rows{display:grid;gap:0}.product-row{display:flex;justify-content:space-between;gap:18px;padding:11px 4px;border-top:1px solid var(--line)}.release-copy{max-height:320px;overflow:auto;white-space:pre-wrap;color:var(--mut);font:13px/1.5 ui-monospace,monospace}@media(max-width:520px){html,body{overflow-x:hidden}.shell>*{min-width:0}.setting-row label{min-width:0}.savebar button{min-width:0;font-size:13px}.workspace-nav{margin-inline:-14px;padding-inline:8px}.workspace-nav .view-display{margin-left:0}.product-row{display:block}.product-row>*:last-child{display:block;margin-top:4px}}</style>
+  <script defer src="/settings-control.js"></script>
+</head>
+<body>
+<main class="shell">
+  <header class="masthead">
+    <div>
+      <p class="eyebrow">Settings</p>
+      <h1>Marquee <span>settings</span></h1>
+      <p class="intro">The everyday controls for every Marquee screen, in one place.</p>
+    </div>
+  </header>
+  <nav class="workspace-nav" aria-label="Settings workspaces"><a href="/settings" aria-current="page">Settings</a><a href="/settings/layout?profile=cast">Layout</a><a href="/settings/attention">Alert rules</a><a href="/settings/tests">Test screens</a><a class="view-display" href="/live" target="_blank" rel="noopener">View display ↗</a></nav>
+
+  <div id="load-state" class="load-state" role="status" aria-live="polite">Loading your settings…</div>
+  <div id="app" hidden>
+    <nav class="tabs" role="tablist" aria-label="Settings areas">
+      <button role="tab" id="tab-displays" aria-controls="panel-displays" aria-selected="true" data-tab="displays">Displays <span class="dirty-dot" hidden>Edited</span></button>
+      <button role="tab" id="tab-content" aria-controls="panel-content" aria-selected="false" data-tab="content" tabindex="-1">Content <span class="dirty-dot" hidden>Edited</span></button>
+      <button role="tab" id="tab-alerts" aria-controls="panel-alerts" aria-selected="false" data-tab="alerts" tabindex="-1">Alerts <span class="dirty-dot" hidden>Edited</span></button>
+      <button role="tab" id="tab-advanced" aria-controls="panel-advanced" aria-selected="false" data-tab="advanced" tabindex="-1">Advanced <span class="dirty-dot" hidden>Edited</span></button>
+    </nav>
+
+    <section class="tabpanel" id="panel-displays" role="tabpanel" aria-labelledby="tab-displays">
+      <header class="section-head">
+        <div><p class="eyebrow">Displays</p><h2>Choose what each screen shows</h2><p>Cast and browser screens keep separate appearance drafts.</p></div>
+      </header>
+
+      <section class="panel">
+        <div class="panel-title"><div><h3>Cast display modes</h3><p>These switches choose the experience on each physical Cast display.</p></div><span class="scope">Main Cast + Garage</span></div>
+        <div class="setting-row">
+          <label for="cast-kiosk"><strong>Main Cast display</strong><small>Use the browser Live/Kiosk experience, including its screens and rotation.</small><span class="mode-state" id="cast-mode-state"></span></label>
+          <input class="switch" id="cast-kiosk" type="checkbox" data-cast-key="castKioskActivity" role="switch">
+        </div>
+        <div class="setting-row">
+          <label for="garage-kiosk"><strong>Garage display</strong><small>Use Live/Kiosk while the garage is occupied. Occupancy behavior stays in effect.</small><span class="mode-state" id="garage-mode-state"></span></label>
+          <input class="switch" id="garage-kiosk" type="checkbox" data-cast-key="garageKioskActivity" role="switch">
+        </div>
+      </section>
+
+      <div class="profile-picker" role="group" aria-label="Appearance profile">
+        <button type="button" data-profile="cast" aria-pressed="true"><b>Cast design</b><span>Media cards on Cast displays</span></button>
+        <button type="button" data-profile="live" aria-pressed="false"><b>Browser Live / Kiosk</b><span>Dashboard and kiosk screens</span></button>
+      </div>
+
+      <section class="panel" aria-labelledby="appearance-heading">
+        <div class="panel-title"><div><h3 id="appearance-heading">Appearance</h3><p id="profile-help"></p></div><span class="scope" id="profile-scope"></span></div>
+        <div class="field-grid">
+          <div class="field cast-only"><label for="template">Card layout</label><select id="template" data-profile-key="template"><option value="spotlight">Spotlight</option><option value="split">Split</option><option value="hero">Hero</option><option value="lowerthird">Lower third</option><option value="bigclock">Big clock</option><option value="street">Street</option><option value="fanart">Fanart</option></select></div>
+          <div class="field cast-only"><label for="theme">Color direction</label><select id="theme" data-profile-key="theme"><option value="amber">Amber</option><option value="ice">Ice</option><option value="crimson">Crimson</option><option value="emerald">Emerald</option><option value="campaign">Campaign</option><option value="concrete">Concrete</option><option value="trophy">Trophy</option><option value="bsides">B-sides</option></select></div>
+          <div class="field live-only" hidden><label for="live-theme">Visual direction</label><select id="live-theme" data-profile-key="liveTheme"><option value="studio">Studio</option><option value="afterhours">After Hours</option><option value="dispatch">Dispatch</option></select></div>
+          <div class="field"><label for="clock-format">Clock</label><select id="clock-format" data-profile-key="clockFormat"><option value="12h">12 hour</option><option value="24h">24 hour</option></select></div>
+          <label class="check-field"><input id="clock-seconds" type="checkbox" data-profile-key="clockSeconds"> Show seconds</label>
+          <label class="check-field"><input id="show-weather" type="checkbox" data-profile-key="showWeather"> Show weather on media cards</label>
+          <div class="field"><label for="weather-units">Temperature</label><select id="weather-units" data-profile-key="weatherUnits"><option value="f">Fahrenheit</option><option value="c">Celsius</option></select></div>
+        </div>
+        <details><summary>Target display size</summary><div class="field-grid inset"><div class="field"><label for="display-width">Width</label><input id="display-width" type="number" min="320" max="3840" required data-profile-key="displayWidth"></div><div class="field"><label for="display-height">Height</label><input id="display-height" type="number" min="240" max="2160" required data-profile-key="displayHeight"></div></div></details>
+        <div class="related-links"><a href="/settings/layout?profile=cast">Open Cast layout workspace</a><a href="/settings/layout?profile=live">Open Live / Kiosk layout workspace</a><span>Drag positions, block visibility, backdrops, and per-item styling live in Layout.</span></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title"><div><h3>When Live / Kiosk is idle</h3><p>Useful content shown between events and takeovers.</p></div><span class="scope">Browser Live / Kiosk</span></div>
+        <div class="field-grid">
+          <div class="field"><label for="fallback-screen">Default view</label><select id="fallback-screen" data-config-path="fallback.screen"><option value="clock_weather">Clock &amp; weather</option><option value="ambient">Ambient information</option><option value="plex">Plex</option><option value="blank">Blank</option></select></div>
+          <label class="check-field"><input type="checkbox" data-config-path="fallback.rotate_relevant"> Rotate relevant screens</label>
+          <label class="check-field"><input type="checkbox" data-config-path="fallback.show_clock"> Show clock</label>
+          <label class="check-field"><input type="checkbox" data-config-path="fallback.show_weather"> Show weather</label>
+          <label class="check-field"><input type="checkbox" data-config-path="fallback.show_details"> Show details</label>
+          <label class="check-field"><input type="checkbox" data-config-path="fallback.show_artwork"> Show artwork</label>
+        </div>
+        <details><summary>Idle timing</summary><div class="field-grid inset"><div class="field"><label for="fallback-rotation">Rotate every</label><div class="suffix"><input id="fallback-rotation" type="number" min="5" max="3600" data-config-path="fallback.rotation_seconds"><span>seconds</span></div></div><div class="field"><label for="fallback-item">Keep one item up for</label><div class="suffix"><input id="fallback-item" type="number" min="5" max="600" data-config-path="fallback.single_item_seconds"><span>seconds</span></div></div></div></details>
+      </section>
+      <div class="savebar" data-area="displays"><span class="area-status" role="status" aria-live="polite"></span><button type="button" class="secondary discard">Discard display edits</button><button type="button" class="primary save-area">Save displays</button></div>
+    </section>
+
+    <section class="tabpanel" id="panel-content" role="tabpanel" aria-labelledby="tab-content" hidden>
+      <header class="section-head"><div><p class="eyebrow">Content</p><h2>Choose what earns screen time</h2><p>Turn sources on here. Detailed timing and thresholds stay one level deeper.</p></div></header>
+      <section class="panel">
+        <details id="interest-details">
+          <summary>What matters in this household</summary>
+          <p class="intro">These interests help Marquee select relevant sports, shows, releases, artists, and games.</p>
+          <div class="field-grid inset">
+            <div class="field"><label for="interest-sports-teams">Sports teams</label><input id="interest-sports-teams" type="text" data-config-path="interests.sports_teams" data-list="1" placeholder="TOR, Raptors"><small>Comma-separated names or abbreviations</small></div>
+            <div class="field"><label for="interest-shows">Tracked shows</label><input id="interest-shows" type="text" data-config-path="interests.tracked_shows" data-list="1"><small>Comma-separated</small></div>
+            <div class="field"><label for="interest-franchises">Franchises</label><input id="interest-franchises" type="text" data-config-path="interests.franchises" data-list="1"><small>Comma-separated</small></div>
+            <div class="field"><label for="interest-artists">Artists</label><input id="interest-artists" type="text" data-config-path="interests.artists" data-list="1"><small>Comma-separated</small></div>
+            <div class="field"><label for="interest-gaming">Games and platforms</label><input id="interest-gaming" type="text" data-config-path="interests.gaming" data-list="1"><small>Comma-separated</small></div>
+          </div>
+        </details>
+      </section>
+      <div id="provider-list" class="provider-list"></div>
+      <div class="savebar" data-area="content"><span class="area-status" role="status" aria-live="polite"></span><button type="button" class="secondary discard">Discard content edits</button><button type="button" class="primary save-area">Save content</button></div>
+    </section>
+
+    <section class="tabpanel" id="panel-alerts" role="tabpanel" aria-labelledby="tab-alerts" hidden>
+      <header class="section-head"><div><p class="eyebrow">Alerts</p><h2>Household attention</h2><p>Choose which configured Home Assistant devices Marquee monitors. Turning one off removes only Marquee monitoring.</p></div></header>
+      <section class="panel">
+        <div class="panel-title"><div><h3>Attention alerts</h3><p>Show configured household alerts when they need attention.</p></div><span class="scope">Configured displays</span></div>
+        <div class="setting-row"><label for="attention-enabled"><strong>Alerts enabled</strong><small>Ambient rotation continues when alerts are off.</small></label><input class="switch" id="attention-enabled" type="checkbox" role="switch"></div>
+        <details><summary>Quiet hours</summary><div class="field-grid inset"><div class="field"><label for="quiet-start">Start</label><select id="quiet-start"></select></div><div class="field"><label for="quiet-end">End</label><select id="quiet-end"></select></div></div></details>
+      </section>
+      <section class="panel"><div class="panel-title"><div><h3>Monitored devices</h3><p>Names come from Home Assistant when available. Removed devices remain here until you save or discard.</p></div></div><div id="binding-groups"></div></section>
+      <section class="panel" id="nursery-health"><div class="panel-title"><div><h3>Nursery device health</h3><p>Configured nursery bindings and current availability.</p></div><span class="health-badge" id="nursery-health-badge">Checking…</span></div><div id="nursery-health-list"></div></section>
+      <div class="savebar" data-area="alerts"><span class="area-status" role="status" aria-live="polite"></span><button type="button" class="secondary discard">Discard alert edits</button><button type="button" class="primary save-area">Save alerts</button></div>
+    </section>
+
+    <section class="tabpanel" id="panel-advanced" role="tabpanel" aria-labelledby="tab-advanced" hidden>
+      <header class="section-head"><div><p class="eyebrow">Advanced</p><h2>Connections and diagnostics</h2><p>Household location, media filters, timing, and source health.</p></div></header>
+      <section class="panel"><div class="panel-title"><div><h3>Home</h3><p>Location and timezone used by schedules, weather, and quiet hours.</p></div><span class="scope">All displays</span></div><div class="field-grid"><div class="field"><label for="app-name">Name</label><input id="app-name" type="text" maxlength="60" data-config-path="general.application_name"></div><div class="field"><label for="timezone">Timezone</label><input id="timezone" type="text" data-config-path="general.timezone" placeholder="America/Toronto"></div><div class="field"><label for="latitude">Latitude</label><input id="latitude" type="number" step="any" min="-90" max="90" data-config-path="general.latitude"></div><div class="field"><label for="longitude">Longitude</label><input id="longitude" type="number" step="any" min="-180" max="180" data-config-path="general.longitude"></div></div></section>
+      <section class="panel"><div class="panel-title"><div><h3>Media connection and privacy</h3><p>Shared by Cast and Live. Blank secret fields keep their saved values.</p></div><span class="scope">All displays</span></div><div class="field-grid"><div class="field"><label for="media-backend">Media server</label><select id="media-backend" data-cast-key="mediaBackend"><option value="">Container default</option><option value="plex">Plex</option><option value="emby">Emby</option><option value="jellyfin">Jellyfin</option></select></div><div class="field"><label for="media-host">Server address</label><input id="media-host" type="url" autocomplete="off"></div><div class="field"><label for="media-secret">API key / token</label><input id="media-secret" type="password" autocomplete="new-password"><small id="media-secret-help">Blank keeps the saved secret.</small></div><div class="field"><label for="allowed-users">Allowed users</label><input id="allowed-users" type="text" data-cast-key="plexUsers" placeholder="Everyone"></div><div class="field"><label for="allowed-devices">Allowed players</label><input id="allowed-devices" type="text" data-cast-key="plexDevices" placeholder="Any player"></div><div class="field"><label for="blocked-tags">Do not cast</label><input id="blocked-tags" type="text" data-cast-key="blockTags" placeholder="adult, 18+"></div></div></section>
+      <section class="panel"><details open><summary>Display timing and selection</summary><div class="field-grid inset"><div class="field"><label for="rotation-seconds">Relevant screen duration</label><div class="suffix"><input id="rotation-seconds" type="number" min="5" max="3600" data-config-path="display.rotation_seconds"><span>seconds</span></div></div><div class="field"><label for="minimum-seconds">Minimum screen time</label><div class="suffix"><input id="minimum-seconds" type="number" min="0" max="600" data-config-path="display.minimum_context_seconds"><span>seconds</span></div></div><div class="field"><label for="transition-ms">Transition</label><div class="suffix"><input id="transition-ms" type="number" min="0" max="5000" data-config-path="display.transition_ms"><span>ms</span></div></div><div class="field"><label for="secondary-mode">Garage idle screen</label><select id="secondary-mode" data-config-path="display.secondary_screen_mode"><option value="off">Off</option><option value="weather">Weather while occupied</option><option value="mirror">Mirror active Cast context</option></select></div><div class="field"><label for="relevance">Source eligibility threshold</label><input id="relevance" type="number" min="0" max="100" data-config-path="context_engine.minimum_relevance"><small>Sources below this weight stay out of normal rotation.</small></div><label class="check-field"><input type="checkbox" data-config-path="context_engine.takeovers_enabled"> Allow explicit Cast takeovers</label></div></details></section>
+      <section class="panel"><div class="panel-title"><div><h3>Diagnostics</h3><p>Read-only status. Refreshing does not change settings.</p></div><button type="button" class="secondary" id="refresh-health">Refresh</button></div><div id="provider-health" class="health-grid"></div><div class="related-links"><a href="/settings/attention">Open alert rules and diagnostics</a><a href="/settings/tests">Test screens</a></div></section>
+      <section class="panel"><div class="panel-title"><div><h3>About Marquee</h3><p>A context-aware household display for media, weather, sports, and the moments that matter at home.</p></div></div><div class="product-rows"><div class="product-row"><strong>Running version</strong><span id="running-version">Checking…</span></div><div class="product-row"><strong>Source</strong><a href="https://github.com/Jamisonfitz/marquee" target="_blank" rel="noopener">github.com/Jamisonfitz/marquee ↗</a></div><div class="product-row"><strong>Backup</strong><span>Export the complete setup, including presets and layouts, from the <a href="/settings/layout?profile=cast">Cast Layout workspace</a>.</span></div></div><details id="release-notes-details"><summary>Release notes</summary><pre class="release-copy" id="release-notes">Open to load release notes.</pre></details></section>
+      <div class="savebar" data-area="advanced"><span class="area-status" role="status" aria-live="polite"></span><button type="button" class="secondary discard">Discard advanced edits</button><button type="button" class="primary save-area">Save advanced</button></div>
+    </section>
+  </div>
+</main>
+</body>
+</html>

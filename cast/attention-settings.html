@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Marquee — Household attention</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+  <link rel="stylesheet" href="/control-shell.css?v=3">
+  <link rel="stylesheet" href="/settings-admin.css">
+  <script defer src="/control-shell.js?v=3"></script>
+  <script defer src="/attention-settings.js"></script>
+</head>
+<body>
+  <main class="settings-admin">
+    <header class="page-head">
+      <p class="eyebrow">Household attention</p>
+      <h1>Attention policy</h1>
+      <p>Review live decisions, then open only the policy controls you need. Saving validates the complete policy and refreshes its live observations.</p>
+    </header>
+    <p id="status" class="status" role="status" aria-live="polite">Loading attention…</p>
+
+    <section class="summary-grid" aria-label="Live attention summary">
+      <article><span>Active items</span><strong id="active-count">—</strong></article>
+      <article><span>Fresh signals</span><strong id="signal-count">—</strong></article>
+      <article><span>Configured displays</span><strong id="display-count">—</strong></article>
+      <article><span>Policy state</span><strong id="policy-state">—</strong></article>
+    </section>
+
+    <section class="admin-card">
+      <div class="section-title"><div><h2>Active attention</h2><p>Current household items. Acknowledging or suppressing changes only the active item.</p></div><button type="button" class="secondary" id="refresh">Refresh</button></div>
+      <div id="active-items" class="compact-list"></div>
+    </section>
+
+    <section class="admin-card">
+      <div class="section-title"><div><h2>Policy</h2><p>Core limits, quiet hours, and delivery capability.</p></div><button type="button" class="secondary" data-expand="policy-editor">Edit policy</button></div>
+      <div id="policy-summary" class="summary-copy"></div>
+      <div id="policy-editor" hidden></div>
+    </section>
+
+    <details class="admin-card grouping" id="signal-binding-group">
+      <summary><span><b>Signal bindings</b><small>Home Assistant entities that create household observations.</small></span><em id="signal-binding-count">0 bindings</em></summary>
+      <div class="group-body"><div class="section-title"><p>Search, review, or edit a binding only when needed.</p><button type="button" class="secondary" id="add-signal" data-rebuild>Add binding</button></div>
+        <label class="search"><span class="visually-hidden">Search signal bindings</span><input id="signal-search" data-rebuild type="search" placeholder="Search entity, category, or location"></label>
+        <div id="signal-bindings" class="editable-list"></div>
+      </div>
+    </details>
+
+    <details class="admin-card grouping" id="context-binding-group">
+      <summary><span><b>Context bindings</b><small>Small household facts that policy conditions can reference.</small></span><em id="context-binding-count">0 bindings</em></summary>
+      <div class="group-body"><div class="section-title"><p>Open a context only when its source or value map needs work.</p><button type="button" class="secondary" id="add-context" data-rebuild>Add context</button></div>
+        <div id="context-bindings" class="editable-list"></div>
+      </div>
+    </details>
+
+    <section class="admin-card">
+      <div class="section-title"><div><h2>Rules</h2><p>Each rule matches observations, chooses delivery, and can escalate over time.</p></div><button type="button" class="secondary" id="add-rule" data-rebuild>Add rule</button></div>
+      <label class="search"><span class="visually-hidden">Search rules</span><input id="rule-search" data-rebuild type="search" placeholder="Search rule ID, title, or matched signal"></label>
+      <div id="rules" class="editable-list"></div>
+    </section>
+
+    <section class="admin-card diagnostics">
+      <div class="section-title"><div><h2>Diagnostics</h2><p>Read-only freshness, decisions, context, and recent history.</p></div></div>
+      <details><summary>Display decisions</summary><div id="display-decisions"></div></details>
+      <details><summary>Signals</summary><div id="signals"></div></details>
+      <details><summary>House context</summary><pre id="context"></pre></details>
+      <details><summary>Recent history</summary><div id="history"></div></details>
+    </section>
+
+    <footer class="savebar"><span id="save-status" role="status" aria-live="polite"></span><button type="button" class="secondary" id="discard" disabled>Discard changes</button><button type="button" class="primary" id="save" disabled>Save attention policy</button></footer>
+  </main>
+</body>
+</html>

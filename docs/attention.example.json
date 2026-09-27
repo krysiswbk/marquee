@@ -1,0 +1,316 @@
+{
+  "version": 1,
+  "enabled": true,
+  "signal_ttl": 90,
+  "max_signals": 2000,
+  "history_limit": 2000,
+  "history_seconds": 604800,
+  "switch_margin": 5,
+  "context_bindings": {
+    "home": {
+      "entity_id": "binary_sensor.example_occupied",
+      "values": {
+        "on": true,
+        "off": false
+      }
+    },
+    "sleeping": {
+      "entity_id": "binary_sensor.example_sleeping",
+      "values": {
+        "on": true,
+        "off": false
+      }
+    },
+    "network_health": {
+      "entity_id": "binary_sensor.example_internet",
+      "values": {
+        "on": "online",
+        "off": "offline"
+      }
+    }
+  },
+  "signal_bindings": [
+    {
+      "entity_id": "binary_sensor.example_front_door",
+      "category": "exterior_door",
+      "location": "entrance"
+    },
+    {
+      "entity_id": "binary_sensor.example_back_door",
+      "category": "exterior_door",
+      "location": "kitchen"
+    },
+    {
+      "entity_id": "binary_sensor.example_garage",
+      "category": "garage_door",
+      "location": "garage"
+    },
+    {
+      "entity_id": "binary_sensor.example_leak",
+      "category": "water_leak",
+      "location": "utility"
+    },
+    {
+      "entity_id": "binary_sensor.example_washer_full",
+      "category": "washer_full",
+      "location": "utility"
+    }
+  ],
+  "rules": [
+    {
+      "id": "weather_alert",
+      "match": {
+        "type": "weather",
+        "category": "alert"
+      },
+      "active_state": "active",
+      "title": "",
+      "preferred_scene": "source",
+      "escalation": [
+        {
+          "id": "warning",
+          "priority": 80,
+          "urgency": "IMPORTANT"
+        }
+      ]
+    },
+    {
+      "id": "exterior_doors",
+      "match": {
+        "category": "exterior_door"
+      },
+      "title": "Exterior door open",
+      "summary": "Please check the open door.",
+      "active_state": "on",
+      "resolution_state": "off",
+      "debounce": 5,
+      "cooldown": 300,
+      "grouping_key": "exterior_doors",
+      "strategy": "global",
+      "escalation": [
+        {
+          "id": "awareness",
+          "after": 120,
+          "priority": 30,
+          "urgency": "ACTIONABLE"
+        },
+        {
+          "id": "important",
+          "after": 300,
+          "priority": 60,
+          "urgency": "IMPORTANT"
+        },
+        {
+          "id": "persistent",
+          "after": 900,
+          "priority": 80,
+          "urgency": "IMPORTANT"
+        },
+        {
+          "id": "away",
+          "priority": 90,
+          "urgency": "CRITICAL",
+          "when": {
+            "field": "context.nobody_home",
+            "op": "eq",
+            "value": true
+          }
+        }
+      ],
+      "modifiers": [
+        {
+          "id": "sleeping",
+          "delta": 15,
+          "when": {
+            "field": "context.sleeping",
+            "op": "eq",
+            "value": true
+          }
+        },
+        {
+          "id": "overnight",
+          "delta": 10,
+          "when": {
+            "field": "context.quiet_hours",
+            "op": "eq",
+            "value": true
+          }
+        },
+        {
+          "id": "expected",
+          "delta": -20,
+          "when": {
+            "field": "signal.attributes.expected",
+            "op": "eq",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "garage_door",
+      "match": {
+        "category": "garage_door"
+      },
+      "title": "Garage door open",
+      "summary": "Please check the open door.",
+      "active_state": "on",
+      "resolution_state": "off",
+      "debounce": 5,
+      "cooldown": 300,
+      "grouping_key": "garage_door",
+      "strategy": "local",
+      "escalation": [
+        {
+          "id": "awareness",
+          "after": 120,
+          "priority": 30,
+          "urgency": "ACTIONABLE"
+        },
+        {
+          "id": "important",
+          "after": 300,
+          "priority": 60,
+          "urgency": "IMPORTANT"
+        },
+        {
+          "id": "persistent",
+          "after": 900,
+          "priority": 80,
+          "urgency": "IMPORTANT"
+        },
+        {
+          "id": "away",
+          "priority": 90,
+          "urgency": "CRITICAL",
+          "when": {
+            "field": "context.nobody_home",
+            "op": "eq",
+            "value": true
+          }
+        }
+      ],
+      "modifiers": [
+        {
+          "id": "sleeping",
+          "delta": 15,
+          "when": {
+            "field": "context.sleeping",
+            "op": "eq",
+            "value": true
+          }
+        },
+        {
+          "id": "overnight",
+          "delta": 10,
+          "when": {
+            "field": "context.quiet_hours",
+            "op": "eq",
+            "value": true
+          }
+        },
+        {
+          "id": "expected",
+          "delta": -20,
+          "when": {
+            "field": "signal.attributes.expected",
+            "op": "eq",
+            "value": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "water_leak",
+      "match": {
+        "category": "water_leak"
+      },
+      "title": "Water leak detected",
+      "summary": "Check the affected area now.",
+      "acknowledgement_required": true,
+      "grouping_key": "leaks",
+      "active_state": "on",
+      "strategy": "critical",
+      "escalation": [
+        {
+          "id": "critical",
+          "priority": 100,
+          "urgency": "CRITICAL"
+        }
+      ]
+    },
+    {
+      "id": "washer_full",
+      "match": {
+        "category": "washer_full"
+      },
+      "title": "Laundry is ready",
+      "summary": "The washer still needs emptying.",
+      "active_state": "on",
+      "debounce": 5,
+      "persistence": "timed",
+      "minimum_display_time": 10,
+      "maximum_display_time": 20,
+      "cooldown": 3600,
+      "acknowledgement": "suppress",
+      "escalation": [
+        {
+          "id": "finished",
+          "priority": 25,
+          "urgency": "CONTEXTUAL"
+        },
+        {
+          "id": "waiting",
+          "after": 7200,
+          "priority": 40,
+          "urgency": "ACTIONABLE"
+        }
+      ]
+    },
+    {
+      "id": "sensor_health",
+      "match": {
+        "type": "availability"
+      },
+      "title": "Some sensors are unavailable",
+      "summary": "Check Home Assistant when convenient.",
+      "active_state": "unavailable",
+      "grouping_key": "sensor_health",
+      "strategy": "targeted",
+      "eligible_displays": [
+        "kiosk"
+      ],
+      "debounce": 300,
+      "persistence": "timed",
+      "minimum_display_time": 10,
+      "maximum_display_time": 20,
+      "cooldown": 3600,
+      "escalation": [
+        {
+          "id": "unavailable",
+          "priority": 10,
+          "urgency": "CONTEXTUAL"
+        }
+      ]
+    }
+  ],
+  "quiet_hours": {
+    "start": 22,
+    "end": 7
+  },
+  "displays": [
+    {
+      "id": "kiosk",
+      "supports_touch": true
+    },
+    {
+      "id": "hubs",
+      "family": "hubs"
+    },
+    {
+      "id": "garage",
+      "family": "hubs",
+      "location": "garage"
+    }
+  ]
+}

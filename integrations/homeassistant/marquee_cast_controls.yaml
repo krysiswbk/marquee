@@ -1,0 +1,86 @@
+input_button:
+  marquee_cast_main_display:
+    name: Cast Marquee to Main Display
+    icon: mdi:cast-connected
+  marquee_cast_garage_display:
+    name: Cast Marquee to Garage Display
+    icon: mdi:garage
+  marquee_cast_bedroom_display:
+    name: Cast Marquee to Bedroom Display
+    icon: mdi:bed
+
+rest:
+  - resource: http://10.10.9.37:8084/healthz
+    scan_interval: 60
+    timeout: 10
+    sensor:
+      - name: Marquee Health
+        unique_id: marquee_health
+        value_template: "{{ 'online' if value_json.ok else 'offline' }}"
+        icon: mdi:heart-pulse
+        json_attributes:
+          - version
+          - cardAlive
+          - cardPollAgo
+          - cardGrace
+          - garageOccupied
+          - garageHubConfigured
+  - resource: http://10.10.9.37:8084/providers
+    scan_interval: 60
+    timeout: 10
+    sensor:
+      - name: Marquee Kiosk Context
+        unique_id: marquee_kiosk_context
+        value_template: >-
+          {{ value_json.active.kiosk.provider
+             if value_json.active.kiosk else 'idle' }}
+        icon: mdi:monitor-dashboard
+        json_attributes_path: "$.active"
+        json_attributes:
+          - kiosk
+          - hubs
+
+rest_command:
+  marquee_cast_main_display:
+    url: http://10.10.9.37:8084/api/cast
+    method: POST
+    content_type: application/json
+    payload: '{"target":"10.10.3.73"}'
+  marquee_cast_garage_display:
+    url: http://10.10.9.37:8084/api/cast
+    method: POST
+    content_type: application/json
+    payload: '{"target":"10.10.3.74"}'
+  marquee_cast_bedroom_display:
+    url: http://10.10.9.37:8084/api/cast
+    method: POST
+    content_type: application/json
+    payload: '{"target":"10.10.3.81"}'
+
+automation:
+  - id: marquee_cast_main_display_button
+    alias: Marquee - Cast to Main Display
+    triggers:
+      - trigger: state
+        entity_id: input_button.marquee_cast_main_display
+    actions:
+      - action: rest_command.marquee_cast_main_display
+    mode: single
+
+  - id: marquee_cast_garage_display_button
+    alias: Marquee - Cast to Garage Display
+    triggers:
+      - trigger: state
+        entity_id: input_button.marquee_cast_garage_display
+    actions:
+      - action: rest_command.marquee_cast_garage_display
+    mode: single
+
+  - id: marquee_cast_bedroom_display_button
+    alias: Marquee - Cast to Bedroom Display
+    triggers:
+      - trigger: state
+        entity_id: input_button.marquee_cast_bedroom_display
+    actions:
+      - action: rest_command.marquee_cast_bedroom_display
+    mode: single

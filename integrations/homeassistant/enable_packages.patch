@@ -1,0 +1,5 @@
+--- configuration.yaml
++++ configuration.yaml
+@@ -7,1 +7,2 @@
+ homeassistant:
++  packages: !include_dir_named packages

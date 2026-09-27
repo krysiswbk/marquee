@@ -1,4 +1,163 @@
+## 2.10.1 — Kiosk destination shell
+
+- Publish the reconciled Marquee modernization source and generated frontend assets.
+- Replace the kiosk/live generic Menu entry point with direct destination navigation.
+- Keep Home and priority destinations visible, using explicit measured overflow only
+  when the available width cannot fit the remaining destinations.
+- Preserve keyboard/touch access, current state, safe-area spacing, and explicit
+  offline, empty, stale, and provider-health treatments.
+
+## 2.10.0 — Consolidated settings and layout workspaces
+
+- Make the four-area Settings page the default: Displays, Content, Alerts, and Advanced.
+- Bring all former source-editor controls and household interests into Settings.
+- Share a consistent charcoal-and-amber navigation across Settings, Cast/Live Layout, Alert rules, and Test screens.
+- Retain rich layout positioning, presets, import/export, custom backdrops, device discovery, and media tools; stage imported setups for review before saving.
+- Save layout changes narrowly, preserve unrelated settings and write-only secrets, detect conflicting edits, and support explicit layout resets.
+- Replace the long attention form with searchable, collapsed editors and compact diagnostics; protect drafts during failed or concurrent saves.
+- Retire previous settings/source/attention/test page files and redirect old bookmarks to their replacements.
+- Highlight unavailable nursery devices in the household headline while preserving native Cast modes and configured window exclusions.
+
+## 2.9.8 — Exact kiosk layout on Cast
+
+- Kiosk-mode Cast loads the actual kiosk page in a 1500×1000 reference viewport, scaled proportionally to fit the receiver.
+- Preserve the complete kiosk navigation, typography, scene layout, house feed, artwork and animations at both Cast display sizes; no receiver-specific reflow or cropping.
+- Keep per-device activity/attention routing and garage occupancy behavior, while fitting the same kiosk canvas to each display.
+
+## 2.9.7 — One Marquee control room
+
+- Shared navigation, active-page state, theme colors and Marquee typography across Cast, Kiosk/Live, Sources, Household Attention and screen tests.
+- Dedicated Cast devices tab with independent “use kiosk experience” switches, clear mode explanations and links to kiosk appearance and sources.
+- Keep the original Cast design, connection, tutorial, release notes and About sections; add direct tab links and remove duplicate page-link bars.
+- Preserve saved display profiles, Cast modes and playback behavior.
+- Accept valid decimal location/radar values; saving reveals and focuses an invalid field with a specific inline explanation, including fields on hidden source sections.
+
+## 2.9.6 — Home Assistant weather and secure bridge
+
+- Use the existing HA weather entity for all current conditions and hourly/daily forecasts; remove independent Open-Meteo and IP-location requests.
+- Preserve unknown readings and stop using expired forecasts. Refresh the HA observation each minute even when its state has not changed.
+- Add a dedicated HTTPS bridge with verified certificate trust and a scoped bearer credential for HA feeds, isolated from browser settings.
+- Keep the themed weather channel, animated icons, HA radar, and kiosk/Cast preferences.
+
+## 2.9.5 — Synth scenes and optional kiosk activity on Cast
+
+- Calendar and UFC lists/full screens inherit the selected Live theme, with matching typography, accent lines and panels.
+- Weather icons animate sun rays, clouds, moon, rain, snow and fog without changing the weather layout. Reduced-motion users receive static icons.
+- Casting settings provide independent main and garage “Kiosk activity” switches, both off by default. Enabled receivers use the kiosk theme, household desk, selection and pacing between playback sessions; garage occupancy/wake rules remain in effect. Saving a switch reconciles the receiver automatically; switching off restores the normal Cast page.
+- Receiver pages omit the browser navigation menu. Local kiosk interaction does not blank opted-in receivers; existing per-display attention policy remains in effect.
+
+## 2.9.4 — Themed weather channel
+
+- Weather opens directly from the shared menu into a full-screen broadcast sequence: current conditions, hourly outlook, five-day forecast, and original local radar.
+- Each segment uses the selected Marquee theme, with a station masthead, clock, weather ticker, direct segment controls and pause/play. Segments rotate every 15 seconds; reduced-motion/editor views start paused and weather warnings hold their presentation.
+- Stale observations, model conditions and radar show explicit unavailable states. Radar metadata carries the original file timestamp and configured enablement; sun and model observation times retain their source timezone.
+- Touch layouts and the existing kiosk Menu/household feed stay accessible. Saved appearance, configuration, and Cast arbitration are preserved.
+
+## 2.9.3 — Configuration-driven kiosk menu
+
+- Shared Menu on Live/Kiosk replaces Previous/Next/Freeze with configured source sections and a household desk destination.
+- Enabled providers populate navigation automatically, including future provider names; disabled and non-kiosk sources are excluded.
+- Browse current source items without changing automatic rotation or Cast selection. Empty and unavailable sections remain explicit; household attention temporarily takes precedence.
+- Menu supports touch, keyboard focus, Escape dismissal, narrow screens, and current-section highlighting. Source configuration refreshes every 15 seconds.
+
+## 2.9.2 — Shared kiosk and Live layout repair
+
+- Move navigation into an accessible Menu and reserve a bottom control bar on Live and kiosk; controls no longer cover titles, footers, or the house feed.
+- Keep competitor artwork, names and records together; fit artwork within the space left by configurable clocks.
+- Add portrait sports composition and readable footer wrapping. Preserve saved layouts and size preferences.
+- Version display assets so refreshed kiosk pages load the corrected styles.
+
+## 2.9.1 — Forecast channel and clock layout repair
+
+- Replaced the floating Cast sports clock with a sized grid row. Clock sizing now applies to Cast sports, weather, and event scenes; time strings with seconds fit their reserved space.
+- Separated automatic clock/weather anchors on media templates and added overlap fitting for clocks. Preserved saved layouts.
+- Added Cast event-clock sizing and sports/weather previews. Live weather builder includes conditions, hourly, forecast, and rain/radar views.
+- Weather now leads with current conditions, six hourly periods, and five forecast days. Radar appears for active or approaching precipitation; dry warnings remain prominent. Original radar animation is preserved.
+- Added real forecast temperatures, precipitation probabilities, day/night flags, feels-like, humidity, wind, and UV data. Missing values stay unknown.
+- Fixed Cast launch discovery-envelope handling.
+
+## 2.9.0 — The household desk
+
+- Rebuilt Live around current household state, recent activity, compact birthdays and dates, and a persistent house feed. Routine calendar, game, TV-release, and summary contexts no longer consume full-screen rotation; Plex and sports keep their dedicated presentations.
+- Actual door/lock transitions get brief notices and a 15-minute activity trail. Startup and reconnect snapshots do not invent activity. Open doors/windows and unlocked locks remain visible with observed duration; important events foreground the desk with acknowledgement, while critical alerts retain full takeover.
+- Three distinct Live visual directions: Studio, After Hours, and Dispatch. Each has its own typography, surfaces, and graphic treatment. New household panels remain positionable in the builder.
+- Broadcast-style local weather presentation with original radar, current observations, and a direct weather view. Offline household feeds visibly stop asserting current state.
+- Updated HA kiosk delivery to open the household desk and foreground household attention. Saved Cast profiles remain separate.
+
 # Changelog
+
+## 2.8.2 — 2026-09-10
+
+- Exclude bills from calendar display and consolidate the next three weeks of
+  birthdays into one card, featuring the closest and deduplicating calendars.
+- Expire birthday cards at local midnight so past birthdays leave the display.
+- Restore Live screen item positioning with a selectable/drag-enabled preview,
+  X/Y, width, size, font/color, alignment, snap and per-item/screen reset.
+- Persist layouts independently for Home, Sports, Weather and Events/media;
+  provide separate clock/weather positions while retaining Cast configuration.
+
+## 2.8.1 — 2026-09-10
+
+- Show grabbed free games only on their collection day in the household timezone,
+  expiring cached cards at local midnight, including daylight-saving transitions.
+- Remove the misleading claim-hours control; upcoming releases remain independent.
+- Complete HA bridge calendar response handling, timezone-aware all-day releases,
+  household status labels and connection health reporting.
+
+## 2.8.0 — 2026-09-10
+
+- Add a modular household attention engine with normalized signals, semantic house
+  context, declarative escalation, contextual scoring and explained arbitration.
+- Add acknowledgement, cooldowns, debounce, immediate resolution/expiry, bounded
+  history, grouped health notices and capability-based display targeting.
+- Native weather alerts outrank ambient content; existing rotation, manual controls,
+  UFC/PFL precedence and unmodified radar rendering remain in place.
+- Add `/admin/attention`, attention APIs, optional generic HA producer, schema and
+  example household policies. Garage attention has its own display feed.
+- Add deterministic scenario tests and scoped lint/strict type checks to CI.
+
+## 2.7.0 — 2026-09-10
+
+- Add PFL schedules, bouts, fighter artwork, and results through the shared
+  ESPN MMA provider, with source controls and a PFL screen-test sample.
+- UFC takes precedence over PFL during live/approaching coverage, including
+  Team Tracker contexts. PFL returns when UFC ends or expires.
+- Extend the Home Assistant bridge to normalize custom PFL tracker data and
+  publish the preferred MMA league for the shared UFC/PFL dashboard card.
+
+## 2.6.1 — 2026-09-10
+
+- Display the original radar image without brightness, contrast, saturation,
+  blend effects, or ambient image dimming. Preserve its original animation
+  and colors; the upload and serving endpoints retain the source bytes.
+
+## 2.6.0 — 2026-09-10
+
+- Live and kiosk displays now have previous/next and Freeze/Resume controls,
+  plus left/right arrow and Space keyboard shortcuts.
+- Manual navigation bypasses the minimum screen dwell and grants a full
+  rotation interval. Frozen screens keep receiving live data; unavailable or
+  expired content returns to automatic selection. Controls are shared between
+  live/kiosk clients and reset after a service restart.
+- Weather summaries appear once, including when older cached feeds repeat
+  the description as a statistic.
+- Regression coverage for navigation, freeze, expiry, and Cast isolation.
+
+## 2.5.0 — 2026-09-08
+
+- **Marquee is now an independent fork** with a small composition entrypoint,
+  modular runtime, HTTP API, media services, provider package, context arbiter,
+  event bus, and versioned configuration repository.
+- **New Admin page** for household interests, context priorities, NHL/UFC,
+  weather/radar, TV/Sonarr, astronomy, optional providers, provider health and
+  manual refresh. Existing settings are migrated automatically and secrets stay
+  write-only.
+- NHL and UFC now use the common provider scheduler/cache/health contract. UFC
+  continues to combine Team Tracker headshots with ESPN fight results.
+- Provider diagnostics include fetch duration, cache age, last success, next
+  refresh, candidates and isolated errors.
+- Removed the duplicate legacy sports scheduler, monolithic runtime/HTTP path,
+  and embedded ad-hoc test suite.
 
 ## 2.4.1 — 2026-08-25
 

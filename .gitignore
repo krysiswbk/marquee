@@ -1,7 +1,22 @@
 __pycache__/
 *.py[cod]
 .env
+marquee.env
+*.key
+*.crt
+*.sqlite3
 data/
+backups/
+*.bak*
+*.pre-*
+*.tar.gz
+.venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+REPORTS/
+screenshots/
+evidence/
 # Local secrets: compose merges this over compose.yaml automatically.
 # Keeps EMBY_API_KEY / PLEX_TOKEN out of the tracked compose.yaml.
 compose.override.yaml

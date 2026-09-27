@@ -1,0 +1,53 @@
+{
+  "version": 4,
+  "general": {
+    "application_name": "Marquee",
+    "timezone": "America/Toronto",
+    "latitude": 43.5,
+    "longitude": -79.9,
+    "display_refresh_seconds": 0.5,
+    "idle_behavior": "plex"
+  },
+  "display": {
+    "rotation_seconds": 30,
+    "secondary_screen_mode": "off",
+    "kiosk_interaction_idle_seconds": 30,
+    "transition_ms": 700,
+    "minimum_context_seconds": 12,
+    "default_screen": "plex"
+  },
+  "context_engine": {
+    "minimum_relevance": 35,
+    "live_priority": 90,
+    "starting_soon_minutes": 120,
+    "post_event_minutes": 30,
+    "post_event_plex_grace_minutes": 0,
+    "takeovers_enabled": true
+  },
+  "interests": {
+    "sports_teams": ["TOR"],
+    "sports": ["UFC", "NHL"],
+    "tracked_shows": [],
+    "franchises": [],
+    "artists": [],
+    "gaming": [],
+    "astronomy": true
+  },
+  "providers": {
+    "plex": {"enabled": true, "priority": 70},
+    "nhl": {"enabled": true, "priority": 90, "teams": ["TOR"], "pregame_minutes": 120, "postgame_minutes": 180},
+    "ufc": {"enabled": true, "priority": 90, "preevent_minutes": 120, "result_minutes": 30, "include_contender_series": true},
+    "weather": {"enabled": true, "priority": 85, "radar": true, "precip_probability": 55, "approach_minutes": 60, "wind_gust_kmh": 70, "radar_span_degrees": 3.0},
+    "tv": {"enabled": false, "priority": 60, "url": "http://sonarr:8989", "api_key": "", "tracked_shows": [], "lookahead_hours": 24, "tracking_mode": "show_all"},
+    "astronomy": {"enabled": true, "priority": 50, "kp_threshold": 6.0},
+    "movies": {"enabled": false, "priority": 55},
+    "trailers": {"enabled": false, "priority": 50},
+    "major_events": {"enabled": false, "priority": 40},
+    "gaming": {"enabled": false, "priority": 45, "release_lookahead_days": 30,
+               "max_releases": 3, "release_priority": 45, "claim_ttl_hours": 24},
+    "music": {"enabled": false, "priority": 60},
+    "calendar": {"enabled": true, "priority": 40, "lookahead_days": 14,
+                  "targets": ["kiosk"], "allow_cast": false,
+                  "cast_min_priority": 95}
+  }
+}

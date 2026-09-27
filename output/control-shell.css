@@ -1,0 +1,129 @@
+/* Marquee control workspaces share the original charcoal and amber vocabulary. */
+body.mq-controls {
+  --bg: #0b0d10;
+  --panel: #14171c;
+  --panel-hi: #181c22;
+  --line: #2a3039;
+  --text: #f2eee6;
+  --muted: #9aa1ab;
+  --mut: var(--muted);
+  --accent: #e5a83b;
+  --amber: var(--accent);
+  --display: 'Bebas Neue', 'Arial Narrow', system-ui, sans-serif;
+  margin: 0;
+  max-width: none;
+  min-height: 100%;
+  background: radial-gradient(70% 320px at 25% 0, rgba(229, 168, 59, .08), transparent 70%), var(--bg);
+  color: var(--text);
+  color-scheme: dark;
+  font: 15px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+.mq-controls *, .mq-controls *::before, .mq-controls *::after { box-sizing: border-box; }
+.mq-controls a { color: var(--accent); text-underline-offset: 4px; }
+.mq-controls a:focus-visible, .mq-controls button:focus-visible,
+.mq-controls input:focus-visible, .mq-controls select:focus-visible,
+.mq-controls textarea:focus-visible, .mq-controls summary:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 3px;
+}
+.mq-controls .wrap, .mq-controls main.shell, .mq-attention-content {
+  width: min(1400px, 100%); margin: 0 auto; padding: 28px 24px 64px;
+}
+.mq-controls header.page { width: min(1400px, 100%); margin: 0 auto; padding: 28px 24px 0; }
+.mq-controls main:not(.shell):not(.mq-attention-content) { max-width: 1400px; }
+.mq-controls h1, .mq-controls h2 {
+  font-family: var(--display); font-weight: 400; text-transform: uppercase; letter-spacing: .045em;
+}
+.mq-controls h1 { margin-top: 0; font-size: 30px; color: var(--text); }
+.mq-controls h2 { color: var(--accent); font-size: 20px; line-height: 1.3; }
+.mq-controls p, .mq-controls small { line-height: 1.5; }
+.mq-controls .panel, .mq-controls .card, .mq-controls .controls,
+.mq-controls .health-row, .mq-attention-content > section {
+  color: var(--text); background: linear-gradient(180deg, var(--panel-hi), var(--panel));
+  border: 1px solid var(--line); border-radius: 13px;
+}
+.mq-controls .note, .mq-controls .savebar { background: var(--panel); }
+.mq-controls .note, .mq-controls .lead, .mq-controls .muted,
+.mq-controls .field small { color: var(--muted); }
+.mq-controls input:not([type=checkbox]):not([type=range]):not([type=color]),
+.mq-controls select, .mq-controls textarea {
+  background: var(--bg); color: var(--text); border-color: var(--line);
+}
+.mq-controls button { font-family: inherit; }
+.mq-controls button.secondary, .mq-controls .actions button,
+.mq-controls .surfaces button, .mq-controls .align button,
+.mq-controls #send, .mq-controls #clear {
+  color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+}
+.mq-controls button.save, .mq-controls button.primary, .mq-controls .actions .primary {
+  color: var(--bg); background: var(--accent); border-color: var(--accent);
+}
+.mq-controls .tabs { flex-wrap: wrap; }
+.mq-controls .tabs button { color: var(--muted); }
+.mq-controls .tabs button[aria-selected=true] { color: var(--accent); border-color: var(--accent); text-shadow: none; }
+
+.mq-controls .mq-shell {
+  position: relative; z-index: 40; width: 100%; padding: 0;
+  background: rgba(14, 16, 20, .96); border-bottom: 1px solid var(--line);
+}
+.mq-shell-inner {
+  width: min(1400px, 100%); margin: auto; padding: 14px 24px;
+  display: flex; align-items: center; gap: 22px;
+}
+.mq-controls .mq-brand {
+  display: flex; align-items: center; gap: 8px; flex: none;
+  color: var(--text); text-decoration: none; letter-spacing: .08em; white-space: nowrap;
+}
+.mq-brand > span { padding: 3px 6px; color: var(--bg); background: var(--accent); font-weight: 900; letter-spacing: -.1em; }
+.mq-brand > b { font-family: var(--display); font-size: 20px; font-weight: 400; }
+.mq-brand small { max-width: 52px; color: var(--muted); font: 9px/1.1 system-ui; letter-spacing: .14em; white-space: normal; }
+.mq-controls .mq-primary { min-width: 0; display: flex; align-items: center; gap: 2px; flex: 1; margin: 0; }
+.mq-controls .mq-primary a, .mq-controls .mq-view {
+  min-height: 44px; display: flex; align-items: center; padding: 9px 12px;
+  border-radius: 7px; color: var(--muted); font-size: 14px; font-weight: 700;
+  text-decoration: none; white-space: nowrap;
+}
+.mq-controls .mq-primary a:hover, .mq-controls .mq-primary a[aria-current=page] {
+  color: var(--accent); background: var(--panel); box-shadow: inset 0 -2px var(--accent);
+}
+.mq-controls .mq-view { color: var(--accent); border: 1px solid var(--line); }
+.mq-controls .mq-view:hover { border-color: var(--accent); }
+.mq-controls .mq-profile-picker {
+  display: inline-flex; gap: 3px; margin: 8px 0 16px; padding: 3px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+}
+.mq-controls .mq-profile-picker a {
+  display: flex; align-items: center; min-height: 40px; padding: 8px 14px;
+  color: var(--muted); border-radius: 7px; font-size: 13px; font-weight: 750; text-decoration: none;
+}
+.mq-controls .mq-profile-picker a:hover { color: var(--text); }
+.mq-controls .mq-profile-picker a[aria-current=page] { color: var(--bg); background: var(--accent); }
+
+.mq-eyebrow { color: var(--accent); font-size: 11px; font-weight: 750; letter-spacing: .16em; }
+.mq-related { display: flex; gap: 18px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--line); }
+.mq-controls input.switch:checked { background: var(--accent); }
+.mq-controls input.switch:checked::after { background: var(--bg); }
+.mq-controls .surfaces button[aria-selected=true], .mq-controls button[aria-pressed=true] {
+  color: var(--accent); background: var(--panel); border-color: var(--accent);
+}
+.mq-attention-content table { table-layout: fixed; width: 100%; }
+.mq-attention-content td, .mq-attention-content th { overflow-wrap: anywhere; }
+.mq-controls [aria-invalid=true] { border: 2px solid #ff8585 !important; outline: 2px solid #ff858533; outline-offset: 2px; }
+.mq-controls .mq-field-error { display: block; margin-top: 7px; color: #ff8585; font-weight: 650; }
+
+@media (max-width: 760px) {
+  .mq-shell-inner { padding: 12px 14px; gap: 8px; flex-wrap: wrap; }
+  .mq-controls .mq-brand { flex: 1; }
+  .mq-brand small { display: none; }
+  .mq-controls .mq-view { padding-inline: 9px; }
+  .mq-controls .mq-primary { order: 3; flex-basis: 100%; overflow-x: auto; scrollbar-width: thin; }
+  .mq-controls .mq-primary a { padding: 9px; font-size: 13px; }
+  .mq-controls .mq-profile-picker { display: flex; width: 100%; }
+  .mq-controls .mq-profile-picker a { flex: 1; justify-content: center; text-align: center; }
+  .mq-controls .wrap, .mq-controls main.shell, .mq-attention-content { padding: 20px 14px 52px; }
+  .mq-controls header.page { padding: 20px 14px 0; }
+  .mq-controls .top, .mq-controls .top .actions { flex-wrap: wrap; gap: 12px; }
+  .mq-attention-content table { display: block; overflow: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mq-controls *, .mq-controls *::before, .mq-controls *::after { scroll-behavior: auto !important; transition: none !important; }
+}

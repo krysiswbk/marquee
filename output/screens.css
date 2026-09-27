@@ -1,0 +1,129 @@
+/* Rich scenes reserve space for their clock; no floating receiver clock. */
+body .cast-clock-overlay{display:none!important}
+body .stage.sports .sports-card{padding:3vh 4vw;grid-template-rows:auto minmax(0,1fr) auto auto;gap:1.5vh;overflow:hidden;background:radial-gradient(ellipse at 18% 38%,#63332633,transparent 45%),radial-gradient(ellipse at 80% 40%,#263e6333,transparent 45%),#0d1016}
+body .stage.sports .sport-timebox{display:grid;transform:none;justify-self:center;padding:0;gap:.3vh;min-width:0;max-width:90vw}
+body .sport-clock{font-size:var(--sport-clock-size,6.8vw);line-height:.95;white-space:nowrap;font-variant-numeric:tabular-nums}
+body .sport-date{font-size:1.05vw;line-height:1.1;margin-top:.5vh;letter-spacing:.1em}
+body .sport-weather{font-size:var(--sport-weather-size,1.4vw);line-height:1.15}
+body .sport-head{grid-template-columns:minmax(0,1fr) minmax(0,5fr) minmax(0,1fr);gap:2vw;border-bottom:1px solid #ffffff24;padding-bottom:1.5vh}
+body .sport-title{max-width:100%;font-family:'Oswald',sans-serif;text-wrap:balance;font-size:var(--sport-title-size,3.2vw);line-height:1.04}
+body .sport-matchup{height:100%;min-height:0;gap:3vw;grid-template-columns:minmax(0,1fr) minmax(0,.8fr) minmax(0,1fr)}
+body .sport-side{min-width:0;min-height:0;height:100%;grid-template-rows:minmax(0,1fr) auto auto auto;gap:.8vh}
+body .sport-side img{height:100%;max-height:var(--sport-art-height,25vh);width:var(--sport-art-width,17vw);max-width:100%;align-self:center}
+body .sport-name{font-family:'Oswald',sans-serif;font-size:var(--sport-name-size,2.5vw);text-wrap:balance;max-width:100%}
+body .sport-score:empty,body .sport-record:empty{display:none}
+body .sport-score{font-size:5.5vw}
+body .sport-center{min-width:0}.sport-center .sport-subtitle{max-width:100%;font-size:1.3vw}.sport-center .sport-league-logo{height:8vh;width:8vw}
+body .sport-footer{padding-top:1vh;align-items:center}.sport-footer .sport-rows{font-size:1.1vw}
+body .context-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,45%);gap:2vw;align-items:start}
+body .context-time{min-width:0}.context-time .context-clock{display:block;white-space:nowrap;font-size:var(--context-clock-size,5.2vw);line-height:1}
+body .context-time .context-weather{font-size:1.4vw}
+body .context-card{overflow:hidden;grid-template-rows:auto minmax(0,1fr) auto!important}
+body .context-copy{max-height:100%;overflow:auto}.context-card .context-title{font-size:min(var(--context-title-size,5vw),7vh)}
+body .context-art{max-height:100%}.context-rows{flex-wrap:wrap}
+/* Broadcast weather: observations + hourly desk + extended forecast, radar only when relevant. */
+body .stage.weather-context .weather-card{inset:0;bottom:0;padding:0;display:block;background:linear-gradient(130deg,#075798,#0b315e 65%,#061b38);color:#fff;overflow:hidden;font-family:'Space Grotesk',system-ui,sans-serif}
+body.brain-live .stage.weather-context .weather-card{bottom:8vh}
+body .weather-card .weather-head{position:absolute;inset:0 0 auto;height:11%;padding:0 3vw;box-sizing:border-box;background:#051e3d;border-bottom:3px solid #ffda67;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,32%);gap:3vw;align-items:center}
+body .weather-source{font:700 2.1vw/.95 'Oswald',sans-serif;letter-spacing:.025em;color:#fff;max-width:100%}
+body .weather-card .weather-clock{font:700 var(--weather-clock-size,3.5vw)/1 'Space Grotesk',sans-serif;text-align:right;white-space:nowrap;min-width:0}
+.weather-card .channel-current{position:absolute;left:3vw;top:15%;width:54vw;height:50%;box-sizing:border-box;overflow:hidden}
+.channel-location{font-size:1.1vw;letter-spacing:.2em;font-weight:700;color:#bfddf6}.channel-now{display:flex;gap:2vw;align-items:center;margin-top:1.8vh;height:22vh}.channel-icon{width:12vw;height:12vw;max-height:22vh;filter:drop-shadow(0 0 3vw #ffe27844)}.channel-icon svg{width:100%;height:100%}.channel-temp{font:700 13vw/.9 'Oswald',sans-serif;letter-spacing:-.03em;color:white}
+.channel-condition{font:500 3vw/1.1 'Oswald',sans-serif;margin-top:1vh}.channel-metrics{display:flex;gap:2.5vw;margin-top:2vh}.channel-metrics>div{display:grid;gap:.4vh}.channel-metrics span{font-size:.85vw;color:#b3d5ef;text-transform:uppercase;letter-spacing:.1em}.channel-metrics strong{font-size:1.6vw;font-weight:600}.channel-outlook{font-size:1.05vw;color:#c7def4;line-height:1.4;margin-top:1.6vh;max-height:5.5vh;overflow:auto}
+.channel-hours{position:absolute;left:61vw;right:3vw;top:15%;height:49%;box-sizing:border-box;border-left:1px solid #a9d9ff40;padding-left:2.3vw}
+.channel-hours h2{font:600 1.4vw 'Oswald',sans-serif;margin:0 0 1.1vh;letter-spacing:.04em}.channel-hours h2 span{float:right;font:500 .65vw system-ui;color:#a8c9df;padding-top:.7vh}
+.channel-hour{display:grid;grid-template-columns:1fr 3vw 1fr 1.1fr;gap:1vw;align-items:center;border-top:1px solid #a9d9ff25;height:5.5vh;font-size:1.1vw}.channel-hour time{color:#d5e9fa}.channel-hour svg{width:2.8vw;height:4.8vh}.channel-hour strong{text-align:center;font-size:1.65vw}.channel-hour>span{color:#a4d9f4;text-align:right;font-size:1vw}.channel-hour small{font-size:.7vw;color:#d3e2ef}
+.channel-days{position:absolute;left:0;right:0;bottom:0;height:31%;background:#092447;border-top:1px solid #698bb140}
+.channel-strap{display:flex;justify-content:space-between;align-items:center;height:3.8vh;padding:0 3vw;background:#06192f;font-size:.75vw;letter-spacing:.04em;color:#a9bed2}.channel-strap b{color:#081e37;background:#ffda67;font-size:1vw;padding:.3em .6em}.channel-strap span{text-align:right}
+#channel-days{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding:0 3vw;height:calc(100% - 3.8vh)}
+.channel-day{position:relative;padding:1vh 1.5vw;display:grid;grid-template-columns:4vw 1fr;grid-template-rows:auto 1fr auto;align-items:center;border-right:1px solid #ffffff22;gap:.5vh .9vw}.channel-day:first-child{background:#164274}.channel-day:last-child{border:0}.channel-day h3{grid-column:1/-1;font:600 1.5vw/1 'Oswald',sans-serif;letter-spacing:.06em;margin:0}.channel-day svg{width:4vw;height:6vh}.channel-highlow{display:flex;gap:.7vw;align-items:baseline}.channel-highlow b{font:500 3.1vw/1 'Oswald',sans-serif}.channel-highlow span{font-size:1.6vw;color:#a8bad1}.channel-chance{grid-column:1/-1;font-size:.85vw;color:#b9d7ee}.channel-missing{font-size:1.3vw;line-height:1.5;color:#b9d7ee;padding:2vh 0}
+body .weather-card .weather-radar{display:none;position:absolute;left:3vw;top:16%;height:45%;width:54vw;box-sizing:border-box;padding:0;background:#082643;object-fit:contain;border-radius:0;box-shadow:none}
+body .weather-card .weather-copy{display:none}
+body .weather-card[data-radar=true] .weather-radar{display:block}
+body .weather-card[data-radar=true] .channel-current{display:none}
+body .weather-card[data-radar=true] .channel-hours{top:36%;height:28%;overflow:hidden}
+body .weather-card[data-radar=true] .channel-hours h2{display:none}
+body .weather-card[data-radar=true] .channel-hour{height:5vh}
+body .weather-card[data-radar=true] .weather-copy{display:block;position:absolute;left:63.3vw;right:3vw;top:15%;height:19%;padding:0;background:none;overflow:auto}
+body .weather-card .weather-title{font:600 min(var(--weather-title-size,3vw),5vh)/1.03 'Oswald',sans-serif;text-transform:uppercase}
+body .weather-card .weather-subtitle{font-size:1.2vw;color:#ffe194;margin-top:.7vh}.weather-card .weather-body{font-size:1vw;color:#c7def4;margin-top:1vh}.weather-card .weather-stats{display:none}
+.channel-radar-label{display:none;position:absolute;left:3vw;top:62%;font:700 1vw system-ui;color:#ffda67;letter-spacing:.1em}.weather-card[data-radar=true] .channel-radar-label{display:block}
+body .brain-weather-now,body .brain-weather-strap{display:none!important}
+.weather-card[data-sky=night]{background:radial-gradient(ellipse at 20% 10%,#343867,#081b35 70%)!important}.weather-card[data-sky=sun]:before{content:'';position:absolute;left:-8vw;top:8%;width:70vw;height:65%;background:radial-gradient(ellipse,#41abdc36,transparent 65%);pointer-events:none}
+body .weather-card [hidden]{display:none!important}
+body.cast-display .stage.sports .sport-timebox{display:grid}
+body .weather-card{text-align:left}.weather-card .channel-metrics span{font-size:1vw}.weather-card .channel-metrics strong{font-size:1.7vw}.weather-card .channel-hour time{font-size:1.35vw}.weather-card .channel-day h3{font-size:1.7vw}.weather-card .channel-chance{font-size:1.05vw}.weather-card .channel-outlook{font-size:1.2vw;max-height:6vh}.weather-card .channel-strap{font-size:.8vw}
+body .sport-side img{align-self:end}
+body.cast-display[data-template=fanart] .clock{font-size:3.5vw;text-shadow:0 2px 8px #000}
+.channel-warning{display:none;position:absolute;top:11%;left:0;right:0;height:16%;box-sizing:border-box;padding:1.2vh 3vw;background:#a33724;border-bottom:2px solid #ffce85;z-index:4}.weather-card[data-alert=true] .channel-warning{display:block}.channel-warning strong{font:600 2.4vw/1 'Oswald',sans-serif;text-transform:uppercase}.channel-warning>div{font-size:1.1vw;line-height:1.3;margin-top:.6vh;max-height:6vh;overflow:auto}
+.weather-card[data-alert=true] .channel-current,.weather-card[data-alert=true] .channel-hours{top:30%;height:35%;overflow:hidden}.weather-card[data-alert=true] .channel-current .channel-location,.weather-card[data-alert=true] .channel-outlook{display:none}.weather-card[data-alert=true] .channel-now{height:12vh;margin-top:0}.weather-card[data-alert=true] .channel-temp{font-size:8vw}.weather-card[data-alert=true] .channel-icon{height:12vh;width:8vw}.weather-card[data-alert=true] .weather-radar{top:30%;height:30%}.weather-card[data-alert=true] .weather-copy{display:none!important}
+
+/* Live and kiosk controls have their own rail, outside scene and house feed. */
+body.browser-controls{--control-rail:calc(62px + env(safe-area-inset-bottom,0px))}
+body.browser-controls .screen-controls{inset:auto 0 0;transform:none;max-width:none;height:var(--control-rail);padding:6px 88px calc(6px + env(safe-area-inset-bottom,0px)) 12px;border-radius:0;border-width:1px 0 0;justify-content:center;opacity:1;z-index:10001;background:#10141d}
+body.browser-controls .screen-controls [role=status]{white-space:nowrap;flex-shrink:0}
+body.browser-controls nav.display-menu{position:fixed;inset:auto 12px env(safe-area-inset-bottom,0px) auto!important;height:62px;display:flex;align-items:center;opacity:1;z-index:10002;font:14px system-ui;color:#eef2ff}
+.display-menu summary{cursor:pointer;list-style:none;padding:13px 12px;border:1px solid #ffffff30;border-radius:10px;background:#252b38}
+.display-menu summary::-webkit-details-marker{display:none}
+.display-menu details>div{position:absolute;bottom:62px;right:0;min-width:190px;padding:8px;background:#161d2c;border:1px solid #6c7890;border-radius:12px;box-shadow:0 8px 30px #0008;display:grid}
+body.browser-controls nav.display-menu a{color:#edf2ff;text-decoration:none;padding:12px;border-radius:6px}
+.display-menu a:hover,.display-menu a:focus-visible{background:#37415a}
+body.browser-controls .sports-card,body.browser-controls .context-card,body.browser-controls .stage.weather-context .weather-card{bottom:var(--control-rail)}
+body.brain-live.browser-controls .sports-card,body.brain-live.browser-controls .context-card,body.brain-live.browser-controls .stage.weather-context .weather-card{bottom:calc(8vh + var(--control-rail))}
+body.brain-live.browser-controls .brain-dock{bottom:var(--control-rail)}
+/* Keep each competitor's artwork, name and record together at every ratio. */
+body .sport-side{height:auto;align-self:center;grid-template-rows:auto auto auto auto;align-content:center;gap:1vh}
+body .sport-side img{height:min(var(--sport-art-height,29vh),34vh);width:min(calc(24vw * var(--sport-art-scale,1)),30vw);max-height:34vh;align-self:center}
+body .sport-matchup{align-items:center}
+body .sport-footer{grid-template-columns:minmax(0,1fr);gap:.7vh}
+body .sport-detail{text-align:left;font-size:clamp(11px,1.1vw,18px)}
+body .sport-footer .sport-rows{font-size:clamp(11px,1.15vw,18px);flex-wrap:wrap;gap:.4em 1.3em}
+body .sport-rows span{white-space:normal}
+@media(max-aspect-ratio:1/1){
+ body .stage.sports .sports-card{padding:2vh 5vw;gap:2vh;grid-template-rows:auto minmax(0,1fr) auto auto}
+ body .sport-head{grid-template-columns:1fr 1fr;font-size:11px;letter-spacing:.12em;gap:8px}
+ body .sport-title{grid-column:1/-1;grid-row:2;font-size:clamp(20px,calc(5vw * var(--sport-text-scale,1)),36px);line-height:1.1}
+ body .sport-matchup{grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1fr) auto;gap:12px 5vw}
+ body .sport-side{align-self:center;gap:8px}
+ body .sport-side img{width:min(calc(36vw * var(--sport-art-scale,1)),42vw);height:24vh;max-height:26vh}
+ body .sport-side:first-child{grid-column:1;grid-row:1}
+ body .sport-side:last-child{grid-column:2;grid-row:1}
+ body .sport-center{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:5px 12px;text-align:left}
+ body .sport-center .sport-league-logo{grid-row:1/4;width:14vw;height:8vh;margin:0}
+ body .sport-vs{display:none}
+ body .sport-status{font-size:clamp(15px,4vw,24px);margin:0}
+ body .sport-center .sport-subtitle{font-size:12px;max-width:100%;margin:0}
+ body .sport-name{font-size:clamp(17px,calc(4.5vw * var(--sport-text-scale,1)),30px)}
+ body .sport-record{font-size:12px}
+ body .sport-score{font-size:7vw}
+ body .sport-clock{font-size:calc(12vw * var(--sport-clock-scale,1))}
+ body .sport-date{font-size:11px;margin-top:6px}
+ body .sport-weather{font-size:15px}
+ body .sport-footer .sport-rows,body .sport-detail{font-size:11px;line-height:1.35}
+ body .sport-footer{max-height:13vh;overflow:auto}
+ body.brain-live.browser-controls #brain-activity,body.brain-live.browser-controls #brain-agenda{height:calc(25vh - var(--control-rail))}
+}
+/* Bound the artwork row when a large clock leaves less vertical room. */
+body .sport-side{height:100%;max-height:42vh;grid-template-rows:minmax(0,1fr) auto auto auto}
+body .sport-side img{height:100%;min-height:0;object-position:center bottom}
+@media(max-aspect-ratio:1/1){body .sport-side{max-height:34vh}}
+
+body.browser-controls .brain-weather-link{display:none}
+
+/* Shared section menu stays available throughout kiosk browsing. */
+body.browser-controls .kiosk-rail{justify-content:flex-start;padding:6px max(16px,env(safe-area-inset-left,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px));gap:10px;white-space:nowrap;overflow:hidden}
+.kiosk-brand{flex:0 0 auto;font-weight:800;letter-spacing:.04em}.kiosk-primary{display:flex;align-items:center;gap:4px;min-width:0;overflow:hidden}.kiosk-primary a,.kiosk-more{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:0 0 auto;min-width:44px;min-height:44px;padding:8px 10px;border:1px solid transparent;border-radius:10px;background:transparent;color:#eef2ff;text-decoration:none;font:inherit;cursor:pointer}.kiosk-primary a:hover,.kiosk-primary a:focus-visible,.kiosk-more:hover,.kiosk-more:focus-visible{background:#ffffff18;border-color:#ffffff40}.kiosk-primary a[aria-current=page]{background:#31442c;border-color:#b6f378;color:#f4ffd8}.kiosk-primary a[hidden]{display:none}.kiosk-icon{font-size:1.15em;line-height:1}.kiosk-more{background:#252b38;border-color:#66758b}.kiosk-more[hidden]{display:none}.kiosk-more>span:first-child{letter-spacing:2px}.kiosk-rail :focus-visible{outline:3px solid #c3fc86;outline-offset:2px}.kiosk-menu [hidden]{display:none}
+.kiosk-rail button{min-width:44px;min-height:44px}
+.kiosk-menu{color:#eef2ff;background:#151c29;border:1px solid #66758b;border-radius:20px;padding:24px;width:min(680px,calc(100vw - 24px));max-height:calc(100dvh - 32px);box-sizing:border-box;overflow:auto;font:16px system-ui;box-shadow:0 24px 80px #0009}
+.kiosk-menu::backdrop{background:#03070dbb;backdrop-filter:blur(8px)}
+.kiosk-menu header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.kiosk-menu h2{margin:0;font-size:28px}
+.kiosk-menu button{min-width:44px;min-height:44px;background:#29374a;color:inherit;border:1px solid #718099;border-radius:12px;cursor:pointer}
+.kiosk-menu nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.kiosk-menu a{display:flex;flex-direction:column;gap:6px;min-height:64px;justify-content:center;padding:14px;color:inherit;text-decoration:none;background:#202d40;border:1px solid #43516a;border-radius:12px;overflow-wrap:anywhere}
+.kiosk-menu a[aria-current=page]{border-color:#b6f378;background:#31442c}.kiosk-menu small{font-size:13px;color:#c1cbdb}
+.kiosk-menu details{margin-top:20px}.kiosk-menu summary{cursor:pointer;padding:14px 0}.kiosk-menu :focus-visible,.kiosk-items button:focus-visible{outline:3px solid #c3fc86;outline-offset:3px}
+.kiosk-section{position:fixed;inset:0 0 calc(8vh + var(--control-rail));z-index:9000;overflow:auto;background:linear-gradient(145deg,#192936,#0b101b);color:#eef2ff;padding:clamp(22px,4vw,64px);font:18px system-ui}
+.kiosk-section[hidden]{display:none}.kiosk-section header p{font-size:13px;letter-spacing:.18em;color:#b6f378}.kiosk-section h1{font-size:clamp(30px,4vw,56px);margin:0 0 28px}
+.kiosk-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(290px,100%),1fr));gap:16px}.kiosk-items button{text-align:left;display:flex;flex-direction:column;gap:12px;padding:24px;background:#243447;color:inherit;border:1px solid #55667d;border-radius:16px;cursor:pointer;font:inherit;overflow-wrap:anywhere}.kiosk-items strong{font-size:24px}.kiosk-items small{font-size:13px;color:#b6f378}.kiosk-items span{color:#ccd5e3;font-size:16px;line-height:1.5}.kiosk-empty{max-width:600px;line-height:1.6;color:#cbd5e4}
+@media(max-width:700px){body.browser-controls .kiosk-rail{gap:4px;padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}.kiosk-brand{font-size:0;width:18px}.kiosk-brand:before{content:'M';font-size:15px}.kiosk-primary a,.kiosk-more{padding-left:9px;padding-right:9px}.kiosk-primary .kiosk-label,.kiosk-more .kiosk-label{display:none}.kiosk-primary a{width:44px}.kiosk-more{width:52px}}
+@media(max-width:480px){.kiosk-menu{padding:16px}.kiosk-menu nav{grid-template-columns:1fr}.kiosk-items button{padding:20px}}

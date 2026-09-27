@@ -1,0 +1,18 @@
+services:
+  marquee:
+    build: .
+    image: marquee:local
+    container_name: marquee
+    network_mode: host
+    restart: unless-stopped
+    env_file:
+      - marquee.env
+    environment:
+      PAGE_URL: http://10.10.9.37:8084/image
+      PLEX_HOST: http://10.10.9.219:32400
+      GARAGE_HUB_IP: 10.10.3.74
+      MEDIA_BACKEND: plex
+      POLL_SECONDS: "5"
+      SERVE_PORT: "8084"
+    volumes:
+      - ./data:/config

@@ -42,6 +42,40 @@
 
   html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden;
     font-family: var(--font); -webkit-font-smoothing: antialiased; }
+  .sr-only { position:absolute!important; width:1px!important; height:1px!important;
+    padding:0!important; margin:-1px!important; overflow:hidden!important;
+    clip:rect(0,0,0,0)!important; white-space:nowrap!important; border:0!important; }
+
+  /* Nest Hubs do not apply ambient display dimming consistently while a
+     webpage is casting. Keep the Marquee comfortable without muting its art. */
+  .ambient-veil { display: none; position: fixed; inset: 0; z-index: 2147483647;
+    pointer-events: none; background: rgba(0,0,0,var(--ambient-dim,.42));
+    transition: background 2s ease; }
+  body.cast-display .ambient-veil { display: none; }
+  body.cast-display .clock,
+  body.cast-display .wx,
+  body.cast-display .b-category,
+  body.cast-display .b-identity,
+  body.cast-display .b-meta,
+  body.cast-display .b-plot,
+  body.cast-display .b-ratings,
+  body.cast-display .b-progress,
+  body.cast-display .sport-clock,
+  body.cast-display .sport-date,
+  body.cast-display .sport-weather,
+  body.cast-display .sport-head,
+  body.cast-display .sport-name,
+  body.cast-display .sport-record,
+  body.cast-display .sport-score,
+  body.cast-display .sport-center,
+  body.cast-display .sport-footer,
+  body.cast-display .cast-clock-overlay,
+  body.cast-display .weather-clock,
+  body.cast-display .weather-copy,
+  body.cast-display .idle-clock,
+  body.cast-display .idle-weather {
+    filter: brightness(var(--ambient-ui-dim, 1)); }
+  body.editing .ambient-veil { display: none; }
 
   .bg { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover;
     object-position: 50% 50%; opacity: 0;
@@ -70,9 +104,109 @@
   /* ── Blocks: each is a self-contained, internally designed group ─ */
   .stage { position: fixed; inset: 0; display: grid; box-sizing: border-box;
     padding: 6vh 5vw; column-gap: 4vw; row-gap: 0;
-    opacity: 1; transition: opacity .5s ease; }
+    opacity: 1; transition: opacity var(--context-transition, .5s) ease; }
   .stage.fade { opacity: 0; }
   .stage.hidden { display: none; }
+  .sports-card { display: none; position: fixed; inset: 0; box-sizing: border-box;
+    padding: 5vh 5vw; color: #fff; background:
+    radial-gradient(circle at 50% 35%, var(--accent-glow), transparent 42%),
+    linear-gradient(145deg, #080a0e, #151820 68%, #08090c); }
+  .stage.sports { display: block; padding: 0; }
+  .stage.sports > .block { display: none !important; }
+  .weather-card { display: none; position: fixed; inset: 0; box-sizing: border-box;
+    padding: 4vh 4vw; color: #fff; background: #071019; }
+  .stage.weather-context { display: block; padding: 0; }
+  .stage.weather-context > .block, .stage.weather-context > .sports-card { display: none !important; }
+  .stage.weather-context .weather-card { display: grid; grid-template-columns: 58% 1fr;
+    grid-template-rows: auto 1fr; gap: 2vh 3vw; }
+  .weather-head { grid-column: 1 / -1; display: flex; align-items: center;
+    justify-content: space-between; }
+  .weather-source { color: #7dd3fc; font-size: 1.25vw; font-weight: 850;
+    letter-spacing: .2em; text-transform: uppercase; }
+  .weather-clock { font-size: var(--weather-clock-size,4.6vw); font-weight: 900; font-variant-numeric: tabular-nums; }
+  .weather-radar { width: 100%; height: 100%; min-height: 0; object-fit: contain;
+    border-radius: 1.2vw; background: #071019; box-shadow: 0 2vh 5vh rgba(0,0,0,.5);
+    filter: none; mix-blend-mode: normal;
+    opacity:1; transition:opacity .25s ease; }
+  .weather-radar.loading { opacity:0; }
+  .weather-copy { align-self: center; display: grid; gap: 2vh; }
+  .weather-title { margin: 0; font-size: var(--weather-title-size,4.4vw); line-height: .98; }
+  .weather-subtitle { color: #7dd3fc; font-size: 2.2vw; font-weight: 800; }
+  .weather-body { color: var(--text-soft); font-size: 1.65vw; line-height: 1.4; }
+  .weather-stats { display: grid; gap: .8vh; font-size: 1.5vw; font-weight: 700; }
+  .context-card { display: none; position: fixed; inset: 0; box-sizing: border-box;
+    padding: 5vh 5vw; color: #fff; overflow: hidden; background:
+    radial-gradient(circle at 72% 42%, var(--accent-glow), transparent 38%),
+    linear-gradient(145deg, #080a0e, #151820 68%, #08090c); }
+  .stage.contextual { display: block; padding: 0; }
+  .stage.contextual > .block, .stage.contextual > .sports-card,
+  .stage.contextual > .weather-card { display: none !important; }
+  .stage.contextual .context-card { display: grid; grid-template-columns: minmax(0,1fr) var(--context-art-width,34vw);
+    grid-template-rows: auto 1fr auto; gap: 3vh 4vw; }
+  .stage.contextual .context-card.no-art { grid-template-columns: minmax(0, 1fr); }
+  .context-card.no-art .context-copy { max-width: 76vw; }
+  .context-head { grid-column:1/-1;display:flex;justify-content:space-between;align-items:flex-start }
+  .context-source { color:var(--accent);font-size:1.35vw;font-weight:900;letter-spacing:.2em;text-transform:uppercase }
+  .context-time { text-align:right }.context-clock {font-size:var(--context-clock-size,6.8vw);line-height:.9;font-weight:900;font-variant-numeric:tabular-nums}
+  .context-weather {margin-top:1vh;color:#dbeafe;font-size:1.6vw;font-weight:750}
+  .context-copy {align-self:center;min-width:0}.context-status{color:var(--accent);font-size:1.5vw;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+  .context-title{font-size:clamp(2.4rem,var(--context-title-size,5vw),5.5rem);line-height:.96;font-weight:900;margin:.8vh 0 1.5vh;text-wrap:balance}.context-subtitle{font-size:clamp(1.1rem,var(--context-subtitle-size,2vw),2.2rem);font-weight:750;color:#dce3ee;text-wrap:balance}
+  .context-detail{margin-top:2.2vh;font-size:var(--context-detail-size,1.45vw);line-height:1.45;color:var(--text-soft)}
+  .context-art{width:100%;height:100%;min-height:0;object-fit:contain;border-radius:1.2vw;filter:drop-shadow(0 2vh 3vh rgba(0,0,0,.6))}
+  .context-rows{grid-column:1/-1;display:flex;gap:1.5vw;padding-top:2vh;border-top:1px solid rgba(255,255,255,.16);font-size:1.3vw;font-weight:750;color:var(--text-soft)}
+  .context-rows span { padding:.65vh .85vw; border-radius:999px; background:rgba(255,255,255,.07); }
+  .context-card[data-kind="gaming"], .context-card[data-kind="game_release"] { background:radial-gradient(circle at 78% 45%,rgba(126,87,194,.3),transparent 40%),linear-gradient(145deg,#080a0e,#171326 68%,#08090c) }
+  .context-card[data-kind="tv_release"] { background:radial-gradient(circle at 78% 45%,rgba(66,165,245,.24),transparent 40%),linear-gradient(145deg,#080a0e,#101c28 68%,#08090c) }
+  .context-card[data-kind="calendar_event"] { background:radial-gradient(circle at 78% 45%,rgba(20,184,166,.24),transparent 40%),linear-gradient(145deg,#080a0e,#0d211f 68%,#08090c) }
+  .context-card[data-state="starting_soon"] .context-status { color:#fbbf24; }
+  .context-card [hidden], .sports-card [hidden], .weather-card [hidden] {display:none!important}
+  .stage.sports .sports-card { display: grid; grid-template-rows: auto 1fr auto auto;
+    gap: 1.2vh; }
+  .sport-head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    color: var(--accent); font-size: 1.35vw; font-weight: 900; letter-spacing: .22em;
+    text-transform: uppercase; }
+  .sport-head > :last-child { justify-self: end; }
+  .sport-timebox { justify-self: center; display: grid; justify-items: center; gap: .35vh;
+    padding: 0 3vw 1vh; transform: translateY(-3.2vh); }
+  .sport-clock { color: #fff; font-size: var(--sport-clock-size, 9.6vw); line-height: 1;
+    font-weight: 850; letter-spacing: -.03em; font-variant-numeric: tabular-nums;
+    text-shadow: 0 .5vh 2vh rgba(0,0,0,.65); }
+  .sport-date { color: var(--text-soft); font-size: 1.5vw; font-weight: 750;
+    margin-top: 1.35vh; line-height: 1.2; letter-spacing: .14em; text-transform: uppercase; }
+  .sport-weather { color: #dbeafe; font-size: var(--sport-weather-size, 1.8vw); font-weight: 800;
+    line-height: 1.2; letter-spacing: .04em; }
+  .cast-clock-overlay { display: none; position: fixed; left: 50%; bottom: 2.5vh;
+    transform: translateX(-50%); z-index: 50; color: #fff; font-size: 12.5vw;
+    line-height: .86; font-weight: 900; letter-spacing: -.045em;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+    text-shadow: 0 .6vh 2.2vh rgba(0,0,0,.92); }
+  body.cast-display .stage.sports .sport-timebox { display: none; }
+  .sport-title { max-width: 62vw; text-align: center; color: #fff; font-size: var(--sport-title-size, 3.5vw);
+    line-height: .98; font-weight: 900; letter-spacing: -.025em; }
+  .sport-matchup { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    gap: 4vw; }
+  .sport-side { display: grid; justify-items: center; text-align: center; gap: 1vh; }
+  .sport-side img { width: var(--sport-art-width, 17vw); height: var(--sport-art-height, 29vh); object-fit: contain;
+    filter: drop-shadow(0 1vh 2vh rgba(0,0,0,.6)); }
+  .sport-name { font-size: var(--sport-name-size, 2.5vw); font-weight: 900; line-height: 1.05; }
+  .sport-record { color: var(--muted); font-size: 1.35vw; font-weight: 700; }
+  .sport-score { font-size: 7vw; font-weight: 900; line-height: .9; }
+  .sport-center { min-width: 18vw; text-align: center; }
+  .sport-league-logo { display: block; width: 9vw; height: 11vh; margin: 0 auto 1vh;
+    object-fit: contain; filter: drop-shadow(0 .5vh 1.2vh rgba(0,0,0,.65)); }
+  .sport-league-logo[hidden] { display: none; }
+  .sport-vs { color: var(--muted); font-size: 1.8vw; font-weight: 900; }
+  .sport-status { margin-top: 1vh; color: var(--accent); font-size: 2.2vw;
+    font-weight: 900; }
+  .sport-subtitle { margin-top: 1.2vh; max-width: 32vw; font-size: 1.45vw;
+    line-height: 1.25; font-weight: 700; }
+  .sport-footer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2vw;
+    align-items: end; padding-top: 1.7vh; border-top: 1px solid rgba(255,255,255,.15); }
+  .sport-rows { display: flex; gap: 1.6vw; min-width: 0; color: var(--text-soft);
+    font-size: 1.18vw; font-weight: 750; }
+  .sport-rows span { min-width: 0; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; }
+  .sport-detail { color: var(--muted); text-align: right; font-size: 1.15vw; }
   .block { min-width: 0; position: relative; padding: 1.2vh 0; }
   .stage [data-layout][hidden] { display: none !important; }
   .block[hidden] { display: none !important; }
@@ -115,7 +249,20 @@
   .wx { color: var(--faint); font-size: 1.3vw; font-weight: 600;
     text-align: inherit; margin-top: .3vh; }
   .wx:empty { display: none; }
-  body[data-template="bigclock"] .wx { font-size: 2vw; text-align: center; }
+  body[data-template="bigclock"] .b-weather {
+    position: fixed !important; top: 3.5vh !important; right: 3vw !important;
+    left: auto !important; padding: 0 !important; z-index: 8;
+    transform-origin: top right; }
+  body[data-template="bigclock"] .wx {
+    display: flex; flex-direction: column; align-items: flex-end; gap: .25vh; margin: 0;
+    min-width: 25vw; padding: 1.55vh 1.8vw; color: #fff; text-align: right;
+    font-size: 1.9vw; font-weight: 650; white-space: nowrap;
+    text-shadow: 0 .2vh .8vh rgba(0,0,0,.8); }
+  body[data-template="bigclock"] .wx-main {
+    font-size: var(--weather-main-size, 4.1vw); font-weight: 800; }
+  body[data-template="bigclock"] .wx-main strong { color: var(--accent); }
+  body[data-template="bigclock"] .wx-detail {
+    font-size: var(--weather-detail-size, 1.9vw); opacity: .92; }
 
   /* A real, bounded logo viewport makes every clear-logo fit the selected
      Title block instead of inheriting the artwork's often-wild dimensions.
@@ -326,13 +473,22 @@
   body[data-template="bigclock"] .clock { font-size: 15vw; font-weight: 800;
     color: var(--accent); letter-spacing: -.02em;
     text-shadow: 0 0 6vh var(--accent-glow), 0 1vh 5vh rgba(0,0,0,.6); }
-  body[data-template="bigclock"] .b-identity { justify-items: center; row-gap: .6vh; }
+  body[data-template="bigclock"] .b-identity { justify-items: center; row-gap: .6vh;
+    position: relative; top: -17vh; }
   body[data-template="bigclock"] .b-identity { --logo-box-height: 9vh; --logo-box-width: 24vw; }
   body[data-template="bigclock"] .stage.has-logo .b-identity { width: 24vw; }
   body[data-template="bigclock"] .title { font-size: 2.4vw; color: var(--text-soft); }
   body[data-template="bigclock"] .subtitle { font-size: 1.6vw; }
-  body[data-template="bigclock"] .b-progress { width: 34vw; margin-bottom: 2vh; }
-  body[data-template="bigclock"] .bg.on { opacity: .15; }
+  body[data-template="bigclock"] .b-progress { width: 88vw; margin-bottom: 2vh;
+    position: relative; top: -16vh; }
+  body[data-template="bigclock"] .b-progress .bar { height: 2.6vh;
+    border-radius: 2.6vh; }
+  body[data-template="bigclock"] .b-progress .fill { border-radius: 2.6vh;
+    box-shadow: 0 0 3vh var(--accent-glow); }
+  body[data-template="bigclock"] .b-progress .ptime { margin-top: 1.6vh;
+    font-size: 2.4vw; }
+  body[data-template="bigclock"] .bg.on { opacity: .66; filter: saturate(1.12) contrast(1.04); }
+  body[data-template="bigclock"] .bg-shade { opacity: .30; }
 
   /* ── Template: Street — brick wall, pay phone, bulb-lit marquee frame ─ */
   .scene { position: fixed; inset: 0; display: none; }
@@ -354,7 +510,7 @@
   /* Real weather on the Street scene. Rain and snow are drawn on a <canvas>
      (see the JS "Canvas weather" section) for real particles — adapted from
      two CodePens, credited there and in CREDITS.md. Fog, overcast, and
-     day/night are CSS. Driven by /weather (Open-Meteo);
+     day/night are CSS. Driven by /weather (Home Assistant);
      ?wx=rain|snow|fog|cloud|storm and ?day=1|0 force a condition. */
   .wx-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 3;
     display: none; }
@@ -431,9 +587,9 @@
   body[data-template="street"] .b-poster { left: 66.4vw; top: 18.75vh;
     width: 25vw; height: 60vh; aspect-ratio: auto; z-index: 2; }
   body[data-template="street"] .b-nowplaying {
-    left: var(--street-sign-left, 63.4375vw);
-    top: var(--street-sign-top, 6vh);
-    width: var(--street-sign-width, 30.9375vw);
+    left: var(--street-sign-left, 62.2vw);
+    top: var(--street-sign-top, 5.2vh);
+    width: var(--street-sign-width, 33.2vw);
     height: auto; aspect-ratio: 396 / 60; z-index: 2; }
   body[data-template="street"] .b-poster::before { display: none; }
   body[data-template="street"] .poster { border-radius: .3vw;
@@ -451,13 +607,22 @@
     -webkit-mask-image: var(--spray); mask-image: var(--spray);
     -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
   body[data-template="street"] .eyebrow { font-size: 1.3vw; }
-  body[data-template="street"] .b-meta { left: 5.5vw; top: 48.5vh; width: 42vw; }
-  body[data-template="street"] .b-plot { left: 5.5vw; top: 62vh; width: 40vw; }
-  body[data-template="street"] .plot { font-size: 1.7vw; }
-  body[data-template="street"] .b-ratings { left: 5.5vw; top: 75.5vh; }
-  body[data-template="street"] .b-progress { left: 5.5vw; top: 88.5vh; width: 40vw; }
-  body[data-template="street"] .b-clock { left: 5.5vw; top: 3.5vh; }
-  body[data-template="street"] .clock { color: #FFD9A0; opacity: .75; }
+  body[data-template="street"] .b-meta { left: 5.5vw; top: 45.5vh; width: 46vw; }
+  body[data-template="street"] .b-device { left: 5.5vw; top: 52.5vh; width: 20vw; height: 9vh; }
+  body[data-template="street"] .b-stream { left: 27vw; top: 52.5vh; width: 25vw; height: 9vh; }
+  body[data-template="street"] .b-device .session-card,
+  body[data-template="street"] .b-stream .session-card { min-height: 9vh; height: 9vh; padding: .8vh .9vw; }
+  body[data-template="street"] .b-plot { left: 5.5vw; top: 64vh; width: 46vw; }
+  body[data-template="street"] .plot { font-size: 1.55vw; -webkit-line-clamp: 2; }
+  body[data-template="street"] .b-ratings { left: 5.5vw; top: 77vh; }
+  body[data-template="street"] .b-progress { left: 5.5vw; top: 86vh; width: 46vw; }
+  body[data-template="street"] .b-clock { left: 5.5vw; top: 2vh; }
+  body[data-template="street"] .clock { color: #FFD9A0; opacity: .88;
+    font-size: 5.4vw; font-weight: 800; line-height: 1; }
+  body[data-template="street"] .b-weather { left: 26vw; top: 3.1vh; width: 28vw; }
+  body[data-template="street"] .wx { color: #FFD9A0; margin: 0; font-size: 1.25vw; }
+  body[data-template="street"] .wx-main { font-size: 2.15vw; font-weight: 800; }
+  body[data-template="street"] .wx-detail { font-size: 1.05vw; }
 
   /* Late so it outranks the template rules above: a block's Justify must
      align the logo image and the plain-text title the same way. */
@@ -465,10 +630,18 @@
   body .al-center.b-identity { justify-items: center; text-align: center; }
   body .al-right.b-identity  { justify-items: end;    text-align: right; }
 
-  .idle { display: none; position: fixed; inset: 0; align-items: center;
-    justify-content: center; color: #4A5058; font-size: 1.6vw; font-weight: 500;
-    letter-spacing: .3em; text-transform: uppercase; z-index: 2; }
-  body.idle .idle { display: flex; }
+  .idle-screen { display: none; position: fixed; inset: 0; align-items: center;
+    justify-content: center; color: #4A5058; z-index: 2; }
+  .idle-house { display: grid; justify-items: center; gap: 1.7vh; text-align:center; }
+  .idle-kicker { color:var(--accent); font-size:1.15vw; font-weight:900; letter-spacing:.24em; text-transform:uppercase; }
+  .idle-greeting { color:#fff; font-size:clamp(2rem,4.2vw,4.8rem); line-height:1; font-weight:800; letter-spacing:-.025em; }
+  .idle-clock { color: #fff; font-size: 14vw; line-height: .9; font-weight: 850;
+    letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+  .idle-date { color:var(--muted); font-size:1.65vw; font-weight:700; letter-spacing:.06em; }
+  .idle-weather { color: var(--text-soft); font-size: 3.2vw; font-weight: 750; }
+  body.cast-display .idle-kicker, body.cast-display .idle-greeting,
+  body.cast-display .idle-date { display:none; }
+  body.idle .idle-screen { display: flex; }
   body.idle .stage, body.idle .bg, body.idle .bg-shade { display: none; }
 
   /* The settings preview enables this editor with ?edit=1. */
@@ -488,7 +661,36 @@
   @media (prefers-reduced-motion: reduce) {
     .stage, .fill, .bg { transition: none; }
     .scene * { animation: none !important; } }
+  @media (max-aspect-ratio: 6/5) {
+    .stage.contextual .context-card { grid-template-columns:1fr; grid-template-rows:auto minmax(0,1fr) auto; padding:4vh 6vw; }
+    .context-card:not(.no-art) .context-copy { padding-right:30vw; }
+    .context-art { position:absolute; right:5vw; bottom:12vh; width:28vw; height:34vh; }
+    .context-detail { font-size:clamp(1rem,2.2vw,1.5rem); }
+    .context-rows { font-size:clamp(.85rem,1.8vw,1.15rem); flex-wrap:wrap; }
+  }
+  .screen-controls { position:fixed; z-index:10001; bottom:max(12px, env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:6px; padding:6px 10px; border:1px solid #ffffff30; border-radius:16px; background:#10141de8; color:#fff; font:14px system-ui; max-width:calc(100vw - 24px); box-sizing:border-box; }
+  .screen-controls button { min-width:44px; min-height:44px; border:0; border-radius:10px; background:#ffffff18; color:#fff; font:inherit; cursor:pointer; }
+  .screen-controls button[aria-pressed="true"] { background:#a77b25; }
+  .screen-controls button:focus-visible { outline:3px solid #ffd785; outline-offset:2px; }
+  .screen-controls button:disabled { opacity:.4; cursor:default; }
+  .screen-controls [role="status"] { font-size:12px; max-width:150px; }
+
+  .context-card[data-kind="birthday_rollup"] .context-status { color:#f7b2d9; letter-spacing:.18em; }
+  .context-card[data-kind="birthday_rollup"] .context-title { font-size:clamp(2rem,6vw,6rem); }
+  .context-card[data-kind="birthday_rollup"] .context-subtitle { color:#f7b2d9; }
+  .context-card[data-kind="birthday_rollup"] .context-rows { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; max-height:28vh; overflow:auto; }
+  .context-card[data-kind="birthday_rollup"] .context-rows span { padding:12px 16px; border-radius:12px; white-space:normal; }
+
+  body.live-surface .context-clock { display:block; }
+  body.live-editing [data-live-block] { outline:1px dashed #f5a62380; outline-offset:4px; cursor:move; touch-action:none; }
+  body.live-editing [data-live-block].live-selected { outline:3px solid #f5a623; }
+  body.live-editing [data-layout] { outline:none; }
+  body.live-editing .screen-controls, body.live-editing nav { display:none !important; }
 </style>
+<link rel="stylesheet" href="/brain.css?v=2.9.5">
+<link rel="stylesheet" href="/screens.css?v=2.9.5">
+<link rel="stylesheet" href="/weather-channel.css?v=2.9.5">
+<link rel="stylesheet" href="/scene-themes.css?v=2.9.7">
 <body data-template="spotlight">
 <img class="bg" id="bg" alt="">
 <img class="fa" id="fa1" alt=""><img class="fa" id="fa2" alt="">
@@ -496,6 +698,27 @@
 <div class="scene" id="scene"></div>
 <canvas class="wx-canvas" id="wxcanvas" aria-hidden="true"></canvas>
 <div class="stage hidden">
+  <section class="weather-card" id="weather-card">
+    <header class="weather-head"><span class="weather-source">Marquee Weather / Local conditions</span><time class="weather-clock" id="weather-clock"></time></header>
+    <img class="weather-radar" id="weather-radar" alt="Weather radar centered on home">
+    <div class="weather-copy"><h1 class="weather-title" id="weather-title"></h1><div class="weather-subtitle" id="weather-subtitle"></div><div class="weather-body" id="weather-body"></div><div class="weather-stats" id="weather-stats"></div></div>
+  </section>
+  <section class="context-card" id="context-card">
+    <header class="context-head"><div class="context-source" id="context-source"></div><div class="context-time" id="context-time"><time class="context-clock" id="context-clock"></time><div class="context-weather" id="context-weather"></div></div></header>
+    <div class="context-copy"><div class="context-status" id="context-status"></div><div class="context-title" id="context-title"></div><div class="context-subtitle" id="context-subtitle"></div><div class="context-detail" id="context-detail"></div></div>
+    <img class="context-art" id="context-art" alt="">
+    <footer class="context-rows" id="context-rows"></footer>
+  </section>
+  <section class="sports-card" id="sports-card">
+    <header class="sport-head"><span id="sport-league"></span><div class="sport-title" id="sport-title"></div><span id="sport-kicker"></span></header>
+    <div class="sport-matchup">
+      <div class="sport-side"><img id="sport-left-logo" alt=""><div class="sport-name" id="sport-left-name"></div><div class="sport-record" id="sport-left-record"></div><div class="sport-score" id="sport-left-score"></div></div>
+      <div class="sport-center"><img class="sport-league-logo" id="sport-league-logo" alt=""><div class="sport-vs">VS</div><div class="sport-status" id="sport-status"></div><div class="sport-subtitle" id="sport-subtitle"></div></div>
+      <div class="sport-side"><img id="sport-right-logo" alt=""><div class="sport-name" id="sport-right-name"></div><div class="sport-record" id="sport-right-record"></div><div class="sport-score" id="sport-right-score"></div></div>
+    </div>
+    <div class="sport-timebox" id="sport-timebox"><time class="sport-clock" id="sport-clock"></time><time class="sport-date" id="sport-date"></time><div class="sport-weather" id="sport-weather"></div></div>
+    <footer class="sport-footer" id="sport-footer"><div class="sport-rows" id="sport-rows"></div><div class="sport-detail" id="sport-detail"></div></footer>
+  </section>
   <div class="block b-clock" data-layout="clock"><div class="clock" id="clock"></div></div>
   <div class="block b-weather" data-layout="weather"><div class="wx" id="wx"></div></div>
   <div class="block b-category" data-layout="category">
@@ -562,15 +785,31 @@
     </div>
   </div>
 </div>
-<p class="idle">Nothing playing</p>
+<time class="cast-clock-overlay" id="cast-clock-overlay"></time>
+<div class="idle-screen"><div class="idle-house"><div class="idle-kicker" id="idle-kicker">Home</div><div class="idle-greeting" id="idle-greeting"></div><time class="idle-clock" id="idle-clock"></time><div class="idle-date" id="idle-date"></div><div class="idle-weather" id="idle-weather"></div></div></div>
+<div class="ambient-veil" aria-hidden="true"></div>
+<script src="/weather-channel.js?v=2.9.6"></script>
+<script src="/brain.js?v=3"></script>
 <script>
+
   const $ = id => document.getElementById(id);
   const stage = document.querySelector('.stage');
   const DEMO = new URLSearchParams(location.search).has('demo');
   const EDIT = new URLSearchParams(location.search).has('edit');
+  const LIVE_BROWSER = location.pathname === '/live';
+  const LIVE_SURFACE = LIVE_BROWSER || location.pathname === '/kiosk';
+  const ATTENTION_DISPLAY = new URLSearchParams(location.search).get('display') || (LIVE_SURFACE ? 'kiosk' : 'hubs');
+  const CAST_DISPLAY = location.pathname === '/image';
+  const SPORTS_DEMO = new URLSearchParams(location.search).has('sports-demo');
+  document.body.classList.toggle('cast-display', CAST_DISPLAY);
+  document.body.classList.toggle('live-surface', LIVE_SURFACE);
   // ?tpl= previews a template without changing saved settings — handy for
   // sharing a self-contained demo link (e.g. ?demo=1&tpl=street&wx=rain).
-  const TPL_FORCE = new URLSearchParams(location.search).get('tpl');
+  // /kiosk is an independent Street view; /image keeps the configured
+  // template used by the Nest Hub cast.
+  const TPL_FORCE = location.pathname === '/kiosk'
+    ? 'street'
+    : new URLSearchParams(location.search).get('tpl');
   const TEMPLATES = ['spotlight', 'split', 'hero', 'lowerthird', 'bigclock', 'street', 'fanart'];
   // ponytail: mirrors TEMPLATE_DEFAULT_BLOCKS in cast.py — no shared codegen
   // between the two, same as TEMPLATES/THEMES already being duplicated here.
@@ -580,8 +819,8 @@
     hero: ['backdrop', 'clock', 'category', 'identity', 'meta', 'ratings', 'progress', 'stinger'],
     lowerthird: ['backdrop', 'clock', 'category', 'identity', 'meta', 'ratings', 'progress', 'stinger'],
     bigclock: ['backdrop', 'clock', 'identity', 'progress'],
-    street: ['clock', 'category', 'identity', 'meta', 'plot', 'ratings', 'progress',
-      'streetframe', 'poster', 'nowplaying', 'stinger'],
+    street: ['clock', 'weather', 'category', 'identity', 'meta', 'plot', 'ratings',
+      'progress', 'streetframe', 'poster', 'nowplaying', 'device', 'stream', 'stinger'],
     fanart: [],
   };
   // A block outside its template's default set has no grid-area or template
@@ -593,9 +832,16 @@
     const shown = new Set(TEMPLATE_DEFAULT_BLOCKS[tpl] || []);
     const overrides = (visibility || {})[tpl] || {};
     for (const name in overrides) overrides[name] ? shown.add(name) : shown.delete(name);
+    // A cast receiver is first and foremost a household clock/weather display.
+    // Browser kiosk/live views keep their own full-canvas layout freedom.
+    if (CAST_DISPLAY) { shown.add('clock'); shown.add('weather'); }
+    else if (LIVE_SURFACE) shown.add('weather');
     return shown;
   }
   let shownKey = null, prog = null, state = 'playing', fetchedAt = 0;
+  let transitionTimer = null;
+  let fallbackCfg = {screen:'clock_weather',show_clock:true,show_weather:true,
+    show_details:true,show_artwork:true};
   let baseCfg = null, draftCfg = null, draftLayout = null, lastD = null;
   let selectedLayout = 'identity', announced = false;
 
@@ -607,6 +853,63 @@
     const c = { ...(baseCfg || {}), ...(EDIT ? draftCfg || {} : {}) };
     if (EDIT && draftLayout) c.blockLayout = draftLayout;
     return c;
+  }
+
+  function friendlyEventState(context) {
+    const supplied = String(context.status || '').trim();
+    if (supplied && !(supplied === supplied.toUpperCase() && /^[A-Z0-9_ -]+$/.test(supplied))) {
+      return supplied;
+    }
+    return ({UPCOMING:'Coming up',STARTING_SOON:'Starting soon',LIVE:'Live now',
+      RESULT:'Result',POST_EVENT:'Recently finished',EXPIRED:'Expired'})[
+      String(context.eventState || supplied).toUpperCase().replace(/ /g, '_')] || supplied;
+  }
+
+  function calendarRows(context) {
+    const values = [...(context.rows || []).filter(Boolean)];
+    const allDay = context.allDay === true || context.all_day === true;
+    const dateOnly = String(context.starts || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+    const starts = allDay && dateOnly
+      ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))
+      : context.starts ? new Date(context.starts) : null;
+    if (starts && !Number.isNaN(starts.valueOf())) {
+      const when = allDay
+        ? starts.toLocaleDateString([], {weekday:'long', month:'short', day:'numeric'}) + ' · All day'
+        : starts.toLocaleString([], {weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
+      if (!values.some(value => String(value).includes(when))) values.unshift(when);
+      const minutes = Math.round((starts.valueOf() - Date.now()) / 60000);
+      if (!allDay && minutes > 0 && minutes <= 24 * 60) {
+        const countdown = minutes < 60 ? `In ${minutes} min`
+          : `In ${Math.floor(minutes / 60)} hr${Math.floor(minutes / 60) === 1 ? '' : 's'}`;
+        values.unshift(countdown);
+      }
+    }
+    const location = String(context.location || '').trim();
+    if (location && !values.includes(location)) values.push(location);
+    return [...new Set(values.map(String))].slice(0, 4);
+  }
+
+  let radarRequest = 0;
+  function setRadarSource(source) {
+    const radar = $('weather-radar');
+    const wanted = String(source || '/provider-assets/weather-radar.img');
+    // Preserve the original image and its animation. Keep the current image
+    // until a new URL has loaded; no canvas, recoloring, or frame conversion.
+    if (radar.dataset.source === wanted && radar.complete && radar.naturalWidth) return;
+    const request = ++radarRequest;
+    const preload = new Image();
+    preload.onload = async () => {
+      try { if (preload.decode) await preload.decode(); } catch (_) {}
+      if (request !== radarRequest) return;
+      radar.src = wanted;
+      radar.dataset.source = wanted;
+      radar.classList.remove('loading');
+    };
+    preload.onerror = () => {
+      if (request === radarRequest && !radar.dataset.source) radar.classList.add('loading');
+    };
+    if (!radar.dataset.source) radar.classList.add('loading');
+    preload.src = wanted;
   }
 
   const FONTS = {
@@ -971,9 +1274,9 @@ ${chase.join('')}
     root.setProperty('--street-frame-left', `${814 * scale + ox}px`);
     root.setProperty('--street-frame-top', `${114 * scale + oy}px`);
     root.setProperty('--street-frame-width', `${392 * scale}px`);
-    root.setProperty('--street-sign-left', `${812 * scale + ox}px`);
-    root.setProperty('--street-sign-top', `${48 * scale + oy}px`);
-    root.setProperty('--street-sign-width', `${396 * scale}px`);
+    root.setProperty('--street-sign-left', `${796 * scale + ox}px`);
+    root.setProperty('--street-sign-top', `${42 * scale + oy}px`);
+    root.setProperty('--street-sign-width', `${425 * scale}px`);
   }
   addEventListener('resize', () => {
     if (document.body.dataset.template === 'street') syncStreetArtworkAnchors();
@@ -1055,14 +1358,135 @@ ${chase.join('')}
   function render(d) {
     lastD = d;
     const c = activeCfg();
-    document.documentElement.dataset.theme = c.theme || 'amber';
     const root = document.documentElement.style;
-    if (/^#[0-9a-fA-F]{6}$/.test(c.accent || '')) {
-      root.setProperty('--accent', c.accent);
-      root.setProperty('--accent-glow', hexGlow(c.accent));
+    const sportClockScale = Math.max(.6, Math.min(1.8, Number(c.sportsClockSize || 100) / 100));
+    const sportArtScale = Math.max(.6, Math.min(1.8, Number(c.sportsArtworkSize || 100) / 100));
+    const sportTextScale = Math.max(.6, Math.min(1.8, Number(c.sportsTextSize || 100) / 100));
+    const sportWeatherScale = Math.max(.6, Math.min(1.8, Number(c.sportsWeatherSize || 100) / 100));
+    root.setProperty('--sport-art-scale', sportArtScale);
+    root.setProperty('--sport-text-scale', sportTextScale);
+    root.setProperty('--sport-clock-scale', sportClockScale);
+    root.setProperty('--sport-clock-size', `${6.8 * sportClockScale}vw`);
+    root.setProperty('--sport-art-width', `${17 * sportArtScale}vw`);
+    root.setProperty('--sport-art-height', `${29 * sportArtScale}vh`);
+    root.setProperty('--sport-title-size', `${3.5 * sportTextScale}vw`);
+    root.setProperty('--sport-name-size', `${2.5 * sportTextScale}vw`);
+    root.setProperty('--sport-weather-size', `${1.8 * sportWeatherScale}vw`);
+    root.setProperty('--context-clock-size', `${5.2 * sportClockScale}vw`);
+    root.setProperty('--context-art-width', `${34 * sportArtScale}vw`);
+    root.setProperty('--context-title-size', `${5 * sportTextScale}vw`);
+    root.setProperty('--context-subtitle-size', `${2 * sportTextScale}vw`);
+    root.setProperty('--context-detail-size', `${1.45 * sportTextScale}vw`);
+    root.setProperty('--weather-clock-size', `${3.5 * sportClockScale}vw`);
+    root.setProperty('--weather-title-size', `${4.4 * sportTextScale}vw`);
+    const context = d.type === 'media_context' ? (d.context || {}) : null;
+    const sportsContext = !!context && /^(nhl|ufc|pfl)_/.test(context.type || '');
+    const weatherContext = !!context && context.type === 'weather';
+    const genericContext = !!context && !sportsContext && !weatherContext;
+    stage.classList.toggle('sports', sportsContext);
+    stage.classList.toggle('weather-context', weatherContext);
+    stage.classList.toggle('contextual', genericContext);
+    $('sports-card').classList.toggle('ufc-scene', sportsContext && /^(ufc|pfl)_/.test(context.type));
+    $('context-card').classList.toggle('calendar-scene', genericContext && context.type === 'calendar_event');
+    const liveVisible = (surface, block) => !c.liveVisibility
+      || !c.liveVisibility[surface] || c.liveVisibility[surface][block] !== false;
+    if (context) {
+      const left = context.left || {}, right = context.right || {};
+      $('sport-league').textContent = String(context.source || '').toUpperCase();
+      const leagueLogos = {
+        ufc: 'https://a.espncdn.com/i/teamlogos/leagues/500/ufc.png',
+        pfl: 'https://a.espncdn.com/i/teamlogos/leagues/500/pfl.png',
+        nhl: 'https://a.espncdn.com/i/teamlogos/leagues/500/nhl.png'
+      };
+      const leagueLogo = $('sport-league-logo');
+      leagueLogo.src = leagueLogos[String(context.source || '').toLowerCase()] || '';
+      leagueLogo.hidden = !leagueLogo.src;
+      $('sport-kicker').textContent = (context.type || '').split('_').slice(1).join(' ');
+      $('sport-title').textContent = context.title || '';
+      $('sport-subtitle').textContent = context.subtitle || '';
+      $('sport-status').textContent = context.status || '';
+      for (const [side, data] of [['left', left], ['right', right]]) {
+        $(`sport-${side}-name`).textContent = data.name || data.abbr || '';
+        $(`sport-${side}-record`).textContent = data.record || '';
+        $(`sport-${side}-score`).textContent = data.score || '';
+        const img = $(`sport-${side}-logo`); img.src = data.logo || ''; img.hidden = !data.logo;
+      }
+      $('sport-rows').innerHTML = (context.rows || []).map(row =>
+        `<span>${esc(row)}</span>`).join('');
+      $('sport-detail').textContent = context.detail || '';
+      if (context.type === 'weather') {
+        $('weather-title').textContent = context.title || '';
+        $('weather-subtitle').textContent = context.subtype === 'current' ? '' : context.subtitle || '';
+        $('weather-body').textContent = context.detail || '';
+        const weatherCopy = new Set([context.title, context.subtitle, context.detail]
+          .filter(Boolean).map(value => String(value).trim().toLocaleLowerCase()));
+        $('weather-stats').innerHTML = (context.rows || []).filter(row => {
+          const text = String(row || '').trim().toLocaleLowerCase();
+          if (!text || weatherCopy.has(text)) return false;
+          weatherCopy.add(text);
+          return true;
+        })
+          .map(row => `<span>${esc(row)}</span>`).join('');
+        const radarRelevant = window.MarqueeWeather?.render(context, CAST_DISPLAY ? {} : c.liveVisibility?.weather || {});
+        if (radarRelevant) setRadarSource(context.weather?.radar_url || context.background || context.artwork || '/provider-assets/weather-radar.img');
+        $('weather-clock').hidden = LIVE_SURFACE && !liveVisible('weather', 'clock');
+        $('weather-radar').hidden = !radarRelevant || !liveVisible('weather', 'radar');
+        $('weather-title').hidden = !liveVisible('weather', 'headline');
+        $('weather-subtitle').hidden = !liveVisible('weather', 'headline');
+        $('weather-body').hidden = !liveVisible('weather', 'details');
+        $('weather-stats').hidden = !liveVisible('weather', 'stats');
+      } else if (genericContext) {
+        const contextCard = $('context-card');
+        contextCard.dataset.kind = String(context.subtype || context.type || 'context')
+          .toLowerCase().replace(/[^a-z0-9_-]/g, '');
+        contextCard.dataset.state = String(context.eventState || '')
+          .toLowerCase().replace(/[^a-z0-9_-]/g, '');
+        $('context-source').textContent = context.subtype === 'birthday_rollup' ? 'BIRTHDAYS' : String(context.source || context.provider || '').toUpperCase();
+        $('context-status').textContent = friendlyEventState(context);
+        $('context-title').textContent = context.title || '';
+        $('context-subtitle').textContent = context.subtitle || '';
+        $('context-detail').textContent = context.detail || '';
+        const isCalendar = context.type === 'calendar_event' || context.subtype === 'game_release';
+        const rows = isCalendar && context.subtype !== 'birthday_rollup' ? calendarRows(context) : (context.rows || []).filter(Boolean);
+        $('context-rows').innerHTML = rows.map(row => `<span>${esc(row)}</span>`).join('');
+        const art = $('context-art');
+        const artSource = context.artwork || context.background || '';
+        const artVisible = !!artSource && liveVisible('media', 'artwork');
+        contextCard.classList.toggle('no-art', !artVisible);
+        art.onerror = () => { art.hidden = true; contextCard.classList.add('no-art'); };
+        art.src = artSource;
+        art.hidden = !artVisible;
+        $('context-source').hidden = !liveVisible('media', 'source');
+        $('context-time').hidden = false;
+        $('context-clock').hidden = LIVE_SURFACE && !liveVisible('media', 'clock');
+        $('context-weather').hidden = LIVE_SURFACE && !liveVisible('media', 'weather');
+        $('context-title').hidden = !liveVisible('media', 'title');
+        $('context-subtitle').hidden = !liveVisible('media', 'title');
+        $('context-status').hidden = !liveVisible('media', 'status');
+        $('context-detail').hidden = !liveVisible('media', 'details');
+        $('context-rows').hidden = !rows.length || !liveVisible('media', 'rows');
+      }
+      if (sportsContext) {
+        $('sport-timebox').hidden = false;
+        $('sport-clock').hidden = LIVE_SURFACE && !liveVisible('sports', 'clock');
+        $('sport-date').hidden = LIVE_SURFACE && !liveVisible('sports', 'date');
+        $('sport-weather').hidden = !liveVisible('sports', 'weather');
+        $('sport-title').hidden = !liveVisible('sports', 'event');
+        document.querySelector('.sport-matchup').hidden = !liveVisible('sports', 'matchup');
+        $('sport-status').hidden = !liveVisible('sports', 'status');
+        $('sport-subtitle').hidden = !liveVisible('sports', 'details');
+        $('sport-footer').hidden = !liveVisible('sports', 'rows');
+      }
+    }
+    document.documentElement.dataset.theme = c.theme || 'amber';
+    window.MarqueeBrain?.configure(c, fallbackCfg);
+    const chosenAccent = (context && context.accent) || c.accent || '';
+    if (/^#[0-9a-fA-F]{6}$/.test(chosenAccent)) {
+      root.setProperty('--accent', chosenAccent);
+      root.setProperty('--accent-glow', hexGlow(chosenAccent));
       // A custom accent tints as deeply as the built-in themes do.
-      root.setProperty('--chip-border', hexA(c.accent, .45));
-      root.setProperty('--track', hexA(c.accent, .22));
+      root.setProperty('--chip-border', hexA(chosenAccent, .45));
+      root.setProperty('--track', hexA(chosenAccent, .22));
     } else {
       ['--accent', '--accent-glow', '--chip-border', '--track']
         .forEach(p => root.removeProperty(p));
@@ -1101,7 +1525,8 @@ ${chase.join('')}
     if (customBg) {
       $('bg').src = '/custom-backdrop?v=' + encodeURIComponent(c.customBackdropVersion || '1');
     } else if (useBg) {
-      $('bg').src = DEMO ? demoM().backdrop : '/backdrop.jpg?k=' + d.key;
+      $('bg').src = d.backgroundUrl || (DEMO ? demoM().backdrop : '/backdrop.jpg?k=' + d.key
+        + '&v=' + encodeURIComponent(d.backdropVersion || 'legacy'));
     }
     document.body.classList.toggle('custom-backdrop', customBg);
     if (customBg) {
@@ -1199,8 +1624,9 @@ ${chase.join('')}
     $('audio-track').textContent = audioText;
     $('subtitle-track').textContent = subtitleText;
 
-    show('clock', shown.has('clock') && c.showClock !== false);
-    show('weather', shown.has('weather') && c.showWeather !== false);
+    show('clock', shown.has('clock') && (CAST_DISPLAY || c.showClock !== false));
+    show('weather', shown.has('weather')
+      && (CAST_DISPLAY || LIVE_SURFACE || c.showWeather !== false));
     show('category', shown.has('category') && c.showGenres !== false
       && !!(d.genres || []).length);
     show('identity', shown.has('identity'));
@@ -1253,7 +1679,8 @@ ${chase.join('')}
     if (on) {
       if (DEMO) urls = DEMOS.map(m => m.backdrop);
       else if (d.fanart && d.fanart.length) urls = d.fanart;
-      else if (d.backdrop) urls = ['/backdrop.jpg?k=' + d.key];
+      else if (d.backdrop) urls = ['/backdrop.jpg?k=' + d.key
+        + '&v=' + encodeURIComponent(d.backdropVersion || 'legacy')];
     }
     // Real cards rotate no faster than every 5 minutes (fanart.tv courtesy +
     // the Hub is ambient, not a slideshow). The demo preview speeds up to
@@ -1275,6 +1702,100 @@ ${chase.join('')}
     }
   }
 
+  // Live surfaces own their positions; Cast's template/blockLayout is separate.
+  const LIVE_BLOCKS = {
+    home:{greeting:['#idle-kicker','#idle-greeting'],clock:['#idle-clock'],date:['#idle-date'],weather:['#idle-weather'],house:['#brain-house'],activity:['#brain-activity'],agenda:['#brain-agenda']},
+    sports:{clock:['#sport-clock'],date:['#sport-date'],weather:['#sport-weather'],event:['#sport-title'],matchup:['.sport-matchup'],status:['#sport-status'],details:['#sport-subtitle'],rows:['#sport-footer']},
+    weather:{conditions:['#weather-conditions'],hours:['#weather-hours'],forecast:['#weather-days'],clock:['#weather-clock'],radar:['#weather-radar'],headline:['#weather-title','#weather-subtitle'],details:['#weather-body'],stats:['#weather-stats']},
+    media:{clock:['#context-clock'],weather:['#context-weather'],source:['#context-source'],artwork:['#context-art'],title:['#context-title','#context-subtitle'],status:['#context-status'],details:['#context-detail'],rows:['#context-rows']}
+  };
+  let selectedLiveBlock = 'clock', liveReadySignature = '';
+  function liveSurfaceName() {
+    if (document.body.classList.contains('idle')) return 'home';
+    return stage.classList.contains('sports') ? 'sports' : stage.classList.contains('weather-context') ? 'weather' : 'media';
+  }
+  function liveElements(surface, block) { return (LIVE_BLOCKS[surface]?.[block] || []).map(s=>document.querySelector(s)).filter(Boolean); }
+  function applyLiveLayout() {
+    if (!LIVE_SURFACE) return;
+    const layouts = activeCfg().liveLayout || {};
+    for (const [surface,blocks] of Object.entries(LIVE_BLOCKS)) for (const block of Object.keys(blocks)) {
+      const p = layouts[surface]?.[block] || {};
+      for (const el of liveElements(surface,block)) {
+        el.style.translate = p.x || p.y ? `${Number(p.x)||0}vw ${Number(p.y)||0}vh` : '';
+        el.style.scale = p.scale ? String(p.scale) : '';
+        el.style.transformOrigin = 'center center';
+        el.style.width = p.width ? p.width+'vw' : '';
+        el.style.textAlign = p.align || '';
+        el.style.fontFamily = FONTS[p.font] || '';
+        el.style.color = /^#[0-9a-f]{6}$/i.test(p.color||'') ? p.color : '';
+      }
+    }
+  }
+  function liveSelection(block, tap=false) {
+    const surface = liveSurfaceName();
+    if (!LIVE_BLOCKS[surface]?.[block]) return;
+    selectedLiveBlock = block;
+    document.querySelectorAll('.live-selected').forEach(el=>el.classList.remove('live-selected'));
+    const els=liveElements(surface,block);
+    els.forEach(el=>el.classList.add('live-selected'));
+    const p=activeCfg().liveLayout?.[surface]?.[block] || {};
+    const width=els[0]?.getBoundingClientRect().width / innerWidth * 100 || 30;
+    parent.postMessage({type:'marquee-live-selection',surface,block,tap,
+      values:{x:0,y:0,width:Math.round(width),scale:1,align:'',font:'',color:'',...p}},location.origin);
+  }
+  function liveLayouts() {
+    draftCfg ||= {};
+    return draftCfg.liveLayout ||= structuredClone(activeCfg().liveLayout || {});
+  }
+  function liveChanged() {
+    applyLiveLayout();
+    parent.postMessage({type:'marquee-live-layout',layout:activeCfg().liveLayout || {}},location.origin);
+    liveSelection(selectedLiveBlock);
+  }
+  function enableLiveEditor() {
+    if (!EDIT || !LIVE_SURFACE) return;
+    document.body.classList.add('editing','live-editing');
+    for (const [surface,blocks] of Object.entries(LIVE_BLOCKS)) for (const block of Object.keys(blocks)) {
+      for (const el of liveElements(surface,block)) {
+        el.dataset.liveBlock=block;
+        el.addEventListener('pointerdown',e=>{
+          if (surface!==liveSurfaceName()) return;
+          e.preventDefault();e.stopPropagation();liveSelection(block,true);
+          const layouts=liveLayouts();layouts[surface] ||= {};const p=layouts[surface][block] ||= {};
+          const start={x:e.clientX,y:e.clientY,px:p.x||0,py:p.y||0};
+          el.setPointerCapture(e.pointerId);
+          const move=ev=>{
+            p.x=Math.max(-100,Math.min(100,Math.round((start.px+(ev.clientX-start.x)/innerWidth*100)*10)/10));
+            p.y=Math.max(-100,Math.min(100,Math.round((start.py+(ev.clientY-start.y)/innerHeight*100)*10)/10));
+            applyLiveLayout();
+          };
+          const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);liveChanged();};
+          el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
+        });
+      }
+    }
+    window.addEventListener('message',e=>{
+      if(e.origin!==location.origin || e.source!==parent) return;
+      const m=e.data||{},surface=liveSurfaceName();
+      if(m.type==='marquee-live-select') liveSelection(m.block);
+      else if(m.type==='marquee-live-set') {
+        if(!['x','y','width','scale','align','font','color'].includes(m.field)) return;
+        const layouts=liveLayouts();layouts[surface] ||= {};const p=layouts[surface][selectedLiveBlock] ||= {};
+        p[m.field]=m.value;liveChanged();
+      } else if(m.type==='marquee-live-reset') {
+        const layouts=liveLayouts();
+        if(m.surface) delete layouts[surface]; else if(layouts[surface]) delete layouts[surface][selectedLiveBlock];
+        liveChanged();
+      } else if(m.type==='marquee-live-snap') {
+        const layouts=liveLayouts();layouts[surface] ||= {};const p=layouts[surface][selectedLiveBlock] ||= {};
+        const el=liveElements(surface,selectedLiveBlock)[0];if(!el)return;
+        const r=el.getBoundingClientRect(),x=r.left/innerWidth*100,y=r.top/innerHeight*100;
+        p.x=Math.max(-100,Math.min(100,(p.x||0)+Math.round(x/2.5)*2.5-x));
+        p.y=Math.max(-100,Math.min(100,(p.y||0)+Math.round(y/2.5)*2.5-y));liveChanged();
+      }
+    });
+  }
+
   function applyBlockLayout() {
     const tpl = document.body.dataset.template;
     const native = new Set(TEMPLATE_DEFAULT_BLOCKS[tpl] || []);
@@ -1282,6 +1803,14 @@ ${chase.join('')}
     document.querySelectorAll('[data-layout]').forEach(el => {
       const name = el.dataset.layout;
       const p = layout[name] || {};
+      const addedFallback = CAST_DISPLAY && name === 'clock' ? {x:3,y:3,width:40}
+        : CAST_DISPLAY && name === 'weather' ? {x:tpl==='fanart'?63:3,y:3,width:34} : ADDED_BLOCK_FALLBACK;
+      const street = tpl === 'street';
+      const px = street ? Math.max(-10, Math.min(10, Number(p.x) || 0)) : (p.x || 0);
+      const py = street ? Math.max(-8, Math.min(8, Number(p.y) || 0)) : (p.y || 0);
+      const blockScale = street
+        ? Math.max(.65, Math.min(1.5, Number(p.scale) || 1))
+        : Math.max(.3, Math.min(3, Number(p.scale) || 1));
       // Stinger already has a natural anchor (it's an inline child of the
       // meta block, not a template-native top-level block) — it's always
       // been a transform-offset from wherever it naturally sits.
@@ -1290,19 +1819,31 @@ ${chase.join('')}
         // Street per-block CSS anchor) — x/y is a nudge on top of it, as
         // it's always been.
         el.style.position = ''; el.style.left = ''; el.style.top = '';
-        el.style.transform =
-          `translate(${p.x || 0}vw, ${p.y || 0}vh) scale(${p.scale || 1})`;
+        el.style.transform = name === 'weather'
+          ? `translate(${px}vw, ${py}vh)`
+          : `translate(${px}vw, ${py}vh) scale(${blockScale})`;
       } else {
         // Added beyond the template's native set: nothing anchors it, so
         // its saved x/y IS the position, not an offset from one.
-        const f = ADDED_BLOCK_FALLBACK;
+        const f = addedFallback;
         el.style.position = 'absolute';
         el.style.left = (p.x != null ? p.x : f.x) + 'vw';
         el.style.top = (p.y != null ? p.y : f.y) + 'vh';
-        el.style.transform = `scale(${p.scale || 1})`;
+        el.style.transform = name === 'weather' ? '' : `scale(${blockScale})`;
       }
-      const width = p.width || (native.has(name) ? null : ADDED_BLOCK_FALLBACK.width);
+      const requestedWidth = p.width || (native.has(name) ? null : addedFallback.width);
+      const width = street && requestedWidth
+        ? Math.max(12, Math.min(55, Number(requestedWidth))) : requestedWidth;
       el.style.width = width ? width + 'vw' : '';
+      if (name === 'weather') {
+        // Chromecast has been inconsistent about scaling fixed-position
+        // parents. Convert the editor's Weather Size into concrete type sizes
+        // and share it with the specialized sports-card weather line.
+        el.style.fontSize = `${1.3 * blockScale}vw`;
+        el.style.setProperty('--weather-main-size', `${4.1 * blockScale}vw`);
+        el.style.setProperty('--weather-detail-size', `${1.9 * blockScale}vw`);
+
+      }
       el.classList.remove('al-left', 'al-center', 'al-right');
       if (p.align) el.classList.add('al-' + p.align);
       // Per-block font: children inherit; --title-font covers the .title.
@@ -1381,7 +1922,7 @@ ${chase.join('')}
   }
 
   function enableEditor() {
-    if (!EDIT) return;
+    if (!EDIT || LIVE_SURFACE) return;
     document.body.classList.add('editing');
     // A tap that lands on no block is a tap on the backdrop.
     document.body.addEventListener('pointerdown', event => {
@@ -1431,7 +1972,7 @@ ${chase.join('')}
   }
 
   // Weather beside the clock (any template): /weather is served by the
-  // container from Open-Meteo, keyed to the ZIP in settings.
+  // existing Home Assistant weather entity.
   //
   // Two independent switches feed off the same fetch: the "Weather" text
   // chip (showWeather) and "Weather effects" (weatherFX) — the live
@@ -1448,6 +1989,16 @@ ${chase.join('')}
     c >= 95 ? 'storms' :
     c >= 85 ? 'snow' : (c >= 80 ? 'showers' : '') ||
     (c >= 71 ? 'snow' : c >= 51 ? 'rain' : c >= 45 ? 'fog' : c >= 2 ? 'clouds' : 'clear');
+  const readableCondition = (condition, code) => {
+    const raw = String(condition || '').trim();
+    if (!raw) return wxWord(code).replace(/^./, c => c.toUpperCase());
+    const known = {partlycloudy:'Partly cloudy',mostlycloudy:'Mostly cloudy',
+      clearnight:'Clear night',pouring:'Heavy rain',lightningrainy:'Thunderstorms',
+      snowyRainy:'Wintry mix'};
+    if (known[raw]) return known[raw];
+    const words = raw.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ');
+    return words.replace(/^./, c => c.toUpperCase());
+  };
   const wxClass = code =>
     code == null ? '' :
     code >= 95 ? 'wx-storm' :
@@ -1647,10 +2198,31 @@ ${chase.join('')}
     else wxStop();
   }
   function paintWx() {
+    window.MarqueeWeather?.observation(lastWx);
     const c = activeCfg();
-    $('wx').textContent = (c.showWeather && lastWx && lastWx.temp != null)
-      ? `${Math.round((c.weatherUnits || 'f') === 'f' ? lastWx.temp * 9 / 5 + 32 : lastWx.temp)}°${(c.weatherUnits || 'f') === 'f' ? 'F' : 'C'} · ${wxWord(lastWx.code)}`
-      : '';
+    if ((CAST_DISPLAY || LIVE_SURFACE || c.showWeather) && lastWx && lastWx.temp != null) {
+      const box = $('wx'); box.replaceChildren();
+      const main = document.createElement('div'); main.className = 'wx-main';
+      const temp = document.createElement('strong'); temp.textContent = `${Math.round(lastWx.temp)}°C`;
+      main.append(temp, document.createTextNode(` · ${readableCondition(lastWx.condition, lastWx.code)}`));
+      box.append(main);
+      if (lastWx.humidity != null || lastWx.wind != null) {
+        const detail = document.createElement('div'); detail.className = 'wx-detail';
+        detail.textContent = `${lastWx.humidity != null ? `Humidity ${lastWx.humidity}%` : ''}`
+          + `${lastWx.humidity != null && lastWx.wind != null ? ' · ' : ''}`
+          + `${lastWx.wind != null ? `Wind ${lastWx.wind} ${lastWx.windUnit || 'km/h'}` : ''}`;
+        box.append(detail);
+      }
+      const sportsWeather = $('sport-weather');
+      if (sportsWeather) sportsWeather.textContent = `${Math.round(lastWx.temp)}°C · ${readableCondition(lastWx.condition, lastWx.code)}`;
+      $('idle-weather').textContent = (!LIVE_SURFACE || (fallbackCfg.screen !== 'blank'
+        && fallbackCfg.show_weather !== false))
+        ? `${Math.round(lastWx.temp)}°C · ${readableCondition(lastWx.condition, lastWx.code)}` : '';
+    } else {
+      $('wx').textContent = '';
+      if ($('sport-weather')) $('sport-weather').textContent = '';
+      $('idle-weather').textContent = '';
+    }
     applyStreetWeather();
   }
   async function wxTick() {
@@ -1660,15 +2232,18 @@ ${chase.join('')}
     // the weather block on THIS template, or Street's scene effects. A
     // weather block added to one template must not keep the fetch running
     // on every other.
-    const wanted = (c.showWeather
+    const wanted = CAST_DISPLAY || LIVE_SURFACE || (c.showWeather
         && visibleBlockSet(tpl, c.blockVisibility).has('weather'))
       || (c.weatherFX !== false && tpl === 'street')
       || WX_FORCE || DAY_FORCE !== null;
     if (!wanted) { paintWx(); return; }
-    try { lastWx = await (await fetch('/weather')).json(); } catch (e) {}
+    try {
+      const response = await fetch('/weather?t=' + Date.now());
+      lastWx = await response.json();
+    } catch (e) {}
     paintWx();
   }
-  wxTick(); setInterval(wxTick, 600000);
+  wxTick(); setInterval(wxTick, 60000);
 
   window.addEventListener('message', event => {
     if (!EDIT || event.origin !== location.origin) return;
@@ -1678,7 +2253,8 @@ ${chase.join('')}
       const logoChanged = draftCfg && (msg.cfg || {}).logo !== draftCfg.logo;
       draftCfg = msg.cfg || {};
       if (fontChanged || logoChanged) peekTitle();
-      if (lastD) render(lastD), paint();
+      if (lastD) render(lastD);
+      paint();
       wxTick();
     } else if (msg.type === 'marquee-wx') {
       // Condition preview from the editor: force a weather look without
@@ -1751,15 +2327,80 @@ ${chase.join('')}
   function refreshPoster(d) {
     const i = new Image();
     i.onload = () => { $('poster').src = i.src; };
-    i.src = DEMO ? demoM().poster : '/poster.jpg?k=' + d.key;
+    i.src = DEMO ? demoM().poster : '/poster.jpg?k=' + encodeURIComponent(d.key || '')
+      + '&v=' + encodeURIComponent(d.posterVersion || 'legacy');
+  }
+
+  function fitSceneClocks() {
+    const idle = document.body.classList.contains('idle');
+    const selector = idle ? (CAST_DISPLAY ? '#idle-clock' : null)
+      : stage.classList.contains('sports') ? '#sport-clock'
+      : stage.classList.contains('weather-context') ? '#weather-clock'
+      : stage.classList.contains('contextual') ? '#context-clock' : '#clock';
+    if (!selector) return;
+    const el = document.querySelector(selector);if (!el || el.hidden) return;
+    el.style.fontSize = '';
+    const base = parseFloat(getComputedStyle(el).fontSize);
+    const parent = el.parentElement.getBoundingClientRect();
+    const blockers = selector === '#clock' ? ['.b-identity','.b-progress','.wx'].map(s=>document.querySelector(s))
+      .filter(e=>e && e.getClientRects().length && getComputedStyle(e).display!=='none') : [];
+    // Inline time text can have a wider glyph box than its container.
+    const measure = () => {const range=document.createRange();range.selectNodeContents(el);return range.getBoundingClientRect();};
+    for(let size=base;size>=base*.35;size*=.94){
+      el.style.fontSize=size+'px';const box=measure();
+      const width=Math.min(innerWidth*.92,selector==='#weather-clock'?el.getBoundingClientRect().width:parent.width || innerWidth*.92);
+      const clash=blockers.some(other=>{const b=other.getBoundingClientRect();return b.width>0&&b.height>0&&box.left<b.right&&box.right>b.left&&box.top<b.bottom+4&&box.bottom>b.top-4});
+      if(box.width<=width && box.left>=innerWidth*.02 && box.right<=innerWidth*.98
+          && box.top>=0 && box.bottom<=innerHeight*(LIVE_SURFACE ? .9 : 1) && !clash)break;
+    }
   }
 
   function paint() {
     const c = activeCfg();
     const opts = { hour: 'numeric', minute: '2-digit', hour12: c.clockFormat !== '24h' };
     if (c.clockSeconds) opts.second = '2-digit';
-    $('clock').textContent = (c.showClock === false || document.body.classList.contains('idle'))
+    $('clock').textContent = ((!CAST_DISPLAY && c.showClock === false) || document.body.classList.contains('idle'))
       ? '' : new Date().toLocaleTimeString([], opts);
+    $('idle-clock').textContent = (CAST_DISPLAY || (LIVE_SURFACE
+      && fallbackCfg.screen !== 'blank' && fallbackCfg.show_clock !== false))
+      ? new Date().toLocaleTimeString([], opts) : '';
+    const now = new Date(), hour = now.getHours();
+    $('idle-greeting').textContent = hour < 5 ? 'The late edition'
+      : hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon'
+      : hour < 22 ? 'Good evening' : 'Winding down';
+    $('idle-date').textContent = now.toLocaleDateString([], {
+      weekday:'long', month:'long', day:'numeric'
+    });
+    const homeVisible = block => CAST_DISPLAY || !c.liveVisibility?.home
+      || c.liveVisibility.home[block] !== false;
+    $('idle-kicker').hidden = !homeVisible('greeting');
+    $('idle-greeting').hidden = !homeVisible('greeting');
+    $('idle-date').hidden = !homeVisible('date');
+    $('idle-clock').hidden = !homeVisible('clock');
+    $('idle-weather').hidden = !homeVisible('weather');
+    const sportsVisible = stage.classList.contains('sports')
+      && (CAST_DISPLAY || !document.body.classList.contains('idle'));
+    $('sport-clock').textContent = sportsVisible
+      ? new Date().toLocaleTimeString([], opts) : '';
+    const castSportsClock = false; // The sports clock lives in its reserved grid row on every display.
+    $('cast-clock-overlay').style.display = castSportsClock ? 'block' : 'none';
+    $('cast-clock-overlay').textContent = castSportsClock
+      ? new Date().toLocaleTimeString([], opts) : '';
+    $('sport-date').textContent = sportsVisible
+      ? new Date().toLocaleDateString([], {weekday: 'long', month: 'long', day: 'numeric'}) : '';
+    $('weather-clock').textContent = document.body.classList.contains('idle')
+      ? '' : new Date().toLocaleTimeString([], opts);
+    $('context-clock').textContent = new Date().toLocaleTimeString([], opts);
+    $('context-weather').textContent = lastWx && lastWx.temp != null
+      ? `${Math.round(lastWx.temp)}°C · ${readableCondition(lastWx.condition, lastWx.code)}` : '';
+    window.MarqueeBrain?.configure(c, fallbackCfg);
+    applyLiveLayout();
+    fitSceneClocks();
+    if (EDIT && LIVE_SURFACE) {
+      const el = liveElements(liveSurfaceName(), selectedLiveBlock)[0];
+      const signature = liveSurfaceName() + ':' + Math.round(el?.getBoundingClientRect().width || 0);
+      if (signature !== liveReadySignature) { liveReadySignature = signature; liveSelection(selectedLiveBlock); }
+    }
     if (!prog || c.showProgress === false) return;
     const off = Math.min(
       prog.offsetMs + (state === 'playing' ? Date.now() - fetchedAt : 0),
@@ -1775,32 +2416,57 @@ ${chase.join('')}
   // Settings get their own fast poll so a Save shows on the Hub in ~2s
   // instead of waiting out the now-playing cycle.
   let lastCfgText = '';
+  const settingsUrl = LIVE_SURFACE
+    ? '/live-settings.json' : '/settings.json';
   async function settingsTick() {
     try {
-      const text = await (await fetch('/settings.json?t=' + Date.now())).text();
+      if (LIVE_SURFACE) {
+        const appCfg = await (await fetch('/api/config?t=' + Date.now())).json();
+        fallbackCfg = appCfg.fallback || fallbackCfg;
+      }
+      const text = await (await fetch(settingsUrl + '?t=' + Date.now())).text();
       if (text !== lastCfgText) {
         lastCfgText = text;
         baseCfg = JSON.parse(text);
+        window.MarqueeBrain?.configure(activeCfg(), fallbackCfg);
         wxTick();
         if (lastD) { render(lastD); paint(); }
       }
     } catch (e) {}
   }
 
-  async function tick() {
-    let d = demoM().data;
-    try {
-      if (!baseCfg) await settingsTick();
-      if (!DEMO) d = await (await fetch('/now-playing.json?t=' + Date.now())).json();
-    } catch (e) { if (!DEMO) return; }
-    if (!d.playing) { document.body.classList.add('idle'); shownKey = null; prog = null; return; }
+  let latestPayload = null, payloadRevision = 0, pollSequence = 0, appliedPollSequence = 0;
+  function applyPayload(d) {
+    latestPayload = d;
+    if (LIVE_SURFACE && !DEMO) d = window.MarqueeNavigation?.resolve(d) || d;
+    if (!d.playing) {
+      if (transitionTimer) clearTimeout(transitionTimer);
+      transitionTimer = null;
+      lastD = null;
+      stage.classList.remove('fade');
+      document.body.classList.add('idle'); shownKey = null; prog = null; paint(); return;
+    }
     document.body.classList.remove('idle');
     stage.classList.remove('hidden');
+    const c = activeCfg();
     prog = d.progress || null; state = d.state || 'playing'; fetchedAt = Date.now();
-    const key = (d.title || '') + '|' + (d.subtitle || '');
+    const key = d.key || ((d.title || '') + '|' + (d.subtitle || ''));
     if (key !== shownKey) {
+      if (transitionTimer) clearTimeout(transitionTimer);
+      const transitionMs = matchMedia('(prefers-reduced-motion: reduce)').matches
+        ? 0 : Math.max(0, Math.min(5000, Number(c.transitionMs ?? 500)));
+      document.documentElement.style.setProperty('--context-transition', `${transitionMs}ms`);
       stage.classList.add('fade');
-      setTimeout(() => { render(d); refreshPoster(d); stage.classList.remove('fade'); }, 500);
+      transitionTimer = setTimeout(() => {
+        render(d);
+        refreshPoster(d);
+        // The old ordering painted before a newly selected context had added
+        // the sports class, leaving its dedicated clock blank until a later
+        // poll (or indefinitely on a suspended Cast receiver).
+        paint();
+        stage.classList.remove('fade');
+        transitionTimer = null;
+      }, transitionMs);
       shownKey = key;
     } else {
       render(d);
@@ -1809,9 +2475,97 @@ ${chase.join('')}
     paint();
   }
 
+  async function tick() {
+    const sequence = ++pollSequence, revision = payloadRevision;
+    let d = demoM().data;
+    if (SPORTS_DEMO) d = {
+      playing: true, type: 'media_context', title: 'UFC Fight Night',
+      subtitle: 'Main Event', key: 'sports-preview', context: {
+        source: 'ufc', type: 'ufc_live', title: 'UFC Fight Night',
+        subtitle: 'Main Event · Welterweight', status: 'LIVE',
+        left: {name: 'Fighter One', record: '18–3', logo: svgU(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320"><rect width="320" height="320" rx="160" fill="#211b32"/><text x="160" y="190" text-anchor="middle" font-size="92" font-family="sans-serif" font-weight="800" fill="white">F1</text></svg>`)},
+        right: {name: 'Fighter Two', record: '16–2', logo: svgU(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320"><rect width="320" height="320" rx="160" fill="#162732"/><text x="160" y="190" text-anchor="middle" font-size="92" font-family="sans-serif" font-weight="800" fill="white">F2</text></svg>`)},
+        rows: ['Last: Winner · TKO R2', 'Up next: Co-main event'],
+        detail: 'Round 3 · 2:14'
+      }
+    };
+    const demoSurface = new URLSearchParams(location.search).get('context-demo');
+    if (demoSurface === 'home') d = {playing:false};
+    if (demoSurface === 'weather') d = {playing:true,type:'media_context',key:'weather-preview',context:{source:'weather',type:'weather',title:'Rain approaching',subtitle:'Expected in 34 minutes',detail:'A band of rain is moving toward home from the west.',status:'STARTING_SOON',rows:['Rain 78%','Wind 21 km/h','Ending near 9:10 PM'],background:'/provider-assets/weather-radar.img'}};
+    if (demoSurface === 'weather-clear') d = {playing:true,type:'media_context',key:'weather-clear-preview',context:{source:'weather',type:'weather',subtype:'current',title:'Weather at home',detail:'A bright afternoon. Comfortable through the evening.'}};
+    if (demoSurface === 'weather-warning') d = {playing:true,type:'media_context',key:'weather-warning-preview',context:{source:'weather',type:'weather',subtype:'alert',title:'Heat warning',detail:'Hot conditions are expected this afternoon. Follow the guidance in the local weather warning.'}};
+    if (DEMO && d.context?.type === 'weather') {
+      const now = new Date();
+      d.context.weather = {timezone:'America/Toronto',generated_at:now.toISOString(),radar_relevant:demoSurface==='weather',current:{temperature_2m:24,apparent_temperature:26,relative_humidity_2m:49,wind_speed_10m:12,weather_code:demoSurface==='weather-clear'?0:61,is_day:1},
+        hours:Array.from({length:6},(_,i)=>({at:new Date(+now+(i+1)*3600000).toISOString(),temp:[24,23,22,21,19,18][i],code:[0,0,2,2,3,3][i],rain:[0,0,5,10,15,10][i]})),
+        days:Array.from({length:5},(_,i)=>({date:new Date(+now+i*86400000).toISOString().slice(0,10),high:[24,25,22,20,23][i],low:[14,15,13,12,14][i],code:[0,2,61,3,0][i],rain:[0,10,80,20,5][i],uv:6}))};
+    }
+    if (demoSurface === 'birthdays') d = {playing:true,type:'media_context',key:'birthday-preview',context:{source:'calendar',type:'calendar_event',subtype:'birthday_rollup',title:"Casey's Birthday",subtitle:'Tomorrow · Sep 12',detail:'Coming up',status:'Next birthday',rows:["Jordan's Birthday · In 6 days · Sep 17","Sam's Birthday · In 12 days · Sep 23"],accent:'#f7b2d9'}};
+    if (demoSurface === 'media') d = {playing:true,type:'media_context',key:'media-preview',context:{source:'gaming',type:'gaming',title:'Nintendo Direct',subtitle:'Tomorrow · 10:00 AM',detail:'A notable showcase matching your Nintendo interests.',status:'UPCOMING',rows:['40 minute presentation','Watch live on YouTube'],artwork:'https://upload.wikimedia.org/wikipedia/commons/0/0d/Nintendo.svg'}};
+    try {
+      if (!baseCfg) await settingsTick();
+      if (!DEMO) {
+        const display = '&display=' + encodeURIComponent(ATTENTION_DISPLAY);
+        const response = await fetch('/now-playing.json?t=' + Date.now() + display);
+        if (!response.ok) return;
+        d = await response.json();
+      }
+    } catch (e) { if (!DEMO) return; }
+    // An older poll must not undo a newer poll or an SSE transition to idle.
+    if (sequence <= appliedPollSequence || revision !== payloadRevision) return;
+    appliedPollSequence = sequence;
+    applyPayload(d);
+  }
+
+  function startLiveEvents() {
+    if (DEMO || !LIVE_SURFACE || !window.EventSource) return;
+    const events = new EventSource('/events?display=' + encodeURIComponent(ATTENTION_DISPLAY));
+    events.addEventListener('context', event => {
+      try {
+        const d = JSON.parse(event.data);
+        payloadRevision++;
+        applyPayload(d);
+      } catch (e) {}
+    });
+  }
+
+  // Ambient dimming updates in-place; changing lux never restarts the cast.
+  async function ambientTick() {
+    try {
+      const d = await (await fetch('/ambient.json?t=' + Date.now())).json();
+      if (Number.isFinite(d.opacity)) {
+        document.documentElement.style.setProperty('--ambient-dim', d.opacity);
+        // Ambient control is deliberately simple: dim luminous interface
+        // elements, never media artwork. The server's shade value maps
+        // directly to remaining UI brightness.
+        const uiDim = Math.max(.25, 1 - d.opacity);
+        document.documentElement.style.setProperty('--ambient-ui-dim', uiDim.toFixed(2));
+      }
+    } catch (e) {}
+  }
+
+  // Live/Kiosk section navigation is owned by kiosk-menu.js.
+  window.addEventListener('marquee-navigation', () => {
+    if (DEMO) return;
+    // Household/menu changes should work even while the server is unreachable.
+    if (latestPayload) applyPayload(latestPayload);
+    tick();
+  });
+
+  window.addEventListener('marquee-brain', () => {
+    if (!DEMO && new URLSearchParams(location.search).get('view') === 'weather') tick();
+  });
   enableEditor();
+  enableLiveEditor();
   tick();
-  setInterval(tick, 5000);
+  startLiveEvents();
+  ambientTick();
+  // SSE is primary on /live; a slow fallback poll recovers from proxies or
+  // browsers that suspend long-lived connections in the background.
+  setInterval(tick, LIVE_SURFACE ? 30000 : 5000);
   setInterval(settingsTick, 2000);
+  setInterval(ambientTick, 15000);
   setInterval(paint, 1000);
 </script>
+
+<script src="/kiosk-menu.js?v=3"></script>

@@ -1,5 +1,23 @@
 # Marquee
 
+> This repository is now an independently maintained Marquee fork. Working
+> display behavior remains compatible with this installation, but internal
+> architecture and future development no longer track upstream/main. Original
+> attribution and licensing are retained.
+
+The fork adds a context engine for Plex, UFC, NHL/Leafs, meaningful weather and
+radar, tracked television releases, and notable astronomy conditions. Use
+`/settings` for Displays, Content, Alerts, and Advanced controls. Use
+`/settings/layout?profile=cast` or `?profile=live` for independent visual layouts,
+`/settings/attention` for detailed household rules and diagnostics, and
+`/settings/tests` for temporary screen tests. `/live`, `/kiosk`, and `/image`
+continue to serve the display experiences. Old settings/admin bookmarks redirect
+to these replacements; the retired page implementations are no longer shipped.
+
+Architecture and migration details are in
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md); the preserved behavior contract
+is in [`docs/BEHAVIORAL_INVENTORY.md`](docs/BEHAVIORAL_INVENTORY.md).
+
 [![Build](https://github.com/Jamisonfitz/marquee/actions/workflows/container.yml/badge.svg)](https://github.com/Jamisonfitz/marquee/actions/workflows/container.yml)
 [![Top language](https://img.shields.io/github/languages/top/Jamisonfitz/marquee)](https://github.com/Jamisonfitz/marquee)
 [![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)](https://www.python.org/)
@@ -30,10 +48,10 @@ title, metadata, plot, ratings, progress, poster — and every block carries its
 own position, size, font, and color per template, so a nudge in Spotlight
 never moves anything in Street.
 
-## The settings page is the card
+## The layout editor is the card
 
-Settings v2 has no wall of options. The card fills the page; you edit what
-you're looking at.
+The Layout workspace preserves the original visual editor: the card fills the
+page and you edit what you are looking at. Common controls live in Settings.
 
 ![Settings v2 — the card is the page](https://github.com/Jamisonfitz/marquee/releases/download/v2.2.1/settings-design.jpg)
 
@@ -52,7 +70,7 @@ you're looking at.
   small setup file — credited to you — and anyone who imports it gets it on
   their carousel tagged with your name, one tap from applied. Locations and
   credentials never ride along.
-- **A guided tour, once.** First run walks you through the six things that
+- **A guided tour when needed.** The Tutorial tab walks you through the six things that
   matter, spotlighting the real interface — then gets out of the way.
 - **Phones are first-class.** The preview pins to the top at a size that
   leaves room to work, and the on-screen keyboard can never cover it.
@@ -111,6 +129,9 @@ docker run -d --name marquee --restart unless-stopped --network host \
 ```
 
 Settings persist under `./data` in Compose mode or `/config` in the container.
+Cast uses `settings.json`; `/live` and `/kiosk` use the independent
+`live-settings.json` profile. Until Live is saved for the first time it inherits
+the current Cast appearance, avoiding a disruptive migration.
 
 ## Configuration
 
@@ -188,6 +209,16 @@ credential-shaped can leak to a browser.
 
 Health status is available at `/healthz` and includes the version.
 
+## Context-aware providers
+
+This installation can run independent weather/radar, monitored-TV-release and
+astronomy providers beside Plex/UFC/NHL. Providers compete through normalized,
+expiring contexts and remain silent when nothing is sufficiently relevant.
+Configuration, data sources, cache intervals and diagnostic details are in
+[docs/CONTEXT_PROVIDERS.md](docs/CONTEXT_PROVIDERS.md). Runtime provider health
+is available at `GET /providers`; an example config is
+[`providers.example.json`](providers.example.json).
+
 ## Plex Token
 
 1. Sign in to Plex Web and open an item on your server.
@@ -253,3 +284,36 @@ Marquee stands on generous shoulders:
 
 Marquee is free and stays that way. If it makes your living room a little
 more cinematic, you can [buy me a coffee](https://buymeacoffee.com/jamisonfitz) ☕
+
+### Live screen controls
+
+Use **← / →** at the bottom of `/live` or `/kiosk` to browse eligible screens.
+**Freeze** keeps the current screen selected while its data and clock update;
+**Resume** returns to automatic selection. Keyboard: left/right arrows and Space.
+Manual navigation grants a full rotation interval and also works while frozen.
+If a screen expires or becomes unavailable, automatic selection resumes.
+The controls affect the shared live/kiosk feed; Cast retains its own selection.
+Freeze is temporary runtime state and resets when Marquee restarts.
+
+`GET /api/display-control` returns selection position, count, and freeze state.
+`POST /api/display-control` accepts `{"action":"next"}` with actions `next`,
+`previous`, `freeze`, or `resume`.
+
+### UFC and PFL
+
+PFL has its own source controls under **Sources / Admin → PFL** and uses the
+existing fight-card layout. Both MMA providers use ESPN's scoreboard API.
+UFC wins overlapping live/approaching coverage regardless of configured PFL
+weight. PFL becomes eligible again once UFC ends, expires, or is unavailable.
+
+The Home Assistant bridge in `integrations/homeassistant/marquee_ambient.py`
+watches `sensor.ufc_tracker` and `sensor.pfl_tracker`, normalizes the custom
+`mma/pfl` league path, and publishes `sensor.marquee_mma_priority`. The shared
+MMA Team Tracker card uses that sensor: active/approaching UFC first, then PFL,
+then the nearest upcoming event. Team Tracker's raw sensors keep updating.
+PFL uses Team Tracker's [custom league configuration](https://github.com/vasqued2/ha-teamtracker#custom-apis-how-to-determine-the-sport-path-and-league-path-sport_path-league_path)
+with sport `mma`, league `pfl`, and athlete `*`.
+
+### Household attention
+
+Marquee now evaluates normalized household signals through declarative attention policies, with escalation, acknowledgement, cooldowns and capability-based display targeting. Open `/settings/attention` for household rules and diagnostics. See the [architecture](docs/ATTENTION_ARCHITECTURE.md), [configuration schema](docs/ATTENTION_CONFIGURATION.md), and [example policies](docs/attention.example.json). Existing ambient rotation and manual controls remain available.

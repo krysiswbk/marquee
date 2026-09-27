@@ -1,0 +1,41 @@
+/* Calendar and UFC use the same theme tokens as the weather broadcast. */
+body.brain-live .calendar-scene,body.brain-live .stage.sports .sports-card.ufc-scene,body.brain-live .kiosk-section:is([data-section=calendar],[data-section=ufc]){
+ color:var(--desk-ink);font-family:var(--desk-font);background:radial-gradient(ellipse at 12% 70%,color-mix(in srgb,var(--desk-accent) 12%,transparent),transparent 65%),var(--desk-bg);isolation:isolate;
+}
+body.brain-live .calendar-scene::before,body.brain-live .ufc-scene::before,body.brain-live .kiosk-section:is([data-section=calendar],[data-section=ufc])::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(0deg,transparent 95%,color-mix(in srgb,var(--desk-accent) 5%,transparent) 100%);background-size:100% 36px}
+body.brain-live .calendar-scene .context-head,body.brain-live .ufc-scene .sport-head{border-bottom:2px solid var(--desk-accent);padding-bottom:2vh;color:var(--desk-accent)}
+body.brain-live .calendar-scene .context-source{font-family:var(--desk-font);color:var(--desk-accent);font-size:clamp(12px,1.35vw,24px)}
+body.brain-live .calendar-scene :is(.context-clock,.context-title){font-family:var(--desk-font);color:var(--desk-ink);letter-spacing:-.045em;line-height:1.12}
+body.brain-live .calendar-scene .context-title{font-size:min(var(--context-title-size,5vw),6.5vh);font-weight:700}
+body.brain-live .calendar-scene :is(.context-subtitle,.context-detail,.context-weather){color:var(--desk-muted);font-family:var(--desk-font)}
+body.brain-live .calendar-scene .context-status{color:var(--desk-accent);font-family:var(--desk-font);font-size:clamp(12px,1.4vw,26px)}
+body.brain-live .calendar-scene .context-copy{border-left:4px solid var(--desk-accent);padding:2vh 2.5vw;background:var(--desk-panel);border-radius:0 var(--desk-radius) var(--desk-radius) 0;box-sizing:border-box}
+body.brain-live .calendar-scene .context-rows{border-color:var(--desk-line);color:var(--desk-muted);font-family:var(--desk-font)}
+body.brain-live .calendar-scene .context-rows span{border:1px solid var(--desk-line);border-radius:var(--desk-radius);background:var(--desk-panel);padding:.7em 1em}
+body.brain-live .ufc-scene .sport-title{font-family:var(--desk-font);color:var(--desk-ink);font-size:min(var(--sport-title-size,3.2vw),4vh);letter-spacing:-.045em;line-height:1.15}
+body.brain-live .ufc-scene #sport-league{background:var(--desk-accent);color:var(--desk-bg);padding:.4em .6em;justify-self:start;border-radius:var(--desk-radius);letter-spacing:.08em}
+body.brain-live .ufc-scene .sport-side{background:linear-gradient(0deg,var(--desk-panel),transparent);border-bottom:2px solid var(--desk-accent);border-radius:var(--desk-radius);padding:1vh 1vw 1.5vh;box-sizing:border-box}
+body.brain-live .ufc-scene :is(.sport-name,.sport-clock,.sport-score){font-family:var(--desk-font);color:var(--desk-ink);letter-spacing:-.045em}
+body.brain-live .ufc-scene .sport-name{font-size:min(var(--sport-name-size,2.5vw),3.5vh);line-height:1.15}
+body.brain-live .ufc-scene :is(.sport-record,.sport-subtitle,.sport-date,.sport-weather,.sport-detail,.sport-rows){font-family:var(--desk-font);color:var(--desk-muted)}
+body.brain-live .ufc-scene :is(.sport-status,.sport-vs){font-family:var(--desk-font);color:var(--desk-accent)}
+body.brain-live .ufc-scene .sport-vs{font-weight:700;font-size:clamp(18px,2vw,36px);letter-spacing:.08em}
+body.brain-live .ufc-scene .sport-status{font-size:clamp(15px,1.7vw,30px)}
+body.brain-live .ufc-scene .sport-footer{border-top:1px solid var(--desk-line)}
+body.brain-live .kiosk-section:is([data-section=calendar],[data-section=ufc]) header{border-bottom:2px solid var(--desk-accent);padding-bottom:2vh;margin-bottom:2.5vh}
+body.brain-live .kiosk-section:is([data-section=calendar],[data-section=ufc]) header p{color:var(--desk-accent);font-family:var(--desk-font);letter-spacing:.16em}
+body.brain-live .kiosk-section:is([data-section=calendar],[data-section=ufc]) h1{font-family:var(--desk-font);font-size:clamp(32px,4.2vw,68px);letter-spacing:-.05em;margin:0}
+body.brain-live .kiosk-section:is([data-section=calendar],[data-section=ufc]) .kiosk-items{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+body.brain-live .kiosk-section:is([data-section=calendar],[data-section=ufc]) .kiosk-items button{font-family:var(--desk-font);color:var(--desk-ink);background:var(--desk-panel);border:1px solid var(--desk-line);border-left:4px solid var(--desk-accent);border-radius:var(--desk-radius);padding:clamp(18px,2.2vw,34px)}
+body.brain-live .kiosk-section:is([data-section=calendar],[data-section=ufc]) .kiosk-items small{color:var(--desk-accent);font-size:clamp(11px,.9vw,16px);letter-spacing:.06em}
+body.brain-live .kiosk-section:is([data-section=calendar],[data-section=ufc]) .kiosk-items strong{font-size:clamp(20px,2vw,34px);line-height:1.2;letter-spacing:-.025em}
+body.brain-live .kiosk-section:is([data-section=calendar],[data-section=ufc]) .kiosk-items span{color:var(--desk-muted);font-size:clamp(13px,1.2vw,20px)}
+body.brain-live .kiosk-section:is([data-section=calendar],[data-section=ufc]) .kiosk-items button:focus-visible{outline-color:var(--desk-accent)}
+@media(max-aspect-ratio:1/1){body.brain-live .kiosk-section:is([data-section=calendar],[data-section=ufc]) .kiosk-items{grid-template-columns:1fr}body.brain-live .ufc-scene .sport-name{font-size:clamp(13px,3.9vw,22px)}body.brain-live .ufc-scene .sport-title{font-size:clamp(16px,4.5vw,24px)}body.brain-live .calendar-scene .context-title{font-size:clamp(25px,6vw,40px)}body.brain-live .calendar-scene .context-subtitle{font-size:16px}body.brain-live .calendar-scene .context-detail{font-size:14px}body.brain-live .calendar-scene .context-weather{font-size:11px}body.brain-live .calendar-scene .context-rows{font-size:12px}}
+
+/* Agency FB web family (Adobe Web Project) or an installed licensed copy.
+   Until the project is connected, retain the selected screen theme's font. */
+body.brain-live .ufc-scene :is(.sport-title,.sport-name,.sport-score,.sport-status,.sport-vs),
+body.brain-live .kiosk-section:is([data-section=ufc],[data-section=pfl]) :is(h1,.kiosk-items strong){
+ font-family:"agency-fb","Agency FB",var(--desk-font);letter-spacing:.015em;
+}
