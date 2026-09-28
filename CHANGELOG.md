@@ -1,3 +1,10 @@
+## 2.10.43
+
+- Give Cast and settings layout tabs complete roving-tab semantics with truthful
+  panel relationships, wrapping Arrow/Home/End activation, and URL state.
+- Keep Tutorial as an action dialog that preserves the active real tab and its
+  focus/selection contract.
+
 ## 2.10.42
 
 - Make the settings walkthrough an accessible action dialog with truthful tab

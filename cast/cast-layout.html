@@ -386,9 +386,9 @@
     .mq-mode-link { padding: 12px; }
   }
 </style>
-<link rel="stylesheet" href="/control-shell.css?v=2.10.42">
-<link rel="stylesheet" href="/control-shell-narrow.css?v=2.10.42">
-<script defer src="/control-shell.js?v=2.10.42"></script>
+<link rel="stylesheet" href="/control-shell.css?v=2.10.43">
+<link rel="stylesheet" href="/control-shell-narrow.css?v=2.10.43">
+<script defer src="/control-shell.js?v=2.10.43"></script>
 
 <script src="/settings-draft.js?v=3"></script>
 <div class="wrap">
@@ -404,11 +404,11 @@
   <nav class="mq-profile-picker" aria-label="Layout profile"><a href="/settings/layout?profile=cast" aria-current="page">Cast cards</a><a href="/settings/layout?profile=live">Live / Kiosk screens</a></nav>
   <div class="tabs" aria-label="Cast editor tools">
     <div class="tab-items" role="tablist" aria-label="Cast editor tools">
-    <button role="tab" id="tab-design" aria-selected="true" data-tab="design">Layout</button>
-    <button role="tab" id="tab-casting" aria-selected="false" data-tab="casting">Cast devices</button>
-    <button role="tab" id="tab-connection" aria-selected="false" data-tab="connection">Media &amp; sharing</button>
-    <button role="tab" id="tab-notes" aria-selected="false" data-tab="notes">What&rsquo;s new</button>
-    <button role="tab" id="tab-about" aria-selected="false" data-tab="about">About</button>
+    <button role="tab" id="tab-design" aria-controls="pane-design" aria-selected="true" tabindex="0" data-tab="design">Layout</button>
+    <button role="tab" id="tab-casting" aria-controls="pane-casting" aria-selected="false" tabindex="-1" data-tab="casting">Cast devices</button>
+    <button role="tab" id="tab-connection" aria-controls="pane-connection" aria-selected="false" tabindex="-1" data-tab="connection">Media &amp; sharing</button>
+    <button role="tab" id="tab-notes" aria-controls="pane-notes" aria-selected="false" tabindex="-1" data-tab="notes">What&rsquo;s new</button>
+    <button role="tab" id="tab-about" aria-controls="pane-about" aria-selected="false" tabindex="-1" data-tab="about">About</button>
     </div>
     <button id="tab-tutorial" type="button" data-tab="tutorial" aria-haspopup="dialog" aria-controls="tour">Tutorial</button>
   </div>
@@ -1594,26 +1594,44 @@
   // ── Tabs ──
   const PANES = { design: 'pane-design', casting: 'pane-casting', connection: 'pane-connection',
     notes: 'pane-notes', about: 'pane-about' };
+  const tabButtons = [...document.querySelectorAll('.tab-items [role="tab"]')];
   let notesLoaded = false, aboutLoaded = false;
   function activateTab(tab) {
     if (tab === 'tutorial') {
-      activateTab('design');
       startTour($('#tab-tutorial'));
       return;
     }
     const target = tab;
-    document.querySelectorAll('.tabs button[role="tab"]').forEach(b =>
-      b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+    tabButtons.forEach(b => {
+      const active = b.dataset.tab === tab;
+      b.setAttribute('aria-selected', String(active));
+      b.tabIndex = active ? 0 : -1;
+    });
     Object.entries(PANES).forEach(([name, id]) =>
       { document.getElementById(id).hidden = name !== target; });
     if (tab === 'notes' && !notesLoaded) loadNotes();
     if (tab === 'about' && !aboutLoaded) loadAbout();
     stopTour();
     scaleFrame();
-    const url = new URL(location.href); url.searchParams.set("tab", tab); history.replaceState(null, "", url);
+    const url = new URL(location.href);
+    url.searchParams.set('tab', tab);
+    history.replaceState(null, '', url);
   }
-  document.querySelectorAll('.tabs button').forEach(b =>
+  tabButtons.forEach(b =>
     b.addEventListener('click', () => activateTab(b.dataset.tab)));
+  $('.tab-items').addEventListener('keydown', event => {
+    const index = tabButtons.indexOf(document.activeElement);
+    if (index < 0) return;
+    let next = index;
+    if (event.key === 'ArrowRight') next = (index + 1) % tabButtons.length;
+    else if (event.key === 'ArrowLeft') next = (index - 1 + tabButtons.length) % tabButtons.length;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = tabButtons.length - 1;
+    else return;
+    event.preventDefault();
+    activateTab(tabButtons[next].dataset.tab);
+    tabButtons[next].focus();
+  });
   const requestedTab = new URLSearchParams(location.search).get('tab');
 
 
@@ -1710,7 +1728,6 @@
     if (event.key === 'Escape') {
       event.preventDefault();
       stopTour(true);
-      activateTab('design');
       return;
     }
     if (event.key !== 'Tab') return;
@@ -1725,10 +1742,10 @@
       first.focus();
     }
   });
-  $('#tour-skip').addEventListener('click', () => { stopTour(true); activateTab('design'); });
+  $('#tour-skip').addEventListener('click', () => stopTour(true));
   $('#tour-back').addEventListener('click', () => stepTo(Math.max(0, tourStep - 1)));
   $('#tour-next').addEventListener('click', () => {
-    if (tourStep >= TOUR.length - 1) { stopTour(true); activateTab('design'); }
+    if (tourStep >= TOUR.length - 1) stopTour(true);
     else stepTo(tourStep + 1);
   });
 

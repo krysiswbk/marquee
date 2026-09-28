@@ -88,7 +88,39 @@ class ControlNavigationTests(unittest.TestCase):
                 self.assertIn("$('#tour-next').focus()", source)
                 self.assertIn("tourLauncher.focus()", source)
                 self.assertIn("event.key !== 'Tab'", source)
-                self.assertIn("button[role=\"tab\"]", source)
+                self.assertIn('.tab-items [role="tab"]', source)
+
+    def test_layout_tabs_have_complete_roving_keyboard_contract(self):
+        expected = {
+            'settings': {
+                'design': 'pane-design', 'connection': 'pane-connection',
+                'notes': 'pane-notes', 'about': 'pane-about',
+            },
+            'cast layout': {
+                'design': 'pane-design', 'casting': 'pane-casting',
+                'connection': 'pane-connection', 'notes': 'pane-notes',
+                'about': 'pane-about',
+            },
+        }
+        for name, panes in expected.items():
+            path = ROOT / 'cast' / ('settings.html' if name == 'settings' else 'cast-layout.html')
+            source = path.read_text()
+            buttons = re.findall(
+                r'<button role="tab" id="([^"]+)" aria-controls="([^"]+)" '
+                r'aria-selected="(true|false)" tabindex="(-?\d+)" data-tab="([^"]+)"',
+                source)
+            with self.subTest(surface=name):
+                self.assertEqual({tab: panel for _, panel, _, _, tab in buttons}, panes)
+                self.assertEqual(sum(tabindex == '0' for _, _, _, tabindex, _ in buttons), 1)
+                self.assertEqual(sum(selected == 'true' for _, _, selected, _, _ in buttons), 1)
+                self.assertIn("event.key === 'ArrowRight'", source)
+                self.assertIn("event.key === 'ArrowLeft'", source)
+                self.assertIn("event.key === 'Home'", source)
+                self.assertIn("event.key === 'End'", source)
+                self.assertIn("tabButtons[next].focus()", source)
+                self.assertIn("url.searchParams.set('tab', tab)", source)
+                self.assertNotIn("activateTab('design');\n      startTour", source)
+                self.assertNotIn("stopTour(true); activateTab('design')", source)
 
     def test_provider_diagnostics_use_safe_status_copy_and_authoritative_source(self):
         page = PAGES['settings'].read_text()
