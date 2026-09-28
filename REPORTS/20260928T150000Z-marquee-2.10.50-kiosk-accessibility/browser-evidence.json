@@ -1,0 +1,85 @@
+{
+  "results": [
+    {
+      "viewport": [
+        1024,
+        600
+      ],
+      "url": "http://10.10.9.37:8084/kiosk?audit=2.10.50&view=gaming",
+      "section_visible": true,
+      "background_inert": true,
+      "rail_visible": true,
+      "body_scroll_width": 1024,
+      "inner_width": 1024,
+      "section_text": "MEDIA\n\nGaming\n\nComing up \u00b7 Gaming\n\nMinecraft Dungeons II (PS5/Xbox/Switch/PC)\n\nGame release \u00b7 Tomorrow\n\nRole-playing (RPG) from Mojang Studios.\n\nQUEUE\n\nUP NEXT\n\nThe Witcher 3: Wild Hunt Remastered (PS5/Xbox/Switch/PC)\nGa"
+    },
+    {
+      "viewport": [
+        1280,
+        720
+      ],
+      "url": "http://10.10.9.37:8084/kiosk?audit=2.10.50&view=gaming",
+      "section_visible": true,
+      "background_inert": true,
+      "rail_visible": true,
+      "body_scroll_width": 1280,
+      "inner_width": 1280,
+      "section_text": "MEDIA\n\nGaming\n\nComing up \u00b7 Gaming\n\nMinecraft Dungeons II (PS5/Xbox/Switch/PC)\n\nGame release \u00b7 Tomorrow\n\nRole-playing (RPG) from Mojang Studios.\n\nQUEUE\n\nUP NEXT\n\nThe Witcher 3: Wild Hunt Remastered (PS5/Xbox/Switch/PC)\nGa"
+    },
+    {
+      "viewport": [
+        393,
+        852
+      ],
+      "url": "http://10.10.9.37:8084/kiosk?audit=2.10.50&view=gaming",
+      "section_visible": true,
+      "background_inert": true,
+      "rail_visible": true,
+      "body_scroll_width": 393,
+      "inner_width": 393,
+      "section_text": "MEDIA\n\nGaming\n\nComing up \u00b7 Gaming\n\nMinecraft Dungeons II (PS5/Xbox/Switch/PC)\n\nGame release \u00b7 Tomorrow\n\nRole-playing (RPG) from Mojang Studios.\n\nQUEUE\n\nUP NEXT\n\nThe Witcher 3: Wild Hunt Remastered (PS5/Xbox/Switch/PC)\nGa"
+    },
+    {
+      "viewport": [
+        700,
+        900
+      ],
+      "url": "http://10.10.9.37:8084/kiosk?audit=2.10.50&view=gaming",
+      "section_visible": true,
+      "background_inert": true,
+      "rail_visible": true,
+      "body_scroll_width": 700,
+      "inner_width": 700,
+      "section_text": "MEDIA\n\nGaming\n\nComing up \u00b7 Gaming\n\nMinecraft Dungeons II (PS5/Xbox/Switch/PC)\n\nGame release \u00b7 Tomorrow\n\nRole-playing (RPG) from Mojang Studios.\n\nQUEUE\n\nUP NEXT\n\nThe Witcher 3: Wild Hunt Remastered (PS5/Xbox/Switch/PC)\nGa"
+    },
+    {
+      "viewport": [
+        1500,
+        900
+      ],
+      "url": "http://10.10.9.37:8084/kiosk?audit=2.10.50&view=gaming",
+      "section_visible": true,
+      "background_inert": true,
+      "rail_visible": true,
+      "body_scroll_width": 1500,
+      "inner_width": 1500,
+      "section_text": "MEDIA\n\nGaming\n\nComing up \u00b7 Gaming\n\nMinecraft Dungeons II (PS5/Xbox/Switch/PC)\n\nGame release \u00b7 Tomorrow\n\nRole-playing (RPG) from Mojang Studios.\n\nQUEUE\n\nUP NEXT\n\nThe Witcher 3: Wild Hunt Remastered (PS5/Xbox/Switch/PC)\nGa"
+    },
+    {
+      "escape": {
+        "url": "http://10.10.9.37:8084/kiosk?audit=2.10.50",
+        "background_restored": true,
+        "focus": "Home"
+      }
+    },
+    {
+      "home": {
+        "url": "http://10.10.9.37:8084/kiosk?audit=2.10.50",
+        "background_restored": true,
+        "focus": "A"
+      }
+    }
+  ],
+  "console_errors": [],
+  "failed_requests": []
+}
