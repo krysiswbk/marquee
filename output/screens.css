@@ -279,8 +279,26 @@ body.browser-controls{overflow-x:hidden}.kiosk-section.now-playing-surface{displ
 
 /* The exposed kiosk destinations render their own editorial/sports markup;
    keep those fixed stages independent from the base context-card renderer. */
-.kiosk-editorial-feature h2,.kiosk-sport-feature h2{overflow-wrap:break-word;word-break:normal;text-wrap:pretty;padding-bottom:.15em}
+.kiosk-editorial-feature h2,.kiosk-sport-feature h2{min-width:0;overflow-wrap:anywhere;word-break:normal;text-wrap:pretty;padding-bottom:.15em}
 .kiosk-queue-more{display:none;color:#aebdcd;font-size:15px;margin:10px 0 0}
+.kiosk-sports-disclosure,.kiosk-sports-controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:18px auto 0;max-width:1480px}
+.kiosk-sports-disclosure button,.kiosk-sports-controls button,.kiosk-sports-controls a{box-sizing:border-box;min-height:48px;padding:10px 16px;border:1px solid #b6f378;border-radius:6px;background:transparent;color:#b6f378;font:inherit;font-weight:750;text-decoration:none;cursor:pointer}
+.kiosk-sports-disclosure button:hover,.kiosk-sports-disclosure button:focus-visible,.kiosk-sports-controls button:hover,.kiosk-sports-controls button:focus-visible,.kiosk-sports-controls a:hover,.kiosk-sports-controls a:focus-visible{background:#b6f378;color:#10151d}
+.kiosk-sports-disclosure button:focus-visible,.kiosk-sports-controls button:focus-visible,.kiosk-sports-controls a:focus-visible{outline:3px solid #c3fc86;outline-offset:3px}
+.kiosk-sports-controls button:disabled{opacity:.4;cursor:default}
+.kiosk-sports-detail-head{display:flex;justify-content:space-between;align-items:baseline;gap:18px;max-width:1480px;margin:0 auto}
+.kiosk-sports-count{margin:0;color:#aebdcd;font-size:15px;font-variant-numeric:tabular-nums}
+.kiosk-sports-detail .kiosk-broadcast-layout{margin-top:0}
+.kiosk-sports-detail{display:flex;flex-direction:column;box-sizing:border-box;min-width:0;min-height:0;height:100%;max-height:100%;max-width:1480px;margin:0 auto;overflow:hidden}
+.kiosk-section.sports-detail-surface{display:flex;flex-direction:column;overflow:hidden}
+.kiosk-section.sports-detail-surface>.kiosk-section-head{flex:0 0 auto}
+.kiosk-section.sports-detail-surface>.kiosk-sports-detail{flex:1 1 auto;height:auto;max-height:none}
+.kiosk-sports-content{min-width:0;min-height:0;flex:1 1 auto;overflow:auto;overscroll-behavior:contain;padding:0 3px 12px;outline:none}
+.kiosk-sports-content:focus-visible{outline:3px solid #c3fc86;outline-offset:-3px}
+.kiosk-sports-content *{min-width:0;overflow-wrap:anywhere}
+.kiosk-sports-detail .kiosk-broadcast-layout{min-height:0}
+.kiosk-sports-controls{flex:0 0 auto;min-width:0;background:#192936;padding-top:10px;position:relative;z-index:1}
+.kiosk-sports-controls button,.kiosk-sports-controls a{overflow-wrap:anywhere}
 @media(min-width:701px){
   .kiosk-section:is([data-section=gaming],[data-section=tv],[data-section=ufc]) .kiosk-editorial-feature,
   .kiosk-section[data-section=ufc] .kiosk-sport-feature{min-height:0}
@@ -314,6 +332,9 @@ body.browser-controls{overflow-x:hidden}.kiosk-section.now-playing-surface{displ
   .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-queue-row{gap:3px;padding:8px 0}
   .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-queue-row:nth-of-type(n+2){display:none}
   .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-queue-more{display:block;margin:8px 0 0}
+  .kiosk-sports-disclosure,.kiosk-sports-controls{margin-top:12px;gap:8px}
+  .kiosk-sports-disclosure button,.kiosk-sports-controls button,.kiosk-sports-controls a{flex:1 1 130px;min-width:0;padding:10px 12px;font-size:14px;text-align:center}
+  .kiosk-sports-detail-head{align-items:flex-start;flex-direction:column;gap:4px}
 }
 
 /* Keep the short-wide contract last so destination-specific desktop rules

@@ -1,3 +1,11 @@
+## 2.10.89
+
+- Give UFC and PFL browse destinations an explicit full-schedule disclosure
+  backed by their existing authoritative event contexts.
+- Add paged event navigation with keyboard, remote, and touch-sized controls,
+  browser history, and direct Return to Home behavior across narrow, tablet,
+  and TV layouts.
+
 ## 2.10.88
 
 - Replace the narrow gaming `+N more` dead end with an accessible expander

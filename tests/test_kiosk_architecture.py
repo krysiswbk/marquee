@@ -50,6 +50,19 @@ def test_sports_contract_keeps_matchup_status_and_next_event_hierarchy():
     assert "sourceStatus" in MENU and "broadcast" in MENU
 
 
+def test_combat_schedule_discloses_and_pages_authoritative_sibling_events():
+    for token in (
+        "sportsMode", "View all ${list.length} events", "FULL ${esc(source)} SCHEDULE",
+        "data-sports-control=\"next\"", "data-sports-summary", "Previous event",
+        "href(view, true, sportsPage)", "ArrowLeft", "ArrowRight", "BrowserBack",
+    ):
+        assert token in MENU
+    assert "const current = ordered(list)[page - 1]" in MENU
+    assert ".kiosk-sports-disclosure" in SCREENS
+    assert ".kiosk-sports-controls" in SCREENS
+    assert "min-height:48px" in SCREENS
+
+
 def test_nhl_matchup_contract_deduplicates_composition_and_scopes_heading_focus():
     for token in (
         "const nhlMatchupName",
@@ -193,7 +206,7 @@ def test_editorial_renderer_exposes_the_authoritative_media_queue_and_safe_title
     assert "index === 0 ? 'Up next' : 'Later'" in MENU
     assert "c.detail || stateCopy(c)" in MENU
     assert "aria-label=\"${esc(label(view))} queue\"" in MENU
-    assert ".kiosk-editorial-feature h2,.kiosk-sport-feature h2{overflow-wrap:break-word;word-break:normal;text-wrap:pretty" in SCREENS
+    assert ".kiosk-editorial-feature h2,.kiosk-sport-feature h2{min-width:0;overflow-wrap:anywhere;word-break:normal;text-wrap:pretty" in SCREENS
     assert "const titleMarkup = text => esc(text).replace(/\\//g, '/<wbr>')" in MENU
     assert ".kiosk-section:is([data-section=gaming],[data-section=tv])" in SCREENS
 

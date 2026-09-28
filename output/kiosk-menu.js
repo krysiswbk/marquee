@@ -49,6 +49,8 @@
   let view = params.get('view') || '', interrupted = false;
   let calendarMode = params.get('mode') === 'all' ? 'all' : '';
   let calendarPage = Math.max(1, Number.parseInt(params.get('page') || '1', 10) || 1);
+  let sportsMode = ['ufc', 'pfl'].includes(view) && params.get('mode') === 'all' ? 'all' : '';
+  let sportsPage = Math.max(1, Number.parseInt(params.get('page') || '1', 10) || 1);
   let calendarDisclosure = null;
   let calendarPageSize = 4;
   let calendarPageSizeViewport = '';
@@ -57,6 +59,9 @@
   let calendarLayoutGeneration = 0;
   let calendarFocusHeadingPending = Boolean(calendarMode);
   let calendarFocusDisclosurePending = false;
+  let sportsFocusHeadingPending = Boolean(sportsMode);
+  let sportsFocusDisclosurePending = false;
+  let sportsFocusControlPending = '';
   let historyFocusDestination = null;
   let historyFocusOwned = false;
   let initialDirectFocusPending = Boolean(view);
@@ -135,16 +140,17 @@
   function href(key, agenda = false, page = 1) {
     const u = new URL(location.href);
     key ? u.searchParams.set('view', key) : u.searchParams.delete('view');
-    if (key === 'calendar' && agenda) { u.searchParams.set('mode', 'all'); u.searchParams.set('page', String(page)); }
+    if ((key === 'calendar' && agenda) || (['ufc', 'pfl'].includes(key) && agenda)) { u.searchParams.set('mode', 'all'); u.searchParams.set('page', String(page)); }
     else { u.searchParams.delete('mode'); u.searchParams.delete('page'); }
     return u.pathname + u.search;
   }
   if (view) {
     const initialAgenda = view === 'calendar' && calendarMode === 'all';
+    const initialSports = ['ufc', 'pfl'].includes(view) && sportsMode === 'all';
     const initialDestination = href(view, initialAgenda, calendarPage);
     history.replaceState({marqueeHome: true}, '', href(''));
     history.pushState({marqueeDestination: true}, '', href(view));
-    if (initialAgenda) history.pushState({marqueeCalendarAgenda: true}, '', initialDestination);
+    if (initialAgenda || initialSports) history.pushState({marqueeDetail: true}, '', href(view, true, sportsPage));
   }
   function allDestinations() {
     return [['', 'Home', homeIcon], ...sections.map((key, index) => [key, label(key), icon(key), index])]
@@ -329,7 +335,14 @@
     const feature = ordered(list)[0];
     if (!feature) return sharedState(`No upcoming ${combatName(view)} events are scheduled.`, 'Return to Home', false, 'empty', view);
     const source = label(view).toUpperCase();
-    return renderSportStage(feature, source, [feature.subtitle || '', feature.detail || '', ...safeRows(feature)].filter(Boolean));
+    if (sportsMode === 'all') {
+      const page = Math.max(1, Math.min(sportsPage, list.length));
+      sportsPage = page;
+      const current = ordered(list)[page - 1];
+      return `<div class="kiosk-sports-detail"><div class="kiosk-sports-content" tabindex="0" aria-label="Scrollable ${esc(source)} event details"><header class="kiosk-sports-detail-head"><p class="kiosk-kicker">FULL ${esc(source)} SCHEDULE</p><p class="kiosk-sports-count">Event ${page} of ${list.length}</p></header>${renderSportStage(current, source, [current.subtitle || '', current.detail || '', ...safeRows(current)].filter(Boolean))}</div><div class="kiosk-sports-controls"><button type="button" data-sports-control="previous" ${page <= 1 ? 'disabled' : ''}>Previous event</button><button type="button" data-sports-control="next" ${page >= list.length ? 'disabled' : ''}>Next event</button><button type="button" data-sports-summary>Back to schedule</button><a href="${esc(href(''))}" data-view="">Return to Home</a></div><p class="kiosk-sr-only" aria-live="polite">Event ${page} of ${list.length}</p></div>`;
+    }
+    const schedule = list.length > 1 ? `<div class="kiosk-sports-disclosure"><button type="button" data-sports-disclosure aria-label="View all ${list.length} ${esc(source)} events">View all ${list.length} events</button></div>` : '';
+    return `${renderSportStage(feature, source, [feature.subtitle || '', feature.detail || '', ...safeRows(feature)].filter(Boolean))}${schedule}`;
   }
   function agendaGroup(date) {
     if (!date) return 'Later';
@@ -454,6 +467,15 @@
   function renderDestination(key, list) { const category = categoryFor(key); return key === 'nhl' ? renderNhl(list) : category === 'sports' ? renderSports(list) : category === 'agenda' ? renderAgenda(list) : category === 'media' ? renderMedia(list) : category === 'ambient' ? renderAmbient(list) : list.length ? `<div class="kiosk-items">${list.slice(0, 8).map(button).join('')}</div>` : sharedState('Nothing to show here right now.', 'Return to Home', false, 'empty'); }
   function drawPanel() {
     const preserveHeadingFocus = Boolean(view && document.activeElement?.id === 'kiosk-section-title');
+    const focusedSportsControl = sportsFocusControlPending || (sportsMode && panel.contains(document.activeElement)
+      ? document.activeElement.dataset.sportsControl || (document.activeElement.hasAttribute('data-sports-summary') ? 'summary'
+        : document.activeElement.dataset.view === '' ? 'home' : document.activeElement.matches?.('.kiosk-sports-content') ? 'content' : '')
+      : '');
+    sportsFocusControlPending = '';
+    const preserveSportsDisclosureFocus = !sportsMode && ['ufc', 'pfl'].includes(view)
+      && panel.contains(document.activeElement)
+      && document.activeElement.matches?.('[data-sports-disclosure]');
+    if (preserveSportsDisclosureFocus) sportsFocusDisclosurePending = true;
     panel.dataset.section = view;
     const failedResources = Object.values(resources).filter(resourceFailure).length;
     const resourceNotice = offline ? ' · Sources unavailable' : failedResources ? ` · ${failedResources} source${failedResources === 1 ? '' : 's'} delayed` : '';
@@ -501,7 +523,9 @@
     const feature = view === 'nhl' && list.length ? ordered(list)[0] : null;
     const headingName = feature ? nhlMatchupName(feature.left || {}, feature.right || {}) : label(view);
     const detail = view === 'calendar' && calendarMode === 'all' && lifecycle.state === 'populated';
+    const sportsDetail = ['ufc', 'pfl'].includes(view) && sportsMode === 'all' && lifecycle.state === 'populated';
     panel.classList.toggle('calendar-detail-surface', detail);
+    panel.classList.toggle('sports-detail-surface', sportsDetail);
     if (detail) {
       const layoutKey = calendarLayoutKey(calendarEntries(ordered(list)));
       if (calendarLayoutSettled && calendarPageSizeViewport !== layoutKey) {
@@ -521,6 +545,10 @@
       && document.activeElement.matches?.('[data-calendar-disclosure]');
     if (preserveCalendarDisclosureFocus) calendarFocusDisclosurePending = true;
     if (panel.innerHTML !== html) panel.innerHTML = html;
+    if (sportsDetail) {
+      const canonical = new URL(location.href).searchParams.get('page');
+      if (canonical !== String(sportsPage)) history.replaceState({marqueeDetail: true}, '', href(view, true, sportsPage));
+    }
     if (detail && calendarLayoutSettled) {
       // Capacity was measured against every page before controls became
       // enabled. Navigation only redraws the already-settled page size.
@@ -549,6 +577,29 @@
       else if (focusedCalendarControl === 'next') panel.querySelector('[data-calendar-control="previous"]')?.focus({preventScroll: true});
       else if (focusedCalendarControl === 'previous') panel.querySelector('[data-calendar-control="next"]')?.focus({preventScroll: true});
     }
+    if (!sportsDetail && sportsFocusDisclosurePending) {
+      panel.querySelector('[data-sports-disclosure]')?.focus({preventScroll: true});
+      sportsFocusDisclosurePending = false;
+    } else if (!sportsDetail && sportsFocusHeadingPending) {
+      const heading = panel.querySelector('#kiosk-section-title');
+      if (heading) { heading.tabIndex = -1; heading.focus({preventScroll: true}); }
+      sportsFocusHeadingPending = false;
+      initialDirectFocusPending = false;
+    } else if (sportsDetail && sportsFocusHeadingPending) {
+      const heading = panel.querySelector('#kiosk-section-title');
+      if (heading) { heading.tabIndex = -1; heading.focus({preventScroll: true}); }
+      sportsFocusHeadingPending = false;
+      initialDirectFocusPending = false;
+    } else if (sportsDetail && focusedSportsControl) {
+      const target = focusedSportsControl === 'previous' ? '[data-sports-control="previous"]'
+        : focusedSportsControl === 'next' ? '[data-sports-control="next"]'
+          : focusedSportsControl === 'summary' ? '[data-sports-summary]'
+            : focusedSportsControl === 'home' ? '[data-view=""]' : '.kiosk-sports-content';
+      const control = panel.querySelector(target);
+      if (control && !control.disabled) control.focus({preventScroll: true});
+      else if (focusedSportsControl === 'next') panel.querySelector('[data-sports-control="previous"]')?.focus({preventScroll: true});
+      else if (focusedSportsControl === 'previous') panel.querySelector('[data-sports-control="next"]')?.focus({preventScroll: true});
+    }
     if (!detail) focusInitialDestination();
     preserveDirectHeadingFocus(preserveHeadingFocus);
   }
@@ -558,7 +609,7 @@
     else if (key) more.focus();
     else primary.querySelector('[data-view=""]')?.focus();
   }
-  function change(key, restoreFocus = true) { view = key; selected = ''; calendarMode = ''; calendarPage = 1; invalidateCalendarLayout(); calendarPageSizeViewport = ''; calendarFocusDisclosurePending = false; history.pushState({marqueeDestination: Boolean(key)}, '', href(key)); closeMenu(false); drawNavigation(); drawMenu(); drawPanel(); if (restoreFocus) { focusNavigation(key); setTimeout(() => focusNavigation(key), 0); } window.dispatchEvent(new Event('marquee-navigation')); }
+  function change(key, restoreFocus = true) { view = key; selected = ''; calendarMode = ''; sportsMode = ''; calendarPage = 1; sportsPage = 1; sportsFocusHeadingPending = false; sportsFocusDisclosurePending = false; sportsFocusControlPending = ''; invalidateCalendarLayout(); calendarPageSizeViewport = ''; calendarFocusDisclosurePending = false; history.pushState({marqueeDestination: Boolean(key)}, '', href(key)); closeMenu(false); drawNavigation(); drawMenu(); drawPanel(); if (restoreFocus) { focusNavigation(key); setTimeout(() => focusNavigation(key), 0); } window.dispatchEvent(new Event('marquee-navigation')); }
   function openCalendarAgenda() { if (view !== 'calendar' || !items('calendar').length) return; calendarMode = 'all'; calendarPage = 1; invalidateCalendarLayout(); calendarPageSizeViewport = ''; calendarFocusHeadingPending = true; calendarFocusDisclosurePending = false; history.pushState({marqueeCalendarAgenda: true}, '', href('calendar', true, calendarPage)); drawPanel(); }
   function closeCalendarAgenda() {
     if (!calendarMode) return;
@@ -574,6 +625,9 @@
     history.replaceState({marqueeCalendarAgenda: true}, '', href('calendar', true, calendarPage));
     drawPanel();
   }
+  function openSportsSchedule() { if (!['ufc', 'pfl'].includes(view) || items(view).length < 2) return; sportsMode = 'all'; sportsPage = 1; sportsFocusHeadingPending = true; sportsFocusDisclosurePending = false; history.pushState({marqueeDetail: true}, '', href(view, true, sportsPage)); drawPanel(); }
+  function closeSportsSchedule() { if (!sportsMode) return; sportsFocusDisclosurePending = true; history.back(); }
+  function setSportsPage(page) { const list = ordered(items(view)); sportsPage = Math.max(1, Math.min(list.length, page)); history.replaceState({marqueeDetail: true}, '', href(view, true, sportsPage)); drawPanel(); }
   more.onclick = () => { drawMenu(); menu.showModal(); more.setAttribute('aria-expanded', 'true'); };
   function closeMenu(focus = true) {
     if (menu.open) menu.close();
@@ -586,12 +640,12 @@
   function handleLink(e) { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); } }
   primary.addEventListener('click', handleLink); overflow.addEventListener('click', handleLink);
   menu.addEventListener('click', e => { if (e.target === menu) { const r = menu.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closeMenu(); } });
-  panel.addEventListener('click', e => { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); return; } if (e.target.closest('[data-calendar-disclosure]')) { openCalendarAgenda(); return; } if (e.target.closest('[data-calendar-summary]')) { closeCalendarAgenda(); return; } const page = e.target.closest('[data-calendar-page]'); if (page && !page.disabled) { setCalendarPage(Number(page.dataset.calendarPage)); return; } const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); return; } const b = e.target.closest('button[data-item]'); if (b) { selected = b.dataset.item; drawPanel(); primary.querySelector(`[data-view="${CSS.escape(view)}"]`)?.focus(); window.dispatchEvent(new Event('marquee-navigation')); } });
-  document.addEventListener('keydown', e => { if (menu.open || !view) return; if (!calendarMode && e.target.closest?.('[data-calendar-disclosure]') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openCalendarAgenda(); return; } if (calendarMode) { if (e.key === 'Escape' || e.key === 'BrowserBack') { e.preventDefault(); closeCalendarAgenda(); return; } if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); setCalendarPage(calendarPage - 1); return; } if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); setCalendarPage(calendarPage + 1); return; } } else if (e.key === 'Escape') { e.preventDefault(); change(''); } });
+  panel.addEventListener('click', e => { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); return; } if (e.target.closest('[data-calendar-disclosure]')) { openCalendarAgenda(); return; } if (e.target.closest('[data-calendar-summary]')) { closeCalendarAgenda(); return; } if (e.target.closest('[data-sports-disclosure]')) { openSportsSchedule(); return; } if (e.target.closest('[data-sports-summary]')) { closeSportsSchedule(); return; } const sportsControl = e.target.closest('[data-sports-control]'); if (sportsControl && !sportsControl.disabled) { sportsFocusControlPending = sportsControl.dataset.sportsControl; setSportsPage(sportsPage + (sportsControl.dataset.sportsControl === 'next' ? 1 : -1)); return; } const page = e.target.closest('[data-calendar-page]'); if (page && !page.disabled) { setCalendarPage(Number(page.dataset.calendarPage)); return; } const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); return; } const b = e.target.closest('button[data-item]'); if (b) { selected = b.dataset.item; drawPanel(); primary.querySelector(`[data-view="${CSS.escape(view)}"]`)?.focus(); window.dispatchEvent(new Event('marquee-navigation')); } });
+  document.addEventListener('keydown', e => { if (menu.open || !view) return; if (!calendarMode && !sportsMode && e.target.closest?.('[data-calendar-disclosure]') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openCalendarAgenda(); return; } if (!sportsMode && e.target.closest?.('[data-sports-disclosure]') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openSportsSchedule(); return; } if (calendarMode) { if (e.key === 'Escape' || e.key === 'BrowserBack') { e.preventDefault(); closeCalendarAgenda(); return; } if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); setCalendarPage(calendarPage - 1); return; } if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); setCalendarPage(calendarPage + 1); return; } } else if (sportsMode) { if (e.key === 'Escape' || e.key === 'BrowserBack') { e.preventDefault(); closeSportsSchedule(); return; } if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); setSportsPage(sportsPage - 1); return; } if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); setSportsPage(sportsPage + 1); return; } } else if (e.key === 'Escape') { e.preventDefault(); change(''); } });
   function restoreHistoryDestinationFocus() { if (historyFocusDestination === null || calendarMode || view === 'calendar') return; const destination = historyFocusDestination; historyFocusDestination = null; focusNavigation(destination); }
   window.addEventListener('marquee-history-focus-owned', () => { historyFocusOwned = true; historyFocusDestination = null; });
   document.addEventListener('focusin', event => { if (historyFocusDestination === null || calendarMode || view === 'calendar') return; const destination = historyFocusDestination; historyFocusDestination = null; if (event.target?.dataset?.view !== destination) focusNavigation(destination); });
-  window.addEventListener('popstate', () => { const overlayOwnsFocus = historyFocusOwned; historyFocusOwned = false; const wasCalendarDetail = view === 'calendar' && calendarMode === 'all'; const next = new URLSearchParams(location.search); const nextView = next.get('view') || ''; const activityHash = location.hash === '#activity'; const calendarHistoryChange = view === 'calendar' || nextView === 'calendar'; view = nextView; calendarMode = view === 'calendar' && next.get('mode') === 'all' ? 'all' : ''; if (calendarHistoryChange) invalidateCalendarLayout(); calendarPageSizeViewport = ''; if (wasCalendarDetail && view === 'calendar' && !calendarMode) calendarFocusDisclosurePending = true; if (!(view === 'calendar' && !calendarMode)) calendarFocusDisclosurePending = false; calendarPage = Math.max(1, Number.parseInt(next.get('page') || '1', 10) || 1); calendarFocusHeadingPending = Boolean(calendarMode); selected = ''; drawNavigation(false); drawMenu(); drawPanel(); if (!overlayOwnsFocus && !calendarMode && !activityHash) { if (view !== 'calendar') focusNavigation(view); } window.dispatchEvent(new Event('marquee-navigation')); historyFocusDestination = overlayOwnsFocus || view === 'calendar' || activityHash ? null : view; });
+  window.addEventListener('popstate', () => { const overlayOwnsFocus = historyFocusOwned; historyFocusOwned = false; const wasCalendarDetail = view === 'calendar' && calendarMode === 'all'; const wasSportsDetail = ['ufc', 'pfl'].includes(view) && sportsMode === 'all'; const next = new URLSearchParams(location.search); const nextView = next.get('view') || ''; const activityHash = location.hash === '#activity'; const calendarHistoryChange = view === 'calendar' || nextView === 'calendar'; view = nextView; calendarMode = view === 'calendar' && next.get('mode') === 'all' ? 'all' : ''; sportsMode = ['ufc', 'pfl'].includes(view) && next.get('mode') === 'all' ? 'all' : ''; if (calendarHistoryChange) invalidateCalendarLayout(); calendarPageSizeViewport = ''; if (wasCalendarDetail && view === 'calendar' && !calendarMode) calendarFocusDisclosurePending = true; if (!(view === 'calendar' && !calendarMode)) calendarFocusDisclosurePending = false; if (wasSportsDetail && !sportsMode && ['ufc', 'pfl'].includes(view)) sportsFocusDisclosurePending = true; sportsFocusHeadingPending = Boolean(sportsMode); calendarPage = Math.max(1, Number.parseInt(next.get('page') || '1', 10) || 1); sportsPage = Math.max(1, Number.parseInt(next.get('page') || '1', 10) || 1); calendarFocusHeadingPending = Boolean(calendarMode || sportsMode); selected = ''; drawNavigation(false); drawMenu(); drawPanel(); if (!overlayOwnsFocus && !calendarMode && !sportsMode && !activityHash) { if (view !== 'calendar' && !(['ufc', 'pfl'].includes(view))) focusNavigation(view); } window.dispatchEvent(new Event('marquee-navigation')); historyFocusDestination = overlayOwnsFocus || view === 'calendar' || sportsMode || activityHash || (['ufc', 'pfl'].includes(view) && !sportsMode) ? null : view; if (['ufc', 'pfl'].includes(view) && !sportsMode && wasSportsDetail) setTimeout(() => panel.querySelector('[data-sports-disclosure]')?.focus({preventScroll: true}), 0); });
   window.addEventListener('pageshow', restoreHistoryDestinationFocus);
   window.addEventListener('resize', () => { if (calendarMode && view === 'calendar') { invalidateCalendarLayout(); drawPanel(); } });
   window.addEventListener('marquee-surface-rendered', drawPanel);
