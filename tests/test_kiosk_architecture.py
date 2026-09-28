@@ -74,8 +74,12 @@ def test_kiosk_editorial_desktop_compaction_contract_is_deterministic():
 
 def test_shallow_landscape_contract_covers_secondary_17_10_and_keeps_decoration_out_of_scroll_geometry():
     assert "@media(min-width:1000px) and (max-height:700px) and (min-aspect-ratio:3/2)" in SCREENS
-    assert "position:fixed" in SCREENS.split(".now-playing-surface::before", 1)[1].split("}", 1)[0]
-    assert "pointer-events:none" in SCREENS.split(".now-playing-surface::before", 1)[1].split("}", 1)[0]
+    assert ".kiosk-section.now-playing-surface{display:flex" in SCREENS
+    assert "background:radial-gradient(circle,transparent 0 49%" in SCREENS
+    shallow = SCREENS.rsplit("@media(min-width:1000px) and (max-height:700px) and (min-aspect-ratio:3/2)", 1)[1]
+    assert ".kiosk-section:is([data-section=gaming],[data-section=tv]){display:flex;flex-direction:column;overflow:visible}" in shallow
+    assert ".kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial{flex:1 1 auto;min-height:0;grid-template-rows:minmax(0,1fr)}" in shallow
+    assert ".kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial-feature{height:100%;padding:16px}" in shallow
     assert "min-aspect-ratio: 3/2" in MENU
 
 

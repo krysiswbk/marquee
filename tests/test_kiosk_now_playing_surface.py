@@ -64,11 +64,12 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
     def test_narrow_orbit_cannot_create_a_horizontal_scroller(self):
         self.assertIn("body.browser-controls{overflow-x:hidden}", SCREENS)
         self.assertIn("overflow-x:hidden;overflow-y:auto", SCREENS)
-        # The responsive orbit may overhang visually, but the kiosk panel is
-        # the scrolling element and must not expose that x-axis overflow.
-        self.assertIn(".now-playing-surface::before", SCREENS)
-        self.assertIn("right:-18%", SCREENS)
-        self.assertIn("right:-31%", SCREENS)
+        # The responsive orbit is a background layer, so it remains ambient
+        # without becoming scrollable content at any narrow width.
+        self.assertIn("background-size:72vw 72vw,auto,auto,auto", SCREENS)
+        self.assertIn("background-position:right -18% top 13%", SCREENS)
+        self.assertIn("background-size:92vw 92vw,auto,auto,auto", SCREENS)
+        self.assertIn("background-position:right -31% top 9%", SCREENS)
 
 
 if __name__ == "__main__":
