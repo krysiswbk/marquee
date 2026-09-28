@@ -93,10 +93,22 @@
   function link([key, title, glyph], detail = '') { return `<a href="${esc(href(key))}" data-view="${esc(key)}" aria-label="${esc(title)}" title="${esc(title)}" ${key===view?'aria-current="page"':''}><span class="kiosk-icon" aria-hidden="true">${esc(glyph)}</span><span class="kiosk-label">${esc(title)}</span>${detail ? `<small>${esc(detail)}</small>` : ''}</a>`; }
   function drawNavigation() {
     const all = allDestinations(); primary.innerHTML = all.map(d => link(d)).join(''); primary.querySelectorAll('a').forEach(a => a.hidden = false); more.hidden = false;
-    const available = () => Math.max(0, rail.clientWidth - rail.querySelector('.kiosk-brand').offsetWidth - more.offsetWidth - 44);
-    let used = [...primary.children].reduce((sum, a) => sum + a.offsetWidth, 0), cutoff = all.length;
-    while (used > available() && cutoff > 1) { const a = primary.children[--cutoff]; used -= a.offsetWidth; a.hidden = true; }
-    const hidden = all.slice(cutoff); overflow.innerHTML = hidden.map(d => link(d, offline ? 'Connection unavailable' : `${items(d[0]).length} current item${items(d[0]).length === 1 ? '' : 's'}`)).join(''); more.hidden = hidden.length === 0;
+    const brand = rail.querySelector('.kiosk-brand');
+    const railGap = parseFloat(getComputedStyle(rail).columnGap) || 0;
+    const primaryGap = parseFloat(getComputedStyle(primary).columnGap) || 0;
+    const available = () => Math.max(0, rail.getBoundingClientRect().width - brand.getBoundingClientRect().width - more.getBoundingClientRect().width - (railGap * 2));
+    const visibleWidth = () => [...primary.children].filter(a => !a.hidden).reduce((sum, a) => sum + a.offsetWidth, 0) + Math.max(0, primary.querySelectorAll(':scope > a:not([hidden])').length - 1) * primaryGap;
+    // Home and the current destination must remain direct, even when the
+    // current destination would otherwise be the next item sent to More.
+    const required = new Set(['']);
+    if (view && all.some(([key]) => key === view)) required.add(view);
+    while (visibleWidth() > available()) {
+      const candidate = [...primary.children].reverse().find(a => !a.hidden && !required.has(a.dataset.view));
+      if (!candidate) break;
+      candidate.hidden = true;
+    }
+    const hidden = all.filter(([key]) => primary.querySelector(`[data-view="${CSS.escape(key)}"]`)?.hidden);
+    overflow.innerHTML = hidden.map(d => link(d, offline ? 'Connection unavailable' : `${items(d[0]).length} current item${items(d[0]).length === 1 ? '' : 's'}`)).join(''); more.hidden = hidden.length === 0;
     const activeInOverflow = hidden.some(([key]) => key === view);
     more.classList.toggle('is-active', activeInOverflow);
     more.setAttribute('aria-label', activeInOverflow ? `More destinations; current destination is ${label(view)}` : 'More destinations');

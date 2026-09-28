@@ -1,3 +1,14 @@
+## 2.10.64
+
+- Keep the active/current destination text label visible in the narrow kiosk
+  rail while inactive destinations remain compact glyph controls.
+- Reserve direct Home and the selected destination during responsive fitting,
+  preserving More overflow, 44px touch targets, keyboard focus, and
+  `aria-current` semantics without rail clipping or wrapping.
+- Add responsive browser coverage across phone, tablet, desktop, and TV rail
+  widths for sports identity, overflow, Home reachability, focus, and return
+  to the dashboard.
+
 ## 2.10.63
 
 - Redesign the idle Now Playing kiosk surface into a calm weather-and-Home composition.
