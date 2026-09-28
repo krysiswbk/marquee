@@ -183,7 +183,11 @@
     panel.classList.toggle('now-playing-surface', view === 'plex');
     const active = Boolean(view) && !interrupted && view !== 'household';
     setBackgroundActive(active);
-    panel.hidden = !active || plexActive || Boolean(selected); panel.inert = !active || panel.hidden; if (panel.hidden) return;
+    panel.hidden = !active || plexActive || Boolean(selected); panel.inert = !active || panel.hidden;
+    if (panel.hidden) {
+      if (panel.contains(document.activeElement)) focusNavigation(view);
+      return;
+    }
     if (view === 'plex') {
       const unavailable = nowPlaying?.state === 'unavailable' || nowPlaying?.availability === 'unavailable';
       const loading = !nowPlaying;
