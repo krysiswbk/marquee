@@ -1,3 +1,8 @@
+## 2.10.54
+
+- Distinguish recent attention full-payload disclosures by available source,
+  event id, context, and display identity while preserving concise visible copy.
+
 ## 2.10.53
 
 - Present recent attention history as responsive human-readable event summaries

@@ -11,7 +11,7 @@ BASE = os.environ.get("MARQUEE_SMOKE_URL", "http://127.0.0.1:18084").rstrip("/")
 assert urlparse(BASE).hostname in ("127.0.0.1", "localhost")
 FIXTURE = json.loads((Path(__file__).parent / "fixtures" / "attention-history.json").read_text())
 VIEWPORTS = [(1500, 900), (1024, 600), (700, 900), (393, 852)]
-EVIDENCE = Path(os.environ.get("MARQUEE_EVIDENCE_DIR", "/tmp/marquee-2.10.53-history-evidence"))
+EVIDENCE = Path(os.environ.get("MARQUEE_EVIDENCE_DIR", "/tmp/marquee-2.10.54-history-evidence"))
 
 
 with sync_playwright() as playwright:
@@ -22,7 +22,10 @@ with sync_playwright() as playwright:
     response = seed_page.request.get(BASE + "/api/attention")
     assert response.ok, response.status
     payload = response.json()
-    payload["history"] = (FIXTURE * 80)[:150]
+    payload["history"] = [
+        dict(item, at=1800000000, source=f"fixture-source-{index}", id=f"fixture-event-{index}")
+        for index, item in enumerate((FIXTURE * 80)[:150])
+    ]
     for width, height in VIEWPORTS:
         EVIDENCE.mkdir(parents=True, exist_ok=True)
         page = browser.new_page(viewport={"width": width, "height": height})
@@ -33,6 +36,11 @@ with sync_playwright() as playwright:
         page.wait_for_function("document.getElementById('status').textContent.startsWith('Updated')")
         page.get_by_text("Recent history", exact=True).click()
         assert page.locator(".history-row").count() == 40
+        labels = page.locator(".history-details summary").evaluate_all(
+            "summaries => summaries.map(summary => summary.getAttribute('aria-label'))"
+        )
+        assert len(set(labels)) == 40
+        assert all("source fixture-source-" in label and "id fixture-event-" in label for label in labels)
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         disclosure = page.locator(".history-details summary").first
         disclosure.focus()

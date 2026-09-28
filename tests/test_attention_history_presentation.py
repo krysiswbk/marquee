@@ -1,6 +1,7 @@
 """Deterministic contracts for the responsive attention-history presentation."""
 
 import json
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
@@ -22,6 +23,28 @@ def test_history_has_human_summary_and_explicit_full_payload_disclosure() -> Non
         "JSON.stringify(item, null, 2)", "aria-label",
     ):
         assert token in SCRIPT
+
+
+def test_history_disclosure_names_distinguish_same_time_events() -> None:
+    start = SCRIPT.index("  function humanize")
+    end = SCRIPT.index("  function renderHistory")
+    helper = SCRIPT[start:end]
+    events = [
+        {"at": 1800000000, "kind": "signal", "source": "sensor.kitchen", "id": "kitchen-1"},
+        {"at": 1800000000, "kind": "signal", "source": "sensor.garage", "id": "garage-1"},
+        {"at": 1800000000, "kind": "signal", "source": "sensor.office", "id": "office-1", "display": "hallway"},
+    ]
+    script = f"events = {json.dumps(events)};\n{helper}\nconsole.log(JSON.stringify(events.map(item => historyDisclosureLabel(item, 'same timestamp'))));"
+    result = subprocess.run(
+        ["node", "-e", script], text=True,
+        capture_output=True, check=True,
+    )
+    labels = json.loads(result.stdout)
+    assert len(set(labels)) == len(events)
+    assert labels[0] == "View full payload for Signal — source sensor.kitchen · id kitchen-1 at same timestamp"
+    assert "source sensor.garage" in labels[1]
+    assert "id garage-1" in labels[1]
+    assert "display hallway" in labels[2]
 
 
 def test_history_is_truthful_for_empty_invalid_error_and_large_sets() -> None:
