@@ -208,6 +208,42 @@ body.browser-controls{overflow-x:hidden}.kiosk-section.now-playing-surface{displ
   .kiosk-section[data-section=calendar] .kiosk-agenda-more{margin:10px 0 0;font-size:13px}
 }
 
+/* Short-wide kiosk displays have a shallow destination stage. Keep the
+   primary summary and actions in one remote-visible view, and summarize the
+   secondary queue with a truthful remainder count. This deliberately excludes
+   ordinary phones, tablets, and 16:9 displays. */
+@media(min-width:1000px) and (max-height:700px) and (min-aspect-ratio:2/1){
+  .kiosk-section{overflow:hidden;padding:24px 44px}
+  .kiosk-section-head h1{margin-bottom:12px}
+  .kiosk-state{margin-top:18px;gap:20px}
+  .kiosk-sports-layout,.kiosk-editorial,.kiosk-agenda{gap:28px}
+  .kiosk-sport-feature,.kiosk-editorial-feature,.kiosk-agenda-feature{min-height:0;justify-content:flex-start}
+  .kiosk-sport-feature h2,.kiosk-editorial-feature h2,.kiosk-agenda-feature h2{font-size:clamp(42px,4vw,64px);line-height:1}
+  .kiosk-lede{margin:8px 0;font-size:20px;line-height:1.2}
+  .kiosk-meta{font-size:15px}
+  .kiosk-matchup{margin:14px 0;gap:12px}
+  .kiosk-sport-rows{margin-top:10px;gap:8px 18px}
+  .kiosk-editorial-feature{padding:24px}
+  .kiosk-support{align-self:start;padding-left:24px}
+  .kiosk-queue-row{padding:8px 0;gap:3px}
+  .kiosk-queue-row:nth-of-type(n+2){display:none}
+  .kiosk-queue-more{display:block;margin:8px 0 0}
+  .kiosk-agenda{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+  .kiosk-agenda-feature h2{font-size:clamp(38px,3.5vw,56px)}
+  .kiosk-agenda-groups section{margin-bottom:10px}
+  .kiosk-agenda-row{padding:8px 0;gap:8px}
+  .kiosk-agenda-row time,.kiosk-agenda-row small{font-size:13px}
+  .kiosk-agenda-row strong{font-size:16px}
+  .kiosk-agenda-more{margin:8px 0 0;font-size:13px}
+  .kiosk-section.now-playing-surface{justify-content:flex-start;overflow:hidden;padding:24px 44px}
+  .now-playing-surface .kiosk-now-playing-head>p:first-child{margin-bottom:8px}
+  .now-playing-surface .kiosk-now-playing-head h1{font-size:clamp(44px,5vw,82px)}
+  .now-playing-surface .kiosk-now-playing-detail{margin-top:10px;font-size:19px;line-height:1.25}
+  .kiosk-now-playing-body{gap:24px;margin-top:20px}
+  .kiosk-state-mark{width:72px;height:72px;font-size:54px}
+  .kiosk-now-playing-actions{margin-top:12px}
+}
+
 /* The exposed kiosk destinations render their own editorial/sports markup;
    keep those fixed stages independent from the base context-card renderer. */
 .kiosk-editorial-feature h2,.kiosk-sport-feature h2{overflow-wrap:anywhere;word-break:normal;padding-bottom:.15em}
@@ -245,4 +281,14 @@ body.browser-controls{overflow-x:hidden}.kiosk-section.now-playing-surface{displ
   .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-queue-row{gap:3px;padding:8px 0}
   .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-queue-row:nth-of-type(n+2){display:none}
   .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-queue-more{display:block;margin:8px 0 0}
+}
+
+/* Keep the short-wide contract last so destination-specific desktop rules
+   cannot reintroduce feature dead space or a hidden secondary queue. */
+@media(min-width:1000px) and (max-height:700px) and (min-aspect-ratio:2/1){
+  .kiosk-section:is([data-section=gaming],[data-section=tv],[data-section=ufc]){padding:24px 44px}
+  .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial-feature{padding:24px}
+  .kiosk-section:is([data-section=gaming],[data-section=tv],[data-section=ufc]) :is(.kiosk-editorial-feature h2,.kiosk-sport-feature h2){font-size:clamp(42px,4vw,64px);line-height:1}
+  .kiosk-section:is([data-section=gaming],[data-section=tv],[data-section=ufc]) .kiosk-lede{font-size:20px;line-height:1.2}
+  .kiosk-section[data-section=ufc] .kiosk-matchup{margin:14px 0;font-size:inherit}
 }

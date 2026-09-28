@@ -1,3 +1,11 @@
+## 2.10.36
+
+- Add a short-wide kiosk presentation mode for shallow landscape displays.
+  Keep Now Playing, source-error and empty states, Calendar, and Gaming primary
+  context plus actions in the first view, while summarizing secondary items
+  with truthful remainder counts and preserving the existing phone and normal
+  TV layouts.
+
 ## 2.10.35
 
 - Align dedicated Attention Policy and Display Tests workspaces with the shared
