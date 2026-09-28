@@ -160,7 +160,7 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("max-width:92vw", styles)
         self.assertIn("line-height:1.2", styles)
         self.assertIn("#brain-house{top:43vh;bottom:auto;height:25vh}", styles)
-        self.assertIn("#brain-house .brain-openings{max-height:4vh;overflow:hidden}", styles)
+        self.assertIn("#brain-house .brain-openings{max-height:4vh;overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap}", styles)
         self.assertNotIn("max-width:44vw", styles)
 
     def test_home_responsive_panels_respect_dock_safe_area(self):
