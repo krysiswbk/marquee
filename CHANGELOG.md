@@ -1,3 +1,9 @@
+## 2.10.39
+
+- Correct the shared short-wide UFC/PFL empty-state box so its readable
+  heading, truthful copy, and complete Return Home action stay inside the
+  435px stage without clipping or hidden overflow.
+
 ## 2.10.38
 
 - Fit UFC and PFL truthful empty-state headings, copy, and Return Home actions

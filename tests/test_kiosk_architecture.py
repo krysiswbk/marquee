@@ -179,10 +179,11 @@ def test_short_wide_sports_empty_state_keeps_action_reachable_with_readable_rhyt
     )[1]
     for token in (
         ".kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-state{align-items:flex-start;gap:20px;margin-top:18px}",
-        ".kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-state-mark{width:72px;height:72px;font-size:54px}",
-        ".kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-state h2{font-size:clamp(32px,3.2vw,48px);line-height:1.05}",
+        ".kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-state-mark{width:64px;height:64px;font-size:48px}",
+        ".kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-state h2{font-size:clamp(32px,3.2vw,42px);line-height:1.05}",
         ".kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-state .kiosk-empty{margin:8px 0;font-size:20px;line-height:1.25}",
         ".kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-state .kiosk-now-playing-actions{margin-top:12px}",
+        ".kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-home-action,\n  .kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-retry{box-sizing:border-box}",
     ):
         assert token in shallow
     assert ".kiosk-home-action,.kiosk-retry{display:inline-flex" in SCREENS
