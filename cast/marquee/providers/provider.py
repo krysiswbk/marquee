@@ -55,6 +55,10 @@ class Provider:
     def contexts(self, payload, now):
         raise NotImplementedError
 
+    def health_details(self, payload):
+        """Optional payload-backed health details, retained by disk caches."""
+        return {}
+
     def cached_fetch(self):
         try:
             payload = self.fetch()

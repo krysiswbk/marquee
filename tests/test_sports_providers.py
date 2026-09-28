@@ -1,10 +1,11 @@
 import tempfile
 import unittest
 from datetime import datetime, timezone
+from urllib.parse import parse_qs, urlparse
 
+from cast.marquee.providers.engine import ContextEngine
 from cast.marquee.providers.model import EventState
-from cast.marquee.providers.sports import NHLProvider, UFCProvider, PFLProvider
-
+from cast.marquee.providers.sports import NHLProvider, PFLProvider, UFCProvider
 
 NOW = datetime(2026, 9, 9, 1, 0, tzinfo=timezone.utc)
 
@@ -66,5 +67,77 @@ class SportsProviderTests(unittest.TestCase):
         self.assertEqual(len(values), 1)
         self.assertEqual(values[0].event_state, EventState.LIVE)
 
+    def test_nhl_aggregates_single_dates_deduplicates_and_maps_lifecycle(self):
+        calls = []
+        def event(ident, state, date):
+            return {"id": ident, "name": ident,
+            "date": date, "status": {"type": {"state": state}},
+            "competitions": [{"venue": {"fullName": "Arena"}, "competitors": [
+                {"team": {"abbreviation": "TOR", "displayName": "Maple Leafs"}, "score": "3"},
+                {"team": {"abbreviation": "MTL", "displayName": "Canadiens"}, "score": "2"}]}]}
+        payloads = [{"events": [event("game-live", "in", NOW.isoformat())]},
+                    {"events": [event("game-live", "in", NOW.isoformat()),
+                                event("game-final", "post", "2026-09-08T23:00Z")]},
+                    {"events": []}]
 
-if __name__ == "__main__": unittest.main()
+        class Client:
+            def json(self, url, timeout=8):
+                calls.append(parse_qs(urlparse(url).query)["dates"][0])
+                return payloads[min(len(calls) - 1, 2)]
+
+        provider = NHLProvider({"enabled": True, "priority": 90, "teams": ["TOR"]},
+                               self.tmp.name, client=Client(), clock=lambda: NOW.timestamp())
+        result = provider.fetch()
+        self.assertEqual(len(calls), 9)
+        self.assertEqual(len(result["events"]), 2)
+        values = provider.contexts(result, NOW)
+        self.assertEqual([value.event_state for value in values],
+                         [EventState.POST_EVENT, EventState.LIVE])
+        self.assertEqual(result["_fetch"]["successfulDates"], 9)
+
+    def test_nhl_partial_and_total_failures_are_explicit(self):
+        class Partial:
+            def __init__(self): self.calls = 0
+            def json(self, url, timeout=8):
+                self.calls += 1
+                if self.calls == 2:
+                    raise RuntimeError("HTTP 400")
+                return {"events": []}
+
+        provider = NHLProvider({"enabled": True}, self.tmp.name, client=Partial(),
+                               clock=lambda: NOW.timestamp())
+        result = provider.fetch()
+        details = provider.health_details(result)
+        self.assertEqual(details["state"], "degraded")
+        self.assertIn("8/9", details["error"])
+
+        class Down:
+            def json(self, url, timeout=8): raise RuntimeError("HTTP 400")
+
+        down = NHLProvider({"enabled": True}, self.tmp.name, client=Down(),
+                           clock=lambda: NOW.timestamp())
+        with self.assertRaisesRegex(RuntimeError, "every requested date"):
+            down.fetch()
+
+    def test_nhl_partial_health_survives_context_engine(self):
+        class Client:
+            calls = 0
+            def json(self, url, timeout=8):
+                self.calls += 1
+                if self.calls == 2:
+                    raise RuntimeError("HTTP 400")
+                return {"events": []}
+
+        provider = NHLProvider({"enabled": True}, self.tmp.name, client=Client(),
+                               clock=lambda: NOW.timestamp())
+        engine = ContextEngine([provider], clock=lambda: NOW.timestamp())
+        engine.tick()
+        engine.futures["nhl"].result()
+        engine.tick()
+        health = engine.diagnostics()["providers"]["nhl"]
+        self.assertEqual(health["state"], "degraded")
+        self.assertIn("failed dates", health["error"])
+
+
+if __name__ == "__main__":
+    unittest.main()

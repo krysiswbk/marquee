@@ -6,6 +6,7 @@ belong to the application and arbitration layers.
 from datetime import timedelta
 import json
 import subprocess
+from urllib.parse import urlencode
 
 from .model import Context, EventState, parse_time
 from .provider import Provider
@@ -74,6 +75,72 @@ class NHLProvider(ESPNProvider):
     name = "nhl"
     sport_path = "hockey/nhl"
     reason = "ESPN schedule filtered to followed NHL teams"
+
+    # ESPN accepts the scoreboard's `dates` parameter for one calendar day,
+    # but currently rejects the otherwise documented ranged form. Keep this
+    # deliberately small: the provider refreshes once per minute and the
+    # aggregate is cached as one provider snapshot.
+    lookback_days = 1
+    lookahead_days = 7
+    max_dates = 14
+
+    def _date_urls(self, now):
+        first = now - timedelta(days=self.lookback_days)
+        count = min(self.max_dates, self.lookback_days + self.lookahead_days + 1)
+        return [
+            "https://site.api.espn.com/apis/site/v2/sports/"
+            + self.sport_path + "/scoreboard?" + urlencode({"limit": 100, "dates":
+                                                               (first + timedelta(days=offset)).strftime("%Y%m%d")})
+            for offset in range(count)
+        ]
+
+    def _get_json(self, url):
+        if type(self.client) is not HttpClient:
+            return self.client.json(url, timeout=8)
+        raw = subprocess.check_output(["curl", "-fsS", "--max-time", "8",
+                                       "-H", "Accept: application/json", url],
+                                      timeout=10)
+        return json.loads(raw)
+
+    def fetch(self):
+        from datetime import datetime, timezone
+
+        now = datetime.fromtimestamp(self.clock(), timezone.utc)
+        urls = self._date_urls(now)
+        events, seen, failed_dates = [], set(), []
+        for url in urls:
+            date = url.rsplit("dates=", 1)[-1]
+            try:
+                payload = self._get_json(url)
+            except Exception:
+                failed_dates.append(date)
+                continue
+            for event in payload.get("events", []):
+                event_id = str(event.get("id", "")).strip()
+                # ESPN events have IDs. The fallback prevents duplicate rows
+                # from malformed fixtures without inventing a second entity.
+                key = event_id or json.dumps(event, sort_keys=True, separators=(",", ":"))
+                if key not in seen:
+                    seen.add(key)
+                    events.append(event)
+        if len(failed_dates) == len(urls):
+            raise RuntimeError("NHL schedule failed for every requested date")
+        events.sort(key=lambda event: (event.get("date") or "", str(event.get("id", ""))))
+        return {"events": events, "_fetch": {
+            "requestedDates": len(urls), "successfulDates": len(urls) - len(failed_dates),
+            "failedDates": failed_dates}}
+
+    def health_details(self, payload):
+        details = payload.get("_fetch") or {}
+        failed = details.get("failedDates") or []
+        if not failed:
+            return {}
+        requested = details.get("requestedDates", len(failed))
+        succeeded = details.get("successfulDates", max(0, requested - len(failed)))
+        message = (f"NHL schedule partially fetched: {succeeded}/{requested} dates succeeded; "
+                   f"failed dates: {', '.join(failed)}")
+        return {"state": "degraded", "error": message, "errorSummary": message,
+                "reason": "NHL schedule partially fetched", "lastSuccessReason": message}
 
     def contexts(self, payload, now):
         teams = {str(x).upper() for x in self.config.get("teams", ["TOR"])}

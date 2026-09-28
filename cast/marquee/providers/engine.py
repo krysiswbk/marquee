@@ -50,6 +50,7 @@ class ContextEngine:
                     threshold = float(provider.config.get("_minimum_relevance", 0))
                     with self.lock: self.candidates[name] = found
                     success_reason = getattr(provider, "reason", "fetched successfully")
+                    health_details = provider.health_details(payload)
                     health.update(state="stale" if stale else "ok", stale=stale,
                                   lastSuccess=now.isoformat(), candidateContexts=len(found),
                                   eligibleContexts=sum(not c.expired(now) and
@@ -61,6 +62,8 @@ class ContextEngine:
                                                    if provider.cache_age is not None else None),
                                   durationMs=round((now_ts - started) * 1000, 1),
                                   reason=success_reason, lastSuccessReason=success_reason)
+                    if health_details:
+                        health.update(health_details)
                     if self.event_bus:
                         self.event_bus.publish("provider.updated", provider=name,
                                                candidates=len(found), stale=stale)

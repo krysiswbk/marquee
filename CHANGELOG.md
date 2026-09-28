@@ -1,3 +1,9 @@
+## 2.10.60
+
+- Restore NHL schedule freshness by aggregating bounded single-date ESPN
+  scoreboard requests, deduplicating events, and reporting partial-date
+  failures truthfully through provider health and cached payloads.
+
 ## 2.10.59
 
 - Make narrow kiosk media titles preserve whole-word wrapping while exposing
