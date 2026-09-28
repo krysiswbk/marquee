@@ -11,7 +11,7 @@
   card.classList.add('wx-broadcast');
   card.querySelector('.weather-source').innerHTML='<b>M/</b> MARQUEE <span>WEATHER</span>';
   const heading=document.createElement('header');heading.className='wx-heading';
-  heading.innerHTML='<div><p>YOUR LOCAL WEATHER</p><h1 id="wx-segment-title">Current conditions</h1></div><span id="wx-data-status"></span>';
+  heading.innerHTML='<div><p>YOUR LOCAL WEATHER</p><h1 id="wx-segment-title" tabindex="-1">Current conditions</h1></div><span id="wx-data-status"></span>';
   const main=document.createElement('div');main.className='wx-main';
   main.innerHTML=`<section id="weather-conditions" class="wx-panel channel-current" aria-label="Current conditions"><div class="wx-observation"><div id="channel-icon" class="channel-icon"></div><div id="channel-temp" class="channel-temp"></div><div id="channel-condition" class="channel-condition"></div><span id="wx-observation-source"></span></div><div class="wx-readings"><div class="channel-metrics" id="channel-metrics"></div><p id="channel-outlook" class="channel-outlook"></p></div></section>
   <section id="weather-hours" class="wx-panel channel-hours" aria-label="Hourly outlook" hidden><div id="channel-hours"></div></section>

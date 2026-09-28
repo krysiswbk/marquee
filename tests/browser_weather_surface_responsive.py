@@ -1,5 +1,6 @@
 """Deterministic contract for the dedicated weather surface hierarchy."""
 
+import json
 import os
 from datetime import datetime, timezone
 from pathlib import Path
@@ -86,10 +87,16 @@ with sync_playwright() as playwright:
         page.goto("http://marquee.test/kiosk?view=weather", wait_until="domcontentloaded")
         page.wait_for_selector(".stage.weather-context .wx-broadcast")
         page.wait_for_selector('.kiosk-rail .kiosk-primary [data-view="weather"][aria-current="page"]')
+        page.wait_for_function("document.querySelector('.stage.weather-context')?.inert === false && document.querySelector('.stage.weather-context')?.getAttribute('aria-hidden') !== 'true'")
         page.wait_for_selector("#brain-dock-copy")
         page.wait_for_timeout(250)
 
         assert page.locator(".kiosk-rail").is_visible()
+        assert page.locator(".stage.weather-context").evaluate("el => !el.inert && !el.hasAttribute('aria-hidden') && !el.classList.contains('kiosk-covered')")
+        assert page.locator(".kiosk-section").evaluate("el => el.hidden && el.inert && el.getAttribute('aria-hidden') === 'true'")
+        assert page.evaluate("document.activeElement?.id === 'wx-segment-title'")
+        assert page.locator("#wx-segment-title").inner_text() == "Current conditions"
+        assert page.locator("#wx-observation-source").count() == 1
         assert page.locator('.kiosk-primary [data-view=""]:visible').count() == 1
         assert page.locator('.kiosk-primary [data-view="weather"]:visible').count() == 1
         assert page.locator(".kiosk-rail").evaluate(
@@ -147,7 +154,26 @@ with sync_playwright() as playwright:
             button.scroll_into_view_if_needed()
             assert button.is_visible(), (width, height, index)
 
-        page.screenshot(path=f"/tmp/marquee-2.10.67-weather-{width}x{height}.png")
+        for index in range(buttons.count()):
+            button = buttons.nth(index)
+            button.focus()
+            assert button.evaluate("el => document.activeElement === el")
+            assert button.get_attribute("aria-pressed") == ("true" if index == 0 else "false")
+        pause = page.locator("#wx-pause")
+        pause.focus()
+        assert page.evaluate("document.activeElement === document.querySelector('#wx-pause')")
+        assert pause.get_attribute("aria-pressed") == "false"
+        page.locator('.wx-segments button[data-segment="hours"]').click()
+        assert page.locator('.wx-segments button[data-segment="hours"]').get_attribute("aria-pressed") == "true"
+        assert page.locator('.wx-segments button[data-segment="conditions"]').get_attribute("aria-pressed") == "false"
+        page.locator("#wx-pause").click()
+        assert page.locator("#wx-pause").get_attribute("aria-pressed") == "true"
+        page.locator('.kiosk-primary [data-view=""]').click()
+        page.wait_for_function("new URL(location.href).searchParams.get('view') === null")
+        assert page.locator(".stage").evaluate("el => !el.inert && !el.hasAttribute('aria-hidden')")
+        assert page.evaluate("document.activeElement?.dataset.view === ''")
+
+        page.screenshot(path=f"/tmp/marquee-2.10.71-weather-{width}x{height}.png")
         assert not errors, (width, height, errors)
         page.close()
 

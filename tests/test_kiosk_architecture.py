@@ -4,6 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).parents[1]
 MENU = (ROOT / "output/kiosk-menu.js").read_text()
 SCREENS = (ROOT / "output/screens.css").read_text()
+INDEX = (ROOT / "output/index.html").read_text()
 
 
 def test_forced_destinations_have_purposeful_category_renderers():
@@ -180,10 +181,32 @@ def test_destination_owns_background_accessibility_state_and_history_focus():
     assert "panel.inert = !active || panel.hidden" in MENU
 
 
+def test_weather_stage_is_the_authoritative_kiosk_surface_when_selected():
+    for token in (
+        "const stage = document.querySelector('.stage');",
+        "surface = active && view === 'weather' && selected ? 'weather'",
+        "const weatherActive = active && surface === 'weather';",
+        "node === stage",
+        "stage.classList.toggle('kiosk-covered', active && !weatherActive)",
+        "stage.querySelector('#wx-segment-title')",
+        "marquee-surface-rendered",
+    ):
+        assert token in MENU
+    assert ".stage.kiosk-covered { display: none !important; }" in INDEX
+
+
+def test_weather_controls_have_truthful_pressed_state_and_direct_heading_focus():
+    weather = (ROOT / "output/weather-channel.js").read_text()
+    assert '<h1 id="wx-segment-title" tabindex="-1">' in weather
+    assert "aria-pressed=\"false\"" in weather
+    assert "button.dataset.segment===segment" in weather
+    assert "aria-pressed',String(paused)" in weather
+
+
 def test_direct_destination_focus_is_pending_only_for_visible_initial_region():
     assert "let initialDirectFocusPending = Boolean(view);" in MENU
     assert "panel.setAttribute('aria-labelledby', 'kiosk-section-title')" in MENU
-    assert "if (!initialDirectFocusPending || requestState === 'loading' || !view || panel.hidden || panel.inert) return;" in MENU
+    assert "if (!initialDirectFocusPending || requestState === 'loading' || !view) return;" in MENU
     assert "heading.tabIndex = -1" in MENU
     assert "heading.focus({preventScroll: true})" in MENU
     assert "<h1 id=\"kiosk-section-title\">" in MENU

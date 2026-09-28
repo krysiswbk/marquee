@@ -1,3 +1,14 @@
+## 2.10.71
+
+- Fix the Weather kiosk lifecycle so the visible Weather stage, accessibility
+  tree, focus targets, and background state share one authoritative surface.
+- Expose the direct Weather heading, current summary, source/freshness, and
+  44px segment/Pause controls across current, forecast, radar, paused, alert,
+  stale, and unavailable states with truthful pressed semantics.
+- Add deterministic Weather source and browser regressions for stage exposure,
+  keyboard reachability, mode selection, viewport fit, console errors, and
+  return to Home.
+
 ## 2.10.70
 
 - Restore Home as the single current kiosk rail destination on the dashboard

@@ -45,26 +45,37 @@
     node,
     inert: node.inert,
     ariaHidden: node.getAttribute('aria-hidden'),
+    hidden: node.hidden,
   }));
-  function setBackgroundActive(active) {
-    backgroundState.forEach(({node, inert, ariaHidden}) => {
-      if (active) {
+  const stage = document.querySelector('.stage');
+  function setBackgroundActive(active, surface = active ? 'panel' : 'dashboard') {
+    const weatherActive = active && surface === 'weather';
+    backgroundState.forEach(({node, inert, ariaHidden, hidden}) => {
+      const covered = active && !(weatherActive && node === stage);
+      if (covered) {
         node.inert = true;
         node.setAttribute('aria-hidden', 'true');
       } else {
         node.inert = inert;
+        node.hidden = hidden;
         if (ariaHidden === null) node.removeAttribute('aria-hidden');
         else node.setAttribute('aria-hidden', ariaHidden);
       }
     });
-    panel.hidden = !active;
-    panel.inert = !active;
-    if (active) panel.removeAttribute('aria-hidden');
+    if (stage) stage.classList.toggle('kiosk-covered', active && !weatherActive);
+    const panelActive = active && !weatherActive;
+    panel.hidden = !panelActive;
+    panel.inert = !panelActive;
+    if (panelActive) panel.removeAttribute('aria-hidden');
     else panel.setAttribute('aria-hidden', 'true');
   }
   function focusInitialDestination() {
-    if (!initialDirectFocusPending || requestState === 'loading' || !view || panel.hidden || panel.inert) return;
-    const heading = panel.querySelector('#kiosk-section-title');
+    if (!initialDirectFocusPending || requestState === 'loading' || !view) return;
+    const weatherSurface = view === 'weather' && selected && stage && !stage.classList.contains('kiosk-covered')
+      && !stage.inert && stage.getAttribute('aria-hidden') !== 'true';
+    const heading = weatherSurface
+      ? stage.querySelector('#wx-segment-title')
+      : panel.hidden || panel.inert ? null : panel.querySelector('#kiosk-section-title');
     if (!heading || !heading.getClientRects().length) return;
     heading.tabIndex = -1;
     heading.focus({preventScroll: true});
@@ -72,7 +83,9 @@
   }
   function preserveDirectHeadingFocus(wasFocused) {
     if (!wasFocused) return;
-    const heading = panel.querySelector('#kiosk-section-title');
+    const heading = view === 'weather' && selected
+      ? stage?.querySelector('#wx-segment-title')
+      : panel.querySelector('#kiosk-section-title');
     if (heading) {
       heading.tabIndex = -1;
       heading.focus({preventScroll: true});
@@ -293,7 +306,8 @@
     const plexActive = view === 'plex' && nowPlaying?.playing === true;
     panel.classList.toggle('now-playing-surface', view === 'plex');
     const active = Boolean(view) && !interrupted && view !== 'household';
-    setBackgroundActive(active);
+    const surface = active && view === 'weather' && selected ? 'weather' : active ? 'panel' : 'dashboard';
+    setBackgroundActive(active, surface);
     panel.hidden = !active || plexActive || Boolean(selected); panel.inert = !active || panel.hidden;
     if (panel.hidden) {
       if (panel.contains(document.activeElement)) {
@@ -355,6 +369,7 @@
   panel.addEventListener('click', e => { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); return; } const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); return; } const b = e.target.closest('button[data-item]'); if (b) { selected = b.dataset.item; drawPanel(); primary.querySelector(`[data-view="${CSS.escape(view)}"]`)?.focus(); window.dispatchEvent(new Event('marquee-navigation')); } });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && view && !menu.open) { e.preventDefault(); change(''); } });
   window.addEventListener('popstate', () => { view = new URLSearchParams(location.search).get('view') || ''; selected = ''; drawNavigation(); drawMenu(); drawPanel(); focusNavigation(view); setTimeout(() => focusNavigation(view), 0); window.dispatchEvent(new Event('marquee-navigation')); });
+  window.addEventListener('marquee-surface-rendered', drawPanel);
   window.MarqueeNavigation = { resolve(payload) { nowPlaying = payload || {playing:false, state:'idle', availability:'idle'}; const wasInterrupted = interrupted; interrupted = Boolean(payload?.attention || payload?.householdFocus); if (interrupted && !wasInterrupted && menu.open) closeMenu(false); drawPanel(); if (interrupted || !view || view === 'plex') return payload; const c = !offline && sections.includes(view) && items(view).find(item => item.id === selected); return c ? c.payload || {playing:true,type:'media_context',key:'browse:'+c.id,context:c} : {playing:false}; } };
   async function refresh() {
     if (requestState === 'loading' && requestSerial > 0) return;
