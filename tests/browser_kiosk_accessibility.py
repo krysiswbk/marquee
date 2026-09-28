@@ -10,9 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(
-        executable_path=os.environ.get("MARQUEE_CHROMIUM"), args=["--no-sandbox", "--disable-crashpad"]
-    )
+    browser = p.chromium.launch(executable_path=os.environ.get("MARQUEE_CHROMIUM"), args=["--no-sandbox"])
     page = browser.new_page(viewport={"width": 1024, "height": 600})
 
     def route(request):

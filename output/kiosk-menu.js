@@ -67,6 +67,14 @@
     heading.focus({preventScroll: true});
     initialDirectFocusPending = false;
   }
+  function preserveDirectHeadingFocus(wasFocused) {
+    if (!wasFocused) return;
+    const heading = panel.querySelector('#kiosk-section-title');
+    if (heading) {
+      heading.tabIndex = -1;
+      heading.focus({preventScroll: true});
+    }
+  }
   function href(key) { const u = new URL(location.href); key ? u.searchParams.set('view', key) : u.searchParams.delete('view'); return u.pathname + u.search; }
   if (view) {
     const initialDestination = href(view);
@@ -166,6 +174,7 @@
   }
   function renderDestination(key, list) { const category = categoryFor(key); return category === 'sports' ? renderSports(list) : category === 'agenda' ? renderAgenda(list) : category === 'media' ? renderMedia(list) : category === 'ambient' ? renderAmbient(list) : list.length ? `<div class="kiosk-items">${list.slice(0, 8).map(button).join('')}</div>` : sharedState('Nothing to show here right now.', 'Return to Home', false, 'empty'); }
   function drawPanel() {
+    const preserveHeadingFocus = Boolean(view && document.activeElement?.id === 'kiosk-section-title');
     panel.dataset.section = view; status.textContent = interrupted ? 'Household attention' : view === 'household' ? 'Household' : view ? label(view) : 'Marquee · Auto';
     const valid = sections.includes(view), list = valid && !offline ? items(view) : [];
     if (selected && !list.some(c => c.id === selected)) selected = '';
@@ -185,6 +194,7 @@
       const ambient = document.querySelector('#idle-weather')?.textContent?.trim() || 'Home display ready';
       panel.innerHTML = `<header class="kiosk-now-playing-head"><p>NOW PLAYING</p><h1 id="kiosk-section-title">${esc(title)}</h1><p class="kiosk-now-playing-detail">${esc(detail)}</p></header><div class="kiosk-now-playing-body"><div class="kiosk-state-mark ${unavailable ? 'is-unavailable' : ''}" aria-hidden="true"><span>${unavailable ? '↻' : '·'}</span></div><div class="kiosk-now-playing-copy"><p class="kiosk-ambient">${esc(ambient)}</p><p class="kiosk-now-playing-note">${unavailable ? 'Try again when the service is reachable.' : 'Nothing needs your attention right now.'}</p><div class="kiosk-now-playing-actions"><a class="kiosk-home-action" href="${esc(href(''))}" data-view="">Return to Home</a>${unavailable ? '<button type="button" class="kiosk-retry" data-kiosk-retry>Check again</button>' : ''}</div></div></div>`;
       focusInitialDestination();
+      preserveDirectHeadingFocus(preserveHeadingFocus);
       return;
     }
     const lifecycle = requestState === 'loading'
@@ -194,6 +204,7 @@
     const html = `<header class="kiosk-section-head"><p>${esc(categoryFor(view).toUpperCase())}</p><h1 id="kiosk-section-title">${esc(label(view))}</h1></header>` + (message ? sharedState(message, 'Return to Home', lifecycle.state === 'error' || lifecycle.state === 'stale' || lifecycle.state === 'unavailable', lifecycle.state) : renderDestination(view, list));
     if (panel.innerHTML !== html) panel.innerHTML = html;
     focusInitialDestination();
+    preserveDirectHeadingFocus(preserveHeadingFocus);
   }
   function focusNavigation(key) {
     const target = primary.querySelector(`[data-view="${CSS.escape(key)}"]`);
