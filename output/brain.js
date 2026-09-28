@@ -41,6 +41,7 @@
     if(deviceHealth.length)summary='Device status needs attention.';
     else if(fresh&&state.unknown?.length)summary+=` ${state.unknown.length} household sensor${state.unknown.length===1?' is':'s are'} unavailable.`;
     set('brain-summary',summary);
+    $('brain-house').classList.toggle('dense', summary.length > 110 || healthText.length > 80);
     $('brain-openings').innerHTML=opening.slice(0,5).map(o=>`<span class="brain-tag warm">${esc(o.name)} <small>${esc(o.state)} · ${elapsed(Math.max(o.duration||0,now-o.since))}</small></span>`).join('');
     const actionable=serious?.acknowledgement_required?serious:null;alertId=actionable?.id||'';$('brain-ack').hidden=!actionable||demo;
     $('brain-events').innerHTML=events.length?events.slice(0,4).map(e=>`<div class="brain-event"><span>${esc(e.title)}</span><time>${elapsed(now-e.at)}${now-e.at>=60?' ago':''}</time></div>`).join(''):`<p class="brain-empty">${fresh?'No new door or lock activity in the last 15 minutes.':'Activity feed reconnecting; recent activity is unavailable.'}</p>`;

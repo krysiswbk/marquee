@@ -103,9 +103,9 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("grid-template-columns: repeat(2, minmax(0, 1fr))", css)
         for page in (PAGES["cast-layout"], PAGES["live-layout"], PAGES["attention"], PAGES["tests"]):
             source = page.read_text()
-            self.assertIn("control-shell.css?v=2.10.24", source)
-            self.assertIn("control-shell.js?v=2.10.24", source)
-            self.assertIn("control-shell-narrow.css?v=2.10.24", source)
+            self.assertIn("control-shell.css?v=2.10.25", source)
+            self.assertIn("control-shell.js?v=2.10.25", source)
+            self.assertIn("control-shell-narrow.css?v=2.10.25", source)
 
     def test_layout_workspace_has_explicit_phone_composition_contract(self):
         source = PAGES["cast-layout"].read_text()
@@ -159,7 +159,7 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("width:92vw", styles)
         self.assertIn("max-width:92vw", styles)
         self.assertIn("line-height:1.2", styles)
-        self.assertIn("#brain-house{top:43vh;bottom:32vh;height:auto}", styles)
+        self.assertIn("#brain-house{top:43vh;bottom:auto;height:25vh}", styles)
         self.assertNotIn("max-width:44vw", styles)
 
     def test_home_responsive_panels_respect_dock_safe_area(self):
@@ -175,9 +175,9 @@ class ControlNavigationTests(unittest.TestCase):
         tablet = styles.split("@media (min-width:481px) and (max-width:700px)", 1)[1].split("@media (max-width:480px)", 1)[0]
         self.assertIn("box-sizing:border-box", tablet)
         self.assertIn("padding-block:1.2vh", tablet)
-        self.assertIn("bottom:32vh", tablet)
+        self.assertIn("height:25vh", tablet)
         self.assertLessEqual(70 + 13, 85.1)
-        self.assertLessEqual(100 - 32, 75)
+        self.assertLessEqual(43 + 25, 70)
         self.assertIn("device-alert .brain-openings{display:none}", tablet)
         brain = (ROOT / "output" / "brain.js").read_text()
         self.assertIn("classList.toggle('device-alert',Boolean(deviceHealth.length))", brain)
@@ -202,6 +202,25 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("No new door or lock activity in the last 15 minutes.", brain)
         self.assertIn("Activity feed reconnecting; recent activity is unavailable.", brain)
         self.assertNotIn("The next real change lands here.", brain)
+
+    def test_portrait_home_uses_explicit_zones_and_dense_household_fit(self):
+        styles = (ROOT / "output" / "brain.css").read_text()
+        brain = (ROOT / "output" / "brain.js").read_text()
+        self.assertIn("min-height:6vh", styles)
+        self.assertIn("top:12vh;right:4vw;bottom:auto;height:26vh", styles)
+        self.assertIn("#brain-house{top:40vh;left:4vw;height:22vh}", styles)
+        self.assertIn("#brain-house{top:43vh;bottom:auto;height:25vh}", styles)
+        self.assertIn("#brain-house.dense .brain-summary", styles)
+        self.assertIn("classList.toggle('dense', summary.length > 110 || healthText.length > 80)", brain)
+
+    def test_portrait_weather_has_legible_minimums_without_losing_secondary_facts(self):
+        styles = (ROOT / "output" / "brain.css").read_text()
+        source = (ROOT / "output" / "index.html").read_text()
+        self.assertIn("font-size:clamp(32px,8vw,78px)", styles)
+        self.assertIn("font-size:clamp(11px,2.5vw,24px)", styles)
+        for field in ("idle-weather-temp", "idle-weather-condition", "idle-weather-feels",
+                      "idle-weather-range", "idle-weather-rain"):
+            self.assertIn(f'id="{field}"', source)
 
     def test_home_uses_names_without_decorative_editorial_ordinals(self):
         brain = (ROOT / "output" / "brain.js").read_text()

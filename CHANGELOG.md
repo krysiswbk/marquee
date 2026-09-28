@@ -1,3 +1,11 @@
+## 2.10.25
+
+- Harden the portrait Home composition with explicit masthead, identity,
+  household, activity, agenda, and dock zones.
+- Promote phone weather temperature, condition, and secondary facts to a
+  legible first-class glance; retain complete long household status copy with
+  deterministic dense-panel fitting.
+
 ## 2.10.24
 
 - Promote dashboard weather to a persistent current-conditions hierarchy with
