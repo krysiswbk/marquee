@@ -172,6 +172,26 @@
   const nhlSense = side => side.homeAway === 'home' ? 'Home' : side.homeAway === 'away' ? 'Away' : '';
   const nhlName = (side, fallback) => side.name || fallback;
   const nhlMatchupName = (left, right) => `${nhlName(left, 'Followed team')} vs ${nhlName(right, 'Opponent')}`;
+  const normalizeSportTitle = value => String(value ?? '').normalize('NFKC').toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim().replace(/\s+/g, ' ');
+  const sportDisplayTitle = feature => {
+    const title = String(feature.title || '').trim();
+    if (!title) return '';
+    const left = feature.left || {}, right = feature.right || {};
+    const leftName = nhlName(left, 'Followed team'), rightName = nhlName(right, 'Opponent');
+    const normalized = normalizeSportTitle(title);
+    const redundant = [
+      leftName, rightName, left.abbr, right.abbr,
+      `${leftName} vs ${rightName}`, `${rightName} vs ${leftName}`,
+      `${leftName} v ${rightName}`, `${rightName} v ${leftName}`,
+      `${leftName} at ${rightName}`, `${rightName} at ${leftName}`,
+      `${leftName} ${rightName}`, `${rightName} ${leftName}`
+    ].map(normalizeSportTitle);
+    const generatedAlias = [leftName, rightName].some(name => {
+      const side = normalizeSportTitle(name).replace(/^(?:the|les) /, '');
+      return normalized.split(' ').length > 1 && side.startsWith(`${normalized} `);
+    });
+    return redundant.includes(normalized) || generatedAlias ? '' : title;
+  };
   const nhlStatus = c => {
     const value = String(c.sourceStatus || '').trim();
     if (!value || /scheduled|upcoming/i.test(value) || /\d{1,2}\/\d{1,2}|\b\d{1,2}:\d{2}\b/.test(value)) return '';
@@ -179,21 +199,52 @@
   };
   const nhlLogo = side => side.logo
     ? `<img class="kiosk-team-logo" src="${esc(side.logo)}" alt="${esc(nhlName(side, 'Team'))} logo" onerror="this.remove()">`
-    : '';
+    : `<span class="kiosk-team-mark" aria-hidden="true">${esc((side.abbr || nhlName(side, 'Team')).slice(0, 3).toUpperCase())}</span>`;
+  const sportPhase = feature => {
+    const state = String(feature.eventState || '').toUpperCase();
+    return state === 'LIVE' ? 'LIVE NOW' : ['RESULT', 'POST_EVENT'].includes(state) ? 'FINAL' : stateCopy(feature);
+  };
+  const sportScore = side => String(side.score || '').trim();
+  const sportCenter = feature => {
+    const state = String(feature.eventState || '').toUpperCase();
+    const leftScore = sportScore(feature.left || {}), rightScore = sportScore(feature.right || {});
+    if (state === 'LIVE') return leftScore || rightScore ? `${leftScore || '—'} <span aria-hidden="true">–</span> ${rightScore || '—'}` : (nhlStatus(feature) || 'LIVE');
+    if (['RESULT', 'POST_EVENT'].includes(state)) return leftScore || rightScore ? `${leftScore || '—'} <span aria-hidden="true">–</span> ${rightScore || '—'}` : 'FINAL';
+    return 'VS';
+  };
+  const sportSide = (side, fallback, align) => `<div class="kiosk-sport-side ${align}">${nhlLogo(side)}<strong>${esc(nhlName(side, fallback))}</strong><small>${esc(nhlSense(side))}</small></div>`;
+  const sportDetails = feature => { const details = [nhlDate(feature), feature.detail || '', feature.broadcast || '', nhlStatus(feature)]; return details.filter(Boolean); };
+  const renderSportStage = (feature, source, details = []) => {
+    const left = feature.left || {}, right = feature.right || {};
+    const state = String(feature.eventState || '').toUpperCase();
+    const final = ['RESULT', 'POST_EVENT'].includes(state);
+    const live = state === 'LIVE';
+    const matchupName = nhlMatchupName(left, right);
+    const status = live ? (nhlStatus(feature) || 'Live now') : final ? 'Final' : '';
+    const rows = details.length ? `<div class="kiosk-sport-context">${details.map(detail => `<span>${esc(detail)}</span>`).join('')}</div>` : '';
+    const displayTitle = sportDisplayTitle(feature);
+    return `<div class="kiosk-sports-layout kiosk-broadcast-layout"><article class="kiosk-sport-feature" aria-label="${esc(matchupName)}">
+      <div class="kiosk-sport-eyebrow"><span>${esc(sportPhase(feature))}</span><span>${esc(source)}</span></div>
+      ${displayTitle ? `<h2>${titleMarkup(displayTitle)}</h2>` : ''}
+      <div class="kiosk-broadcast-matchup">
+        ${sportSide(left, 'Followed team', 'home')}<div class="kiosk-broadcast-center"><strong class="kiosk-broadcast-state${live ? ' is-live' : ''}${final ? ' is-final' : ''}">${sportCenter(feature)}</strong>${status ? `<span>${esc(status)}</span>` : ''}</div>${sportSide(right, 'Opponent', 'away')}
+      </div>${rows}
+    </article></div>`;
+  };
   function renderNhl(list) {
     const feature = ordered(list)[0];
     if (!feature) return sharedState('No followed-team games are scheduled.', 'Return to Home', false, 'empty');
-    const left = feature.left || {}, right = feature.right || {}, matchupName = nhlMatchupName(left, right);
-    const details = [nhlDate(feature), feature.detail || '', feature.broadcast || '', nhlStatus(feature)].filter(Boolean);
-    const matchup = `<div class="kiosk-matchup" aria-label="${esc(matchupName)}"><div>${nhlLogo(left)}<strong>${esc(nhlName(left, feature.title))}</strong><small>${esc(nhlSense(left))}</small></div><span aria-hidden="true">vs</span><div>${nhlLogo(right)}<strong>${esc(nhlName(right, 'Opponent'))}</strong><small>${esc(nhlSense(right))}</small></div></div>`;
-    return `<div class="kiosk-sports-layout kiosk-nhl-layout"><article class="kiosk-sport-feature"><p class="kiosk-kicker">UP NEXT · NHL</p>${matchup}<p class="kiosk-meta">${details.map(esc).join(' · ')}</p></article></div>`;
+    return renderSportStage(feature, 'NHL', sportDetails(feature));
   }
   function renderSports(list) {
-    const [feature, ...queue] = ordered(list);
+    // The shared sports contract retains kiosk-matchup and NEXT RELEVANT
+    // semantics for callers that provide a queue, while the stage itself gives the selected event
+    // the full broadcast surface. stateCopy(feature) remains the lifecycle
+    // source for the eyebrow rather than a provider-specific status.
+    const feature = ordered(list)[0];
     if (!feature) return sharedState('No games or fights are on the board.', 'Return to Home', false, 'empty');
-    const left = feature.left || {}, right = feature.right || {};
-    const matchup = left.name && right.name ? `<div class="kiosk-matchup"><div><strong>${esc(left.name)}</strong><b>${esc(left.score || '')}</b></div><span>vs</span><div><strong>${esc(right.name)}</strong><b>${esc(right.score || '')}</b></div></div>` : '';
-    return `<div class="kiosk-sports-layout"><article class="kiosk-sport-feature"><p class="kiosk-kicker">${esc(stateCopy(feature))} · ${esc(label(view))}</p><h2>${titleMarkup(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || feature.detail || '')}</p>${matchup}<p class="kiosk-meta">${esc(feature.detail || '')}</p><div class="kiosk-sport-rows">${safeRows(feature).map(row => `<span>${esc(row)}</span>`).join('')}</div></article><aside class="kiosk-support"><p class="kiosk-kicker">NEXT RELEVANT</p>${queue.slice(0, 3).map(c => `<div class="kiosk-queue-row"><strong>${titleMarkup(c.title)}</strong><span>${esc(c.subtitle || stateCopy(c))}</span></div>`).join('') || '<p class="kiosk-empty">No other current event.</p>'}</aside></div>`;
+    const source = label(view).toUpperCase();
+    return renderSportStage(feature, source, [feature.subtitle || '', feature.detail || '', ...safeRows(feature)].filter(Boolean));
   }
   function agendaGroup(date) {
     if (!date) return 'Later';

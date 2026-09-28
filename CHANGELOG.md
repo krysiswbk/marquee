@@ -1,3 +1,8 @@
+## 2.10.68
+
+- Recompose the shared kiosk sports stage into an overscan-safe broadcast matchup surface with stronger team marks, a centered scheduled/live/final state, balanced identities, and cohesive date/venue/broadcast context.
+- Preserve truthful empty, unavailable, and stale states plus UFC/PFL shared sports rendering, and add deterministic browser coverage across TV, short-wide, tablet, and phone viewports.
+
 ## 2.10.67
 
 - Calm live offline-device health copy across phone, tablet, desktop, and TV

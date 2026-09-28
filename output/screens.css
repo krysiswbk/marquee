@@ -294,7 +294,7 @@ body.browser-controls{overflow-x:hidden}.kiosk-section.now-playing-surface{displ
   .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial-feature{padding:24px}
   .kiosk-section:is([data-section=gaming],[data-section=tv],[data-section=ufc]) :is(.kiosk-editorial-feature h2,.kiosk-sport-feature h2){font-size:clamp(42px,4vw,64px);line-height:1}
   .kiosk-section:is([data-section=gaming],[data-section=tv],[data-section=ufc]) .kiosk-lede{font-size:20px;line-height:1.2}
-  .kiosk-section[data-section=ufc] .kiosk-matchup{margin:14px 0;font-size:inherit}
+.kiosk-section[data-section=ufc] .kiosk-matchup{margin:14px 0;font-size:inherit}
   .kiosk-section:is([data-section=gaming],[data-section=tv]){display:flex;flex-direction:column;overflow:visible}
   .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial{flex:1 1 auto;min-height:0;grid-template-rows:minmax(0,1fr)}
   .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial-feature{height:100%;box-sizing:border-box;padding:16px}
@@ -313,6 +313,24 @@ body.browser-controls{overflow-x:hidden}.kiosk-section.now-playing-surface{displ
   .kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-retry{box-sizing:border-box}
 }
 
+/* 2.10.68 broadcast sports stage: one event owns the safe area, with its
+   identity, center state, and source facts kept in one visual unit. */
+.kiosk-broadcast-layout{display:block;max-width:1480px;margin:0 auto;min-height:clamp(430px,58vh,650px)}
+.kiosk-broadcast-layout .kiosk-sport-feature{min-height:0;display:flex;flex-direction:column;justify-content:center;align-items:stretch}
+.kiosk-sport-eyebrow{display:flex;justify-content:space-between;gap:24px;color:#b6f378;font-size:clamp(12px,1.1vw,17px);font-weight:850;letter-spacing:.18em;text-transform:uppercase;border-bottom:1px solid #71809955;padding-bottom:16px}
+.kiosk-broadcast-layout h2{align-self:center;text-align:center;font-size:clamp(30px,3.3vw,58px);line-height:1;max-width:1100px;margin:clamp(20px,4vh,46px) auto 0}
+.kiosk-broadcast-matchup{display:grid;grid-template-columns:minmax(0,1fr) minmax(170px,.45fr) minmax(0,1fr);align-items:center;gap:clamp(24px,4vw,84px);margin:clamp(26px,5vh,64px) 0 clamp(22px,4vh,48px)}
+.kiosk-sport-side{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-width:0;text-align:center}
+.kiosk-sport-side.away{order:3}.kiosk-sport-side strong{max-width:100%;font-size:clamp(25px,3.2vw,56px);line-height:1.03;overflow-wrap:anywhere;text-wrap:balance}.kiosk-sport-side small{color:#9fb0c2;font-size:clamp(12px,1.1vw,17px);font-weight:750;letter-spacing:.12em;text-transform:uppercase}
+.kiosk-team-logo,.kiosk-team-mark{width:clamp(110px,13vw,220px);height:clamp(110px,20vh,220px);object-fit:contain;filter:drop-shadow(0 1.3vh 2.5vh #0009)}
+.kiosk-team-mark{display:grid;place-items:center;border:2px solid #ffffff3b;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffffff22,#ffffff08 55%,#0005);color:#eef2ff;font-size:clamp(28px,4vw,68px);font-weight:900;letter-spacing:-.04em}
+.kiosk-broadcast-center{text-align:center;min-width:0}.kiosk-broadcast-state{display:block;color:#eef2ff;font-size:clamp(27px,4.2vw,72px);font-weight:950;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}.kiosk-broadcast-state:not(.is-live):not(.is-final){color:#b6f378;font-size:clamp(24px,2vw,34px);letter-spacing:.18em}.kiosk-broadcast-state.is-live{color:#ffcf70}.kiosk-broadcast-state.is-final{color:#eef2ff}.kiosk-broadcast-center span{display:block;margin-top:12px;color:#b6f378;font-size:clamp(14px,1.35vw,22px);font-weight:850;letter-spacing:.1em;text-transform:uppercase}
+.kiosk-broadcast-state span{display:inline!important;margin:0!important;color:inherit!important;font-size:inherit!important;letter-spacing:normal!important}
+.kiosk-sport-context{display:flex;justify-content:center;flex-wrap:wrap;gap:8px 24px;border-top:1px solid #71809955;padding-top:18px;color:#c2cfdd;font-size:clamp(13px,1.15vw,18px);text-align:center}.kiosk-sport-context span{overflow-wrap:anywhere}
+@media(min-width:1000px) and (max-height:700px) and (min-aspect-ratio: 3/2){.kiosk-broadcast-layout{min-height:0}.kiosk-broadcast-layout h2{margin-top:16px}.kiosk-broadcast-matchup{margin:22px 0}.kiosk-team-logo,.kiosk-team-mark{width:clamp(82px,10vw,150px);height:clamp(82px,17vh,150px)}}
+@media(max-width:900px){.kiosk-broadcast-layout{min-height:0}.kiosk-broadcast-matchup{grid-template-columns:minmax(0,1fr) minmax(100px,.42fr) minmax(0,1fr);gap:14px}.kiosk-team-logo,.kiosk-team-mark{width:min(26vw,150px);height:min(20vh,150px)}.kiosk-broadcast-layout h2{font-size:clamp(28px,5.8vw,48px)}}
+@media(max-width:480px){.kiosk-broadcast-layout{min-height:0}.kiosk-sport-eyebrow{font-size:11px;padding-bottom:11px}.kiosk-broadcast-layout h2{font-size:clamp(25px,8vw,38px);margin-top:17px}.kiosk-broadcast-matchup{grid-template-columns:minmax(0,1fr) minmax(64px,.48fr) minmax(0,1fr);gap:6px;margin:24px 0 22px}.kiosk-sport-side{gap:8px}.kiosk-team-logo,.kiosk-team-mark{width:min(27vw,112px);height:min(16vh,112px)}.kiosk-sport-side strong{font-size:clamp(19px,5.5vw,28px)}.kiosk-sport-side small{font-size:10px}.kiosk-broadcast-state{font-size:clamp(22px,7vw,32px)}.kiosk-broadcast-state:not(.is-live):not(.is-final){font-size:18px;letter-spacing:.12em}.kiosk-broadcast-center span{font-size:12px;margin-top:8px}.kiosk-sport-context{justify-content:flex-start;text-align:left;gap:6px 14px;font-size:13px;line-height:1.25}}
+
 /* Every current media item remains visible; these destination-scoped rules
    override compact event-summary hiding without changing event queues. */
 .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-queue-row{display:flex}
@@ -329,3 +347,11 @@ body.browser-controls{overflow-x:hidden}.kiosk-section.now-playing-surface{displ
 /* NHL browse keeps the existing sports hierarchy while giving the next game
    enough room for matchup, local time, and authoritative source details. */
 .kiosk-nhl-layout{grid-template-columns:minmax(0,1fr);max-width:1000px}.kiosk-nhl-layout .kiosk-sport-feature{min-height:0;justify-content:flex-start}.kiosk-nhl-layout .kiosk-matchup{margin-top:clamp(28px,5vh,58px)}.kiosk-nhl-layout .kiosk-matchup div{align-items:flex-start}.kiosk-nhl-layout .kiosk-matchup div:last-child{align-items:flex-end}.kiosk-nhl-layout .kiosk-matchup small{color:#9fb0c2;font-size:14px;letter-spacing:.08em;text-transform:uppercase}.kiosk-nhl-layout .kiosk-meta{max-width:760px}.kiosk-team-logo{width:clamp(52px,7vw,96px);height:clamp(52px,7vw,96px);object-fit:contain;margin-bottom:12px}.kiosk-section-head h1{display:inline-block;width:fit-content;max-width:100%}.kiosk-section-head h1:focus-visible{outline:3px solid #c3fc86;outline-offset:5px;border-radius:4px}
+
+/* Keep the broadcast stage overrides after legacy NHL/editorial rules. */
+.kiosk-broadcast-layout .kiosk-sport-feature{min-height:0;justify-content:center}
+.kiosk-broadcast-layout h2{font-size:clamp(30px,3.3vw,58px);margin:clamp(20px,4vh,46px) auto 0}
+.kiosk-broadcast-layout .kiosk-team-logo,.kiosk-broadcast-layout .kiosk-team-mark{width:clamp(110px,13vw,220px);height:clamp(110px,20vh,220px);margin:0}
+@media(min-width:1000px) and (max-height:700px) and (min-aspect-ratio: 3/2){.kiosk-broadcast-layout{transform:scale(.78);transform-origin:center top}.kiosk-broadcast-layout h2{margin-top:6px}.kiosk-broadcast-matchup{margin:8px 0 12px}.kiosk-broadcast-layout .kiosk-team-logo,.kiosk-broadcast-layout .kiosk-team-mark{width:70px!important;height:70px!important;max-height:70px!important}.kiosk-broadcast-layout .kiosk-sport-side{gap:4px}.kiosk-broadcast-layout .kiosk-sport-side strong{font-size:30px}.kiosk-broadcast-layout .kiosk-sport-side small{font-size:12px}.kiosk-broadcast-layout .kiosk-broadcast-center{height:fit-content!important;min-height:0!important;max-height:130px;overflow:hidden}}
+@media(max-width:900px){.kiosk-broadcast-layout h2{font-size:clamp(28px,5.8vw,48px)}.kiosk-broadcast-layout .kiosk-team-logo,.kiosk-broadcast-layout .kiosk-team-mark{width:min(26vw,150px);height:min(20vh,150px)}}
+@media(max-width:480px){.kiosk-broadcast-layout h2{font-size:clamp(25px,8vw,38px);margin-top:17px}.kiosk-broadcast-layout .kiosk-team-logo,.kiosk-broadcast-layout .kiosk-team-mark{width:min(27vw,112px);height:min(16vh,112px)}}
