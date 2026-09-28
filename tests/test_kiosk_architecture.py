@@ -76,6 +76,32 @@ def test_calendar_contract_groups_and_limits_chronological_agenda():
         assert token in MENU
 
 
+def test_calendar_full_agenda_contract_is_paginated_and_history_addressable():
+    for token in (
+        'data-calendar-disclosure', 'View all ${values.length} events',
+        'calendarMode = params.get(\'mode\') === \'all\'',
+        'u.searchParams.set(\'mode\', \'all\')',
+        'u.searchParams.set(\'page\', String(page))',
+        'data-calendar-page', 'Page ${calendarPage} of ${pages}',
+        'Back to summary', 'Return to Home', 'calendarPageSize',
+        'measuredAgendaPageSize', 'aria-live="polite"',
+        "e.key === 'ArrowLeft' || e.key === 'PageUp'",
+        "e.key === 'ArrowRight' || e.key === 'PageDown'",
+        "e.key === 'Escape' || e.key === 'BrowserBack'",
+        'calendarDisclosure?.focus', 'history.back()',
+        'calendar-detail-surface',
+    ):
+        assert token in MENU
+    for token in (
+        '.kiosk-calendar-detail{', 'overflow:hidden',
+        '.kiosk-calendar-controls button,.kiosk-calendar-controls a',
+        'min-width:44px;min-height:44px',
+    ):
+        assert token in SCREENS
+    assert 'more event${remaining === 1 ?' not in MENU
+    assert 'remaining beyond this summary' not in MENU
+
+
 def test_overflow_trigger_and_escape_are_remote_visible_contracts():
     assert "activeInOverflow" in MENU
     assert "more.classList.toggle('is-active', activeInOverflow)" in MENU

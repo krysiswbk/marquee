@@ -1,4 +1,4 @@
-## 2.10.83
+## 2.10.84
 
 - Settle kiosk config, context, and provider refreshes independently, retaining
   last-good snapshots through partial failures and recovering each resource

@@ -47,6 +47,10 @@
   // state from browse contexts or from the previous render.
   let nowPlaying = null;
   let view = params.get('view') || '', interrupted = false;
+  let calendarMode = params.get('mode') === 'all' ? 'all' : '';
+  let calendarPage = Math.max(1, Number.parseInt(params.get('page') || '1', 10) || 1);
+  let calendarDisclosure = null;
+  let calendarPageSize = 4;
   let initialDirectFocusPending = Boolean(view);
   const label = key => destinations[key]?.[0] || key.replaceAll('_', ' ').replace(/^./, c => c.toUpperCase());
   const icon = key => destinations[key]?.[1] || moreIcon;
@@ -120,11 +124,19 @@
       heading.focus({preventScroll: true});
     }
   }
-  function href(key) { const u = new URL(location.href); key ? u.searchParams.set('view', key) : u.searchParams.delete('view'); return u.pathname + u.search; }
+  function href(key, agenda = false, page = 1) {
+    const u = new URL(location.href);
+    key ? u.searchParams.set('view', key) : u.searchParams.delete('view');
+    if (key === 'calendar' && agenda) { u.searchParams.set('mode', 'all'); u.searchParams.set('page', String(page)); }
+    else { u.searchParams.delete('mode'); u.searchParams.delete('page'); }
+    return u.pathname + u.search;
+  }
   if (view) {
-    const initialDestination = href(view);
+    const initialAgenda = view === 'calendar' && calendarMode === 'all';
+    const initialDestination = href(view, initialAgenda, calendarPage);
     history.replaceState({marqueeHome: true}, '', href(''));
-    history.pushState({marqueeDestination: true}, '', initialDestination);
+    history.pushState({marqueeDestination: true}, '', href(view));
+    if (initialAgenda) history.pushState({marqueeCalendarAgenda: true}, '', initialDestination);
   }
   function allDestinations() {
     return [['', 'Home', homeIcon], ...sections.map((key, index) => [key, label(key), icon(key), index])]
@@ -315,13 +327,34 @@
   }
   const shortWide = () => window.matchMedia?.('(min-width: 1000px) and (max-height: 700px) and (min-aspect-ratio: 3/2)').matches;
   const agendaLimit = () => window.matchMedia?.('(max-width: 480px)').matches || shortWide() ? 2 : 3;
+  function measuredAgendaPageSize() {
+    const height = panel.clientHeight || window.innerHeight;
+    const width = window.innerWidth;
+    const available = Math.max(180, height - (width <= 480 ? 210 : 190));
+    const target = width <= 480 ? 3 : shortWide() || width <= 900 ? 4 : 6;
+    return Math.max(3, Math.min(target, Math.floor(available / (width <= 480 ? 64 : 60))));
+  }
+  const calendarPageCount = list => Math.max(1, Math.ceil(list.length / calendarPageSize));
+  function calendarRow(c) {
+    return `<div class="kiosk-agenda-row ${c.subtype === 'birthday_rollup' ? 'is-birthday' : ''}"><time>${esc(c.subtitle || 'All day')}</time><strong>${esc(c.title || 'Untitled')}</strong><small>${esc(c.subtype === 'birthday_rollup' ? 'Birthday' : sourceLabel(c))}</small></div>`;
+  }
+  function calendarDetail(list) {
+    calendarPageSize = measuredAgendaPageSize();
+    const pages = calendarPageCount(list);
+    calendarPage = Math.min(calendarPage, pages);
+    const start = (calendarPage - 1) * calendarPageSize;
+    const entries = list.slice(start, start + calendarPageSize);
+    const grouped = entries.reduce((map, c) => { const key = agendaGroup(dateOf(c)); (map[key] ||= []).push(c); return map; }, {});
+    const liveId = 'calendar-page-announcement';
+    return `<div class="kiosk-calendar-detail" data-page-size="${calendarPageSize}"><header class="kiosk-calendar-detail-head"><div><p class="kiosk-kicker">FULL AGENDA</p><h2 id="calendar-agenda-title" tabindex="-1">All calendar events</h2></div><p class="kiosk-calendar-count">Page ${calendarPage} of ${pages}</p></header><div class="kiosk-agenda-groups kiosk-calendar-page">${Object.entries(grouped).map(([group, values]) => `<section><h3>${esc(group)}</h3>${values.map(calendarRow).join('')}</section>`).join('') || '<p class="kiosk-empty">No events are available.</p>'}</div><div class="kiosk-calendar-controls"><button type="button" data-calendar-page="${calendarPage - 1}" ${calendarPage <= 1 ? 'disabled' : ''}>Previous</button><button type="button" data-calendar-page="${calendarPage + 1}" ${calendarPage >= pages ? 'disabled' : ''}>Next</button><button type="button" data-calendar-summary>Back to summary</button><a href="${esc(href(''))}" data-view="">Return to Home</a></div><p class="kiosk-sr-only" id="${liveId}" aria-live="polite" aria-atomic="true">Page ${calendarPage} of ${pages}</p></div>`;
+  }
   function renderAgenda(list) {
     const values = ordered(list), feature = values[0];
     if (!feature) return sharedState('Your agenda is clear.', 'Return to Home', false, 'empty');
     const upcoming = values.slice(1, 1 + agendaLimit()), remaining = Math.max(0, values.length - 1 - upcoming.length);
     const grouped = upcoming.reduce((map, c) => { const key = agendaGroup(dateOf(c)); (map[key] ||= []).push(c); return map; }, {});
-    const remainder = remaining ? `<p class="kiosk-agenda-more">${remaining} more event${remaining === 1 ? '' : 's'} remain beyond this summary.</p>` : '';
-    return `<div class="kiosk-agenda"><article class="kiosk-agenda-feature"><p class="kiosk-kicker">UP NEXT</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || feature.detail || '')}</p><p class="kiosk-meta">${esc(feature.location || feature.detail || sourceLabel(feature))}</p></article><div class="kiosk-agenda-groups">${Object.entries(grouped).map(([group, entries]) => `<section><h3>${esc(group)}</h3>${entries.map(c => `<div class="kiosk-agenda-row ${c.subtype === 'birthday_rollup' ? 'is-birthday' : ''}"><time>${esc(c.subtitle || 'All day')}</time><strong>${esc(c.title)}</strong><small>${esc(c.subtype === 'birthday_rollup' ? 'Birthday' : sourceLabel(c))}</small></div>`).join('')}</section>`).join('') || '<p class="kiosk-empty">No later events in view.</p>'}${remainder}</div></div>`;
+    const remainder = remaining ? `<button type="button" class="kiosk-agenda-more" data-calendar-disclosure aria-label="View all ${values.length} events">View all ${values.length} events</button>` : '';
+    return `<div class="kiosk-agenda"><article class="kiosk-agenda-feature"><p class="kiosk-kicker">UP NEXT</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || feature.detail || '')}</p><p class="kiosk-meta">${esc(feature.location || feature.detail || sourceLabel(feature))}</p></article><div class="kiosk-agenda-groups">${Object.entries(grouped).map(([group, entries]) => `<section><h3>${esc(group)}</h3>${entries.map(calendarRow).join('')}</section>`).join('') || '<p class="kiosk-empty">No later events in view.</p>'}${remainder}</div></div>`;
   }
   function renderMedia(list) {
     const [feature, ...queue] = ordered(list);
@@ -385,9 +418,15 @@
     const message = lifecycle.state === 'loading' ? `Loading ${label(view)}…` : lifecycle.state === 'error' ? `${label(view)} is unavailable` : lifecycle.state === 'stale' ? `${label(view)} is stale` : lifecycle.state === 'unavailable' ? `${label(view)} is unavailable` : '';
     const feature = view === 'nhl' && list.length ? ordered(list)[0] : null;
     const headingName = feature ? nhlMatchupName(feature.left || {}, feature.right || {}) : label(view);
-    const html = `<header class="kiosk-section-head"><p>${esc(categoryFor(view).toUpperCase())}</p><h1 id="kiosk-section-title"${feature ? ` aria-label="${esc(headingName)}"` : ''}>${esc(label(view))}</h1></header>` + (message ? sharedState(message, 'Return to Home', lifecycle.state === 'error' || lifecycle.state === 'stale' || lifecycle.state === 'unavailable', lifecycle.state, view) : renderDestination(view, list));
+    const detail = view === 'calendar' && calendarMode === 'all' && lifecycle.state === 'populated';
+    panel.classList.toggle('calendar-detail-surface', detail);
+    const html = detail
+      ? `<header class="kiosk-section-head kiosk-section-head-detail"><p>CALENDAR</p><h1 id="kiosk-section-title">Calendar</h1></header>${calendarDetail(ordered(list))}`
+      : `<header class="kiosk-section-head"><p>${esc(categoryFor(view).toUpperCase())}</p><h1 id="kiosk-section-title"${feature ? ` aria-label="${esc(headingName)}"` : ''}>${esc(label(view))}</h1></header>` + (message ? sharedState(message, 'Return to Home', lifecycle.state === 'error' || lifecycle.state === 'stale' || lifecycle.state === 'unavailable', lifecycle.state, view) : renderDestination(view, list));
     if (panel.innerHTML !== html) panel.innerHTML = html;
-    focusInitialDestination();
+    calendarDisclosure = panel.querySelector('[data-calendar-disclosure]');
+    if (detail) panel.querySelector('#calendar-agenda-title')?.focus({preventScroll: true});
+    if (!detail) focusInitialDestination();
     preserveDirectHeadingFocus(preserveHeadingFocus);
   }
   function focusNavigation(key) {
@@ -396,7 +435,22 @@
     else if (key) more.focus();
     else primary.querySelector('[data-view=""]')?.focus();
   }
-  function change(key, restoreFocus = true) { view = key; selected = ''; history.pushState({marqueeDestination: Boolean(key)}, '', href(key)); closeMenu(false); drawNavigation(); drawMenu(); drawPanel(); if (restoreFocus) { focusNavigation(key); setTimeout(() => focusNavigation(key), 0); } window.dispatchEvent(new Event('marquee-navigation')); }
+  function change(key, restoreFocus = true) { view = key; selected = ''; calendarMode = ''; calendarPage = 1; history.pushState({marqueeDestination: Boolean(key)}, '', href(key)); closeMenu(false); drawNavigation(); drawMenu(); drawPanel(); if (restoreFocus) { focusNavigation(key); setTimeout(() => focusNavigation(key), 0); } window.dispatchEvent(new Event('marquee-navigation')); }
+  function openCalendarAgenda() { if (view !== 'calendar' || !items('calendar').length) return; calendarMode = 'all'; calendarPage = 1; history.pushState({marqueeCalendarAgenda: true}, '', href('calendar', true, calendarPage)); drawPanel(); setTimeout(() => panel.querySelector('#calendar-agenda-title')?.focus({preventScroll: true}), 0); }
+  function closeCalendarAgenda(useHistory = true) {
+    if (!calendarMode) return;
+    if (useHistory) { history.back(); return; }
+    calendarMode = ''; calendarPage = 1; drawPanel(); setTimeout(() => calendarDisclosure?.focus({preventScroll: true}), 0);
+  }
+  function setCalendarPage(page) {
+    const list = ordered(items('calendar')); const pages = calendarPageCount(list);
+    const nextPage = Math.max(1, Math.min(pages, page));
+    if (nextPage === calendarPage) return;
+    calendarPage = nextPage;
+    history.pushState({marqueeCalendarAgenda: true}, '', href('calendar', true, calendarPage));
+    drawPanel();
+    setTimeout(() => panel.querySelector('[data-calendar-page]:not([disabled])')?.focus({preventScroll: true}), 0);
+  }
   more.onclick = () => { drawMenu(); menu.showModal(); more.setAttribute('aria-expanded', 'true'); };
   function closeMenu(focus = true) {
     if (menu.open) menu.close();
@@ -409,11 +463,12 @@
   function handleLink(e) { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); } }
   primary.addEventListener('click', handleLink); overflow.addEventListener('click', handleLink);
   menu.addEventListener('click', e => { if (e.target === menu) { const r = menu.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closeMenu(); } });
-  panel.addEventListener('click', e => { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); return; } const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); return; } const b = e.target.closest('button[data-item]'); if (b) { selected = b.dataset.item; drawPanel(); primary.querySelector(`[data-view="${CSS.escape(view)}"]`)?.focus(); window.dispatchEvent(new Event('marquee-navigation')); } });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && view && !menu.open) { e.preventDefault(); change(''); } });
-  window.addEventListener('popstate', () => { view = new URLSearchParams(location.search).get('view') || ''; selected = ''; drawNavigation(); drawMenu(); drawPanel(); focusNavigation(view); setTimeout(() => focusNavigation(view), 0); window.dispatchEvent(new Event('marquee-navigation')); });
+  panel.addEventListener('click', e => { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); return; } if (e.target.closest('[data-calendar-disclosure]')) { openCalendarAgenda(); return; } if (e.target.closest('[data-calendar-summary]')) { closeCalendarAgenda(); return; } const page = e.target.closest('[data-calendar-page]'); if (page && !page.disabled) { setCalendarPage(Number(page.dataset.calendarPage)); return; } const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); return; } const b = e.target.closest('button[data-item]'); if (b) { selected = b.dataset.item; drawPanel(); primary.querySelector(`[data-view="${CSS.escape(view)}"]`)?.focus(); window.dispatchEvent(new Event('marquee-navigation')); } });
+  document.addEventListener('keydown', e => { if (menu.open || !view) return; if (!calendarMode && e.target.closest?.('[data-calendar-disclosure]') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openCalendarAgenda(); return; } if (calendarMode) { if (e.key === 'Escape' || e.key === 'BrowserBack') { e.preventDefault(); closeCalendarAgenda(); return; } if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); setCalendarPage(calendarPage - 1); return; } if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); setCalendarPage(calendarPage + 1); return; } } else if (e.key === 'Escape') { e.preventDefault(); change(''); } });
+  window.addEventListener('popstate', () => { const next = new URLSearchParams(location.search); view = next.get('view') || ''; calendarMode = view === 'calendar' && next.get('mode') === 'all' ? 'all' : ''; calendarPage = Math.max(1, Number.parseInt(next.get('page') || '1', 10) || 1); selected = ''; drawNavigation(); drawMenu(); drawPanel(); if (calendarMode) setTimeout(() => panel.querySelector('#calendar-agenda-title')?.focus({preventScroll: true}), 0); else if (view === 'calendar') setTimeout(() => calendarDisclosure?.focus({preventScroll: true}), 0); else { focusNavigation(view); setTimeout(() => focusNavigation(view), 0); } window.dispatchEvent(new Event('marquee-navigation')); });
+  window.addEventListener('resize', () => { if (calendarMode && view === 'calendar') drawPanel(); });
   window.addEventListener('marquee-surface-rendered', drawPanel);
-  window.MarqueeNavigation = { resolve(payload) { nowPlaying = payload || {playing:false, state:'idle', availability:'idle'}; const wasInterrupted = interrupted; interrupted = Boolean(payload?.attention || payload?.householdFocus); if (interrupted && !wasInterrupted && menu.open) closeMenu(false); drawPanel(); if (interrupted || !view || view === 'plex') return payload; const c = !offline && sections.includes(view) && items(view).find(item => item.id === selected); return c ? c.payload || {playing:true,type:'media_context',key:'browse:'+c.id,context:c} : {playing:false}; }, refresh };
+  window.MarqueeNavigation = { resolve(payload) { nowPlaying = payload || {playing:false, state:'idle', availability:'idle'}; const wasInterrupted = interrupted; interrupted = Boolean(payload?.attention || payload?.householdFocus); if (interrupted && calendarMode) { calendarMode = ''; calendarPage = 1; history.replaceState({marqueeDestination: true}, '', href('calendar')); } if (interrupted && !wasInterrupted && menu.open) closeMenu(false); drawPanel(); if (interrupted || !view || view === 'plex') return payload; const c = !offline && sections.includes(view) && items(view).find(item => item.id === selected); return c ? c.payload || {playing:true,type:'media_context',key:'browse:'+c.id,context:c} : {playing:false}; }, refresh };
   async function refresh() {
     if (refreshInFlight) return;
     refreshInFlight = true;
