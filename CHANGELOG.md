@@ -1,3 +1,11 @@
+## 2.10.70
+
+- Restore Home as the single current kiosk rail destination on the dashboard
+  and after returning from every destination, while keeping More and utility
+  links neutral.
+- Add source and browser regressions for initial Home, destination returns,
+  More, utility links, and URL/history state across kiosk rail widths.
+
 ## 2.10.69
 
 - Correct kiosk current-destination semantics so only the active destination

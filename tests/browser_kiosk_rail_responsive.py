@@ -55,6 +55,13 @@ with sync_playwright() as playwright:
                 return route.fulfill(json={})
 
             page.route("**/*", route)
+            page.goto("http://marquee.test/kiosk", wait_until="domcontentloaded")
+            page.wait_for_selector('.kiosk-primary [data-view=""][aria-current="page"]')
+            assert page.locator('[aria-current="page"]').count() == 1, (width, "home")
+            assert page.locator('.kiosk-more[aria-current]').count() == 0
+            assert page.locator('.kiosk-menu a[href="/live"][aria-current]').count() == 0
+            assert page.evaluate("new URL(location.href).searchParams.get('view') === null")
+
             page.goto(f"http://marquee.test/kiosk?view={destination}", wait_until="domcontentloaded")
             page.wait_for_selector(f'.kiosk-primary [data-view="{destination}"][aria-current="page"]')
 
@@ -85,6 +92,9 @@ with sync_playwright() as playwright:
                 page.wait_for_function("document.querySelector('.kiosk-menu[open]') !== null")
                 assert page.locator('.kiosk-primary [data-view=""]').count() == 1
                 assert page.locator('.kiosk-menu [data-view=""]').count() == 0
+                assert page.locator('[aria-current="page"]').count() == 1
+                assert page.locator('.kiosk-more[aria-current]').count() == 0
+                assert page.locator('.kiosk-menu a[href="/live"][aria-current]').count() == 0
                 page.keyboard.press("Escape")
                 page.wait_for_function("document.querySelector('.kiosk-menu[open]') === null")
 
@@ -93,6 +103,9 @@ with sync_playwright() as playwright:
             home.press("Enter")
             page.wait_for_function("new URL(location.href).searchParams.get('view') === null")
             assert page.locator('.kiosk-primary [data-view=""][aria-current="page"]').count() == 1
+            assert page.locator('[aria-current="page"]').count() == 1
+            assert page.locator('.kiosk-more[aria-current]').count() == 0
+            assert page.locator('.kiosk-menu a[href="/live"][aria-current]').count() == 0
             assert page.evaluate("document.activeElement?.dataset.view === ''")
             page.close()
     browser.close()

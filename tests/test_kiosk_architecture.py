@@ -54,6 +54,9 @@ def test_overflow_trigger_and_escape_are_remote_visible_contracts():
     assert "current destination is ${label(view)}" in MENU
     assert "function updateCurrentDestination()" in MENU
     assert "document.querySelectorAll('.kiosk-rail a[data-view], .kiosk-menu a[data-view]').forEach(a => a.removeAttribute('aria-current'));" in MENU
+    assert "const currentView = view || '';" in MENU
+    assert "const direct = primary.querySelector(`[data-view=\"${CSS.escape(currentView)}\"]`);" in MENU
+    assert "const active = direct && !direct.hidden ? direct : overflow.querySelector(`[data-view=\"${CSS.escape(currentView)}\"]`);" in MENU
     assert "more.removeAttribute('aria-current')" in MENU
     assert '<a href="/live">Live display</a>' in MENU
     assert "overflow.innerHTML = allDestinations().filter" in MENU

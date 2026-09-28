@@ -93,9 +93,9 @@
   function link([key, title, glyph], detail = '') { return `<a href="${esc(href(key))}" data-view="${esc(key)}" aria-label="${esc(title)}" title="${esc(title)}"><span class="kiosk-icon" aria-hidden="true">${esc(glyph)}</span><span class="kiosk-label">${esc(title)}</span>${detail ? `<small>${esc(detail)}</small>` : ''}</a>`; }
   function updateCurrentDestination() {
     document.querySelectorAll('.kiosk-rail a[data-view], .kiosk-menu a[data-view]').forEach(a => a.removeAttribute('aria-current'));
-    if (!view) return;
-    const direct = primary.querySelector(`[data-view="${CSS.escape(view)}"]`);
-    const active = direct && !direct.hidden ? direct : overflow.querySelector(`[data-view="${CSS.escape(view)}"]`);
+    const currentView = view || '';
+    const direct = primary.querySelector(`[data-view="${CSS.escape(currentView)}"]`);
+    const active = direct && !direct.hidden ? direct : overflow.querySelector(`[data-view="${CSS.escape(currentView)}"]`);
     if (active) active.setAttribute('aria-current', 'page');
   }
   function drawNavigation() {

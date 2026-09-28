@@ -43,12 +43,22 @@ with sync_playwright() as p:
     page.goto("http://marquee.test/kiosk", wait_until="domcontentloaded")
     page.wait_for_selector('.kiosk-primary [data-view="gaming"]')
 
+    def assert_current(view):
+        assert page.locator('[aria-current="page"]').count() == 1
+        assert page.locator(f'.kiosk-rail a[data-view="{view}"][aria-current="page"]').count() == 1
+        assert page.locator('.kiosk-more[aria-current]').count() == 0
+        assert page.locator('.kiosk-menu a[href="/live"][aria-current]').count() == 0
+
+    assert_current("")
+    assert page.evaluate("new URL(location.href).pathname + new URL(location.href).search") == "/kiosk"
+
     # Home starts exposed and usable.
     assert page.locator(".stage").evaluate("el => !el.inert && !el.hasAttribute('aria-hidden')")
     assert page.evaluate("document.activeElement === document.body")
 
     page.locator('.kiosk-primary [data-view="gaming"]').click()
     page.wait_for_function("document.querySelector('.kiosk-section:not([hidden])') !== null")
+    assert_current("gaming")
     assert page.evaluate("document.activeElement?.dataset.view === 'gaming'")
     assert page.locator(".stage").evaluate("el => el.inert && el.getAttribute('aria-hidden') === 'true'")
     assert page.locator(".idle-screen").evaluate("el => el.inert && el.getAttribute('aria-hidden') === 'true'")
@@ -57,17 +67,20 @@ with sync_playwright() as p:
 
     page.locator('.kiosk-primary [data-view=""]').click()
     page.wait_for_function("new URL(location.href).searchParams.get('view') === null")
+    assert_current("")
     assert page.evaluate("document.activeElement?.dataset.view") == ""
 
     page.locator('.kiosk-primary [data-view="gaming"]').click()
     page.keyboard.press("Escape")
     page.wait_for_function("new URL(location.href).searchParams.get('view') === null")
+    assert_current("")
     assert page.locator(".stage").evaluate("el => !el.inert && !el.hasAttribute('aria-hidden')")
     assert page.evaluate("document.activeElement?.dataset.view") == ""
 
     page.locator('.kiosk-primary [data-view="gaming"]').click()
     page.go_back(wait_until="domcontentloaded")
     page.wait_for_function("new URL(location.href).searchParams.get('view') === null")
+    assert_current("")
     assert page.evaluate("document.activeElement?.dataset.view") == ""
     assert page.locator(".kiosk-section").evaluate("el => el.hidden && el.inert && el.getAttribute('aria-hidden') === 'true'")
 
@@ -80,10 +93,12 @@ with sync_playwright() as p:
     page.goto("http://marquee.test/kiosk?audit=2.10.50&view=gaming", wait_until="domcontentloaded")
     page.wait_for_function("document.querySelector('.kiosk-section:not([hidden])') !== null")
     page.wait_for_function("document.activeElement?.id === 'kiosk-section-title'")
+    assert_current("gaming")
     assert page.evaluate("document.activeElement !== document.body")
     assert page.locator(".stage").evaluate("el => el.inert && el.getAttribute('aria-hidden') === 'true'")
     page.go_back(wait_until="domcontentloaded")
     page.wait_for_function("new URL(location.href).searchParams.get('view') === null")
+    assert_current("")
     assert page.locator(".stage").evaluate("el => !el.inert && !el.hasAttribute('aria-hidden')")
 
     browser.close()
