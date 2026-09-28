@@ -101,6 +101,8 @@ body .sport-rows span{white-space:normal}
  body .sport-weather{font-size:15px}
  body .sport-footer .sport-rows,body .sport-detail{font-size:11px;line-height:1.35}
  body .sport-footer{max-height:13vh;overflow:auto}
+}
+@media(min-width:701px) and (max-aspect-ratio:1/1){
  body.brain-live.browser-controls #brain-activity,body.brain-live.browser-controls #brain-agenda{height:calc(25vh - var(--control-rail))}
 }
 /* Bound the artwork row when a large clock leaves less vertical room. */

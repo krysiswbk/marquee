@@ -162,6 +162,20 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("Activity feed reconnecting; recent activity is unavailable.", brain)
         self.assertNotIn("The next real change lands here.", brain)
 
+    def test_home_uses_names_without_decorative_editorial_ordinals(self):
+        brain = (ROOT / "output" / "brain.js").read_text()
+        for label in ("Right now", "Just happened", "People first"):
+            self.assertIn(f">{label}<", brain)
+        self.assertNotRegex(brain, r">0[1-9]\s*[/·|—-]")
+        self.assertNotRegex(brain, r"\b0[1-9]\s*[/·|—-]\s*(Right now|Just happened|People first)")
+
+    def test_screens_geometry_override_does_not_compete_with_tablet_or_phone_contract(self):
+        screens = (ROOT / "output" / "screens.css").read_text()
+        self.assertIn("@media(min-width:701px) and (max-aspect-ratio:1/1)", screens)
+        override = "body.brain-live.browser-controls #brain-activity,body.brain-live.browser-controls #brain-agenda{height:calc(25vh - var(--control-rail))}"
+        self.assertEqual(screens.count(override), 1)
+        self.assertNotIn(override, screens.split("@media(min-width:701px)", 1)[0])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,3 +1,9 @@
+## 2.10.8 — Remove decorative sequencing
+
+- Remove ornamental numeric prefixes from the household desk section labels.
+- Keep the browser-control support-panel geometry contract scoped away from
+  481–700px tablet and phone layouts so their dock-safe panel rules win.
+
 ## 2.10.7 — Tablet support geometry contract
 
 - Give 481–700px activity and agenda panels explicit dock-safe heights instead
