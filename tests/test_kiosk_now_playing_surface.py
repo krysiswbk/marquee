@@ -37,7 +37,7 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn(".kiosk-section.now-playing-surface", SCREENS)
         self.assertIn("@media(max-width:700px)", SCREENS)
         self.assertIn("@media(max-width:480px)", SCREENS)
-        self.assertIn("kiosk-menu.js?v=2.10.14", INDEX)
+        self.assertIn("kiosk-menu.js?v=2.10.15", INDEX)
 
     def test_narrow_orbit_cannot_create_a_horizontal_scroller(self):
         self.assertIn("body.browser-controls{overflow-x:hidden}", SCREENS)

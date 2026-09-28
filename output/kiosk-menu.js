@@ -96,10 +96,11 @@
     const days = Math.round((new Date(date.getFullYear(), date.getMonth(), date.getDate()) - start) / 86400000);
     return days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : days < 7 ? 'This week' : 'Later';
   }
+  const agendaLimit = () => window.matchMedia?.('(max-width: 480px)').matches ? 2 : 3;
   function renderAgenda(list) {
     const values = ordered(list), feature = values[0];
     if (!feature) return sharedState('Your agenda is clear.', 'Return to Home', false, 'empty');
-    const upcoming = values.slice(1, 4), remaining = Math.max(0, values.length - 1 - upcoming.length);
+    const upcoming = values.slice(1, 1 + agendaLimit()), remaining = Math.max(0, values.length - 1 - upcoming.length);
     const grouped = upcoming.reduce((map, c) => { const key = agendaGroup(dateOf(c)); (map[key] ||= []).push(c); return map; }, {});
     const remainder = remaining ? `<p class="kiosk-agenda-more">${remaining} more event${remaining === 1 ? '' : 's'} remain beyond this summary.</p>` : '';
     return `<div class="kiosk-agenda"><article class="kiosk-agenda-feature"><p class="kiosk-kicker">UP NEXT</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || feature.detail || '')}</p><p class="kiosk-meta">${esc(feature.location || feature.detail || sourceLabel(feature))}</p></article><div class="kiosk-agenda-groups">${Object.entries(grouped).map(([group, entries]) => `<section><h3>${esc(group)}</h3>${entries.map(c => `<div class="kiosk-agenda-row ${c.subtype === 'birthday_rollup' ? 'is-birthday' : ''}"><time>${esc(c.subtitle || 'All day')}</time><strong>${esc(c.title)}</strong><small>${esc(c.subtype === 'birthday_rollup' ? 'Birthday' : sourceLabel(c))}</small></div>`).join('')}</section>`).join('') || '<p class="kiosk-empty">No later events in view.</p>'}${remainder}</div></div>`;

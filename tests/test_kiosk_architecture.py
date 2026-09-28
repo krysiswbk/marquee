@@ -19,7 +19,7 @@ def test_sports_contract_keeps_matchup_status_and_next_event_hierarchy():
 
 
 def test_calendar_contract_groups_and_limits_chronological_agenda():
-    for token in ("agendaGroup", "Today", "Tomorrow", "This week", "values.slice(1, 4)", "remaining", "kiosk-agenda-more", "is-birthday"):
+    for token in ("agendaGroup", "Today", "Tomorrow", "This week", "agendaLimit", "max-width: 480px", "values.slice(1, 1 + agendaLimit())", "remaining", "kiosk-agenda-more", "is-birthday"):
         assert token in MENU
 
 
@@ -44,6 +44,17 @@ def test_narrow_single_event_surfaces_remove_artificial_minimum_height():
     assert ".kiosk-sport-feature,.kiosk-editorial-feature{min-height:0" in SCREENS
     assert ".kiosk-support{margin-top:18px}" in SCREENS
     assert ".kiosk-more.is-active" in SCREENS
+
+
+def test_narrow_agenda_and_ufc_fit_contract_is_destination_scoped():
+    for token in (
+        ".kiosk-section[data-section=ufc]",
+        ".kiosk-section[data-section=calendar]",
+        ".kiosk-section[data-section=calendar] .kiosk-agenda-feature{min-height:0",
+        ".kiosk-section[data-section=ufc] .kiosk-sport-feature h2",
+        ".kiosk-section[data-section=calendar] .kiosk-agenda-more",
+    ):
+        assert token in SCREENS
 
 
 def test_presentation_does_not_promote_raw_email_or_entity_source_names():

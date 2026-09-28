@@ -1,3 +1,7 @@
+## 2.10.15
+
+- Fit UFC’s complete single-event summary and the bounded Calendar agenda in the 393px first view with deliberate narrow hierarchy and responsive agenda remainder counts.
+
 ## 2.10.14
 
 - Mark the active overflow destination on the narrow More control and make Escape return any forced destination to Home while preserving dialog close/focus behavior.
