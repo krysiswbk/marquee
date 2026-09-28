@@ -1,3 +1,8 @@
+## 2.10.90
+
+- Keep selected kiosk destinations visible when the live shell enters its idle
+  state, including direct links, browser history, and overflow navigation.
+
 ## 2.10.89
 
 - Give UFC and PFL browse destinations an explicit full-schedule disclosure

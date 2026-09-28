@@ -95,6 +95,10 @@
   }));
   const stage = document.querySelector('.stage');
   function setBackgroundActive(active, surface = active ? 'panel' : 'dashboard') {
+    // The media shell may enter its real idle state independently of kiosk
+    // navigation. A selected destination must therefore explicitly own the
+    // surface; otherwise the idle rules can hide it after this render.
+    document.body.classList.toggle('kiosk-destination-active', active);
     const weatherActive = active && surface === 'weather';
     backgroundState.forEach(({node, inert, ariaHidden, hidden}) => {
       const covered = active && !(weatherActive && node === stage);
@@ -489,7 +493,7 @@
     const surface = active && view === 'weather' && selected ? 'weather' : active ? 'panel' : 'dashboard';
     setBackgroundActive(active, surface);
     panel.hidden = !active || plexActive || Boolean(selected); panel.inert = !active || panel.hidden;
-    if (panel.hidden) {
+    if (panel.hidden && !selected) {
       if (panel.contains(document.activeElement)) {
         focusNavigation(view);
         if (panel.contains(document.activeElement)) document.activeElement.blur();

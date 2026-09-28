@@ -60,18 +60,18 @@ with sync_playwright() as playwright:
     failures["contexts"] = False
     page.evaluate("window.MarqueeNavigation.refresh()")
     page.wait_for_selector("text=Recovered weather")
-    assert page.locator('[data-lifecycle]').count() == 0
+    assert sum(item.is_visible() for item in page.locator('[data-lifecycle]').all()) == 0
 
     failures["providers"] = True
     page.evaluate("window.MarqueeNavigation.refresh()")
     page.wait_for_selector("text=Recovered weather")
     assert "source delayed" in page.locator(".kiosk-brand").inner_text()
-    assert page.locator("text=Recovered weather").count() == 1
+    assert sum(item.is_visible() for item in page.locator("text=Recovered weather").all()) == 1
 
     failures["providers"] = False
     page.evaluate("window.MarqueeNavigation.refresh()")
     page.wait_for_function("!document.querySelector('.kiosk-brand').textContent.includes('delayed')")
-    assert page.locator("text=Recovered weather").count() == 1
+    assert sum(item.is_visible() for item in page.locator("text=Recovered weather").all()) == 1
     page.close()
     browser.close()
     print("PASS: config/context/provider failures settle independently and recover without erasing context data")

@@ -52,7 +52,8 @@ class DisplayTemplateTests(unittest.TestCase):
     def test_idle_body_state_cannot_hide_the_entire_document(self):
         self.assertNotIn("\n  .idle { display: none", DISPLAY)
         self.assertIn(".idle-screen { display: none", DISPLAY)
-        self.assertIn("body.idle .idle-screen { display: flex; }", DISPLAY)
+        self.assertIn("body.idle:not(.kiosk-destination-active) .idle-screen { display: flex; }", DISPLAY)
+        self.assertIn("body.idle:not(.kiosk-destination-active) .stage", DISPLAY)
         self.assertIn("body.unavailable .idle-kicker", DISPLAY)
         self.assertIn("Media connection unavailable", DISPLAY)
 

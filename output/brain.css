@@ -15,7 +15,7 @@ body.brain-live .idle-weather-primary span{font-size:1.35vw;font-weight:500;colo
 body.brain-live .idle-weather-secondary{display:flex;flex-wrap:wrap;gap:.35vw 1vw;margin-top:.8vh;color:var(--desk-muted);font-size:.95vw;line-height:1.25}
 body.brain-live .idle-weather-secondary span:not(:empty)+span:not(:empty):before{content:'·';margin-right:1vw;color:var(--desk-accent)}
 body.brain-live .idle-weather-status{margin-top:.55vh;color:var(--desk-muted);font-size:.72vw;letter-spacing:.08em;text-transform:uppercase}
-body.brain-live.idle .brain-shell{display:block;position:fixed;inset:0;z-index:3;pointer-events:none;font-family:var(--desk-font);color:var(--desk-ink)}
+body.brain-live.idle:not(.kiosk-destination-active) .brain-shell{display:block;position:fixed;inset:0;z-index:3;pointer-events:none;font-family:var(--desk-font);color:var(--desk-ink)}
 .brain-shell button,.brain-shell a{pointer-events:auto}
 .brain-mast{position:absolute;top:3.5vh;left:4vw;right:4vw;min-height:6vh;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--desk-accent);padding-bottom:1.8vh;box-sizing:border-box;font-size:1vw;letter-spacing:.13em}
 .brain-brand{font-weight:800;font-size:1.65vw;letter-spacing:-.06em}.brain-brand em{font-style:normal;background:var(--desk-accent);color:var(--desk-bg);padding:.18em .35em;margin-right:.5em}.brain-edition{color:var(--desk-muted)}
