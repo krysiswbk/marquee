@@ -1,3 +1,10 @@
+## 2.10.47
+
+- Make browse artwork truthful: contexts without a generated poster, including
+  weather, use their semantic no-art presentation without requesting a known
+  404; real media posters remain on the existing endpoint, and failed poster
+  identities are not retried on every poll.
+
 ## 2.10.46
 
 - Restore viewing-distance readability for the complete shallow-landscape

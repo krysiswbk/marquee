@@ -693,9 +693,9 @@
   body.live-editing [data-layout] { outline:none; }
   body.live-editing .screen-controls, body.live-editing nav { display:none !important; }
 </style>
-<link rel="stylesheet" href="/brain.css?v=2.10.46">
-<link rel="stylesheet" href="/screens.css?v=2.10.46">
-<link rel="stylesheet" href="/weather-channel.css?v=2.10.46">
+<link rel="stylesheet" href="/brain.css?v=2.10.47">
+<link rel="stylesheet" href="/screens.css?v=2.10.47">
+<link rel="stylesheet" href="/weather-channel.css?v=2.10.47">
 <link rel="stylesheet" href="/scene-themes.css?v=2.9.7">
 <body data-template="spotlight">
 <img class="bg" id="bg" alt="">
@@ -794,9 +794,9 @@
 <time class="cast-clock-overlay" id="cast-clock-overlay"></time>
 <div class="idle-screen"><div class="idle-house"><div class="idle-kicker" id="idle-kicker">Home</div><div class="idle-greeting" id="idle-greeting"></div><div class="idle-state" id="idle-state" hidden></div><div class="idle-note" id="idle-note" hidden></div><time class="idle-clock" id="idle-clock"></time><div class="idle-date" id="idle-date"></div><div class="idle-weather" id="idle-weather" aria-label="Current weather"><div class="idle-weather-primary"><strong id="idle-weather-temp"></strong><span id="idle-weather-condition"></span></div><div class="idle-weather-secondary"><span id="idle-weather-feels"></span><span id="idle-weather-range"></span><span id="idle-weather-rain"></span></div><div class="idle-weather-status" id="idle-weather-status"></div></div></div></div>
 <div class="ambient-veil" aria-hidden="true"></div>
-<script src="/weather-channel.js?v=2.10.46"></script>
-<script src="/now-playing-progress.js?v=2.10.46"></script>
-<script src="/brain.js?v=2.10.46"></script>
+<script src="/weather-channel.js?v=2.10.47"></script>
+<script src="/now-playing-progress.js?v=2.10.47"></script>
+<script src="/brain.js?v=2.10.47"></script>
 <script>
 
   const $ = id => document.getElementById(id);
@@ -2378,11 +2378,45 @@ ${chase.join('')}
     }
   });
 
+  // Poster art is an explicit media capability, not a property of every
+  // context key. Weather and other browse contexts can be fully visual with
+  // their own semantic presentation and must not turn that absence into a
+  // guaranteed-404 request. Keep real media art on the existing endpoint so
+  // unrelated missing-media faults remain observable.
+  const unavailablePosterIdentities = new Set();
+  let requestedPosterIdentity = '';
+  function clearPosterPresentation(resetIdentity = true) {
+    if (resetIdentity) requestedPosterIdentity = '';
+    const poster = $('poster');
+    poster.removeAttribute('src');
+    poster.hidden = true;
+    document.querySelector('.b-poster')?.setAttribute('hidden', '');
+  }
   function refreshPoster(d) {
+    const posterAvailable = DEMO ? Boolean(demoM().poster) : d.poster === true;
+    if (!posterAvailable) {
+      clearPosterPresentation();
+      return;
+    }
+    const requestIdentity = `${d.key || ''}|${d.posterVersion || 'legacy'}`;
+    if (requestIdentity === requestedPosterIdentity) {
+      if (unavailablePosterIdentities.has(requestIdentity)) clearPosterPresentation(false);
+      return;
+    }
+    requestedPosterIdentity = requestIdentity;
+    if (unavailablePosterIdentities.has(requestIdentity)) {
+      clearPosterPresentation(false);
+      return;
+    }
     const i = new Image();
-    i.onload = () => { $('poster').src = i.src; };
-    i.src = DEMO ? demoM().poster : '/poster.jpg?k=' + encodeURIComponent(d.key || '')
+    const source = DEMO ? demoM().poster : '/poster.jpg?k=' + encodeURIComponent(d.key || '')
       + '&v=' + encodeURIComponent(d.posterVersion || 'legacy');
+    i.onload = () => { $('poster').src = i.src; $('poster').hidden = false; document.querySelector('.b-poster')?.removeAttribute('hidden'); };
+    i.onerror = () => {
+      unavailablePosterIdentities.add(requestIdentity);
+      if (requestedPosterIdentity === requestIdentity) clearPosterPresentation(false);
+    };
+    i.src = source;
   }
 
   function fitSceneClocks() {
@@ -2649,4 +2683,4 @@ ${chase.join('')}
   setInterval(paint, 1000);
 </script>
 
-<script src="/kiosk-menu.js?v=2.10.46"></script>
+<script src="/kiosk-menu.js?v=2.10.47"></script>
