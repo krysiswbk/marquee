@@ -49,6 +49,12 @@
 .diagnostics pre{white-space:pre-wrap;overflow-wrap:anywhere;color:var(--muted);font-size:12px}
 .diagnostics table{width:100%;border-collapse:collapse;font-size:13px}
 .diagnostics td,.diagnostics th{padding:8px;text-align:left;border-top:1px solid var(--line);vertical-align:top}
+.history-list{display:grid;gap:8px;min-width:0}
+.history-row{display:grid;grid-template-columns:minmax(130px,1.15fr) minmax(90px,.8fr) minmax(90px,.75fr) minmax(180px,1.5fr) minmax(170px,1.2fr);gap:10px;align-items:start;padding:11px 0;border-top:1px solid var(--line);min-width:0}
+.history-row:first-child{border-top:0}
+.history-identity{display:grid;gap:3px;min-width:0}.history-time,.history-source,.history-summary,.history-outcome{font-size:12px;overflow-wrap:anywhere}.history-time,.history-source,.history-summary{color:var(--muted)}.history-kind,.history-outcome{overflow-wrap:anywhere}
+.history-details{min-width:0}.history-details summary{padding:0 0 0 4px!important;min-height:44px;align-items:center}.history-payload{margin:8px 0 0;max-height:320px;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:10px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
+.history-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:13px;color:var(--muted);font-size:12px}.history-count{color:var(--muted);font-size:12px}.diagnostic-state{padding:10px 0;overflow-wrap:anywhere}.diagnostic-state.error{color:#ef7777}
 .savebar{position:sticky;bottom:0;z-index:5;display:flex;align-items:center;gap:10px;padding:14px 0 calc(14px + env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--bg) 34%);scroll-margin-bottom:calc(112px + env(safe-area-inset-bottom))}
 .savebar span{margin-right:auto;color:var(--muted)}
 .test-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(260px,.75fr);gap:24px}
@@ -64,6 +70,7 @@
 .savebar{flex-wrap:wrap}
 .savebar span{flex-basis:100%}
 .diagnostics table{display:block;overflow:auto}
+.history-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px}.history-identity{grid-column:1/-1}.history-summary{grid-column:1/-1}.history-details{grid-column:1/-1}.history-controls{align-items:flex-start;flex-direction:column}.history-controls .secondary{width:100%}
 }
 .grouping{padding:0}
 .grouping>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px;cursor:pointer;list-style:none}

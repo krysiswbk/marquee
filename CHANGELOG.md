@@ -1,3 +1,9 @@
+## 2.10.53
+
+- Present recent attention history as responsive human-readable event summaries
+  with accessible full-payload disclosure, truthful progressive loading, and
+  explicit unavailable and empty states.
+
 ## 2.10.52
 
 - Keep the Main Settings mobile Save/Discard dock fixed to the viewport through

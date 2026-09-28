@@ -1,0 +1,12 @@
+{
+  "fixture": "tests/fixtures/attention-history.json",
+  "viewports": ["1500x900", "1024x600", "700x900", "393x852"],
+  "populated_events": 150,
+  "initial_page_size": 40,
+  "keyboard_disclosure": "pass",
+  "empty_state": "pass",
+  "unavailable_state": "pass",
+  "horizontal_overflow": "none",
+  "console_errors": "none",
+  "network_failures": "none except intentional unavailable fixture"
+}

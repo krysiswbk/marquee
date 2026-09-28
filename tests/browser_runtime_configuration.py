@@ -7,7 +7,7 @@ from playwright.sync_api import sync_playwright
 
 
 BASE = os.environ.get("MARQUEE_BASE_URL", "http://10.10.9.37:8084").rstrip("/")
-EVIDENCE = Path(os.environ.get("MARQUEE_EVIDENCE_DIR", "/tmp/marquee-2.10.52-evidence"))
+EVIDENCE = Path(os.environ.get("MARQUEE_EVIDENCE_DIR", "/tmp/marquee-2.10.53-evidence"))
 VIEWPORTS = [(1500, 900), (1024, 600), (700, 900), (393, 852)]
 
 

@@ -1,0 +1,19 @@
+[
+  {
+    "at": 1800000000,
+    "kind": "escalation",
+    "id": "door:nursery",
+    "rule_id": "door",
+    "stage": "important",
+    "source": "sensor.nursery_door",
+    "metadata": {"friendly_name": "Nursery door", "unknown_flag": true},
+    "long_value": "A deliberately long diagnostic value that must wrap safely instead of widening the history surface."
+  },
+  {
+    "at": 1799999940,
+    "kind": "signal",
+    "entity_id": "sensor.unknown",
+    "state": "unavailable",
+    "mystery_field": "kept in the explicit payload"
+  }
+]

@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Marquee — Household attention</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
-  <link rel="stylesheet" href="/control-shell.css?v=2.10.52">
+  <link rel="stylesheet" href="/control-shell.css?v=2.10.53">
   <link rel="stylesheet" href="/settings-admin.css">
-  <link rel="stylesheet" href="/control-shell-narrow.css?v=2.10.52">
-  <script defer src="/control-shell.js?v=2.10.52"></script>
+  <link rel="stylesheet" href="/control-shell-narrow.css?v=2.10.53">
+  <script defer src="/control-shell.js?v=2.10.53"></script>
   <script defer src="/attention-settings.js"></script>
 </head>
 <body>
@@ -64,7 +64,7 @@
       <details><summary>Display decisions</summary><div id="display-decisions"></div></details>
       <details><summary>Signals</summary><div id="signals"></div></details>
       <details><summary>House context</summary><pre id="context"></pre></details>
-      <details><summary>Recent history</summary><div id="history"></div></details>
+      <details><summary>Recent history</summary><div id="history" aria-live="polite"><p class="empty">Loading history…</p></div></details>
     </section>
 
     <footer class="savebar"><span id="save-status" role="status" aria-live="polite"></span><button type="button" class="secondary" id="discard" disabled>Discard changes</button><button type="button" class="primary" id="save" disabled>Save attention policy</button></footer>
