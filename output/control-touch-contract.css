@@ -19,6 +19,10 @@
 .settings-admin input[type="number"] { padding-block:9px; }
 .admin-touch-contract input[type="range"],
 .settings-admin input[type="range"] { height:44px; }
+.admin-touch-contract input[type="number"],
+.admin-touch-contract input[type="range"],
+.settings-admin input[type="number"],
+.settings-admin input[type="range"] { scroll-margin-bottom:calc(136px + env(safe-area-inset-bottom)); }
 .admin-touch-contract summary,
 .admin-touch-contract a,
 .settings-admin summary,

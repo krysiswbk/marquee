@@ -1,6 +1,28 @@
 (() => {
   'use strict';
-  document.querySelectorAll('input[type="number"], input[type="range"]').forEach(control => control.setAttribute('aria-describedby', 'admin-numeric-help'));
+  function numericAccessibility(root = document) {
+    root.querySelectorAll('input[type="number"], input[type="range"]').forEach(control => {
+      if (!control.id) control.id = `numeric-${Math.random().toString(36).slice(2, 8)}`;
+      const label = root.querySelector(`label[for="${CSS.escape(control.id)}"]`) || control.closest('label');
+      if (!label && !control.getAttribute('aria-label')) control.setAttribute('aria-label', control.dataset.label || 'Numeric setting');
+      let help = control.getAttribute('aria-describedby')?.split(/\s+/).map(id => document.getElementById(id)).find(Boolean);
+      if (!help) {
+        help = document.createElement('small'); help.id = `${control.id}-help`;
+        help.textContent = `Allowed range: ${control.min}–${control.max}; step ${control.step || 'any'}.`;
+        control.insertAdjacentElement('afterend', help); control.setAttribute('aria-describedby', help.id);
+      }
+      const report = () => {
+        document.getElementById(`${control.id}-error`)?.remove();
+        if (control.checkValidity()) { control.removeAttribute('aria-invalid'); return; }
+        control.setAttribute('aria-invalid', 'true');
+        const error = document.createElement('small'); error.id = `${control.id}-error`; error.className = 'field-error'; error.setAttribute('role', 'alert'); error.textContent = control.validationMessage;
+        control.insertAdjacentElement('afterend', error);
+        const described = new Set((control.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean)); described.add(error.id); control.setAttribute('aria-describedby', [...described].join(' '));
+      };
+      control.addEventListener('input', report); control.addEventListener('blur', report);
+    });
+  }
+  numericAccessibility();
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -196,7 +218,7 @@
     if (type === 'select') return `<div class="field"><label for="${id}">${label}</label><select id="${id}" data-config-path="${path}">${min.map(([value, text]) => `<option value="${value}">${text}</option>`).join('')}</select></div>`;
     const inputType = type === 'list' ? 'text' : type === 'decimal' ? 'number' : type;
     const numeric = ['number', 'decimal'].includes(type);
-    const attrs = numeric ? `min="${min}" max="${max}" step="${type === 'decimal' ? 'any' : '1'}" required aria-describedby="${id}-help admin-numeric-help"` : '';
+    const attrs = numeric ? `min="${min}" max="${max}" step="${type === 'decimal' ? 'any' : '1'}" required aria-describedby="${id}-help"` : '';
     const hint = type === 'list' ? (help || 'Comma-separated') : numeric ? (help ? `${help}; bounded by the displayed range.` : 'Numeric provider setting; use the displayed unit and bounded range.') : help;
     return `<div class="field"><label for="${id}">${label}</label><input id="${id}" type="${inputType}" ${attrs} data-config-path="${path}" data-list="${type === 'list' ? '1' : '0'}" autocomplete="${type === 'password' ? 'new-password' : 'off'}">${hint ? `<small id="${id}-help">${hint}</small>` : ''}</div>`;
   }
@@ -213,9 +235,10 @@
         const target = name === 'calendar'
           ? `<label class="provider-target"><input type="checkbox" data-calendar-target="kiosk"> Live / Kiosk</label><label class="provider-target"><input type="checkbox" data-calendar-target="hubs"> Cast</label>`
           : `<span class="provider-target">${provider.target}</span>`;
-        card.innerHTML = `<div class="provider-main"><div class="provider-name"><h3>${provider.label}</h3><p>${provider.desc}</p></div><label class="provider-toggle"><input class="switch" type="checkbox" role="switch" data-config-path="providers.${name}.enabled"><span>Enabled</span></label><div class="provider-targets">${target}</div></div><details><summary>Timing and source details</summary><div class="field-grid"><div class="field"><label for="provider-${name}-priority">Source weight</label><input id="provider-${name}-priority" type="number" min="0" max="100" step="1" required aria-describedby="provider-${name}-priority-help admin-numeric-help" data-config-path="providers.${name}.priority"><small id="provider-${name}-priority-help">Compared with the eligibility threshold in Advanced; bounded from 0 to 100 points.</small></div>${(provider.fields || []).map(field => providerField(name, field)).join('')}</div></details>`;
+        card.innerHTML = `<div class="provider-main"><div class="provider-name"><h3>${provider.label}</h3><p>${provider.desc}</p></div><label class="provider-toggle"><input class="switch" type="checkbox" role="switch" data-config-path="providers.${name}.enabled"><span>Enabled</span></label><div class="provider-targets">${target}</div></div><details><summary>Timing and source details</summary><div class="field-grid"><div class="field"><label for="provider-${name}-priority">Source weight</label><input id="provider-${name}-priority" type="number" min="0" max="100" step="1" required aria-describedby="provider-${name}-priority-help" data-config-path="providers.${name}.priority"><small id="provider-${name}-priority-help">Points; whole number from 0 to 100, compared with the eligibility threshold in Advanced.</small></div>${(provider.fields || []).map(field => providerField(name, field)).join('')}</div></details>`;
       }
       root.append(card);
+      numericAccessibility(card);
     }
     $$('[data-config-path]', root).forEach(control => {
       const path = control.dataset.configPath;

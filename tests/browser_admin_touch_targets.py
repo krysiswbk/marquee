@@ -48,10 +48,16 @@ with sync_playwright() as playwright:
                     assert box["rect"]["height"] >= 44, (width, height, route, selector, box)
             for control in page.locator('input[type="number"], input[type="range"]').evaluate_all(
                 "els => els.filter(el => { const r=el.getBoundingClientRect(); "
-                "return r.width > 0 && r.height > 0; }).map(el => ({id:el.id,min:el.min,max:el.max,step:el.step,described:el.getAttribute('aria-describedby')}))"
+                "return r.width > 0 && r.height > 0; }).map(el => ({id:el.id,min:el.min,max:el.max,step:el.step,described:el.getAttribute('aria-describedby'),name:el.getAttribute('aria-label') || document.querySelector(`label[for=\"${el.id}\"]`)?.innerText || el.closest('label')?.innerText || ''}))"
             ):
                 assert control["min"] and control["max"] and control["step"], (route, control)
                 assert control["described"], (route, control)
+                assert control["name"].strip(), (route, control)
+            for control in page.locator('input[type="number"], input[type="range"]').evaluate_all(
+                "els => els.map(el => ({id:el.id,min:el.min,max:el.max,step:el.step,name:el.getAttribute('aria-label') || document.querySelector(`label[for=\"${el.id}\"]`)?.innerText || el.closest('label')?.innerText || '',described:el.getAttribute('aria-describedby')}))"
+            ):
+                assert control["min"] != '' and control["max"] != '' and control["step"] != '', (route, control)
+                assert control["name"].strip() and control["described"], (route, control)
             audit = page.evaluate("""() => {
                 const ids = [...document.querySelectorAll('[id]')].map(node => node.id);
                 const duplicateIds = [...new Set(ids.filter((id, index) => ids.indexOf(id) !== index))];

@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 with sync_playwright() as p:
     browser = p.chromium.launch(
         executable_path=os.environ.get('MARQUEE_CHROMIUM'), args=['--no-sandbox'])
-    page = browser.new_page(viewport={'width': 1280, 'height': 800})
+    page = browser.new_page(viewport={'width': 700, 'height': 900})
     errors = []
     page.on('pageerror', lambda e: errors.append(str(e)))
     page.add_init_script('''
@@ -34,7 +34,11 @@ with sync_playwright() as p:
         if asset.is_file():
             return r.fulfill(path=str(asset))
         if path == '/api/config':
-            data = {'providers': {'plex': {'enabled': True}}, 'fallback': {}}
+            data = {'providers': {key: {'enabled': True, 'targets': ['kiosk']} for key in ('plex', 'nhl', 'ufc', 'pfl', 'weather', 'tv', 'astronomy', 'gaming', 'calendar', 'movies', 'trailers', 'major_events', 'music')}, 'fallback': {}}
+        elif path == '/contexts':
+            data = {'contexts': [], 'browse': {}}
+        elif path == '/providers':
+            data = {'providers': {}}
         elif path in ['/settings.json', '/live-settings.json']:
             data = {'transitionMs': 0}
         elif path == '/ambient.json':
@@ -67,14 +71,32 @@ with sync_playwright() as p:
     page.evaluate("pendingPolls.shift()(new Response(JSON.stringify(media)))")
     page.wait_for_timeout(100)
     assert page.locator('.idle-screen').is_visible()
-    # Return to media, then choose Household with requests deliberately stalled.
+    # Direct rail destinations and the More overflow are the current kiosk contract.
     page.evaluate('sendContext(media)')
     page.wait_for_function("!document.body.classList.contains('idle')")
-    page.get_by_role('button', name='Menu', exact=True).click()
-    page.locator('a[data-view="household"]').click()
-    page.wait_for_timeout(100)
-    assert page.locator('.idle-screen').is_visible()
-    assert page.locator('body').evaluate("el=>el.classList.contains('idle')")
+    page.wait_for_selector('.kiosk-primary a[data-view=""]')
+    assert page.get_by_role('button', name='Menu', exact=True).count() == 0
+    assert page.get_by_role('button', name='More destinations').count() == 1
+    direct = page.locator('.kiosk-primary a[data-view]:not([data-view=""])').first
+    direct.click()
+    page.wait_for_function("new URL(location.href).searchParams.has('view')")
+    assert page.locator('a[aria-current="page"]').count() == 1
+    assert page.locator('.kiosk-primary a[data-view=""]').count() == 1
+    # Keyboard return from a direct destination.
+    page.locator('.kiosk-primary a[data-view=""]').focus()
+    page.keyboard.press('Enter')
+    page.wait_for_function("!new URL(location.href).searchParams.has('view')")
+    assert page.locator('.kiosk-primary a[data-view=""][aria-current="page"]').count() == 1
+    # Touch/click return from an overflow destination, with one current state.
+    page.get_by_role('button', name='More destinations').click()
+    overflow_destination = page.locator('.kiosk-menu a[data-view]:not([data-view=""])').first
+    overflow_destination.click()
+    page.wait_for_function("new URL(location.href).searchParams.has('view')")
+    assert page.locator('a[aria-current="page"]').count() == 1
+    page.locator('.kiosk-home-action').click()
+    page.wait_for_function("!new URL(location.href).searchParams.has('view')")
+    assert page.locator('.kiosk-primary a[data-view=""][aria-current="page"]').count() == 1
+    assert page.locator('body').evaluate("el=>el.classList.contains('idle')") is False
     assert not errors, errors
     browser.close()
-    print('PASS: SSE supersedes stale polls; overlapping polls do not starve or regress; Household navigation works with stalled requests')
+    print('PASS: stale polls are superseded; direct rail, More overflow, keyboard Home, touch Home, current-state, and Menu contracts hold')

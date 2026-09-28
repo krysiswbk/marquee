@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
-<link rel="stylesheet" href="/control-touch-contract.css?v=2.10.77">
+<link rel="stylesheet" href="/control-touch-contract.css?v=2.10.78">
 <style>
   :root { --bg:#0B0D10; --panel:#14171C; --line:#262B33; --text:#F2EEE6;
     --mut:#9AA1AB; --amber:#E5A83B;
@@ -387,9 +387,9 @@
     .mq-mode-link { padding: 12px; }
   }
 </style>
-<link rel="stylesheet" href="/control-shell.css?v=2.10.77">
-<link rel="stylesheet" href="/control-shell-narrow.css?v=2.10.77">
-<script defer src="/control-shell.js?v=2.10.77"></script>
+<link rel="stylesheet" href="/control-shell.css?v=2.10.78">
+<link rel="stylesheet" href="/control-shell-narrow.css?v=2.10.78">
+<script defer src="/control-shell.js?v=2.10.78"></script>
 
 <script src="/settings-draft.js?v=3"></script>
 <div class="wrap">
@@ -2052,6 +2052,14 @@
     $('#status').textContent = 'This template reset to its defaults — save to apply.';
   });
 
-  document.querySelectorAll('input[type="number"], input[type="range"]').forEach(control => control.setAttribute('aria-describedby', 'admin-numeric-help'));
+  document.querySelectorAll('input[type="number"], input[type="range"]').forEach(control => {
+    const key = control.dataset.layoutField || control.dataset.backdropField || control.id || 'numeric-setting';
+    if (!control.id) control.id = `numeric-${key}`;
+    if (!control.getAttribute('aria-label') && !document.querySelector(`label[for="${CSS.escape(control.id)}"]`) && !control.closest('label')) control.setAttribute('aria-label', key.replaceAll(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase()));
+    let help = (control.getAttribute('aria-describedby') || '').split(/\s+/).map(id => document.getElementById(id)).find(Boolean);
+    if (!help) { help = document.createElement('small'); help.id = `${control.id}-help`; help.className = 'numeric-help'; help.textContent = `Range ${control.min}–${control.max}; step ${control.step || 'any'}.`; control.insertAdjacentElement('afterend', help); control.setAttribute('aria-describedby', help.id); }
+    const report = () => { document.getElementById(`${control.id}-error`)?.remove(); if (control.checkValidity()) { control.removeAttribute('aria-invalid'); return; } control.setAttribute('aria-invalid', 'true'); const error = document.createElement('small'); error.id = `${control.id}-error`; error.className = 'field-error'; error.setAttribute('role', 'alert'); error.textContent = control.validationMessage; control.insertAdjacentElement('afterend', error); control.setAttribute('aria-describedby', `${control.getAttribute('aria-describedby')} ${error.id}`); };
+    control.addEventListener('input', report); control.addEventListener('blur', report);
+  });
   load();
 </script>

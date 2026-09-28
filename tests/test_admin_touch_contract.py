@@ -24,7 +24,7 @@ def test_every_in_scope_surface_loads_the_shared_contract() -> None:
     assert "min-height:44px" in contract
     for route, path in SURFACES.items():
         source = path.read_text()
-        assert "/control-touch-contract.css?v=2.10.77" in source, route
+        assert "/control-touch-contract.css?v=2.10.78" in source, route
         assert "min-height:44px" in contract
 
 
@@ -37,6 +37,19 @@ def test_static_numeric_controls_have_truthful_bounds_steps_and_descriptions() -
             assert re.search(r"\bmax=[\"'][^\"']+[\"']", control), (route, control)
             assert re.search(r"\bstep=[\"'][^\"']+[\"']", control), (route, control)
             assert "aria-describedby=" in control or "querySelectorAll('input[type=\"number\"], input[type=\"range\"]')" in association_source, (route, control)
+
+
+def test_static_numeric_controls_have_names_and_explicit_range_context() -> None:
+    for route, path in SURFACES.items():
+        source = path.read_text()
+        for control in numeric_controls(source):
+            control_id = re.search(r'\bid=["\']([^"\']+)["\']', control, re.I)
+            named = ('aria-label=' in control or 'aria-labelledby=' in control
+                     or 'data-backdrop-field=' in control or 'data-layout-field=' in control
+                     or (control_id and re.search(rf'<label\b[^>]*for=["\']{re.escape(control_id.group(1))}["\']', source, re.I)))
+            assert named, (route, control)
+            assert re.search(r'\bmin=["\'][^"\']+["\']', control) and re.search(r'\bmax=["\'][^"\']+["\']', control), (route, control)
+            assert 'aria-describedby=' in control or 'numeric-help' in source, (route, control)
 
 
 def test_attention_schema_and_editor_share_all_numeric_semantics() -> None:

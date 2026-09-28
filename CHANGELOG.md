@@ -1,3 +1,8 @@
+## 2.10.78
+
+- Give every numeric administration control a programmatic name, explicit unit/range context, bounded validation, and tablet-safe focus clearance.
+- Reconcile the dashboard-return browser contract with direct kiosk destinations, the More overflow, and the Home rail action.
+
 ## 2.10.77
 
 - Scale the kiosk destination rail for large displays with explicit 1024px and
