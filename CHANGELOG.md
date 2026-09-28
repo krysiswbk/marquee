@@ -1,3 +1,12 @@
+## 2.10.27
+
+- Restore shared `.brain-panel` overflow containment while keeping household
+  fitting scoped to `#brain-house`.
+- Preserve readable compact household text and a minimum 44px acknowledgement
+  touch target at phone and tablet widths without hiding household content.
+- Retain the 2.10.25 mast/weather improvements and 2.10.26 render-time fitting
+  lifecycle with refreshed cache-busted assets.
+
 ## 2.10.25
 
 - Fit the populated portrait Home household panel after layout: compact only

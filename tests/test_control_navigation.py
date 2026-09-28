@@ -103,9 +103,9 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("grid-template-columns: repeat(2, minmax(0, 1fr))", css)
         for page in (PAGES["cast-layout"], PAGES["live-layout"], PAGES["attention"], PAGES["tests"]):
             source = page.read_text()
-            self.assertIn("control-shell.css?v=2.10.26", source)
-            self.assertIn("control-shell.js?v=2.10.26", source)
-            self.assertIn("control-shell-narrow.css?v=2.10.26", source)
+            self.assertIn("control-shell.css?v=2.10.27", source)
+            self.assertIn("control-shell.js?v=2.10.27", source)
+            self.assertIn("control-shell-narrow.css?v=2.10.27", source)
 
     def test_layout_workspace_has_explicit_phone_composition_contract(self):
         source = PAGES["cast-layout"].read_text()
@@ -166,6 +166,10 @@ class ControlNavigationTests(unittest.TestCase):
 
     def test_home_responsive_panels_respect_dock_safe_area(self):
         styles = (ROOT / "output" / "brain.css").read_text()
+        self.assertIn(".brain-panel{position:absolute", styles)
+        self.assertIn("box-sizing:border-box;padding:2.3vh 1.8vw;overflow:hidden;pointer-events:auto}", styles)
+        self.assertIn("#brain-house{left:47vw;right:4vw;top:14vh;height:37vh;border-top:4px solid var(--desk-accent);overflow:visible}", styles)
+        self.assertIn("min-width:44px;min-height:44px", styles)
         self.assertIn("body.brain-live .brain-panel{box-sizing:border-box;padding-block:1.2vh}", styles)
         self.assertIn("#brain-activity,body.brain-live #brain-agenda{top:70vh;height:13vh;bottom:auto;overflow:hidden}", styles)
         self.assertNotIn("top:70vh;bottom:16vh;height:auto", styles)
@@ -217,6 +221,14 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("opening.map(o=>", brain)
         self.assertNotIn("opening.slice(0,5)", brain)
         self.assertNotIn("summary.length > 110", brain)
+
+    def test_compact_household_text_and_acknowledgement_remain_readable(self):
+        styles = (ROOT / "output" / "brain.css").read_text()
+        self.assertIn("#brain-house.fit-compact .brain-summary{font-size:clamp(12px", styles)
+        self.assertIn("#brain-house.fit-compact .brain-tag{padding:.18em .35em;font-size:clamp(12px", styles)
+        self.assertIn("#brain-house.fit-compact .brain-ack{margin-top:.45vh;font-size:clamp(12px", styles)
+        self.assertIn("#brain-house.fit-compact .brain-tag{padding:.25em .45em;font-size:clamp(12px", styles)
+        self.assertIn("#brain-house.fit-compact .brain-ack{margin-top:.5vh;font-size:clamp(12px", styles)
 
     def test_portrait_weather_has_legible_minimums_without_losing_secondary_facts(self):
         styles = (ROOT / "output" / "brain.css").read_text()
