@@ -1,5 +1,6 @@
-## 2.10.85
+## 2.10.86
 
+- Gate Calendar page fitting on font and layout settlement so the measured capacity cannot change after paging begins.
 - Make dashboard birthday and upcoming-calendar summaries link to the existing full Calendar agenda instead of inert `+N` notices.
 
 ## 2.10.84

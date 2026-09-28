@@ -82,7 +82,7 @@ def test_calendar_full_agenda_contract_is_paginated_and_history_addressable():
         'calendarMode = params.get(\'mode\') === \'all\'',
         'u.searchParams.set(\'mode\', \'all\')',
         'u.searchParams.set(\'page\', String(page))',
-        'data-calendar-page', 'Page ${calendarPage} of ${pages}',
+        'data-calendar-page', 'Page ${calendarPage} of ${settled ? pages : \'…\'}',
         'Back to summary', 'Return to Home', 'calendarPageSize',
         'measuredAgendaPageSize', 'aria-live="polite"',
         "e.key === 'ArrowLeft' || e.key === 'PageUp'",
@@ -100,9 +100,17 @@ def test_calendar_full_agenda_contract_is_paginated_and_history_addressable():
         assert token in SCREENS
     assert 'more event${remaining === 1 ?' not in MENU
     assert 'remaining beyond this summary' not in MENU
+    assert "document.fonts?.ready" in MENU
+    assert "calendarLayoutSettlementScheduled" in MENU
+    assert 'aria-busy="${settled ? \'false\' : \'true\'}"' in MENU
 
 
 def test_calendar_focus_and_history_contracts_do_not_steal_control_focus():
+    assert "function drawNavigation(preserveFocus = true)" in MENU
+    assert "if (preserveFocus && focusedView !== undefined)" in MENU
+    assert "document.addEventListener('focusin'" in MENU
+    assert "const calendarHistoryChange = view === 'calendar' || nextView === 'calendar'" in MENU
+    assert "drawNavigation(false)" in MENU
     assert "let calendarFocusHeadingPending = Boolean(calendarMode);" in MENU
     assert "let calendarFocusDisclosurePending = false;" in MENU
     assert "if (detail && calendarFocusHeadingPending)" in MENU
@@ -125,11 +133,13 @@ def test_calendar_focus_and_history_contracts_do_not_steal_control_focus():
 
 
 def test_calendar_fit_and_disclosure_contracts_use_real_geometry_and_touch_target():
-    detail_start = MENU.index("function calendarDetail(list)")
-    detail_end = MENU.index("function renderAgenda", detail_start)
+    detail_start = MENU.index("function calendarDetail(list, options = {})")
+    detail_end = MENU.index("function calendarLayoutKey", detail_start)
     assert "measuredAgendaPageSize" not in MENU[detail_start:detail_end]
-    assert "while (page && page.scrollHeight > page.clientHeight + 1 && calendarPageSize > 1)" in MENU
-    assert "calendarPageSize -= 1" in MENU
+    assert "settleCalendarLayout" in MENU
+    assert "calendarPageFits(page)" in MENU
+    assert "calendarPageSize === 1" in MENU
+    assert "page.dataset.calendarOverflow = 'scroll'" in MENU
     assert "history.replaceState({marqueeCalendarAgenda: true}, '', href('calendar', true, calendarPage))" in MENU
     for token in (
         ".kiosk-agenda-more{display:inline-flex",

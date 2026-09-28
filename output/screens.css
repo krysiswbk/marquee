@@ -233,6 +233,13 @@ body.browser-controls{overflow-x:hidden}.kiosk-section.now-playing-surface{displ
   .kiosk-section[data-section=calendar] .kiosk-agenda-more{margin:10px 0 0;font-size:13px}
 }
 
+/* Calendar full-agenda presentation stays inside the stage. An irreducibly
+   tall single entry gets a deliberate touch/keyboard-scrollable reveal. */
+.kiosk-calendar-page{overflow:auto;overflow-x:hidden;scrollbar-gutter:stable}
+.kiosk-calendar-page[data-calendar-overflow=scroll]{padding-right:8px;outline:2px solid #b6f37866;outline-offset:-2px}
+.kiosk-calendar-page[data-calendar-overflow=scroll]:focus-visible{outline:3px solid #c3fc86;outline-offset:-3px}
+.kiosk-calendar-page [data-calendar-overflow=scroll] strong{overflow-wrap:anywhere;word-break:normal}
+
 /* Short-wide kiosk displays have a shallow destination stage. Keep the
    primary summary and actions in one remote-visible view, and summarize the
    secondary queue with a truthful remainder count. This deliberately excludes

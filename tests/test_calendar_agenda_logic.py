@@ -23,7 +23,14 @@ def test_representative_pages_decrement_until_the_rendered_page_fits() -> None:
 
 def test_fit_loop_terminates_at_one_row_even_when_content_is_tall() -> None:
     assert fit_page_size(6, 40, {6: 400, 5: 330, 4: 260, 3: 190, 2: 120, 1: 60}) == 1
-    assert "calendarPageSize > 1" in MENU
+    assert "calendarPageSize === 1" in MENU
+
+
+def test_settlement_measures_every_page_before_controls_are_enabled() -> None:
+    assert "settleCalendarLayout" in MENU
+    assert "for (let pageNumber = 1; pageNumber <= pages; pageNumber += 1)" in MENU
+    assert "calendarLayoutKey(list)" in MENU
+    assert "data-calendar-overflow" in MENU
 
 
 def test_page_canonicalization_and_history_model_are_summary_first() -> None:
