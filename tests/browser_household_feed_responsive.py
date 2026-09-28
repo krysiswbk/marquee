@@ -130,6 +130,34 @@ with sync_playwright() as playwright:
                 assert "+ 2 more upcoming items" in agenda.inner_text()
                 assert agenda.evaluate("el => { const a=el.getBoundingClientRect(), d=document.querySelector('.brain-dock').getBoundingClientRect(); return {ok:a.bottom <= d.top + 1, a:{top:a.top,bottom:a.bottom}, d:{top:d.top,bottom:d.bottom}} }")['ok'], (width, height, agenda.bounding_box(), page.locator('.brain-dock').bounding_box())
                 assert agenda.evaluate("el => el.getBoundingClientRect().right <= innerWidth && el.getBoundingClientRect().left >= 0")
+                assert agenda.evaluate("el => el.scrollHeight <= el.clientHeight + 1"), (width, height, agenda.bounding_box(), agenda.evaluate("el => ({scrollHeight:el.scrollHeight, clientHeight:el.clientHeight})"))
+                assert not agenda.evaluate("""
+                    el => {
+                        const box = el.getBoundingClientRect();
+                        const visible = node => {
+                            const style = getComputedStyle(node);
+                            return style.display !== 'none' && style.visibility !== 'hidden' && node.getClientRects().length;
+                        };
+                        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+                        const failures = [];
+                        let node;
+                        while (node = walker.nextNode()) {
+                            if (!node.nodeValue.trim() || !visible(node.parentElement)) continue;
+                            // Inline title/detail nodes may retain an intrinsic width behind
+                            // their ellipsis; assert the visible containing line box instead.
+                            const paintBox = node.parentElement.closest('.brain-agenda-item, .brain-agenda-more, .brain-eyebrow, h2, .birthday-when, li, .brain-empty') || node.parentElement;
+                            const rects = [...paintBox.getClientRects()];
+                            const column = node.parentElement.closest('.brain-birthday, .brain-upnext');
+                            const columnBox = column && column.getBoundingClientRect();
+                            for (const rect of rects) {
+                                const within = rect.top >= box.top - 1 && rect.bottom <= box.bottom + 1 &&
+                                    (!columnBox || (rect.left >= columnBox.left - 1 && rect.right <= columnBox.right + 1));
+                                if (!within) failures.push({text: node.nodeValue.trim(), rect: {top: rect.top, bottom: rect.bottom}, agenda: {top: box.top, bottom: box.bottom}, column: columnBox && {left: columnBox.left, right: columnBox.right, top: columnBox.top, bottom: columnBox.bottom}});
+                            }
+                        }
+                        return failures;
+                    }
+                """), (width, height, agenda.bounding_box())
             elif kind == "disconnected":
                 assert agenda.get_attribute("data-agenda-state") == "stale"
                 assert "unavailable while the house feed is offline" in agenda.inner_text()

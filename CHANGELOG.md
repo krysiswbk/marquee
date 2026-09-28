@@ -1,3 +1,11 @@
+## 2.10.75
+
+- Rebalance the phone People First / On the Horizon continuation so its date,
+  detail, and intentional remainder lines remain contained at narrow phone
+  heights while preserving the fixed dock and rail safe areas.
+- Add deterministic internal agenda overflow and text-line containment checks
+  across the responsive household-feed matrix.
+
 ## 2.10.74
 
 - Extend the phone household dashboard with a compact People First / On the

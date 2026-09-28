@@ -291,13 +291,13 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("#brain-house{left:47vw;right:4vw;top:14vh;height:37vh;border-top:4px solid var(--desk-accent);overflow:visible}", styles)
         self.assertIn("min-width:44px;min-height:44px", styles)
         self.assertIn("body.brain-live .brain-panel{box-sizing:border-box;padding-block:1.2vh}", styles)
-        self.assertIn("#brain-activity,body.brain-live #brain-agenda{top:69vh;height:16vh;bottom:auto}", styles)
+        self.assertIn("#brain-activity,body.brain-live #brain-agenda{top:69vh;height:18vh;bottom:auto}", styles)
         self.assertNotIn("top:70vh;bottom:16vh;height:auto", styles)
         self.assertNotIn("top:70vh;height:20vh", styles)
         self.assertIn("#brain-activity{top:65vh;left:4vw;width:92vw;height:12vh}", styles)
         self.assertIn("#brain-agenda{display:none}", styles)
         self.assertIn("#brain-agenda[data-agenda-state=empty]{display:none}", styles)
-        self.assertIn("#brain-agenda{display:grid;top:76vh", styles)
+        self.assertIn("#brain-agenda{display:grid;top:71vh", styles)
         self.assertNotIn("top:80vh", styles)
 
     def test_customize_action_has_a_labeled_responsive_target(self):
@@ -314,7 +314,7 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("box-sizing:border-box", tablet)
         self.assertIn("padding-block:1.2vh", tablet)
         self.assertIn("height:25vh", tablet)
-        self.assertLessEqual(69 + 16, 85.1)
+        self.assertLessEqual(66 + 18, 85.1)
         self.assertLessEqual(43 + 25, 70)
         brain = (ROOT / "output" / "brain.js").read_text()
         self.assertIn("classList.toggle('device-alert',Boolean(deviceHealth.length))", brain)
@@ -332,7 +332,7 @@ class ControlNavigationTests(unittest.TestCase):
         styles = (ROOT / "output" / "brain.css").read_text()
         brain = (ROOT / "output" / "brain.js").read_text()
         tablet = styles.split("@media (min-width:481px) and (max-width:700px)", 1)[1].split("@media (max-width:480px)", 1)[0]
-        self.assertIn("top:69vh;height:16vh;bottom:auto", tablet)
+        self.assertIn("top:69vh;height:18vh;bottom:auto", tablet)
         self.assertNotIn("bottom:16vh", tablet)
         self.assertIn("brain-event-more", tablet)
         self.assertNotIn(".brain-event:nth-child(n+3){display:none}", tablet)
