@@ -1,3 +1,10 @@
+## 2.10.37
+
+- Extend truthful shallow-landscape destination fitting through 17:10 displays.
+- Keep the Now Playing ambient ring fixed to the viewport so decoration cannot
+  inflate the destination stage's scroll geometry.
+- Tighten Gaming's content box to end within the stage on short-wide displays.
+
 ## 2.10.36
 
 - Add a short-wide kiosk presentation mode for shallow landscape displays.

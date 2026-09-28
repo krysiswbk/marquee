@@ -72,6 +72,13 @@ def test_kiosk_editorial_desktop_compaction_contract_is_deterministic():
         assert token in desktop
 
 
+def test_shallow_landscape_contract_covers_secondary_17_10_and_keeps_decoration_out_of_scroll_geometry():
+    assert "@media(min-width:1000px) and (max-height:700px) and (min-aspect-ratio:3/2)" in SCREENS
+    assert "position:fixed" in SCREENS.split(".now-playing-surface::before", 1)[1].split("}", 1)[0]
+    assert "pointer-events:none" in SCREENS.split(".now-playing-surface::before", 1)[1].split("}", 1)[0]
+    assert "min-aspect-ratio: 3/2" in MENU
+
+
 def test_kiosk_editorial_tablet_compaction_contract_is_deterministic():
     tablet = SCREENS.split("@media(min-width:481px) and (max-width:900px)", 1)[1].split("@media", 1)[0]
     for token in (
@@ -154,7 +161,7 @@ def test_responsive_contract_contains_dock_safe_containment_and_narrow_layouts()
 
 
 def test_short_wide_presentation_contract_is_scoped_and_summarizes_secondary_content():
-    assert "@media(min-width:1000px) and (max-height:700px) and (min-aspect-ratio:2/1)" in SCREENS
+    assert "@media(min-width:1000px) and (max-height:700px) and (min-aspect-ratio:3/2)" in SCREENS
     assert ".kiosk-section{overflow:hidden;padding:24px 44px}" in SCREENS
     assert ".kiosk-queue-row:nth-of-type(n+2){display:none}" in SCREENS
     assert ".kiosk-queue-more{display:block;margin:8px 0 0}" in SCREENS
