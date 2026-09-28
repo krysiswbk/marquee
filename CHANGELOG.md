@@ -1,3 +1,11 @@
+## 2.10.67
+
+- Calm live offline-device health copy across phone, tablet, desktop, and TV
+  widths while preserving full named remediation detail in the household panel
+  and accessible feed metadata.
+- Add deterministic device-health browser coverage for count grammar, bounded
+  tablet names, full desktop detail, overflow, rail/dock layout, and errors.
+
 ## 2.10.66
 
 - Make the persistent household feed truthful and readable on narrow kiosk

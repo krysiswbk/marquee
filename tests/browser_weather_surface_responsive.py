@@ -1,6 +1,5 @@
 """Deterministic contract for the dedicated weather surface hierarchy."""
 
-import json
 import os
 from datetime import datetime, timezone
 from pathlib import Path
@@ -8,10 +7,11 @@ from urllib.parse import parse_qs, urlparse
 
 from playwright.sync_api import sync_playwright
 
-
 ROOT = Path(__file__).resolve().parents[1]
 VIEWPORTS = [(320, 720), (360, 720), (393, 852), (430, 852),
              (700, 900), (1024, 600), (1500, 900)]
+HEALTH_NAMES = ["Nursery Motion & Lux Motion — Upstairs Hallway",
+                "Nursery Window Contact — South-facing Window"]
 
 
 def route_for(route):
@@ -32,6 +32,12 @@ def route_for(route):
         return route.fulfill(json={"playing": True, "type": "media_context",
                                    "key": "weather-contract",
                                    "context": weather_context(query)})
+    if path == "/api/brain":
+        return route.fulfill(json={"fresh": True, "unknown": [], "device_health": [
+            {"entity_id": f"sensor.health_{index}", "name": name,
+             "state": "unavailable", "location": "nursery"}
+            for index, name in enumerate(HEALTH_NAMES)],
+            "events": [], "cards": [], "alerts": [], "people": []})
     asset = ROOT / "output" / path.lstrip("/")
     if asset.is_file():
         return route.fulfill(path=str(asset))
@@ -80,6 +86,7 @@ with sync_playwright() as playwright:
         page.goto("http://marquee.test/kiosk?view=weather", wait_until="domcontentloaded")
         page.wait_for_selector(".stage.weather-context .wx-broadcast")
         page.wait_for_selector('.kiosk-rail .kiosk-primary [data-view="weather"][aria-current="page"]')
+        page.wait_for_selector("#brain-dock-copy")
         page.wait_for_timeout(250)
 
         assert page.locator(".kiosk-rail").is_visible()
@@ -93,6 +100,22 @@ with sync_playwright() as playwright:
             "el => { const r = el.getBoundingClientRect(), rail = "
             "document.querySelector('.kiosk-rail').getBoundingClientRect(); "
             "return r.bottom <= rail.top + 1; }"
+        )
+        health_copy = page.locator("#brain-dock-copy")
+        full_health = "Offline: " + ", ".join(HEALTH_NAMES) + ". Check batteries or connection."
+        if width <= 430:
+            assert health_copy.inner_text() == "2 devices offline · Check connection"
+        elif width <= 700:
+            assert health_copy.inner_text().startswith("Offline: ")
+        else:
+            assert health_copy.inner_text() == full_health
+        assert health_copy.get_attribute("aria-label") == full_health
+        assert health_copy.get_attribute("title") == full_health
+        assert health_copy.get_attribute("data-full-text") == full_health
+        assert health_copy.evaluate(
+            "el => { const dock = el.closest('.brain-dock').getBoundingClientRect(); "
+            "const rail = document.querySelector('.kiosk-rail').getBoundingClientRect(); "
+            "return dock.bottom <= rail.top + 1; }"
         )
 
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
@@ -124,7 +147,7 @@ with sync_playwright() as playwright:
             button.scroll_into_view_if_needed()
             assert button.is_visible(), (width, height, index)
 
-        page.screenshot(path=f"/tmp/marquee-2.10.66-weather-{width}x{height}.png")
+        page.screenshot(path=f"/tmp/marquee-2.10.67-weather-{width}x{height}.png")
         assert not errors, (width, height, errors)
         page.close()
 

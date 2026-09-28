@@ -30,8 +30,15 @@
   function feedEntry(fullText, narrowText=fullText) {
     return {fullText:String(fullText), narrowText:String(narrowText)};
   }
+  function deviceHealthFeedEntry(fullText,names) {
+    const count=names.length;
+    const phone=`${count} device${count===1?'':'s'} offline · Check connection`;
+    const tabletNames=names.map(name=>narrowLabel(name,24));
+    const tablet=`Offline: ${compactNames(tabletNames,'devices')}. Check connection.`;
+    return {fullText:String(fullText),narrowText:phone,tabletText:tablet};
+  }
   function renderFeedEntry(entry) {
-    const fullText=entry.fullText, visible=feedTier()==='desktop'?fullText:entry.narrowText;
+    const fullText=entry.fullText, tier=feedTier(), visible=tier==='desktop'?fullText:tier==='tablet'?(entry.tabletText||entry.narrowText):entry.narrowText;
     const copy=$('brain-dock-copy');
     copy.textContent=visible;
     copy.title=fullText;
@@ -86,7 +93,7 @@
     let feed=[];
     if(!fresh)feed=[feedEntry('Household connection lost · Current door and lock states are unknown','Household connection lost · Current states unavailable')];
     else {
-      if(healthText)feed.push(feedEntry(healthText,`Offline: ${compactNames(healthNames,'devices')}. Check connection.`));
+      if(healthText)feed.push(deviceHealthFeedEntry(healthText,healthNames));
       if(primary)feed.push(feedEntry(`${primary.name} ${primary.state} · observed for ${elapsed(duration)}`,`${primary.name} ${primary.state} · ${elapsed(duration)}`));
       if(event)feed.push(feedEntry(`${event.title} · ${elapsed(now-event.at)}${now-event.at>=60?' ago':''}`,`Recent event: ${narrowLabel(event.title)} · ${elapsed(now-event.at)}`));
       if(state.guests)feed.push(feedEntry('Guest mode is on · The house is expecting company','Guest mode is on'));
