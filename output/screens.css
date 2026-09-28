@@ -176,6 +176,11 @@ body.browser-controls{overflow-x:hidden}.kiosk-section.now-playing-surface{displ
 }
 @media(max-width:480px){.kiosk-section.now-playing-surface{justify-content:flex-start;padding:clamp(34px,11vh,86px) 20px 40px}.kiosk-section.now-playing-surface{background-size:92vw 92vw,auto,auto,auto;background-position:right -31% top 9%,0 0,0 0,0 0}.now-playing-surface .kiosk-now-playing-head>p:first-child{margin-bottom:14px}.now-playing-surface .kiosk-now-playing-head h1{font-size:clamp(43px,13vw,62px)}.now-playing-surface .kiosk-now-playing-detail{margin-top:18px;font-size:17px}.kiosk-now-playing-body{display:block;margin-top:38px}.kiosk-state-mark{margin-bottom:24px}.kiosk-now-playing-actions{margin-top:22px}.kiosk-home-action,.kiosk-retry{width:100%;min-height:48px}}
 @media(max-width:700px){body.browser-controls .kiosk-rail{gap:4px;padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}.kiosk-brand{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important}.kiosk-primary a,.kiosk-more{padding-left:9px;padding-right:9px}.kiosk-primary .kiosk-label,.kiosk-more .kiosk-label{display:none}.kiosk-primary a{width:44px}.kiosk-more{width:52px}}
+/* Media queues use the full authoritative remainder. The older compact rules
+   remain for unrelated event summaries, but never hide a current media item. */
+.kiosk-support{align-self:stretch;display:flex;flex-direction:column;justify-content:center}
+.kiosk-queue-label{margin:0;color:#b6f378;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.kiosk-queue-row strong,.kiosk-queue-row span{overflow-wrap:anywhere}
 @media(max-width:480px){.kiosk-menu{padding:16px}.kiosk-menu nav{grid-template-columns:1fr}.kiosk-items button{padding:20px}}
 @media(max-width:480px){.kiosk-section{padding:28px 20px 40px}.kiosk-section-head h1{font-size:42px;margin-bottom:38px}.kiosk-state{display:block;margin-top:30px}.kiosk-state .kiosk-state-mark{margin-bottom:24px}.kiosk-sport-feature h2,.kiosk-editorial-feature h2,.kiosk-agenda-feature h2,.kiosk-ambient-surface h2{font-size:clamp(42px,14vw,64px)}.kiosk-matchup{gap:8px;margin:30px 0}.kiosk-matchup strong{font-size:17px}.kiosk-matchup b{font-size:38px}.kiosk-agenda-row{grid-template-columns:1fr 1fr;gap:6px}.kiosk-agenda-row small{grid-column:2}.kiosk-editorial-feature{min-height:360px;padding:24px}.kiosk-ambient-surface{min-height:52vh;padding:0 0 0 20px}}
 /* Narrow forced destinations keep the feature and support state in the first viewport. */
@@ -307,3 +312,8 @@ body.browser-controls{overflow-x:hidden}.kiosk-section.now-playing-surface{displ
   .kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-home-action,
   .kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-retry{box-sizing:border-box}
 }
+
+/* Every current media item remains visible; these destination-scoped rules
+   override compact event-summary hiding without changing event queues. */
+.kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-queue-row{display:flex}
+.kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-support{align-self:stretch;justify-content:flex-start}

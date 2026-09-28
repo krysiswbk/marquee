@@ -116,9 +116,9 @@
     const [feature, ...queue] = ordered(list);
     if (!feature) return sharedState(`${label(view)} is quiet right now.`, 'Return to Home', false, 'empty');
     const art = feature.artwork || feature.background || '';
-    const queueRows = queue.slice(0, 4).map(c => `<div class="kiosk-queue-row"><strong>${esc(c.title)}</strong><span>${esc(c.subtitle || stateCopy(c))}</span></div>`).join('');
-    const queueMore = queue.length > 1 ? `<p class="kiosk-queue-more">+${queue.length - 1} more</p>` : '';
-    return `<div class="kiosk-editorial"><article class="kiosk-editorial-feature${art ? ' has-art' : ''}"${art ? ` style="--kiosk-art:url('${esc(art)}')"` : ''}><div><p class="kiosk-kicker">${esc(stateCopy(feature))} · ${esc(label(view))}</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || feature.detail || '')}</p><p class="kiosk-meta">${esc(feature.detail || safeRows(feature, 1)[0] || '')}</p></div></article><aside class="kiosk-support"><p class="kiosk-kicker">UP NEXT</p>${queueRows || '<p class="kiosk-empty">No supporting items.</p>'}${queueMore}</aside></div>`;
+    const featureDetail = feature.detail || safeRows(feature, 1)[0] || '';
+    const queueRows = queue.map((c, index) => `<div class="kiosk-queue-row"><p class="kiosk-queue-label">${index === 0 ? 'Up next' : 'Later'}</p><strong>${esc(c.title || 'Untitled')}</strong><span>${esc(c.subtitle || c.detail || stateCopy(c) || '')}</span></div>`).join('');
+    return `<div class="kiosk-editorial"><article class="kiosk-editorial-feature${art ? ' has-art' : ''}"${art ? ` style="--kiosk-art:url('${esc(art)}')"` : ''}><div><p class="kiosk-kicker">${esc(stateCopy(feature))} · ${esc(label(view))}</p><h2>${esc(feature.title || 'Untitled')}</h2><p class="kiosk-lede">${esc(feature.subtitle || featureDetail || '')}</p>${featureDetail ? `<p class="kiosk-meta">${esc(featureDetail)}</p>` : ''}</div></article><aside class="kiosk-support" aria-label="${esc(label(view))} queue"><p class="kiosk-kicker">${queue.length ? 'QUEUE' : 'UP NEXT'}</p>${queueRows || '<p class="kiosk-empty">No supporting items.</p>'}</aside></div>`;
   }
   function renderAmbient(list) {
     const feature = ordered(list)[0];

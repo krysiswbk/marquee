@@ -1,3 +1,9 @@
+## 2.10.49
+
+- Recompose sparse Gaming/media browse queues so the lead item stays dominant
+  while every current authoritative item remains legible and ordered across
+  kiosk, tablet, phone, and large-screen surfaces.
+
 ## 2.10.48
 
 - Make the dashboard's compact rain signal complete and truthful: use the

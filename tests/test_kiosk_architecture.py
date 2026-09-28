@@ -46,9 +46,11 @@ def test_narrow_single_event_surfaces_remove_artificial_minimum_height():
     assert ".kiosk-more.is-active" in SCREENS
 
 
-def test_editorial_renderer_has_phone_queue_summary_and_safe_title_breaks():
-    assert "kiosk-queue-more" in MENU
-    assert "queue.length > 1" in MENU
+def test_editorial_renderer_exposes_the_authoritative_media_queue_and_safe_title_breaks():
+    assert "queue.map((c, index)" in MENU
+    assert "index === 0 ? 'Up next' : 'Later'" in MENU
+    assert "c.detail || stateCopy(c)" in MENU
+    assert "aria-label=\"${esc(label(view))} queue\"" in MENU
     assert ".kiosk-editorial-feature h2,.kiosk-sport-feature h2{overflow-wrap:anywhere" in SCREENS
     assert ".kiosk-section:is([data-section=gaming],[data-section=tv])" in SCREENS
 
@@ -57,7 +59,7 @@ def test_actual_kiosk_destinations_have_fixed_stage_geometry_contracts():
     for token in (
         ".kiosk-section[data-section=ufc] .kiosk-sports-layout{min-height:0}",
         ".kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial,\n  .kiosk-section[data-section=ufc] .kiosk-sports-layout{min-height:0}",
-        ".kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-queue-row:nth-of-type(n+2){display:none}",
+        ".kiosk-support{align-self:stretch;display:flex;flex-direction:column;justify-content:center",
     ):
         assert token in SCREENS
 
