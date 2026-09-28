@@ -38,14 +38,14 @@ class RuntimeReliabilityTests(unittest.TestCase):
         runtime._stop = LoopStop(count)
         runtime.run()
 
-    def test_media_error_grace_expires_and_recovers(self):
+    def test_media_error_clears_payload_immediately_and_recovers(self):
         s = self.services()
         movie = {"title": "Movie", "playing": True}
         s.get_session.side_effect = [movie, OSError("offline"), OSError("offline"), None]
         runtime = Runtime(s)
         with patch("cast.marquee.runtime.time.monotonic", side_effect=[100, 159, 160, 170]):
             self.assertEqual(runtime._poll_media("plex"), movie)
-            self.assertEqual(runtime._poll_media("plex"), movie)
+            self.assertIsNone(runtime._poll_media("plex"))
             self.assertTrue(s.CURRENT_PLEX["stale"])
             self.assertIsNone(runtime._poll_media("plex"))
             self.assertIsNone(runtime._poll_media("plex"))

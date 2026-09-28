@@ -53,6 +53,8 @@ class DisplayTemplateTests(unittest.TestCase):
         self.assertNotIn("\n  .idle { display: none", DISPLAY)
         self.assertIn(".idle-screen { display: none", DISPLAY)
         self.assertIn("body.idle .idle-screen { display: flex; }", DISPLAY)
+        self.assertIn("body.unavailable .idle-kicker", DISPLAY)
+        self.assertIn("Media connection unavailable", DISPLAY)
 
     def test_live_visibility_cannot_hide_the_cast_clock(self):
         self.assertIn("CAST_DISPLAY || (LIVE_SURFACE", DISPLAY)

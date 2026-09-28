@@ -473,6 +473,23 @@ def emby_ticks_to_ms(ticks):
     return int(ticks) // 10000 if ticks is not None else None
 
 
+def normalized_progress(offset, duration):
+    """Return bounded source progress, or no progress when duration is unusable.
+
+    Providers occasionally report a negative offset, an offset beyond the end,
+    or a zero duration while a session is being established.  The renderer
+    must receive one sane contract rather than reimplementing those rules.
+    """
+    try:
+        total = int(duration)
+        current = int(offset or 0)
+    except (TypeError, ValueError):
+        return None
+    if total <= 0:
+        return None
+    return {"offsetMs": max(0, min(current, total)), "durationMs": total}
+
+
 def emby_resolution(width, height=None):
     """Label resolution by frame Width. Height is unreliable for
     letterboxed/scope films (a 1080p 2.76:1 movie is 1920x696, which by
@@ -783,8 +800,9 @@ def parse_emby_session(session, extras, position=None):
     info["state"] = "paused" if play.get("IsPaused") else "playing"
     offset = emby_ticks_to_ms(play.get("PositionTicks"))
     duration = emby_ticks_to_ms(item.get("RunTimeTicks"))
-    if offset is not None and duration:
-        info["progress"] = {"offsetMs": offset, "durationMs": duration}
+    progress = normalized_progress(offset, duration)
+    if progress:
+        info["progress"] = progress
     if duration:
         m = duration // 60000
         info["runtime"] = f"{m // 60}h {m % 60:02d}m" if m >= 60 else f"{m}m"
@@ -850,9 +868,9 @@ def parse_session(video, extras=library_extras, position=None):
     player = video.find("Player")
     if player is not None and player.get("state"):
         info["state"] = player.get("state")
-    if a("viewOffset") and a("duration"):
-        info["progress"] = {"offsetMs": int(a("viewOffset")),
-                            "durationMs": int(a("duration"))}
+    progress = normalized_progress(a("viewOffset"), a("duration"))
+    if progress:
+        info["progress"] = progress
     if a("summary"):
         info["summary"] = a("summary")
     if x["genres"]:

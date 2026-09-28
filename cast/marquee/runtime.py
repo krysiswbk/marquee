@@ -13,9 +13,6 @@ def secondary_screen_wanted(configured, playing, occupied):
             (mode == "off" and playing and occupied))
 
 
-MEDIA_ERROR_GRACE_SECONDS = 60
-
-
 class Runtime:
     """Own long-running work; HTTP handlers only read its published state."""
     def __init__(self, services):
@@ -91,11 +88,12 @@ class Runtime:
         except Exception as error:
             self._failed(scope, error)
             s.CURRENT_PLEX.update(error=s.explain_error(error), stale=True)
-            if (self._last_media_success is None or
-                    time.monotonic() - self._last_media_success >= MEDIA_ERROR_GRACE_SECONDS):
-                s.CURRENT_PLEX["info"] = None
-                if hasattr(s, "LAST_SESSIONS"):
-                    s.LAST_SESSIONS[:] = []
+            # A failed source is not evidence that the last title is still
+            # playing. Clear the authoritative media payload immediately; the
+            # API may report an unavailable state, but never stale media.
+            s.CURRENT_PLEX["info"] = None
+            if hasattr(s, "LAST_SESSIONS"):
+                s.LAST_SESSIONS[:] = []
             return s.CURRENT_PLEX["info"]
         self._last_media_success = time.monotonic()
         s.CURRENT_PLEX.update(info=info, last_success=time.time(), error=None, stale=False)

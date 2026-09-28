@@ -8,7 +8,8 @@ from cast.marquee.services import media
 
 def video(state="paused", session="81", key="34524", device="SHIELD"):
     node = ET.Element("Video", type="episode", sessionKey=session,
-                      ratingKey=key, title="Episode", viewOffset="0")
+                      ratingKey=key, title="Episode", viewOffset="0",
+                      duration="600000", parentIndex="2", index="3")
     ET.SubElement(node, "Player", state=state, title=device,
                   machineIdentifier=device)
     ET.SubElement(node, "User", title="Viewer")
@@ -50,6 +51,28 @@ class PlexSessionLifecycleTests(unittest.TestCase):
     def test_stopped_and_ended_never_occupy_display(self):
         self.assertEqual(media.plex_live_sessions(
             [video("stopped"), video("ended", session="82")], now=0), [])
+
+    def test_progress_is_clamped_and_zero_offset_is_preserved(self):
+        item = video("playing")
+        item.set("viewOffset", "999999")
+        result = media.parse_session(item, extras=lambda *_: {
+            "genres": [], "imdb": None, "stinger": [], "poster": False,
+            "backdrop": False, "logo": False})
+        self.assertEqual(result["progress"], {"offsetMs": 600000,
+                                               "durationMs": 600000})
+        item.set("viewOffset", "0")
+        result = media.parse_session(item, extras=lambda *_: {
+            "genres": [], "imdb": None, "stinger": [], "poster": False,
+            "backdrop": False, "logo": False})
+        self.assertEqual(result["progress"]["offsetMs"], 0)
+
+    def test_missing_or_invalid_duration_has_no_progress_contract(self):
+        item = video("paused")
+        item.set("duration", "0")
+        result = media.parse_session(item, extras=lambda *_: {
+            "genres": [], "imdb": None, "stinger": [], "poster": False,
+            "backdrop": False, "logo": False})
+        self.assertNotIn("progress", result)
 
     def test_vanished_session_is_cleaned_up(self):
         item = video()

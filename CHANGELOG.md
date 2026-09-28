@@ -1,3 +1,9 @@
+## 2.10.9 — Unified now-playing lifecycle
+
+- Clear the authoritative media payload immediately when Plex/Emby becomes unavailable; the API now distinguishes unavailable media from genuine idle without replaying the last title.
+- Bound provider progress values, preserve zero offsets, and keep paused playback stationary in the renderer.
+- Give unavailable media a deliberate reconnect state while preserving the accepted Home, kiosk, tablet, and phone navigation surfaces.
+
 ## 2.10.8 — Remove decorative sequencing
 
 - Remove ornamental numeric prefixes from the household desk section labels.

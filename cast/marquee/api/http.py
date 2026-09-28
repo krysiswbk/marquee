@@ -3,6 +3,21 @@ from http.server import BaseHTTPRequestHandler
 from .attention import route as attention_route
 from .bridge import authorize
 
+
+def now_playing_payload(display):
+    """Serialize the one authoritative display state.
+
+    A provider failure clears CURRENT_PLEX.info in the runtime. Keep that
+    distinction visible to the browser without ever returning the last title.
+    """
+    info = best_context(CURRENT_PLEX["info"], display)
+    if info:
+        return info
+    if CURRENT_PLEX.get("stale"):
+        return {"playing": False, "state": "unavailable",
+                "availability": "unavailable"}
+    return {"playing": False, "state": "idle", "availability": "idle"}
+
 class WebHandler(BaseHTTPRequestHandler):
     def log_message(self, *_):
         pass
@@ -44,8 +59,8 @@ class WebHandler(BaseHTTPRequestHandler):
         previous, heartbeat = None, 0.0
         try:
             while True:
-                info = best_context(CURRENT_PLEX["info"], display)
-                encoded = json.dumps(info or {"playing": False}, separators=(",", ":"))
+                info = now_playing_payload(display)
+                encoded = json.dumps(info, separators=(",", ":"))
                 now = time.time()
                 if encoded != previous:
                     self.wfile.write(("event: context\ndata: " + encoded + "\n\n").encode())
@@ -171,8 +186,7 @@ class WebHandler(BaseHTTPRequestHandler):
                 print(f"card client connected from {client}", flush=True)
             query = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
             display = query.get("display", ["hubs"])[0]
-            info = best_context(CURRENT_PLEX["info"], display)
-            self._send(json.dumps(info or {"playing": False}), "application/json")
+            self._send(json.dumps(now_playing_payload(display)), "application/json")
         elif path == "/healthz":
             last, now = main_card_poll(), time.time()
             self._send(json.dumps({
