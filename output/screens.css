@@ -313,7 +313,7 @@ body.browser-controls{overflow-x:hidden}.kiosk-section.now-playing-surface{displ
   .kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-retry{box-sizing:border-box}
 }
 
-/* 2.10.71 broadcast sports stage: one event owns the safe area, with its
+/* 2.10.72 broadcast sports stage: one event owns the safe area, with its
    identity, center state, and source facts kept in one visual unit. */
 .kiosk-broadcast-layout{display:block;max-width:1480px;margin:0 auto;min-height:clamp(430px,58vh,650px)}
 .kiosk-broadcast-layout .kiosk-sport-feature{min-height:0;display:flex;flex-direction:column;justify-content:center;align-items:stretch}

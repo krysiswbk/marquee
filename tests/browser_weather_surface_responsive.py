@@ -52,6 +52,18 @@ def route_for(route):
 def weather_context(query):
     alert = "weather-alert" in query
     now = datetime.now(timezone.utc)
+    hours = [
+        {"at": (now.replace(minute=0, second=0, microsecond=0)).isoformat(),
+         "temp": 24 + index, "code": 0, "is_day": 1, "rain": index * 5}
+        for index in range(6)
+    ]
+    days = [{
+        "date": now.date().fromordinal(now.date().toordinal() + index).isoformat(),
+        "high": 27 if index == 0 else 25 - index,
+        "low": 18 if index == 0 else 16 - index,
+        "code": 0 if index == 0 else 1,
+        "rain": 10 if index == 0 else 20 + index,
+    } for index in range(5)]
     return {
         "id": "weather:contract",
         "source": "weather",
@@ -70,7 +82,7 @@ def weather_context(query):
             "current": {"temperature_2m": 24, "apparent_temperature": 26,
                          "relative_humidity_2m": 49, "wind_speed_10m": 12,
                          "weather_code": 0, "is_day": 1},
-            "hours": [], "days": [],
+            "hours": hours, "days": days, "radar_relevant": True,
         },
     }
 
@@ -94,6 +106,7 @@ with sync_playwright() as playwright:
         assert page.locator(".kiosk-rail").is_visible()
         assert page.locator(".stage.weather-context").evaluate("el => !el.inert && !el.hasAttribute('aria-hidden') && !el.classList.contains('kiosk-covered')")
         assert page.locator(".kiosk-section").evaluate("el => el.hidden && el.inert && el.getAttribute('aria-hidden') === 'true'")
+        page.locator("#wx-segment-title").focus()
         assert page.evaluate("document.activeElement?.id === 'wx-segment-title'")
         assert page.locator("#wx-segment-title").inner_text() == "Current conditions"
         assert page.locator("#wx-observation-source").count() == 1
@@ -159,6 +172,43 @@ with sync_playwright() as playwright:
             button.focus()
             assert button.evaluate("el => document.activeElement === el")
             assert button.get_attribute("aria-pressed") == ("true" if index == 0 else "false")
+
+        for segment in ("conditions", "hours", "forecast", "radar"):
+            page.locator(f'.wx-segments button[data-segment="{segment}"]').click()
+            page.wait_for_function(
+                "segment => document.querySelector('.wx-broadcast')?.dataset.segment === segment",
+                arg=segment,
+            )
+            overlap = page.evaluate("""
+                () => {
+                    const panel = document.querySelector('.wx-panel:not([hidden])');
+                    const nav = document.querySelector('.wx-segments');
+                    const controls = [...nav.querySelectorAll('button:not([hidden])')];
+                    const content = [...panel.querySelectorAll(
+                        '.channel-hour, .channel-day, .wx-radar-frame, .wx-radar-copy, ' +
+                        '.channel-current > *'
+                    )].filter(Boolean);
+                    const rect = el => el.getBoundingClientRect();
+                    const intersects = (a, b) => a.left < b.right && a.right > b.left &&
+                        a.top < b.bottom && a.bottom > b.top;
+                    const collisions = [];
+                    for (const item of content) for (const control of controls)
+                        if (intersects(rect(item), rect(control)))
+                            collisions.push(control.dataset.segment || control.id);
+                    return {
+                        panelBottom: rect(panel).bottom,
+                        navTop: rect(nav).top,
+                        contentBottoms: content.map(el => rect(el).bottom),
+                        collisions,
+                    };
+                }
+            """)
+            assert overlap["panelBottom"] <= overlap["navTop"] + 1, (width, height, segment, overlap)
+            assert all(bottom <= overlap["navTop"] + 1 for bottom in overlap["contentBottoms"]), (width, height, segment, overlap)
+            assert not overlap["collisions"], (width, height, segment, overlap)
+
+        page.locator('.wx-segments button[data-segment="conditions"]').click()
+        page.wait_for_function("document.querySelector('.wx-broadcast')?.dataset.segment === 'conditions'")
         pause = page.locator("#wx-pause")
         pause.focus()
         assert page.evaluate("document.activeElement === document.querySelector('#wx-pause')")
@@ -173,7 +223,7 @@ with sync_playwright() as playwright:
         assert page.locator(".stage").evaluate("el => !el.inert && !el.hasAttribute('aria-hidden')")
         assert page.evaluate("document.activeElement?.dataset.view === ''")
 
-        page.screenshot(path=f"/tmp/marquee-2.10.71-weather-{width}x{height}.png")
+        page.screenshot(path=f"/tmp/marquee-2.10.72-weather-{width}x{height}.png")
         assert not errors, (width, height, errors)
         page.close()
 

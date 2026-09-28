@@ -1,3 +1,12 @@
+## 2.10.72
+
+- Keep the Weather segment and Pause controls in a dedicated flow region on
+  phone layouts so current, hourly, five-day, and radar content cannot paint
+  over the 44px control targets.
+- Add rectangle-based responsive browser coverage for every Weather mode across
+  phone, tablet, short-wide, and desktop viewports, while preserving the
+  Weather accessibility lifecycle and kiosk safe areas.
+
 ## 2.10.71
 
 - Fix the Weather kiosk lifecycle so the visible Weather stage, accessibility
