@@ -51,7 +51,8 @@ def test_editorial_renderer_exposes_the_authoritative_media_queue_and_safe_title
     assert "index === 0 ? 'Up next' : 'Later'" in MENU
     assert "c.detail || stateCopy(c)" in MENU
     assert "aria-label=\"${esc(label(view))} queue\"" in MENU
-    assert ".kiosk-editorial-feature h2,.kiosk-sport-feature h2{overflow-wrap:anywhere" in SCREENS
+    assert ".kiosk-editorial-feature h2,.kiosk-sport-feature h2{overflow-wrap:break-word;word-break:normal;text-wrap:pretty" in SCREENS
+    assert "const titleMarkup = text => esc(text).replace(/\\//g, '/<wbr>')" in MENU
     assert ".kiosk-section:is([data-section=gaming],[data-section=tv])" in SCREENS
 
 

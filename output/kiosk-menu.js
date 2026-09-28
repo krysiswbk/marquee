@@ -22,6 +22,9 @@
   const label = key => destinations[key]?.[0] || key.replaceAll('_', ' ').replace(/^./, c => c.toUpperCase());
   const icon = key => destinations[key]?.[1] || '•';
   const esc = text => String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  // Keep normal word boundaries intact while allowing platform suffixes such
+  // as PS5/Xbox/Switch/PC to wrap at their deliberate slash opportunities.
+  const titleMarkup = text => esc(text).replace(/\//g, '/<wbr>');
   const fresh = c => (!c.expires || Date.parse(c.expires) > Date.now()) && c.eventState !== 'EXPIRED';
   const items = key => contexts.filter(c => (c.provider || c.source) === key && fresh(c));
   document.body.classList.add('browser-controls');
@@ -141,7 +144,7 @@
     if (!feature) return sharedState('No games or fights are on the board.', 'Return to Home', false, 'empty');
     const left = feature.left || {}, right = feature.right || {};
     const matchup = left.name && right.name ? `<div class="kiosk-matchup"><div><strong>${esc(left.name)}</strong><b>${esc(left.score || '')}</b></div><span>vs</span><div><strong>${esc(right.name)}</strong><b>${esc(right.score || '')}</b></div></div>` : '';
-    return `<div class="kiosk-sports-layout"><article class="kiosk-sport-feature"><p class="kiosk-kicker">${esc(stateCopy(feature))} · ${esc(label(view))}</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || feature.detail || '')}</p>${matchup}<p class="kiosk-meta">${esc(feature.detail || '')}</p><div class="kiosk-sport-rows">${safeRows(feature).map(row => `<span>${esc(row)}</span>`).join('')}</div></article><aside class="kiosk-support"><p class="kiosk-kicker">NEXT RELEVANT</p>${queue.slice(0, 3).map(c => `<div class="kiosk-queue-row"><strong>${esc(c.title)}</strong><span>${esc(c.subtitle || stateCopy(c))}</span></div>`).join('') || '<p class="kiosk-empty">No other current event.</p>'}</aside></div>`;
+    return `<div class="kiosk-sports-layout"><article class="kiosk-sport-feature"><p class="kiosk-kicker">${esc(stateCopy(feature))} · ${esc(label(view))}</p><h2>${titleMarkup(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || feature.detail || '')}</p>${matchup}<p class="kiosk-meta">${esc(feature.detail || '')}</p><div class="kiosk-sport-rows">${safeRows(feature).map(row => `<span>${esc(row)}</span>`).join('')}</div></article><aside class="kiosk-support"><p class="kiosk-kicker">NEXT RELEVANT</p>${queue.slice(0, 3).map(c => `<div class="kiosk-queue-row"><strong>${titleMarkup(c.title)}</strong><span>${esc(c.subtitle || stateCopy(c))}</span></div>`).join('') || '<p class="kiosk-empty">No other current event.</p>'}</aside></div>`;
   }
   function agendaGroup(date) {
     if (!date) return 'Later';
@@ -164,8 +167,8 @@
     if (!feature) return sharedState(`${label(view)} is quiet right now.`, 'Return to Home', false, 'empty');
     const art = feature.artwork || feature.background || '';
     const featureDetail = feature.detail || safeRows(feature, 1)[0] || '';
-    const queueRows = queue.map((c, index) => `<div class="kiosk-queue-row"><p class="kiosk-queue-label">${index === 0 ? 'Up next' : 'Later'}</p><strong>${esc(c.title || 'Untitled')}</strong><span>${esc(c.subtitle || c.detail || stateCopy(c) || '')}</span></div>`).join('');
-    return `<div class="kiosk-editorial"><article class="kiosk-editorial-feature${art ? ' has-art' : ''}"${art ? ` style="--kiosk-art:url('${esc(art)}')"` : ''}><div><p class="kiosk-kicker">${esc(stateCopy(feature))} · ${esc(label(view))}</p><h2>${esc(feature.title || 'Untitled')}</h2><p class="kiosk-lede">${esc(feature.subtitle || featureDetail || '')}</p>${featureDetail ? `<p class="kiosk-meta">${esc(featureDetail)}</p>` : ''}</div></article><aside class="kiosk-support" aria-label="${esc(label(view))} queue"><p class="kiosk-kicker">${queue.length ? 'QUEUE' : 'UP NEXT'}</p>${queueRows || '<p class="kiosk-empty">No supporting items.</p>'}</aside></div>`;
+    const queueRows = queue.map((c, index) => `<div class="kiosk-queue-row"><p class="kiosk-queue-label">${index === 0 ? 'Up next' : 'Later'}</p><strong>${titleMarkup(c.title || 'Untitled')}</strong><span>${esc(c.subtitle || c.detail || stateCopy(c) || '')}</span></div>`).join('');
+    return `<div class="kiosk-editorial"><article class="kiosk-editorial-feature${art ? ' has-art' : ''}"${art ? ` style="--kiosk-art:url('${esc(art)}')"` : ''}><div><p class="kiosk-kicker">${esc(stateCopy(feature))} · ${esc(label(view))}</p><h2>${titleMarkup(feature.title || 'Untitled')}</h2><p class="kiosk-lede">${esc(feature.subtitle || featureDetail || '')}</p>${featureDetail ? `<p class="kiosk-meta">${esc(featureDetail)}</p>` : ''}</div></article><aside class="kiosk-support" aria-label="${esc(label(view))} queue"><p class="kiosk-kicker">${queue.length ? 'QUEUE' : 'UP NEXT'}</p>${queueRows || '<p class="kiosk-empty">No supporting items.</p>'}</aside></div>`;
   }
   function renderAmbient(list) {
     const feature = ordered(list)[0];

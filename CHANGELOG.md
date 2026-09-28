@@ -1,3 +1,9 @@
+## 2.10.59
+
+- Make narrow kiosk media titles preserve whole-word wrapping while exposing
+  deliberate slash-boundary breaks for platform suffixes, with responsive hero
+  sizing and deterministic long-title coverage across browse destinations.
+
 ## 2.10.58
 
 - Correct the browser attention fixture contract to identify generated
