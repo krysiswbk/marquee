@@ -11,7 +11,7 @@ BASE = os.environ.get("MARQUEE_SMOKE_URL", "http://127.0.0.1:18084").rstrip("/")
 assert urlparse(BASE).hostname in ("127.0.0.1", "localhost")
 FIXTURE = json.loads((Path(__file__).parent / "fixtures" / "attention-history.json").read_text())
 VIEWPORTS = [(1500, 900), (1024, 600), (700, 900), (393, 852)]
-EVIDENCE = Path(os.environ.get("MARQUEE_EVIDENCE_DIR", "/tmp/marquee-2.10.54-history-evidence"))
+EVIDENCE = Path(os.environ.get("MARQUEE_EVIDENCE_DIR", "/tmp/marquee-2.10.55-history-evidence"))
 
 
 with sync_playwright() as playwright:

@@ -206,6 +206,7 @@
     add('id', item.id || item.rule_id);
     add('context', item.context || item.context_id || item.category || item.location);
     add('display', item.display || item.display_id || item.target_display || item.target);
+    add('state', item.state || item.stage || item.action || item.status || item.urgency);
     const identity = descriptors.length ? ` — ${descriptors.join(' · ')}` : '';
     return `View full payload for ${humanize(item.kind || 'event')}${identity} at ${stampText}`;
   }

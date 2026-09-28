@@ -30,9 +30,18 @@ def test_history_disclosure_names_distinguish_same_time_events() -> None:
     end = SCRIPT.index("  function renderHistory")
     helper = SCRIPT[start:end]
     events = [
-        {"at": 1800000000, "kind": "signal", "source": "sensor.kitchen", "id": "kitchen-1"},
-        {"at": 1800000000, "kind": "signal", "source": "sensor.garage", "id": "garage-1"},
-        {"at": 1800000000, "kind": "signal", "source": "sensor.office", "id": "office-1", "display": "hallway"},
+        {
+            "at": 1800000000, "kind": "Transition", "source": "attention-rule",
+            "id": "kitchen-1", "display": "hallway", "state": "NEW",
+        },
+        {
+            "at": 1800000000, "kind": "Transition", "source": "attention-rule",
+            "id": "kitchen-1", "display": "hallway", "state": "SUPPRESSED",
+        },
+        {
+            "at": 1800000000, "kind": "signal", "source": "sensor.garage",
+            "id": "garage-1", "state": "active",
+        },
     ]
     script = f"events = {json.dumps(events)};\n{helper}\nconsole.log(JSON.stringify(events.map(item => historyDisclosureLabel(item, 'same timestamp'))));"
     result = subprocess.run(
@@ -41,10 +50,17 @@ def test_history_disclosure_names_distinguish_same_time_events() -> None:
     )
     labels = json.loads(result.stdout)
     assert len(set(labels)) == len(events)
-    assert labels[0] == "View full payload for Signal — source sensor.kitchen · id kitchen-1 at same timestamp"
-    assert "source sensor.garage" in labels[1]
-    assert "id garage-1" in labels[1]
-    assert "display hallway" in labels[2]
+    assert labels[0] == (
+        "View full payload for Transition — source attention-rule · id kitchen-1 "
+        "· display hallway · state NEW at same timestamp"
+    )
+    assert labels[1] == (
+        "View full payload for Transition — source attention-rule · id kitchen-1 "
+        "· display hallway · state SUPPRESSED at same timestamp"
+    )
+    assert "state active" in labels[2]
+    assert "source sensor.garage" in labels[2]
+    assert "id garage-1" in labels[2]
 
 
 def test_history_is_truthful_for_empty_invalid_error_and_large_sets() -> None:

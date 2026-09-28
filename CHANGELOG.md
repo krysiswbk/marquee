@@ -1,3 +1,8 @@
+## 2.10.55
+
+- Include attention event outcome/state in full-payload disclosure names so
+  same-kind, same-id, same-time transitions remain uniquely discoverable.
+
 ## 2.10.54
 
 - Distinguish recent attention full-payload disclosures by available source,
