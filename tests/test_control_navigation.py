@@ -84,6 +84,28 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("safe-area-inset-left", styles)
         self.assertIn("white-space:nowrap", styles)
 
+    def test_weather_is_priority_destination_and_dialog_close_is_synchronized(self):
+        source = PAGES["live"].read_text()
+        self.assertIn("destinationPriority", source)
+        self.assertIn("weather:95", source)
+        self.assertIn("menu.addEventListener('close'", source)
+        self.assertIn("menu.addEventListener('cancel'", source)
+        self.assertIn("more.setAttribute('aria-expanded', 'false')", source)
+
+    def test_narrow_weather_controls_flow_without_small_touch_targets(self):
+        weather = (ROOT / "output" / "weather-channel.css").read_text()
+        screens = (ROOT / "output" / "screens.css").read_text()
+        self.assertIn("min-height:44px", weather)
+        self.assertIn("channel-outlook{max-height:none;overflow:visible}", weather)
+        self.assertIn("clip-path:inset(50%)", screens)
+
+    def test_home_weather_summary_uses_available_authoritative_near_term_fields(self):
+        source = (ROOT / "output" / "index.html").read_text()
+        for field in ("apparent_temperature", "temperature", "templow", "precipitation_probability"):
+            self.assertIn(field, source)
+        self.assertIn("Feels", source)
+        self.assertIn("High", source)
+
 
 if __name__ == "__main__":
     unittest.main()

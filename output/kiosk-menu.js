@@ -3,6 +3,11 @@
   const params = new URLSearchParams(location.search);
   if (!['/live', '/kiosk'].includes(location.pathname) || params.has('demo') || params.has('edit') || params.has('receiver')) return;
   const destinations = { plex:['Now playing','▶'], nhl:['NHL','⚑'], ufc:['UFC','⚑'], pfl:['PFL','⚑'], weather:['Weather','☼'], tv:['TV','▣'], astronomy:['Sky','✦'], movies:['Movies','▶'], trailers:['Trailers','▶'], major_events:['Events','◆'], gaming:['Gaming','⌘'], music:['Music','♫'], calendar:['Calendar','□'] };
+  // Weather is a first-class ambient destination. Keep urgent weather visible
+  // ahead of lower-priority sports when the rail has to compact or overflow.
+  const destinationPriority = { plex:100, weather:95, nhl:85, ufc:75, pfl:65,
+    calendar:55, tv:50, astronomy:45, gaming:40, music:35, movies:30,
+    trailers:25, major_events:20 };
   let sections = [], contexts = [], health = {}, selected = '', loaded = false, offline = false;
   let view = params.get('view') || '', interrupted = false;
   const label = key => destinations[key]?.[0] || key.replaceAll('_', ' ').replace(/^./, c => c.toUpperCase());
@@ -21,7 +26,12 @@
   const overflow = menu.querySelector('nav');
   const panel = document.createElement('section'); panel.className = 'kiosk-section'; panel.hidden = true; panel.setAttribute('aria-label', 'Selected kiosk section'); document.body.append(panel);
   function href(key) { const u = new URL(location.href); key ? u.searchParams.set('view', key) : u.searchParams.delete('view'); return u.pathname + u.search; }
-  function allDestinations() { return [['', 'Home', '⌂'], ...sections.map(key => [key, label(key), icon(key)])]; }
+  function allDestinations() {
+    return [['', 'Home', '⌂'], ...sections.map((key, index) => [key, label(key), icon(key), index])]
+      .sort((a, b) => a[0] === '' ? -1 : b[0] === '' ? 1
+        : (destinationPriority[b[0]] ?? 0) - (destinationPriority[a[0]] ?? 0) || a[3] - b[3])
+      .map(([key, title, glyph]) => [key, title, glyph]);
+  }
   function link([key, title, glyph], detail = '') { return `<a href="${esc(href(key))}" data-view="${esc(key)}" aria-label="${esc(title)}" title="${esc(title)}" ${key===view?'aria-current="page"':''}><span class="kiosk-icon" aria-hidden="true">${esc(glyph)}</span><span class="kiosk-label">${esc(title)}</span>${detail ? `<small>${esc(detail)}</small>` : ''}</a>`; }
   function drawNavigation() {
     const all = allDestinations(); primary.innerHTML = all.map(d => link(d)).join(''); primary.querySelectorAll('a').forEach(a => a.hidden = false); more.hidden = false;
@@ -41,15 +51,22 @@
     const html = `<header><p>EXPLORE</p><h1>${esc(label(view))}</h1></header>` + (list.length ? `<div class="kiosk-items">${list.map(c => `<button type="button" data-item="${esc(c.id)}"><small>${esc(c.status || c.source || '')}</small><strong>${esc(c.title)}</strong><span>${esc(c.subtitle || c.detail || '')}</span>${(c.rows || []).slice(0,3).map(row=>`<span>${esc(row)}</span>`).join('')}</button>`).join('')}</div>` : `<p class="kiosk-empty" role="status">${esc(message)}</p>`);
     if (panel.innerHTML !== html) panel.innerHTML = html;
   }
-  function change(key) { view = key; selected = ''; history.replaceState(null, '', href(key)); if (menu.open) menu.close(); more.setAttribute('aria-expanded', 'false'); drawNavigation(); drawMenu(); drawPanel(); window.dispatchEvent(new Event('marquee-navigation')); }
+  function change(key) { view = key; selected = ''; history.replaceState(null, '', href(key)); closeMenu(false); drawNavigation(); drawMenu(); drawPanel(); window.dispatchEvent(new Event('marquee-navigation')); }
   more.onclick = () => { drawMenu(); menu.showModal(); more.setAttribute('aria-expanded', 'true'); };
-  menu.querySelector('header button').onclick = () => { menu.close(); more.setAttribute('aria-expanded', 'false'); };
+  function closeMenu(focus = true) {
+    if (menu.open) menu.close();
+    more.setAttribute('aria-expanded', 'false');
+    if (focus) more.focus();
+  }
+  menu.addEventListener('close', () => { more.setAttribute('aria-expanded', 'false'); more.focus(); });
+  menu.addEventListener('cancel', () => { more.setAttribute('aria-expanded', 'false'); });
+  menu.querySelector('header button').onclick = () => closeMenu();
   function handleLink(e) { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); } }
   primary.addEventListener('click', handleLink); overflow.addEventListener('click', handleLink);
-  menu.addEventListener('click', e => { if (e.target === menu) { const r = menu.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) { menu.close(); more.setAttribute('aria-expanded', 'false'); } } });
+  menu.addEventListener('click', e => { if (e.target === menu) { const r = menu.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closeMenu(); } });
   panel.addEventListener('click', e => { const b = e.target.closest('button[data-item]'); if (b) { selected = b.dataset.item; drawPanel(); primary.querySelector(`[data-view="${CSS.escape(view)}"]`)?.focus(); window.dispatchEvent(new Event('marquee-navigation')); } });
   window.addEventListener('popstate', () => { view = new URLSearchParams(location.search).get('view') || ''; selected = ''; drawNavigation(); drawMenu(); drawPanel(); window.dispatchEvent(new Event('marquee-navigation')); });
-  window.MarqueeNavigation = { resolve(payload) { const wasInterrupted = interrupted; interrupted = Boolean(payload.attention || payload.householdFocus); if (interrupted && !wasInterrupted && menu.open) { menu.close(); more.setAttribute('aria-expanded', 'false'); } drawPanel(); if (interrupted || !view) return payload; const c = !offline && sections.includes(view) && items(view).find(item => item.id === selected); return c ? c.payload || {playing:true,type:'media_context',key:'browse:'+c.id,context:c} : {playing:false}; } };
+  window.MarqueeNavigation = { resolve(payload) { const wasInterrupted = interrupted; interrupted = Boolean(payload.attention || payload.householdFocus); if (interrupted && !wasInterrupted && menu.open) closeMenu(false); drawPanel(); if (interrupted || !view) return payload; const c = !offline && sections.includes(view) && items(view).find(item => item.id === selected); return c ? c.payload || {playing:true,type:'media_context',key:'browse:'+c.id,context:c} : {playing:false}; } };
   async function refresh() {
     try { const data = await Promise.all(['/api/config','/contexts','/providers'].map(async url => { const r = await fetch(url); if (!r.ok) throw Error(); return r.json(); })); sections = Object.entries(data[0].providers || {}).filter(([,cfg]) => cfg.enabled && (!cfg.targets || cfg.targets.includes('kiosk'))).map(([key]) => key); health = data[2].providers || {}; const seen = new Set(); contexts = (data[1].contexts || []).filter(c => { if (!c.id || c.id.startsWith('screen-test:') || (c.targets && !c.targets.includes('kiosk')) || !fresh(c)) return false; const key=(c.provider||c.source)+'|'+c.title+'|'+(c.starts||''); if (seen.has(key)) return false; seen.add(key); return true; }); for (const p of health.plex?.contexts || []) if (p.playing) contexts.push({id:'plex:now',source:'plex',title:p.title,subtitle:p.subtitle,payload:p}); loaded = true; offline = false; } catch (_) { offline = true; contexts = []; }
     if (!menu.open) { drawNavigation(); drawMenu(); } drawPanel(); window.dispatchEvent(new Event('marquee-navigation'));

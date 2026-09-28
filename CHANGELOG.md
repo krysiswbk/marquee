@@ -1,3 +1,10 @@
+## 2.10.2 — Weather hierarchy and narrow-device repair
+
+- Promote Weather in the responsive destination rail so it displaces lower-priority sports when space is limited.
+- Keep narrow navigation unobstructed, restore 44px weather controls, and synchronize More dialog close state and focus.
+- Make Home weather a compact authoritative summary with available near-term signals, and let narrow weather narrative flow without a nested clipped scroller.
+- Add deliberate spacing between the ambient weather line and the live household surface at mid-narrow widths.
+
 ## 2.10.1 — Kiosk destination shell
 
 - Publish the reconciled Marquee modernization source and generated frontend assets.

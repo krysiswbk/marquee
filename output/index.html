@@ -687,9 +687,9 @@
   body.live-editing [data-layout] { outline:none; }
   body.live-editing .screen-controls, body.live-editing nav { display:none !important; }
 </style>
-<link rel="stylesheet" href="/brain.css?v=2.9.5">
-<link rel="stylesheet" href="/screens.css?v=2.9.5">
-<link rel="stylesheet" href="/weather-channel.css?v=2.9.5">
+<link rel="stylesheet" href="/brain.css?v=2.10.2">
+<link rel="stylesheet" href="/screens.css?v=2.10.2">
+<link rel="stylesheet" href="/weather-channel.css?v=2.10.2">
 <link rel="stylesheet" href="/scene-themes.css?v=2.9.7">
 <body data-template="spotlight">
 <img class="bg" id="bg" alt="">
@@ -2215,9 +2215,18 @@ ${chase.join('')}
       }
       const sportsWeather = $('sport-weather');
       if (sportsWeather) sportsWeather.textContent = `${Math.round(lastWx.temp)}°C · ${readableCondition(lastWx.condition, lastWx.code)}`;
+      const forecast = Array.isArray(lastWx.hourly) ? lastWx.hourly : [];
+      const days = Array.isArray(lastWx.daily) ? lastWx.daily : [];
+      const today = days[0] || {};
+      const summary = [`${Math.round(lastWx.temp)}°C · ${readableCondition(lastWx.condition, lastWx.code)}`];
+      if (Number.isFinite(lastWx.apparent_temperature)) summary.push(`Feels ${Math.round(lastWx.apparent_temperature)}°`);
+      if (Number.isFinite(today.temperature) || Number.isFinite(today.templow)) {
+        summary.push(`High ${Number.isFinite(today.temperature) ? Math.round(today.temperature) + '°' : '—'} / Low ${Number.isFinite(today.templow) ? Math.round(today.templow) + '°' : '—'}`);
+      }
+      const nextRain = forecast.find(row => Number.isFinite(row.precipitation_probability) && row.precipitation_probability >= 30);
+      if (nextRain) summary.push(`Rain ${Math.round(nextRain.precipitation_probability)}% next`);
       $('idle-weather').textContent = (!LIVE_SURFACE || (fallbackCfg.screen !== 'blank'
-        && fallbackCfg.show_weather !== false))
-        ? `${Math.round(lastWx.temp)}°C · ${readableCondition(lastWx.condition, lastWx.code)}` : '';
+        && fallbackCfg.show_weather !== false)) ? summary.join(' · ') : '';
     } else {
       $('wx').textContent = '';
       if ($('sport-weather')) $('sport-weather').textContent = '';
