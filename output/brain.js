@@ -25,7 +25,7 @@
     const serious=alerts.find(a=>['CRITICAL','IMPORTANT','ACTIONABLE'].includes(a.urgency));
     const primary=serious?opening.find(o=>o.id===serious.signal_id):(opening.find(o=>o.category!=='window')||opening[0]);
     const deviceHealth=fresh?(state.device_health||[]):[];
-    const healthText=deviceHealth.length?`Nursery devices offline: ${deviceHealth.map(d=>d.name).join(', ')}. Check their batteries or connection.`:'';
+    const healthText=deviceHealth.length?`Offline: ${deviceHealth.map(d=>d.name).join(', ')}. Check batteries or connection.`:'';
     $('brain-device-health').hidden=!deviceHealth.length;
     $('brain-house').classList.toggle('device-alert',Boolean(deviceHealth.length));
     set('brain-device-health',healthText);
@@ -38,7 +38,8 @@
     const duration=primary?Math.max(primary.duration||0,now-primary.since):0;
     set('brain-headline',!fresh?'The house feed went quiet.':primary?`${primary.name} ${primary.state}.`:serious?serious.title:deviceHealth.length?'Nursery devices are offline.':event&&now-event.at<120?event.title:'Home, in the present.');
     let summary=!fresh?'Live states are unavailable. The last report is not a current all-clear.':primary?`${duration<60?`Just observed ${primary.state}.`:`Observed ${primary.state} for ${elapsed(duration)}.`} ${serious?'Worth checking before you settle in.':state.sleeping?'Someone is sleeping.':state.weather_state&&/rain|snow/.test(state.weather_state)?'Wet weather outside — worth a look.':state.lock==='locked'?'Front door lock is secured.':''}`:serious?serious.summary:state.lock==='locked'?'Front door locked. Reporting doors and windows are closed.':'No monitored door or window is reporting open.';
-    if(fresh&&state.unknown?.length)summary+=` ${state.unknown.length} household sensor${state.unknown.length===1?' is':'s are'} unavailable.`;
+    if(deviceHealth.length)summary='Device status needs attention.';
+    else if(fresh&&state.unknown?.length)summary+=` ${state.unknown.length} household sensor${state.unknown.length===1?' is':'s are'} unavailable.`;
     set('brain-summary',summary);
     $('brain-openings').innerHTML=opening.slice(0,5).map(o=>`<span class="brain-tag warm">${esc(o.name)} <small>${esc(o.state)} · ${elapsed(Math.max(o.duration||0,now-o.since))}</small></span>`).join('');
     const actionable=serious?.acknowledgement_required?serious:null;alertId=actionable?.id||'';$('brain-ack').hidden=!actionable||demo;

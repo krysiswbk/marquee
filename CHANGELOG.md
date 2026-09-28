@@ -1,3 +1,11 @@
+## 2.10.6 — Tablet alert content refinement
+
+- Prioritize the specific actionable device-health message in urgent tablet
+  household cards and remove duplicated unavailable-sensor prose.
+- Keep tablet support panels above the painted dock boundary, limiting lower-
+  priority copy when the available height is tight.
+- Add regression coverage for alert content priority and dock-safe support bounds.
+
 ## 2.10.5 — Tablet dashboard box-model refinement
 
 - Make 481–700px Home panel bounds explicit border boxes with dock-safe insets.
