@@ -129,14 +129,20 @@ with sync_playwright() as playwright:
                 assert control["described"], control
                 for target in control["described"].split():
                     assert page.locator(f"#{target}").count() == 1, (control, target)
-            invalid = page.locator('input[type="number"]').first
+            page.get_by_role("button", name="Edit policy").click()
+            invalid = page.locator("#attention-signal-ttl")
+            assert invalid.is_visible()
             invalid.fill("-1")
             assert invalid.get_attribute("aria-invalid") == "true"
             assert page.locator("#save").is_disabled()
-            for target in invalid.get_attribute("aria-describedby").split():
+            described = invalid.get_attribute("aria-describedby").split()
+            assert {"attention-signal-ttl-help", "attention-signal-ttl-error"}.issubset(described)
+            for target in described:
                 assert page.locator(f"#{target}").count() == 1
             page.locator("#discard").click()
             assert not page.locator('[aria-invalid="true"]').count()
+            assert page.locator("#save").is_disabled()
+            assert invalid.input_value() != "-1"
             assert not errors, errors
             page.close()
     seed.close()
