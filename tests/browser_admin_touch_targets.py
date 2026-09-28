@@ -5,7 +5,6 @@ from urllib.parse import urljoin
 
 from playwright.sync_api import sync_playwright
 
-
 BASE = os.environ.get("MARQUEE_SMOKE_URL", "http://127.0.0.1:18086")
 ROUTES = [
     "/settings",
