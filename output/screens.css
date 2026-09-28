@@ -380,3 +380,7 @@ body.browser-controls{overflow-x:hidden}.kiosk-section.now-playing-surface{displ
 /* Programmatic destination focus keeps the heading in the accessibility tree
    without making a non-interactive stage title look like a control. */
 .kiosk-section-head h1:focus-visible,.now-playing-surface .kiosk-now-playing-head h1:focus-visible{outline:0;text-decoration-line:underline;text-decoration-style:dashed;text-decoration-thickness:3px;text-decoration-color:#c3fc86;text-underline-offset:.18em}
+
+/* Birthday rollup rows remain grouped under the featured provider entry. */
+.kiosk-birthday-rows{grid-column:2/-1;margin:0;padding:6px 0 0 18px;color:#d9e4f0;font-size:15px;line-height:1.3}.kiosk-birthday-rows li{margin:3px 0}
+@media(max-width:480px){.kiosk-birthday-rows{grid-column:1/-1;padding-left:18px;font-size:14px}}

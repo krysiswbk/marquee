@@ -210,17 +210,10 @@
   };
   const safeRows = (c, limit = 3) => (c.rows || []).filter(row => row && !/@/.test(String(row))).slice(0, limit);
   const ordered = list => [...list].sort((a, b) => (dateOf(a)?.valueOf() || Infinity) - (dateOf(b)?.valueOf() || Infinity));
-  // CalendarProvider's birthday rollup keeps the nearest birthday in title
-  // and publishes the remaining authoritative birthdays in rows. Expand only
-  // this presentation shape for the full agenda; the provider remains the
-  // sole source of every display value.
-  function calendarEntries(list) {
-    return list.flatMap(c => c.subtype === 'birthday_rollup'
-      ? [{...c, subtype: 'birthday_entry', id: `${c.id}:featured`}, ...(c.rows || []).filter(Boolean).map((row, index) => ({
-        ...c, subtype: 'birthday_entry', id: `${c.id}:additional:${index}`, title: String(row), subtitle: 'Birthday', rows: []
-      }))]
-      : [c]);
-  }
+  // CalendarProvider keeps the nearest birthday in title and publishes the
+  // remaining authoritative birthdays in rows. Keep that rollup as one
+  // agenda entry and render rows as its subordinate display-only list.
+  const calendarEntries = list => [...list];
   const button = c => `<button type="button" data-item="${esc(c.id)}"><small>${esc(stateCopy(c))}</small><strong>${esc(c.title || 'Untitled')}</strong><span>${esc(c.subtitle || c.detail || '')}</span></button>`;
   const combatView = key => key === 'ufc' || key === 'pfl';
   const combatName = key => key === 'pfl' ? 'PFL' : 'UFC';
@@ -350,8 +343,12 @@
   }
   const calendarPageCount = list => Math.max(1, Math.ceil(list.length / calendarPageSize));
   function calendarRow(c) {
-    const birthday = c.subtype === 'birthday_rollup' || c.subtype === 'birthday_entry';
-    return `<div class="kiosk-agenda-row ${birthday ? 'is-birthday' : ''}"><time>${esc(c.subtitle || 'All day')}</time><strong>${esc(c.title || 'Untitled')}</strong><small>${esc(birthday ? 'Birthday' : sourceLabel(c))}</small></div>`;
+    const birthday = c.subtype === 'birthday_rollup';
+    const birthdayRows = birthday ? (c.rows || []).filter(Boolean) : [];
+    const subordinate = birthdayRows.length
+      ? `<ul class="kiosk-birthday-rows" aria-label="Additional birthdays">${birthdayRows.map(row => `<li>${esc(row)}</li>`).join('')}</ul>`
+      : '';
+    return `<div class="kiosk-agenda-row ${birthday ? 'is-birthday' : ''}"><time>${esc(c.subtitle || 'All day')}</time><strong>${esc(c.title || 'Untitled')}</strong><small>${esc(birthday ? 'Birthday' : sourceLabel(c))}</small>${subordinate}</div>`;
   }
   function calendarDetail(list) {
     const pages = calendarPageCount(list);

@@ -56,6 +56,11 @@ with sync_playwright() as playwright:
             agenda = page.locator(".kiosk-calendar-page")
             assert agenda.evaluate("el => el.scrollHeight <= el.clientHeight + 1"), (width, height, agenda.bounding_box())
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight")
+            if visited_pages == 1:
+                birthday = agenda.locator(".kiosk-agenda-row.is-birthday")
+                assert birthday.count() == 1
+                assert birthday.locator(".kiosk-birthday-rows li").all_inner_texts() == list(BIRTHDAYS[1:])
+                assert birthday.inner_text().count("Birthday") == 1
             seen.extend(agenda.locator(".kiosk-agenda-row").all_inner_texts())
             next_button = page.locator('[data-calendar-control="next"]')
             if next_button.is_disabled():
