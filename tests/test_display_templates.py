@@ -77,14 +77,17 @@ class DisplayTemplateTests(unittest.TestCase):
         self.assertIn('id="sport-footer"', DISPLAY)
 
     def test_long_context_values_break_without_mutating_payload_text(self):
-        for token in ("overflow-wrap:anywhere", "word-break:normal", "contextRows.dataset.summary"):
+        for token in ("overflow-wrap:anywhere", "word-break:normal", "contextRows.dataset.summary",
+                      "data-context-more", "View all ${rows.length} details",
+                      "contextRowsExpanded = !contextRowsExpanded", "aria-expanded"):
             self.assertIn(token, DISPLAY)
         self.assertIn("context.type === 'gaming' && rows.length > 1", DISPLAY)
 
     def test_fixed_stage_contracts_bound_intrinsic_rows_and_phone_gaming_queue(self):
         screens = (Path(__file__).parents[1] / "output" / "screens.css").read_text()
         for token in ("grid-template-rows:auto minmax(0,1fr) auto", "context-card[data-kind=gaming]",
-                      "context-rows.phone-summary::after", "body .sport-footer{min-height:0"):
+                      "context-rows.phone-summary:not(.is-expanded)",
+                      "context-rows.phone-summary .context-more", "body .sport-footer{min-height:0"):
             self.assertIn(token, screens)
 
     def test_weather_condition_tokens_are_humanized_everywhere(self):

@@ -1,3 +1,7 @@
+## 2.10.85
+
+- Make the phone Gaming context's additional detail rows reachable through an accessible, focus-preserving disclosure instead of a decorative `+N more` summary.
+
 ## 2.10.84
 
 - Settle kiosk config, context, and provider refreshes independently, retaining
