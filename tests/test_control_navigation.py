@@ -236,6 +236,20 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("channel-outlook{max-height:none;overflow:visible}", weather)
         self.assertIn("clip-path:inset(50%)", screens)
 
+    def test_shallow_landscape_current_weather_uses_complete_first_look_composition(self):
+        weather = (ROOT / "output" / "weather-channel.css").read_text()
+        shallow = weather.split(
+            "@media(min-width:1000px) and (max-height:700px) and (min-aspect-ratio:3/2)",
+            1,
+        )[1].split("@media(prefers-reduced-motion", 1)[0]
+        for token in (
+            ".wx-broadcast .wx-panel{overflow:visible}",
+            ".channel-current{grid-template-columns:minmax(0,44%) minmax(0,1fr)",
+            ".channel-metrics{grid-template-columns:repeat(2,minmax(0,1fr))",
+            ".channel-outlook{font-size:clamp(11px,1vw,16px);line-height:1.25;max-height:none;overflow:visible",
+        ):
+            self.assertIn(token, shallow)
+
     def test_home_weather_summary_uses_available_authoritative_near_term_fields(self):
         source = (ROOT / "output" / "index.html").read_text()
         for field in ("apparent_temperature", "temperature", "templow", "precipitation_probability"):

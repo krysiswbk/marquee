@@ -1,3 +1,10 @@
+## 2.10.45
+
+- Fit normal current weather conditions completely on shallow landscape
+  Nest Hub-class displays by rebalancing the observation, readings, and
+  forecast narrative hierarchy without hiding or truncating authoritative
+  content.
+
 ## 2.10.44
 
 - Restore explicit Tutorial click launching in both layout workspaces while
