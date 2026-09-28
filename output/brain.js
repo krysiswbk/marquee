@@ -85,7 +85,8 @@
     const birthdays=cards.find(c=>c.subtype==='birthday_rollup');
     if(birthdays){
       const birthdayRows=(birthdays.rows||[]).filter(Boolean), birthdayHref='/kiosk?view=calendar&mode=all';
-      const birthdayMore=birthdayRows.length>1?`<li><a class="brain-agenda-more" href="${birthdayHref}" aria-label="View all ${birthdayRows.length} birthdays">View all ${birthdayRows.length} birthdays</a></li>`:'';
+      const birthdayCount=birthdayRows.length+1;
+      const birthdayMore=birthdayRows.length>1?`<li><a class="brain-agenda-more" href="${birthdayHref}" aria-label="View all ${birthdayCount} birthdays">View all ${birthdayCount} birthdays</a></li>`:'';
       $('brain-birthdays').innerHTML=`<h2>${esc(birthdays.title)}</h2><div class="birthday-when">${esc(birthdays.subtitle)}</div><ul>${birthdayRows.slice(0,1).map(r=>`<li>${esc(r)}</li>`).join('')}${birthdayMore}</ul>`;
     }else $('brain-birthdays').innerHTML='<p class="brain-empty">No birthdays in the next three weeks.</p>';
     const near=c=>!c.starts||Date.parse(c.starts)<=Date.now()+3*86400000;

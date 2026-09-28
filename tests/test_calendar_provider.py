@@ -73,6 +73,10 @@ def test_birthdays_share_one_card_closest_featured_and_cross_calendar_duplicates
     assert card.subtype == "birthday_rollup"
     assert card.title == "Judy's Birthday"
     assert card.stats == ["Lucie's Birthday · In 8 days · Sep 17", "Mark's Birthday · In 14 days · Sep 23"]
+    # The rollup title is the featured/nearest birthday; stats contains only
+    # additional birthdays consumed by dashboard summaries.
+    assert card.title not in card.stats
+    assert len(card.stats) + 1 == 3
     assert card.targets == ["kiosk"]
 
 

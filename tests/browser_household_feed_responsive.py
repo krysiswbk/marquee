@@ -127,7 +127,7 @@ with sync_playwright() as playwright:
                 assert agenda.is_visible()
                 assert "Casey’s birthday" in agenda.inner_text()
                 assert "Urgent school pickup change" in agenda.inner_text()
-                assert "View all 2 birthdays" in agenda.inner_text()
+                assert "View all 3 birthdays" in agenda.inner_text()
                 assert "View all 3 upcoming events" in agenda.inner_text()
                 links = agenda.locator("a.brain-agenda-more")
                 assert links.count() == 2
