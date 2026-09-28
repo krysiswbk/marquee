@@ -1,3 +1,10 @@
+## 2.10.33
+
+- Guard optional layout-editor resize targets so absent panels never receive an
+  observer subscription with a null target.
+- Make compact Home weather facts visibly distinct with measured spacing and a
+  persistent boundary while retaining empty-fact separator suppression.
+
 ## 2.10.32
 
 - Keep the authoritative now-playing progress display monotonic while playing;

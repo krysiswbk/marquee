@@ -1104,7 +1104,8 @@
       $('#status').textContent = 'Custom display size changed — save to keep it.';
     }));
   window.addEventListener('resize', scaleFrame);
-  new ResizeObserver(scaleFrame).observe(document.querySelector('.mq-side'));
+  const settingsSide = document.querySelector('.mq-side');
+  if (settingsSide) new ResizeObserver(scaleFrame).observe(settingsSide);
 
   // Push the whole draft config into the preview card — instant, no reload.
   function sendCfg() {

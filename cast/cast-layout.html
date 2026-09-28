@@ -385,9 +385,9 @@
     .mq-mode-link { padding: 12px; }
   }
 </style>
-<link rel="stylesheet" href="/control-shell.css?v=2.10.32">
-<link rel="stylesheet" href="/control-shell-narrow.css?v=2.10.32">
-<script defer src="/control-shell.js?v=2.10.32"></script>
+<link rel="stylesheet" href="/control-shell.css?v=2.10.33">
+<link rel="stylesheet" href="/control-shell-narrow.css?v=2.10.33">
+<script defer src="/control-shell.js?v=2.10.33"></script>
 
 <script src="/settings-draft.js?v=3"></script>
 <div class="wrap">
@@ -1182,7 +1182,8 @@
       $('#status').textContent = 'Custom display size changed — save to keep it.';
     }));
   window.addEventListener('resize', scaleFrame);
-  new ResizeObserver(scaleFrame).observe(document.querySelector('.mq-side'));
+  const layoutSide = document.querySelector('.mq-side');
+  if (layoutSide) new ResizeObserver(scaleFrame).observe(layoutSide);
 
   // Push the whole draft config into the preview card — instant, no reload.
   function sendCfg() {

@@ -49,10 +49,17 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn("progressState = window.MarqueeNowPlayingProgress.reconcile(d, progressState", source)
 
     def test_compact_weather_facts_have_nonempty_fact_separators(self):
-        self.assertIn("weather-fact-separator:before", SCREENS)
+        self.assertIn("weather-fact-separator", SCREENS)
+        self.assertIn("border-inline-start", SCREENS)
+        self.assertIn("padding-inline-start", SCREENS)
         self.assertIn(".idle-weather-primary", SCREENS)
         self.assertIn(".idle-weather-secondary", SCREENS)
         self.assertIn("markWeatherFactSeparators", INDEX)
+
+    def test_weather_fact_marking_skips_empty_facts_without_double_boundaries(self):
+        self.assertIn("const present = Boolean(fact.textContent.trim())", INDEX)
+        self.assertIn("present && seen", INDEX)
+        self.assertIn("if (present) seen = true", INDEX)
 
     def test_narrow_orbit_cannot_create_a_horizontal_scroller(self):
         self.assertIn("body.browser-controls{overflow-x:hidden}", SCREENS)

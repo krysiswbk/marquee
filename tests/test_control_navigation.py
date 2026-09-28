@@ -78,6 +78,15 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn('ResizeObserver', source)
         self.assertIn('Connection unavailable', source)
 
+    def test_optional_resize_targets_are_guarded_before_observe(self):
+        for path, variable in ((ROOT / 'cast/settings.html', 'settingsSide'),
+                               (ROOT / 'cast/cast-layout.html', 'layoutSide')):
+            source = path.read_text()
+            with self.subTest(path=path):
+                self.assertIn(f"const {variable} = document.querySelector('.mq-side');", source)
+                self.assertIn(f"if ({variable}) new ResizeObserver(scaleFrame).observe({variable});", source)
+                self.assertNotIn("observe(document.querySelector('.mq-side'))", source)
+
     def test_navigation_keeps_touch_targets_and_safe_area_spacing(self):
         styles = (ROOT / "output" / "screens.css").read_text()
         self.assertIn("min-height:44px", styles)
@@ -103,9 +112,9 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("grid-template-columns: repeat(2, minmax(0, 1fr))", css)
         for page in (PAGES["cast-layout"], PAGES["live-layout"], PAGES["attention"], PAGES["tests"]):
             source = page.read_text()
-            self.assertIn("control-shell.css?v=2.10.32", source)
-            self.assertIn("control-shell.js?v=2.10.32", source)
-            self.assertIn("control-shell-narrow.css?v=2.10.32", source)
+            self.assertIn("control-shell.css?v=2.10.33", source)
+            self.assertIn("control-shell.js?v=2.10.33", source)
+            self.assertIn("control-shell-narrow.css?v=2.10.33", source)
 
     def test_layout_workspace_has_explicit_phone_composition_contract(self):
         source = PAGES["cast-layout"].read_text()
