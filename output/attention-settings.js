@@ -74,7 +74,8 @@
   function numeric(label, value, write, schemaKey, id, help = '') {
     const rule = state.schema[schemaKey] || {};
     const attrs = { id: `attention-${id}`, name: `attention.${id}`, min: rule.min, max: rule.max,
-      step: rule.step ?? 'any', required: rule.required !== false, error: true };
+      step: rule.step ?? 'any', required: rule.required !== false, error: true,
+      'data-attention-field': schemaKey };
     const unit = rule.unit ? ` (${rule.unit})` : '';
     return input(label, value, write, 'number', null, help || `Allowed: ${rule.min}–${rule.max}${unit}.`, attrs);
   }

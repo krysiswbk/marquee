@@ -119,8 +119,16 @@ with sync_playwright() as playwright:
             }""")
             assert not audit["duplicateIds"], audit
             assert not audit["broken"], audit
-            stage_ids = page.locator('input[id*="stage"][id$="-after"]').evaluate_all("els => els.map(el => el.id)")
-            assert len(stage_ids) >= 3 and len(stage_ids) == len(set(stage_ids)), stage_ids
+            stage_controls = page.locator('[data-attention-field="stage_after"]').evaluate_all(
+                "els => els.map(el => ({id: el.id, described: el.getAttribute('aria-describedby')}))"
+            )
+            assert len(stage_controls) >= 3, stage_controls
+            stage_ids = [control["id"] for control in stage_controls]
+            assert len(stage_ids) == len(set(stage_ids)), stage_controls
+            for control in stage_controls:
+                assert control["described"], control
+                for target in control["described"].split():
+                    assert page.locator(f"#{target}").count() == 1, (control, target)
             invalid = page.locator('input[type="number"]').first
             invalid.fill("-1")
             assert invalid.get_attribute("aria-invalid") == "true"

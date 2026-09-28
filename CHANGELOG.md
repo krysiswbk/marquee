@@ -1,3 +1,9 @@
+## 2.10.58
+
+- Correct the browser attention fixture contract to identify generated
+  stage-after controls through explicit semantic metadata and verify their
+  accessible help/error references.
+
 ## 2.10.57
 
 - Eliminate duplicate attention-editor IDs with deterministic rule, stage,
