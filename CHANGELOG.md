@@ -1,3 +1,8 @@
+## 2.10.44
+
+- Restore explicit Tutorial click launching in both layout workspaces while
+  keeping Tutorial outside the real tablist and preserving active-tab state.
+
 ## 2.10.43
 
 - Give Cast and settings layout tabs complete roving-tab semantics with truthful

@@ -89,6 +89,9 @@ class ControlNavigationTests(unittest.TestCase):
                 self.assertIn("tourLauncher.focus()", source)
                 self.assertIn("event.key !== 'Tab'", source)
                 self.assertIn('.tab-items [role="tab"]', source)
+                self.assertIn(
+                    "$('#tab-tutorial').addEventListener('click', () => startTour($('#tab-tutorial')))",
+                    source)
 
     def test_layout_tabs_have_complete_roving_keyboard_contract(self):
         expected = {

@@ -1542,6 +1542,7 @@
   }
   tabButtons.forEach(b =>
     b.addEventListener('click', () => activateTab(b.dataset.tab)));
+  $('#tab-tutorial').addEventListener('click', () => startTour($('#tab-tutorial')));
   $('.tab-items').addEventListener('keydown', event => {
     const index = tabButtons.indexOf(document.activeElement);
     if (index < 0) return;

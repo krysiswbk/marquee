@@ -386,9 +386,9 @@
     .mq-mode-link { padding: 12px; }
   }
 </style>
-<link rel="stylesheet" href="/control-shell.css?v=2.10.43">
-<link rel="stylesheet" href="/control-shell-narrow.css?v=2.10.43">
-<script defer src="/control-shell.js?v=2.10.43"></script>
+<link rel="stylesheet" href="/control-shell.css?v=2.10.44">
+<link rel="stylesheet" href="/control-shell-narrow.css?v=2.10.44">
+<script defer src="/control-shell.js?v=2.10.44"></script>
 
 <script src="/settings-draft.js?v=3"></script>
 <div class="wrap">
@@ -1619,6 +1619,7 @@
   }
   tabButtons.forEach(b =>
     b.addEventListener('click', () => activateTab(b.dataset.tab)));
+  $('#tab-tutorial').addEventListener('click', () => startTour($('#tab-tutorial')));
   $('.tab-items').addEventListener('keydown', event => {
     const index = tabButtons.indexOf(document.activeElement);
     if (index < 0) return;
