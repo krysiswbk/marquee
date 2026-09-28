@@ -411,7 +411,9 @@ class ControlNavigationTests(unittest.TestCase):
             self.assertIn(token, page + script)
         self.assertIn('env(safe-area-inset-bottom)', styles)
         self.assertIn('min-height:44px', styles)
-        self.assertIn('scroll-padding-bottom:92px', styles)
+        self.assertIn('position:fixed', styles)
+        self.assertIn('--mobile-actionbar-space:calc(76px + env(safe-area-inset-bottom))', styles)
+        self.assertIn('scroll-padding-bottom:var(--mobile-actionbar-space)', styles)
         self.assertIn("$('#mobile-save').disabled = !dirty", script)
         self.assertIn("$('#mobile-discard').disabled = !dirty", script)
 

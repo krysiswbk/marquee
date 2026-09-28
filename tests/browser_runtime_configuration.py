@@ -7,7 +7,7 @@ from playwright.sync_api import sync_playwright
 
 
 BASE = os.environ.get("MARQUEE_BASE_URL", "http://10.10.9.37:8084").rstrip("/")
-EVIDENCE = Path(os.environ.get("MARQUEE_EVIDENCE_DIR", "/tmp/marquee-2.10.51-evidence"))
+EVIDENCE = Path(os.environ.get("MARQUEE_EVIDENCE_DIR", "/tmp/marquee-2.10.52-evidence"))
 VIEWPORTS = [(1500, 900), (1024, 600), (700, 900), (393, 852)]
 
 
@@ -35,10 +35,20 @@ with sync_playwright() as playwright:
                     assert mobile.is_visible()
                     assert page.locator("#mobile-save").is_disabled()
                     assert page.locator("#mobile-discard").is_disabled()
-                    page.evaluate("scrollTo(0, 900)")
-                    page.wait_for_timeout(100)
-                    dock = mobile.bounding_box()
-                    assert dock and dock["y"] + dock["height"] <= height + 1
+                    page.locator("#tab-content").click()
+                    assert page.locator("#tab-content").get_attribute("aria-selected") == "true"
+                    page.locator("#tab-displays").click()
+                    assert page.locator("#tab-displays").get_attribute("aria-selected") == "true"
+                    scroll_height = page.evaluate("document.documentElement.scrollHeight")
+                    for position_name, position in (("top", 0),
+                                                     ("mid", scroll_height // 2),
+                                                     ("bottom", scroll_height)):
+                        page.evaluate("position => scrollTo(0, position)", position)
+                        page.wait_for_timeout(100)
+                        dock = mobile.bounding_box()
+                        assert dock and dock["y"] >= -1 and dock["y"] + dock["height"] <= height + 1, (
+                            name, width, height, position_name, dock
+                        )
                 else:
                     assert not mobile.is_visible()
             else:

@@ -1,3 +1,9 @@
+## 2.10.52
+
+- Keep the Main Settings mobile Save/Discard dock fixed to the viewport through
+  long settings pages, with safe-area clearance and deterministic deep-scroll
+  reachability coverage.
+
 ## 2.10.51
 
 - Keep main Settings save/discard actions reachable on phones with a compact,
