@@ -87,6 +87,15 @@ with sync_playwright() as p:
     page.goto("http://marquee.test/kiosk?audit=2.10.50&view=plex", wait_until="domcontentloaded")
     page.wait_for_function("document.activeElement?.id === 'kiosk-section-title'")
     assert page.locator(".kiosk-section").evaluate("el => !el.hidden && !el.inert")
+    assert page.evaluate("""() => {
+        const style = getComputedStyle(document.activeElement);
+        return style.outlineStyle === 'none' && style.textDecorationLine.includes('underline');
+    }""")
+    page.locator(".kiosk-home-action").focus()
+    assert page.evaluate("""() => {
+        const active = document.activeElement;
+        return active.matches(':focus-visible') && getComputedStyle(active).outlineStyle !== 'none';
+    }""")
     page.evaluate("window.MarqueeNavigation.resolve({playing:true, title:'Active test playback'})")
     assert page.locator(".kiosk-section").evaluate("el => el.hidden && el.inert && !el.contains(document.activeElement)")
 

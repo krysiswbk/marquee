@@ -243,6 +243,13 @@ def test_direct_destination_focus_is_pending_only_for_visible_initial_region():
     assert "focusInitialDestination();" in MENU
 
 
+def test_noninteractive_stage_headings_use_non_boxy_focus_without_weakening_controls():
+    assert ".kiosk-section-head h1:focus-visible,.now-playing-surface .kiosk-now-playing-head h1:focus-visible" in SCREENS
+    assert "outline:0;text-decoration-line:underline;text-decoration-style:dashed" in SCREENS
+    assert ".kiosk-rail :focus-visible{outline:3px solid #c3fc86;outline-offset:2px}" in SCREENS
+    assert ".kiosk-home-action:focus-visible,.kiosk-retry:focus-visible{outline:3px solid #fff;outline-offset:3px}" in SCREENS
+
+
 def test_provider_error_stale_and_empty_states_have_distinct_deterministic_copy():
     assert "function destinationLifecycle(key, list)" in MENU
     assert "state: 'error'" in MENU

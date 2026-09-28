@@ -1,3 +1,10 @@
+## 2.10.82
+
+- Keep direct kiosk destination heading focus for assistive technology while
+  replacing the oversized heading box with a non-boxy underline treatment.
+- Preserve strong interactive focus indicators and refresh local asset cache
+  identity across the release surfaces.
+
 ## 2.10.81
 
 - Load numeric-control accessibility behavior as a standalone shared helper so
