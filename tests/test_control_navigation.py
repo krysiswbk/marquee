@@ -84,6 +84,29 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("safe-area-inset-left", styles)
         self.assertIn("white-space:nowrap", styles)
 
+    def test_settings_navigation_has_deliberate_narrow_priority_layout(self):
+        source = PAGES["settings"].read_text()
+        styles = (ROOT / "output/settings-narrow-nav.css").read_text()
+        self.assertIn('class="workspace-nav"', source)
+        self.assertIn('class="view-display"', source)
+        self.assertIn('aria-hidden="true"', source)
+        self.assertIn("grid-template-columns: repeat(2, minmax(0, 1fr))", styles)
+        self.assertIn("grid-column: 1 / -1", styles)
+        self.assertIn("overflow: visible", styles)
+        self.assertIn("min-height:44px", (ROOT / "cast" / "settings-control.html").read_text())
+
+    def test_shared_navigation_cache_identity_and_labeled_display_action(self):
+        shell = (ROOT / "output/control-shell.js").read_text()
+        css = (ROOT / "output/control-shell-narrow.css").read_text()
+        self.assertIn('class="mq-view"', shell)
+        self.assertIn('View display <span aria-hidden="true">↗</span>', shell)
+        self.assertIn("grid-template-columns: repeat(2, minmax(0, 1fr))", css)
+        for page in (PAGES["cast-layout"], PAGES["live-layout"], PAGES["attention"], PAGES["tests"]):
+            source = page.read_text()
+            self.assertIn("control-shell.css?v=2.10.22", source)
+            self.assertIn("control-shell.js?v=2.10.22", source)
+            self.assertIn("control-shell-narrow.css?v=2.10.22", source)
+
     def test_weather_is_priority_destination_and_dialog_close_is_synchronized(self):
         source = PAGES["live"].read_text()
         self.assertIn("destinationPriority", source)

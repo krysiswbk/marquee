@@ -1,3 +1,7 @@
+## 2.10.22
+
+- Make Settings and admin workspace navigation intentional at narrow widths: configuration destinations wrap into readable, keyboard/touch-sized links and the external display action remains directly reachable without page overflow or clipped labels.
+
 ## 2.10.21
 
 - Finalize the kiosk editorial fixed-stage correction with explicit desktop and

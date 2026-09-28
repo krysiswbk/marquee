@@ -1,0 +1,23 @@
+/* Intentional narrow workspace navigation: every destination stays visible and reachable. */
+@media (max-width: 520px) {
+  .workspace-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 3px;
+    margin-inline: -14px;
+    padding-inline: 8px;
+    overflow: visible;
+  }
+  .workspace-nav a {
+    min-width: 0;
+    justify-content: center;
+    text-align: center;
+    white-space: normal;
+  }
+  .workspace-nav .view-display {
+    grid-column: 1 / -1;
+    margin-left: 0;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+  }
+}
