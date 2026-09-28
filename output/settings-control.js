@@ -432,17 +432,22 @@
       }
     });
   }
-  function validateArea(area) {
-    const panel = $(`#panel-${area}`);
-    $$('[aria-invalid="true"]', panel).forEach(input => input.removeAttribute('aria-invalid'));
-    $$('.field-error', panel).forEach(item => {
-      $$(`[aria-describedby~="${CSS.escape(item.id)}"]`, panel).forEach(input => {
-        const ids = (input.getAttribute('aria-describedby') || '').split(/\s+/).filter(id => id && id !== item.id);
+  function clearAreaValidation(panel) {
+    const errors = $$('.field-error', panel);
+    const errorIds = new Set(errors.map(item => item.id).filter(Boolean));
+    if (errorIds.size) {
+      $$('[aria-describedby]', panel).forEach(input => {
+        const ids = (input.getAttribute('aria-describedby') || '').split(/\s+/).filter(id => id && !errorIds.has(id));
         if (ids.length) input.setAttribute('aria-describedby', ids.join(' '));
         else input.removeAttribute('aria-describedby');
       });
-      item.remove();
-    });
+    }
+    errors.forEach(item => item.remove());
+  }
+  function validateArea(area) {
+    const panel = $(`#panel-${area}`);
+    $$('[aria-invalid="true"]', panel).forEach(input => input.removeAttribute('aria-invalid'));
+    clearAreaValidation(panel);
     const invalid = $$('input,select', panel).find(input => !input.disabled && !input.checkValidity());
     let control = invalid, message = invalid?.validationMessage;
     if (!control && area === 'displays' && Number(configValue('fallback.single_item_seconds')) > Number(configValue('fallback.rotation_seconds'))) {
