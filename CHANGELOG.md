@@ -1,3 +1,9 @@
+## 2.10.23
+
+- Give the Cast Layout workspace an explicit narrow composition: heading and
+  helper copy retain hierarchy, editor rows wrap safely, and primary actions
+  remain reachable at phone and tablet widths without changing desktop layout.
+
 ## 2.10.22
 
 - Make Settings and admin workspace navigation intentional at narrow widths: configuration destinations wrap into readable, keyboard/touch-sized links and the external display action remains directly reachable without page overflow or clipped labels.

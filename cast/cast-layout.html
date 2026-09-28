@@ -104,6 +104,17 @@
   .preview-row { display: grid; grid-template-columns: minmax(0,1fr) 360px;
     gap: 22px; align-items: start; }
   .mq-side { min-width: 0; }
+  .mq-mode-link { display: grid; grid-template-columns: minmax(0,1fr) auto;
+    align-items: center; gap: 14px; margin: 0 0 14px; padding: 13px 14px;
+    border: 1px solid var(--line); border-radius: 10px;
+    background: rgba(20,23,28,.72); }
+  .mq-mode-link > div { min-width: 0; }
+  .mq-mode-link strong, .mq-mode-link span { display: block; }
+  .mq-mode-link strong { margin-bottom: 3px; color: var(--text); font-size: 15px; }
+  .mq-mode-link span { color: var(--mut); font-size: 12.5px; line-height: 1.45; }
+  .mq-mode-link button { min-height: 44px; padding: 9px 13px; border: 1px solid var(--line);
+    border-radius: 8px; background: transparent; color: var(--amber); font-weight: 700;
+    cursor: pointer; white-space: nowrap; }
   .display-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 10px;
     max-width: 1000px; margin: 0 0 10px; }
   .display-toolbar label { display: grid; gap: 4px; color: var(--mut);
@@ -321,6 +332,7 @@
     h1 { font-size: 26px; }
     .status { flex-basis: 100%; order: 3; }
     .preview-row { display: block; }
+    .preview-row > * { min-width: 0; }
     .mq-side { position: sticky; top: 0; z-index: 30; background: var(--bg);
       padding: 6px 0 8px; border-bottom: 1px solid var(--line);
       box-shadow: 0 10px 24px -18px rgba(0,0,0,.8); }
@@ -332,6 +344,13 @@
     .tcard img, .tcard .pthumb { width: 60px; }
     .tcard b { font-size: 9.5px; }
     .editor { position: static; margin-top: 12px; }
+    .editor, .editor * { min-width: 0; }
+    .ed-row { flex-wrap: wrap; align-items: flex-start; row-gap: 8px; }
+    .ed-row > :last-child:not(label) { margin-left: auto; max-width: 100%; }
+    .wx-preview-row > .wx-preview { flex: 1 1 100%; justify-content: flex-start; }
+    .seg { flex-wrap: wrap; }
+    .ed-head select { width: min(150px, 100%); }
+    .editor-foot > * { min-height: 44px; }
     .editor.collapsed { display: none; }
     #editor-toggle { display: block; }
     /* Touch floor: every target ≥44px effective. The chip × is destructive —
@@ -357,11 +376,18 @@
     .sessions-list { text-align: left; }
     .seg button { padding: 10px 16px; min-height: 44px; }
     .tabs button { font-size: 15px; padding: 8px 10px 9px; }
+    .mq-mode-link { grid-template-columns: 1fr; gap: 10px; }
+    .mq-mode-link button { width: 100%; }
+  }
+  @media (max-width: 520px) {
+    .top .actions { width: 100%; margin-left: 0; }
+    .top .actions .save { flex: 1; }
+    .mq-mode-link { padding: 12px; }
   }
 </style>
-<link rel="stylesheet" href="/control-shell.css?v=2.10.22">
-<link rel="stylesheet" href="/control-shell-narrow.css?v=2.10.22">
-<script defer src="/control-shell.js?v=2.10.22"></script>
+<link rel="stylesheet" href="/control-shell.css?v=2.10.23">
+<link rel="stylesheet" href="/control-shell-narrow.css?v=2.10.23">
+<script defer src="/control-shell.js?v=2.10.23"></script>
 
 <script src="/settings-draft.js?v=3"></script>
 <div class="wrap">

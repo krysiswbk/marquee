@@ -103,9 +103,19 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("grid-template-columns: repeat(2, minmax(0, 1fr))", css)
         for page in (PAGES["cast-layout"], PAGES["live-layout"], PAGES["attention"], PAGES["tests"]):
             source = page.read_text()
-            self.assertIn("control-shell.css?v=2.10.22", source)
-            self.assertIn("control-shell.js?v=2.10.22", source)
-            self.assertIn("control-shell-narrow.css?v=2.10.22", source)
+            self.assertIn("control-shell.css?v=2.10.23", source)
+            self.assertIn("control-shell.js?v=2.10.23", source)
+            self.assertIn("control-shell-narrow.css?v=2.10.23", source)
+
+    def test_layout_workspace_has_explicit_phone_composition_contract(self):
+        source = PAGES["cast-layout"].read_text()
+        for token in ("class=\"mq-mode-link\"", "Arrange your Cast cards",
+                      "Choose a template, then select", "id=\"editor-toggle\""):
+            self.assertIn(token, source)
+        self.assertIn(".mq-mode-link strong, .mq-mode-link span { display: block; }", source)
+        self.assertIn(".ed-row { flex-wrap: wrap;", source)
+        self.assertIn(".top .actions { width: 100%; margin-left: 0; }", source)
+        self.assertIn("<strong>Arrange your Cast cards</strong><span>", source)
 
     def test_weather_is_priority_destination_and_dialog_close_is_synchronized(self):
         source = PAGES["live"].read_text()
