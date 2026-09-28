@@ -62,7 +62,7 @@ with sync_playwright() as playwright:
             assert page.locator('.kiosk-more[aria-current]').count() == 0
             assert page.locator('.kiosk-menu a[href="/live"][aria-current]').count() == 0
             assert page.evaluate("new URL(location.href).searchParams.get('view') === null")
-            assert page.locator('.kiosk-primary a[data-view]').evaluate(
+            assert page.locator('.kiosk-primary a[data-view]').evaluate_all(
                 "els => { const marks = els.map(el => el.querySelector('svg')?.innerHTML); "
                 "return marks.length === new Set(marks).size && marks.every(Boolean); }"
             )
