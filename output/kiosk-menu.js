@@ -9,6 +9,10 @@
     calendar:55, tv:50, astronomy:45, gaming:40, music:35, movies:30,
     trailers:25, major_events:20 };
   let sections = [], contexts = [], health = {}, selected = '', loaded = false, offline = false;
+  // A destination is loading until its first provider snapshot commits. Keep
+  // this separate from provider failure: an empty list during a request is not
+  // evidence that the destination is unavailable.
+  let requestState = 'loading', requestSerial = 0;
   // The server payload is the only media truth. Navigation may choose which
   // surface is visible, but it must never manufacture a replacement Plex
   // state from browse contexts or from the previous render.
@@ -73,14 +77,16 @@
     return { state: list.length ? 'populated' : 'empty', reason: provider.reason || '' };
   }
   function sharedState(message, action = 'Return to Home', retry = false, lifecycle = 'empty') {
-    const copy = lifecycle === 'error'
+    const copy = lifecycle === 'loading'
+      ? 'Fetching the latest information for this destination.'
+      : lifecycle === 'error'
       ? 'The source did not answer. No last-known results are being presented as current.'
       : lifecycle === 'stale'
         ? 'The source has not refreshed. Last-known results are not being presented as current.'
         : lifecycle === 'unavailable'
           ? 'This destination is unavailable. Try again when its source is reachable.'
           : 'New items will appear automatically when this destination has something relevant.';
-    const kicker = lifecycle === 'error' ? 'SOURCE ERROR' : lifecycle === 'stale' ? 'STALE SOURCE' : lifecycle === 'unavailable' ? 'UNAVAILABLE' : 'MARQUEE';
+    const kicker = lifecycle === 'loading' ? 'LOADING' : lifecycle === 'error' ? 'SOURCE ERROR' : lifecycle === 'stale' ? 'STALE SOURCE' : lifecycle === 'unavailable' ? 'UNAVAILABLE' : 'MARQUEE';
     return `<div class="kiosk-state" data-lifecycle="${esc(lifecycle)}"><div class="kiosk-state-mark" aria-hidden="true">·</div><div><p class="kiosk-kicker">${kicker}</p><h2>${esc(message)}</h2><p class="kiosk-empty">${copy}</p><div class="kiosk-now-playing-actions"><a class="kiosk-home-action" href="${esc(href(''))}" data-view="">${esc(action)}</a>${retry ? '<button type="button" class="kiosk-retry" data-kiosk-retry>Try again</button>' : ''}</div></div></div>`;
   }
   function renderSports(list) {
@@ -136,9 +142,11 @@
       panel.innerHTML = `<header class="kiosk-now-playing-head"><p>NOW PLAYING</p><h1>${esc(title)}</h1><p class="kiosk-now-playing-detail">${esc(detail)}</p></header><div class="kiosk-now-playing-body"><div class="kiosk-state-mark ${unavailable ? 'is-unavailable' : ''}" aria-hidden="true"><span>${unavailable ? '↻' : '·'}</span></div><div class="kiosk-now-playing-copy"><p class="kiosk-ambient">${esc(ambient)}</p><p class="kiosk-now-playing-note">${unavailable ? 'Try again when the service is reachable.' : 'Nothing needs your attention right now.'}</p><div class="kiosk-now-playing-actions"><a class="kiosk-home-action" href="${esc(href(''))}" data-view="">Return to Home</a>${unavailable ? '<button type="button" class="kiosk-retry" data-kiosk-retry>Check again</button>' : ''}</div></div></div>`;
       return;
     }
-    const lifecycle = loaded ? destinationLifecycle(view, list) : { state: 'unavailable', reason: 'loading' };
-    const message = !loaded ? 'Loading this destination…' : lifecycle.state === 'error' ? `${label(view)} is unavailable` : lifecycle.state === 'stale' ? `${label(view)} is stale` : lifecycle.state === 'unavailable' ? `${label(view)} is unavailable` : '';
-    const html = `<header class="kiosk-section-head"><p>${esc(categoryFor(view).toUpperCase())}</p><h1>${esc(label(view))}</h1></header>` + (message ? sharedState(message, 'Return to Home', true, lifecycle.state) : renderDestination(view, list));
+    const lifecycle = requestState === 'loading'
+      ? { state: 'loading', reason: 'provider request pending' }
+      : destinationLifecycle(view, list);
+    const message = lifecycle.state === 'loading' ? `Loading ${label(view)}…` : lifecycle.state === 'error' ? `${label(view)} is unavailable` : lifecycle.state === 'stale' ? `${label(view)} is stale` : lifecycle.state === 'unavailable' ? `${label(view)} is unavailable` : '';
+    const html = `<header class="kiosk-section-head"><p>${esc(categoryFor(view).toUpperCase())}</p><h1>${esc(label(view))}</h1></header>` + (message ? sharedState(message, 'Return to Home', lifecycle.state === 'error' || lifecycle.state === 'stale' || lifecycle.state === 'unavailable', lifecycle.state) : renderDestination(view, list));
     if (panel.innerHTML !== html) panel.innerHTML = html;
   }
   function change(key) { view = key; selected = ''; history.replaceState(null, '', href(key)); closeMenu(false); drawNavigation(); drawMenu(); drawPanel(); window.dispatchEvent(new Event('marquee-navigation')); }
@@ -159,7 +167,11 @@
   window.addEventListener('popstate', () => { view = new URLSearchParams(location.search).get('view') || ''; selected = ''; drawNavigation(); drawMenu(); drawPanel(); window.dispatchEvent(new Event('marquee-navigation')); });
   window.MarqueeNavigation = { resolve(payload) { nowPlaying = payload || {playing:false, state:'idle', availability:'idle'}; const wasInterrupted = interrupted; interrupted = Boolean(payload?.attention || payload?.householdFocus); if (interrupted && !wasInterrupted && menu.open) closeMenu(false); drawPanel(); if (interrupted || !view || view === 'plex') return payload; const c = !offline && sections.includes(view) && items(view).find(item => item.id === selected); return c ? c.payload || {playing:true,type:'media_context',key:'browse:'+c.id,context:c} : {playing:false}; } };
   async function refresh() {
-    try { const data = await Promise.all(['/api/config','/contexts','/providers'].map(async url => { const r = await fetch(url); if (!r.ok) throw Error(); return r.json(); })); sections = Object.entries(data[0].providers || {}).filter(([,cfg]) => cfg.enabled && (!cfg.targets || cfg.targets.includes('kiosk'))).map(([key]) => key); health = data[2].providers || {}; const seen = new Set(); contexts = (data[1].contexts || []).filter(c => { if (!c.id || c.id.startsWith('screen-test:') || (c.targets && !c.targets.includes('kiosk')) || !fresh(c)) return false; const key=(c.provider||c.source)+'|'+c.title+'|'+(c.starts||''); if (seen.has(key)) return false; seen.add(key); return true; }); for (const p of health.plex?.contexts || []) if (p.playing) contexts.push({id:'plex:now',source:'plex',title:p.title,subtitle:p.subtitle,payload:p}); loaded = true; offline = false; } catch (_) { offline = true; contexts = []; }
+    if (requestState === 'loading' && requestSerial > 0) return;
+    const serial = ++requestSerial;
+    requestState = 'loading';
+    drawPanel();
+    try { const data = await Promise.all(['/api/config','/contexts','/providers'].map(async url => { const r = await fetch(url); if (!r.ok) throw Error(); return r.json(); })); if (serial !== requestSerial) return; sections = Object.entries(data[0].providers || {}).filter(([,cfg]) => cfg.enabled && (!cfg.targets || cfg.targets.includes('kiosk'))).map(([key]) => key); health = data[2].providers || {}; const seen = new Set(); contexts = (data[1].contexts || []).filter(c => { if (!c.id || c.id.startsWith('screen-test:') || (c.targets && !c.targets.includes('kiosk')) || !fresh(c)) return false; const key=(c.provider||c.source)+'|'+c.title+'|'+(c.starts||''); if (seen.has(key)) return false; seen.add(key); return true; }); for (const p of health.plex?.contexts || []) if (p.playing) contexts.push({id:'plex:now',source:'plex',title:p.title,subtitle:p.subtitle,payload:p}); loaded = true; requestState = 'ready'; offline = false; } catch (_) { if (serial !== requestSerial) return; requestState = 'failed'; offline = true; contexts = []; }
     if (!menu.open) { drawNavigation(); drawMenu(); } drawPanel(); window.dispatchEvent(new Event('marquee-navigation'));
   }
   const resize = new ResizeObserver(() => { if (!menu.open) { drawNavigation(); drawMenu(); } }); resize.observe(rail);

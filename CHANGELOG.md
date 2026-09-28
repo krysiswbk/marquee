@@ -1,3 +1,9 @@
+## 2.10.18
+
+- Distinguish the initial and retry loading lifecycle from unavailable and
+  provider failure states in forced kiosk destinations, with request-generation
+  guards so late responses cannot repaint a newer navigation or retry state.
+
 ## 2.10.17
 
 - Modernize Attention policy inputs with schema-backed constraints, inline validation, stable field identities, and tablet-safe save-bar clearance.

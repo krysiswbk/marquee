@@ -95,6 +95,20 @@ def test_provider_error_stale_and_empty_states_have_distinct_deterministic_copy(
     assert "data-lifecycle=\"${esc(lifecycle)}\"" in MENU
 
 
+def test_pending_fetch_is_loading_without_failure_copy_or_retry():
+    assert "let requestState = 'loading', requestSerial = 0" in MENU
+    assert "requestState === 'loading'" in MENU
+    assert "state: 'loading'" in MENU
+    assert "Fetching the latest information for this destination." in MENU
+    assert "lifecycle.state === 'loading' ? `Loading ${label(view)}…`" in MENU
+    assert "lifecycle.state === 'error' || lifecycle.state === 'stale' || lifecycle.state === 'unavailable'" in MENU
+    assert "if (requestState === 'loading' && requestSerial > 0) return;" in MENU
+    assert "if (serial !== requestSerial) return;" in MENU
+    assert "requestState = 'ready'" in MENU
+    assert "requestState = 'failed'" in MENU
+    assert "data-lifecycle=\"${esc(lifecycle)}\"" in MENU
+
+
 def test_responsive_contract_contains_dock_safe_containment_and_narrow_layouts():
     assert "inset:0 0 calc(8vh + var(--control-rail))" in SCREENS
     assert "@media(max-width:900px)" in SCREENS
