@@ -1,3 +1,10 @@
+## 2.10.28
+
+- Recompose the 481–700px Home support band so activity and agenda content
+  remains fully readable above the household feed and navigation dock.
+- Preserve complete agenda detail and summarize only additional recent events
+  with an explicit remainder count; remove tablet-only clipping and hidden copy.
+
 ## 2.10.27
 
 - Restore shared `.brain-panel` overflow containment while keeping household

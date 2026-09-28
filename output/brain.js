@@ -44,13 +44,19 @@
     set('brain-summary',summary);
     $('brain-openings').innerHTML=opening.map(o=>`<span class="brain-tag warm">${esc(o.name)} <small>${esc(o.state)} · ${elapsed(Math.max(o.duration||0,now-o.since))}</small></span>`).join('');
     const actionable=serious?.acknowledgement_required?serious:null;alertId=actionable?.id||'';$('brain-ack').hidden=!actionable||demo;
-    $('brain-events').innerHTML=events.length?events.slice(0,4).map(e=>`<div class="brain-event"><span>${esc(e.title)}</span><time>${elapsed(now-e.at)}${now-e.at>=60?' ago':''}</time></div>`).join(''):`<p class="brain-empty">${fresh?'No new door or lock activity in the last 15 minutes.':'Activity feed reconnecting; recent activity is unavailable.'}</p>`;
+    const eventRows=events.slice(0,3).map(e=>`<div class="brain-event"><span>${esc(e.title)}</span><time>${elapsed(now-e.at)}${now-e.at>=60?' ago':''}</time></div>`);
+    if(events.length>3)eventRows.push(`<div class="brain-event brain-event-more"><span>+ ${events.length-3} more recent event${events.length-3===1?'':'s'} in this window.</span></div>`);
+    $('brain-events').innerHTML=events.length?eventRows.join(''):`<p class="brain-empty">${fresh?'No new door or lock activity in the last 15 minutes.':'Activity feed reconnecting; recent activity is unavailable.'}</p>`;
     const cards=(state.cards||[]).filter(c=>!c.expires||Date.parse(c.expires)>Date.now());
     const birthdays=cards.find(c=>c.subtype==='birthday_rollup');
-    $('brain-birthdays').innerHTML=birthdays?`<h2>${esc(birthdays.title)}</h2><div class="birthday-when">${esc(birthdays.subtitle)}</div><ul>${(birthdays.rows||[]).slice(0,3).map(r=>`<li>${esc(r)}</li>`).join('')}</ul>`:'<p class="brain-empty">No birthdays in the next three weeks.</p>';
+    if(birthdays){
+      const birthdayRows=(birthdays.rows||[]).filter(Boolean), birthdayMore=Math.max(0,birthdayRows.length-1);
+      $('brain-birthdays').innerHTML=`<h2>${esc(birthdays.title)}</h2><div class="birthday-when">${esc(birthdays.subtitle)}</div><ul>${birthdayRows.slice(0,1).map(r=>`<li>${esc(r)}</li>`).join('')}${birthdayMore?`<li class="brain-agenda-more">+ ${birthdayMore} more birthday${birthdayMore===1?'':'s'} in this window.</li>`:''}</ul>`;
+    }else $('brain-birthdays').innerHTML='<p class="brain-empty">No birthdays in the next three weeks.</p>';
     const near=c=>!c.starts||Date.parse(c.starts)<=Date.now()+3*86400000;
     const upcoming=cards.filter(c=>c.type==='calendar_event'&&c.subtype!=='birthday_rollup'&&near(c)).slice(0,3);
-    $('brain-upnext').innerHTML=upcoming.length?upcoming.map(c=>`<div class="brain-agenda-item"><strong>${esc(c.title)}</strong><span>${esc(c.subtitle||c.detail)}</span></div>`).join(''):'<p class="brain-empty">A little room in the calendar.</p>';
+    const upcomingMore=Math.max(0,upcoming.length-1);
+    $('brain-upnext').innerHTML=upcoming.length?`${upcoming.slice(0,1).map(c=>`<div class="brain-agenda-item"><strong>${esc(c.title)}</strong><span>${esc(c.subtitle||c.detail)}</span></div>`).join('')}${upcomingMore?`<div class="brain-agenda-more">+ ${upcomingMore} more upcoming item${upcomingMore===1?'':'s'} in this window.</div>`:''}`:'<p class="brain-empty">A little room in the calendar.</p>';
     $('brain-people').innerHTML=(state.people||[]).map(p=>`<span class="brain-person" data-home="${fresh&&p.state.toLowerCase()==='home'}">${esc(p.name)} · ${esc(fresh?p.state:'Unknown')}</span>`).join('');
     let feed=[];
     if(!fresh)feed=['Household connection lost · Current door and lock states are unknown'];
