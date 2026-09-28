@@ -1,3 +1,9 @@
+## 2.10.5 — Tablet dashboard box-model refinement
+
+- Make 481–700px Home panel bounds explicit border boxes with dock-safe insets.
+- Prioritize actionable device-health detail over secondary opening chips at tablet widths.
+- Add regression coverage for the padding and safe-area contract.
+
 ## 2.10.4 — Responsive household hierarchy and release asset identity
 
 - Give the current household state deliberate vertical clearance from activity

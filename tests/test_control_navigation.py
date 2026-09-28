@@ -118,17 +118,26 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("width:92vw", styles)
         self.assertIn("max-width:92vw", styles)
         self.assertIn("line-height:1.2", styles)
-        self.assertIn("#brain-house{top:43vh;height:25vh}", styles)
+        self.assertIn("#brain-house{top:43vh;bottom:32vh;height:auto}", styles)
         self.assertNotIn("max-width:44vw", styles)
 
     def test_home_responsive_panels_respect_dock_safe_area(self):
         styles = (ROOT / "output" / "brain.css").read_text()
-        self.assertIn("#brain-activity,body.brain-live #brain-agenda{top:70vh;height:13vh}", styles)
+        self.assertIn("body.brain-live .brain-panel{box-sizing:border-box;padding-block:1.6vh}", styles)
+        self.assertIn("#brain-activity,body.brain-live #brain-agenda{top:70vh;bottom:17vh;height:auto}", styles)
         self.assertNotIn("top:70vh;height:20vh", styles)
         self.assertIn("#brain-activity{top:65vh;left:4vw;width:92vw;height:12vh}", styles)
         self.assertIn("#brain-agenda{display:none}", styles)
         self.assertNotIn("top:80vh", styles)
         self.assertIn("#brain-house.device-alert .brain-openings{display:none}", styles)
+        tablet = styles.split("@media (min-width:481px) and (max-width:700px)", 1)[1].split("@media (max-width:480px)", 1)[0]
+        self.assertIn("box-sizing:border-box", tablet)
+        self.assertIn("padding-block:1.6vh", tablet)
+        self.assertIn("bottom:32vh", tablet)
+        self.assertIn("bottom:17vh", tablet)
+        self.assertLessEqual(100 - 17, 85)
+        self.assertLessEqual(100 - 32, 75)
+        self.assertIn("device-alert .brain-openings{display:none}", tablet)
         brain = (ROOT / "output" / "brain.js").read_text()
         self.assertIn("classList.toggle('device-alert',Boolean(deviceHealth.length))", brain)
 
