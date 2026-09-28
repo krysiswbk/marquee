@@ -1,3 +1,9 @@
+## 2.10.48
+
+- Make the dashboard's compact rain signal complete and truthful: use the
+  authoritative hourly timestamp when it provides a near-term horizon, and
+  otherwise show only the available precipitation probability.
+
 ## 2.10.47
 
 - Make browse artwork truthful: contexts without a generated poster, including
