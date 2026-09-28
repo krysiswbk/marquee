@@ -26,6 +26,17 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertNotIn("nowPlaying.key", MENU)
         self.assertIn("data-kiosk-retry", MENU)
 
+    def test_idle_composition_is_concise_and_weather_is_grouped(self):
+        self.assertIn("const unavailableMark = unavailable ?", MENU)
+        self.assertIn("const weatherLabels = ['Temperature', 'Conditions', 'High and low']", MENU)
+        self.assertIn('class="kiosk-weather-separator" aria-hidden="true"', MENU)
+        self.assertIn('class="kiosk-weather-fact" aria-label=', MENU)
+        self.assertNotIn("Nothing needs your attention right now", MENU)
+        self.assertNotIn("The room is quiet. Choose Home", MENU)
+        self.assertIn("display:inline-block;width:fit-content;max-width:100%", SCREENS)
+        self.assertIn(".now-playing-surface .kiosk-now-playing-head h1:focus-visible", SCREENS)
+        self.assertIn("outline-offset:7px", SCREENS)
+
     def test_navigation_and_touch_contract(self):
         self.assertIn('class="kiosk-home-action"', MENU)
         self.assertIn("e.key === 'Escape'", MENU)

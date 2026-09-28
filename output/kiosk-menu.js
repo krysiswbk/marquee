@@ -208,7 +208,10 @@
     setBackgroundActive(active);
     panel.hidden = !active || plexActive || Boolean(selected); panel.inert = !active || panel.hidden;
     if (panel.hidden) {
-      if (panel.contains(document.activeElement)) focusNavigation(view);
+      if (panel.contains(document.activeElement)) {
+        focusNavigation(view);
+        if (panel.contains(document.activeElement)) document.activeElement.blur();
+      }
       return;
     }
     if (view === 'plex') {
@@ -216,10 +219,17 @@
       const loading = !nowPlaying;
       const title = loading ? 'Checking the media room' : unavailable ? 'Media service unavailable' : 'Nothing is playing';
       const detail = loading ? 'Reading the current playback state.' : unavailable
-        ? 'Marquee is ready when the media service reconnects. No previous title or artwork is retained here.'
-        : 'The room is quiet. Choose Home to return to the household view.';
-      const ambient = document.querySelector('#idle-weather')?.textContent?.trim() || 'Home display ready';
-      panel.innerHTML = `<header class="kiosk-now-playing-head"><p>NOW PLAYING</p><h1 id="kiosk-section-title">${esc(title)}</h1><p class="kiosk-now-playing-detail">${esc(detail)}</p></header><div class="kiosk-now-playing-body"><div class="kiosk-state-mark ${unavailable ? 'is-unavailable' : ''}" aria-hidden="true"><span>${unavailable ? '↻' : '·'}</span></div><div class="kiosk-now-playing-copy"><p class="kiosk-ambient">${esc(ambient)}</p><p class="kiosk-now-playing-note">${unavailable ? 'Try again when the service is reachable.' : 'Nothing needs your attention right now.'}</p><div class="kiosk-now-playing-actions"><a class="kiosk-home-action" href="${esc(href(''))}" data-view="">Return to Home</a>${unavailable ? '<button type="button" class="kiosk-retry" data-kiosk-retry>Check again</button>' : ''}</div></div></div>`;
+        ? 'No previous title or artwork is retained here.' : '';
+      const weather = ['idle-weather-temp', 'idle-weather-condition', 'idle-weather-range']
+        .map(id => document.querySelector(`#${id}`)?.textContent?.trim() || '')
+        .filter(Boolean);
+      const weatherLabels = ['Temperature', 'Conditions', 'High and low'];
+      const weatherMarkup = weather.length
+        ? `<div class="kiosk-weather-context" aria-label="Current weather">${weather.map((fact, index) => `${index ? '<span class="kiosk-weather-separator" aria-hidden="true">·</span>' : ''}<span class="kiosk-weather-fact" aria-label="${esc(`${weatherLabels[index]}: ${fact}`)}">${esc(fact)}</span>`).join('')}</div>`
+        : '<div class="kiosk-weather-context" aria-label="Current weather">Home display ready</div>';
+      const unavailableMark = unavailable ? '<div class="kiosk-state-mark is-unavailable" aria-hidden="true"><span>↻</span></div>' : '';
+      const retry = unavailable ? '<button type="button" class="kiosk-retry" data-kiosk-retry>Check again</button>' : '';
+      panel.innerHTML = `<header class="kiosk-now-playing-head"><p>NOW PLAYING</p><h1 id="kiosk-section-title">${esc(title)}</h1>${detail ? `<p class="kiosk-now-playing-detail">${esc(detail)}</p>` : ''}</header><div class="kiosk-now-playing-body">${unavailableMark}<div class="kiosk-now-playing-copy">${weatherMarkup}<div class="kiosk-now-playing-actions"><a class="kiosk-home-action" href="${esc(href(''))}" data-view="">Return to Home</a>${retry}</div></div></div>`;
       focusInitialDestination();
       preserveDirectHeadingFocus(preserveHeadingFocus);
       return;

@@ -1,3 +1,9 @@
+## 2.10.63
+
+- Redesign the idle Now Playing kiosk surface into a calm weather-and-Home composition.
+- Remove the ambiguous idle mark and redundant copy while preserving a distinct unavailable/retry state.
+- Scope heading focus to the heading content and add responsive idle, weather-grouping, and return-to-Home coverage.
+
 ## 2.10.62
 
 - Refine the NHL browse matchup into a single team-vs-team composition with
