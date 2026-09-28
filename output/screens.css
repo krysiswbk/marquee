@@ -292,5 +292,5 @@ body.browser-controls{overflow-x:hidden}.kiosk-section.now-playing-surface{displ
   .kiosk-section[data-section=ufc] .kiosk-matchup{margin:14px 0;font-size:inherit}
   .kiosk-section:is([data-section=gaming],[data-section=tv]){display:flex;flex-direction:column;overflow:visible}
   .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial{flex:1 1 auto;min-height:0;grid-template-rows:minmax(0,1fr)}
-  .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial-feature{height:100%;padding:16px}
+  .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial-feature{height:100%;box-sizing:border-box;padding:16px}
 }

@@ -79,7 +79,7 @@ def test_shallow_landscape_contract_covers_secondary_17_10_and_keeps_decoration_
     shallow = SCREENS.rsplit("@media(min-width:1000px) and (max-height:700px) and (min-aspect-ratio:3/2)", 1)[1]
     assert ".kiosk-section:is([data-section=gaming],[data-section=tv]){display:flex;flex-direction:column;overflow:visible}" in shallow
     assert ".kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial{flex:1 1 auto;min-height:0;grid-template-rows:minmax(0,1fr)}" in shallow
-    assert ".kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial-feature{height:100%;padding:16px}" in shallow
+    assert ".kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial-feature{height:100%;box-sizing:border-box;padding:16px}" in shallow
     assert "min-aspect-ratio: 3/2" in MENU
 
 
