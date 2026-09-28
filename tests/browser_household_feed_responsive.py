@@ -6,7 +6,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
-VIEWPORTS = [(320, 720), (360, 720), (393, 852), (430, 852),
+VIEWPORTS = [(320, 720), (360, 800), (393, 852), (430, 932),
              (481, 900), (700, 900), (1024, 600), (1500, 900)]
 UNKNOWN = ["Nursery Window", "Office Window", "Basement Window",
            "Garage Entry", "Patio Door", "Workshop Door"]
@@ -37,10 +37,15 @@ def snapshot(kind):
             {"entity_id": "sensor.health_one", "name": "Nursery Motion & Lux Motion — Upstairs Hallway",
              "state": "unavailable", "location": "nursery"}],
                 "events": [], "cards": [], "alerts": [], "people": []}
-    return {"fresh": True, "unknown": [], "events": [], "cards": [{
-        "type": "calendar_event", "title": "Annual neighbourhood association planning meeting and accessibility review",
-        "subtitle": "Tomorrow · 7:00 PM",
-    }], "alerts": [], "people": []}
+    return {"fresh": True, "unknown": [], "events": [], "cards": [
+        {"type": "calendar_event", "subtype": "birthday_rollup", "title": "Casey’s birthday",
+         "subtitle": "Tomorrow · Sep 29", "rows": ["Jordan · In 6 days", "Sam · In 12 days"]},
+        {"type": "calendar_event", "title": "Annual neighbourhood association planning meeting and accessibility review",
+         "subtitle": "Tomorrow · 7:00 PM", "priority": 40},
+        {"type": "calendar_event", "title": "Urgent school pickup change with a long label", "subtitle": "Today · 4:00 PM",
+         "priority": 90},
+        {"type": "calendar_event", "title": "Third agenda item", "subtitle": "Saturday", "priority": 20},
+    ], "alerts": [], "people": []}
 
 
 with sync_playwright() as playwright:
@@ -112,8 +117,26 @@ with sync_playwright() as playwright:
                 assert "Recent event:" in copy.inner_text() if width <= 700 else "Front door lock state changed" in copy.inner_text()
                 assert "Front door lock state changed after remote reconnect with a very long explanation" in full
             else:
-                assert "Calendar:" in copy.inner_text() if width <= 700 else "Annual neighbourhood association" in copy.inner_text()
-                assert "accessibility review" in full
+                # The rotating feed may be on any authoritative card; the
+                # dedicated agenda assertions below cover the complete set.
+                assert full
+
+            agenda = page.locator("#brain-agenda")
+            if kind == "calendar":
+                assert agenda.get_attribute("data-agenda-state") == "ready"
+                assert agenda.is_visible()
+                assert "Casey’s birthday" in agenda.inner_text()
+                assert "Urgent school pickup change" in agenda.inner_text()
+                assert "+ 2 more upcoming items" in agenda.inner_text()
+                assert agenda.evaluate("el => { const a=el.getBoundingClientRect(), d=document.querySelector('.brain-dock').getBoundingClientRect(); return {ok:a.bottom <= d.top + 1, a:{top:a.top,bottom:a.bottom}, d:{top:d.top,bottom:d.bottom}} }")['ok'], (width, height, agenda.bounding_box(), page.locator('.brain-dock').bounding_box())
+                assert agenda.evaluate("el => el.getBoundingClientRect().right <= innerWidth && el.getBoundingClientRect().left >= 0")
+            elif kind == "disconnected":
+                assert agenda.get_attribute("data-agenda-state") == "stale"
+                assert "unavailable while the house feed is offline" in agenda.inner_text()
+            elif kind == "unknown":
+                assert agenda.get_attribute("data-agenda-state") == "empty"
+                if width <= 480:
+                    assert not agenda.is_visible()
 
             if width <= 700:
                 assert copy.evaluate("el => getComputedStyle(el).whiteSpace === 'normal'")

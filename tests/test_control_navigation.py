@@ -296,6 +296,8 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertNotIn("top:70vh;height:20vh", styles)
         self.assertIn("#brain-activity{top:65vh;left:4vw;width:92vw;height:12vh}", styles)
         self.assertIn("#brain-agenda{display:none}", styles)
+        self.assertIn("#brain-agenda[data-agenda-state=empty]{display:none}", styles)
+        self.assertIn("#brain-agenda{display:grid;top:76vh", styles)
         self.assertNotIn("top:80vh", styles)
 
     def test_customize_action_has_a_labeled_responsive_target(self):
@@ -353,6 +355,9 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("upcomingMore", brain)
         self.assertIn("more upcoming item", brain)
         self.assertIn("more birthday", brain)
+        self.assertIn("const agendaState=!fresh?'stale'", brain)
+        self.assertIn("Number(b.priority)||0", brain)
+        self.assertIn("People and calendar context unavailable while the house feed is offline.", brain)
         self.assertIn("No new door or lock activity in the last 15 minutes.", brain)
         self.assertIn("Activity feed reconnecting; recent activity is unavailable.", brain)
         self.assertNotIn("The next real change lands here.", brain)

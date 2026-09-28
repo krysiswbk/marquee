@@ -1,3 +1,11 @@
+## 2.10.74
+
+- Extend the phone household dashboard with a compact People First / On the
+  Horizon continuation when fresh birthday or upcoming calendar context exists.
+- Keep stale household context out of current agenda presentation, truncate by
+  authoritative priority, and add responsive browser coverage for agenda fit,
+  empty states, overflow, and fixed-feed safe areas.
+
 ## 2.10.73
 
 - Give UFC and PFL direct kiosk destinations promotion-specific resolved empty,

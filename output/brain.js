@@ -79,16 +79,25 @@
     const eventRows=events.slice(0,3).map(e=>`<div class="brain-event"><span>${esc(e.title)}</span><time>${elapsed(now-e.at)}${now-e.at>=60?' ago':''}</time></div>`);
     if(events.length>3)eventRows.push(`<div class="brain-event brain-event-more"><span>+ ${events.length-3} more recent event${events.length-3===1?'':'s'} in this window.</span></div>`);
     $('brain-events').innerHTML=events.length?eventRows.join(''):`<p class="brain-empty">${fresh?'No new door or lock activity in the last 15 minutes.':'Activity feed reconnecting; recent activity is unavailable.'}</p>`;
-    const cards=(state.cards||[]).filter(c=>!c.expires||Date.parse(c.expires)>Date.now());
+    // Context cards share the household briefing freshness boundary. Do not
+    // turn a disconnected snapshot into current agenda guidance.
+    const cards=fresh?(state.cards||[]).filter(c=>!c.expires||Date.parse(c.expires)>Date.now()):[];
     const birthdays=cards.find(c=>c.subtype==='birthday_rollup');
     if(birthdays){
       const birthdayRows=(birthdays.rows||[]).filter(Boolean), birthdayMore=Math.max(0,birthdayRows.length-1);
       $('brain-birthdays').innerHTML=`<h2>${esc(birthdays.title)}</h2><div class="birthday-when">${esc(birthdays.subtitle)}</div><ul>${birthdayRows.slice(0,1).map(r=>`<li>${esc(r)}</li>`).join('')}${birthdayMore?`<li class="brain-agenda-more">+ ${birthdayMore} more birthday${birthdayMore===1?'':'s'} in this window.</li>`:''}</ul>`;
     }else $('brain-birthdays').innerHTML='<p class="brain-empty">No birthdays in the next three weeks.</p>';
     const near=c=>!c.starts||Date.parse(c.starts)<=Date.now()+3*86400000;
-    const upcoming=cards.filter(c=>c.type==='calendar_event'&&c.subtype!=='birthday_rollup'&&near(c)).slice(0,3);
+    const upcoming=cards.filter(c=>c.type==='calendar_event'&&c.subtype!=='birthday_rollup'&&near(c))
+      .sort((a,b)=>(Number(b.priority)||0)-(Number(a.priority)||0)||String(a.starts||'').localeCompare(String(b.starts||''))).slice(0,3);
     const upcomingMore=Math.max(0,upcoming.length-1);
     $('brain-upnext').innerHTML=upcoming.length?`${upcoming.slice(0,1).map(c=>`<div class="brain-agenda-item"><strong>${esc(c.title)}</strong><span>${esc(c.subtitle||c.detail)}</span></div>`).join('')}${upcomingMore?`<div class="brain-agenda-more">+ ${upcomingMore} more upcoming item${upcomingMore===1?'':'s'} in this window.</div>`:''}`:'<p class="brain-empty">A little room in the calendar.</p>';
+    const agendaState=!fresh?'stale':(birthdays||upcoming.length?'ready':'empty');
+    $('brain-agenda').dataset.agendaState=agendaState;
+    if(!fresh){
+      $('brain-birthdays').innerHTML='<p class="brain-empty">People and calendar context unavailable while the house feed is offline.</p>';
+      $('brain-upnext').innerHTML='';
+    }
     $('brain-people').innerHTML=(state.people||[]).map(p=>`<span class="brain-person" data-home="${fresh&&p.state.toLowerCase()==='home'}">${esc(p.name)} · ${esc(fresh?p.state:'Unknown')}</span>`).join('');
     let feed=[];
     if(!fresh)feed=[feedEntry('Household connection lost · Current door and lock states are unknown','Household connection lost · Current states unavailable')];
