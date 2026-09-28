@@ -402,6 +402,35 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertEqual(screens.count(override), 1)
         self.assertNotIn(override, screens.split("@media(min-width:701px)", 1)[0])
 
+    def test_main_settings_mobile_actions_mirror_active_area_and_safe_area(self):
+        page = PAGES["settings"].read_text()
+        script = (ROOT / "output" / "settings-control.js").read_text()
+        styles = (ROOT / "output" / "settings-control.css").read_text()
+        for token in ('id="mobile-actionbar"', 'id="mobile-save"', 'id="mobile-discard"',
+                      'state.activeTab', 'mobile-actionbar-status'):
+            self.assertIn(token, page + script)
+        self.assertIn('env(safe-area-inset-bottom)', styles)
+        self.assertIn('min-height:44px', styles)
+        self.assertIn('scroll-padding-bottom:92px', styles)
+        self.assertIn("$('#mobile-save').disabled = !dirty", script)
+        self.assertIn("$('#mobile-discard').disabled = !dirty", script)
+
+    def test_layout_editors_gate_actions_from_a_real_baseline(self):
+        cast = PAGES['cast-layout'].read_text()
+        live = PAGES['live-layout'].read_text()
+        for source in (cast, live):
+            self.assertIn('disabled', source)
+            self.assertIn('Save', source)
+            self.assertIn('Discard', source)
+            self.assertIn('aria-live="polite"', source)
+            self.assertIn('beforeunload', source)
+        self.assertIn('savedCfg = structuredClone(cfg)', cast)
+        self.assertIn('Object.keys(MarqueeDraft.changes(savedCfg, cfg)).length', cast)
+        self.assertIn('saved=structuredClone(cfg)', live)
+        self.assertIn('JSON.stringify(cfg)!==JSON.stringify(saved)', live)
+        self.assertIn('if(!ready||saving||!dirty)return', live)
+        self.assertIn("markDirty('Draft discarded; current settings loaded.')", live)
+
 
 if __name__ == "__main__":
     unittest.main()

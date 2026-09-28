@@ -128,6 +128,15 @@
       $('.save-area', bar).disabled = !dirty || !!state.busyArea;
       $('.discard', bar).disabled = !dirty || !!state.busyArea;
     }
+    const area = state.activeTab;
+    const bar = $(`.savebar[data-area="${area}"]`);
+    if (!bar || !$('#mobile-actionbar')) return;
+    const dirty = !!areaDirty(area);
+    $('#mobile-save').disabled = !dirty || !!state.busyArea;
+    $('#mobile-discard').disabled = !dirty || !!state.busyArea;
+    const status = $('.area-status', bar);
+    $('#mobile-actionbar-status').textContent = status.textContent || (dirty ? 'Unsaved changes' : 'No unsaved changes');
+    $('#mobile-actionbar-status').className = 'mobile-actionbar-status' + (status.classList.contains('error') ? ' error' : status.classList.contains('success') ? ' success' : '');
   }
 
   function controlValue(control) {
@@ -390,6 +399,7 @@
     });
     $$('.tabpanel').forEach(panel => panel.hidden = panel.id !== `panel-${name}`);
     history.replaceState(null, '', `#${name}`);
+    updateDirty();
   }
   function bindTabs() {
     const tabs = $$('[role="tab"]');
@@ -407,6 +417,7 @@
   function setAreaStatus(area, message, type = '') {
     const node = $(`.savebar[data-area="${area}"] .area-status`);
     node.textContent = message; node.className = 'area-status' + (type ? ` ${type}` : '');
+    updateDirty();
   }
   function setAreaBusy(area, busy) {
     state.busyArea = busy ? area : '';
@@ -600,6 +611,8 @@
   });
   $$('.save-area').forEach(button => button.addEventListener('click', () => saveArea(button.closest('.savebar').dataset.area)));
   $$('.discard').forEach(button => button.addEventListener('click', () => discardArea(button.closest('.savebar').dataset.area)));
+  $('#mobile-save').addEventListener('click', () => saveArea(state.activeTab));
+  $('#mobile-discard').addEventListener('click', () => discardArea(state.activeTab));
   $('#refresh-health').addEventListener('click', refreshHealth);
   $('#release-notes-details').addEventListener('toggle', async event => {
     const details = event.currentTarget;

@@ -1,3 +1,11 @@
+## 2.10.51
+
+- Keep main Settings save/discard actions reachable on phones with a compact,
+  safe-area-aware action bar while preserving truthful pristine and dirty state.
+- Give Cast and Live layout editors a baseline-driven dirty lifecycle: pristine
+  direct loads disable actions, edits enable them, discard restores the
+  baseline, and save success/failure remains accessible and truthful.
+
 ## 2.10.50
 
 - Make kiosk destinations an accessible application state: hide and inert the

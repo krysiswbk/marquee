@@ -386,17 +386,17 @@
     .mq-mode-link { padding: 12px; }
   }
 </style>
-<link rel="stylesheet" href="/control-shell.css?v=2.10.50">
-<link rel="stylesheet" href="/control-shell-narrow.css?v=2.10.50">
-<script defer src="/control-shell.js?v=2.10.50"></script>
+<link rel="stylesheet" href="/control-shell.css?v=2.10.51">
+<link rel="stylesheet" href="/control-shell-narrow.css?v=2.10.51">
+<script defer src="/control-shell.js?v=2.10.51"></script>
 
 <script src="/settings-draft.js?v=3"></script>
 <div class="wrap">
   <div class="top">
     <h1>Marquee <span>Cast layout</span></h1>
     <div class="actions">
-      <span class="status" id="status" role="status" aria-live="polite"></span><button class="secondary" id="discard" type="button">Discard</button>
-      <button class="save" id="save" title="Push all draft changes to the Hub"
+      <span class="status" id="status" role="status" aria-live="polite" aria-atomic="true"></span><button class="secondary" id="discard" type="button" disabled>Discard</button>
+      <button class="save" id="save" disabled title="Push all draft changes to the Hub"
         aria-label="Save changes — push all draft changes to the Hub">Save changes</button>
     </div>
   </div>
@@ -868,6 +868,15 @@
   const settingsUrl = LIVE_EDITOR ? '/live-settings.json' : '/settings.json';
   const saveUrl = '/settings';
   let savedCfg = {}, ready = false, saving = false;
+  function draftDirty() {
+    return ready && (Object.keys(MarqueeDraft.changes(savedCfg, cfg)).length
+      || Object.values(pendingKeys).some(value => value.trim()) || $('#fakey').value.trim());
+  }
+  function syncActions() {
+    const disabled = !draftDirty() || saving;
+    $('#save').disabled = disabled;
+    $('#discard').disabled = disabled;
+  }
   const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const TEMPLATES = ['spotlight', 'split', 'hero', 'lowerthird', 'bigclock', 'street', 'fanart'];
@@ -1882,11 +1891,9 @@
         const response = await fetch(settingsUrl);
         if (!response.ok) throw Error(response.status);
         cfg = await response.json();
-        savedCfg = structuredClone(cfg);
         Object.keys(pendingKeys).forEach(key => pendingKeys[key] = '');
         $('#fakey').value = '';
         ready = true;
-        $('#save').disabled = false;
       } catch (e) {
         $('#status').textContent = 'Could not load settings. Reload to try again.';
         $('#save').disabled = true;
@@ -1929,6 +1936,8 @@
     $('#scene-clock-size').value=cfg.sportsClockSize||100;$('#scene-clock-value').textContent=$('#scene-clock-size').value+'%';
     cfg.blockLayout ||= {}; cfg.blockVisibility ||= {}; cfg.presets ||= [];
     syncFx(); loadBackdropControls(); syncDisplayControls();
+    savedCfg = structuredClone(cfg);
+    syncActions();
     markTemplates(); renderChips(); renderPresets();
     showEditorFor(selectedBlock);
     loadFrame();
@@ -1942,6 +1951,7 @@
     if (saving) return;
     await load();
     $('#status').textContent = ready ? 'Draft discarded; current settings loaded.' : 'Could not reload settings.';
+    syncActions();
   });
   $('#save').addEventListener('click', async () => {
     if (!ready || saving) return;
@@ -1959,7 +1969,7 @@
       msShow();
       $('#status').textContent = 'Saved — Cast displays update on their next refresh.';
     } catch (e) { $('#status').textContent = 'Save failed: ' + e.message; }
-    finally { saving = false; MarqueeDraft.freeze(false); }
+    finally { saving = false; MarqueeDraft.freeze(false); syncActions(); }
   });
   window.addEventListener('beforeunload', event => {
     if (ready && (Object.keys(MarqueeDraft.changes(savedCfg, cfg)).length || Object.values(pendingKeys).some(v => v.trim()) || $('#fakey').value.trim())) {
@@ -1973,6 +1983,7 @@
     if (msg.type === 'marquee-layout') {
       cfg.blockLayout = msg.layout || {};
       $('#status').textContent = 'Block layout changed — save to apply.';
+      syncActions();
     } else if (msg.type === 'marquee-selection') {
       selectedBlock = msg.name;
       Object.entries(msg.values || {}).forEach(([field, value]) => {
@@ -2007,16 +2018,24 @@
       $('#frame').contentWindow.postMessage({ type: 'marquee-set',
         field, value: ['font', 'color', 'logoFit'].includes(field)
           ? input.value : Number(input.value) },
-        location.origin);
+        location.origin); syncActions();
     }));
   document.querySelectorAll('[data-layout-toggle]').forEach(input =>
     input.addEventListener('change', () => {
       $('#frame').contentWindow.postMessage({ type: 'marquee-set',
         field: input.dataset.layoutToggle, value: input.checked }, location.origin);
       $('#status').textContent = 'Panel styling changed — save to apply.';
+      syncActions();
     }));
   $('#snap').addEventListener('click', () =>
     $('#frame').contentWindow.postMessage({ type: 'marquee-snap' }, location.origin));
+
+  document.querySelectorAll('input, select, textarea').forEach(control =>
+    control.addEventListener('input', syncActions));
+  document.querySelectorAll('input, select, textarea').forEach(control =>
+    control.addEventListener('change', syncActions));
+  document.querySelectorAll('button:not(#save):not(#discard)').forEach(button =>
+    button.addEventListener('click', syncActions));
 
   $('#remove-block').addEventListener('click', () => removeBlock(selectedBlock));
   $('#reset-layout').addEventListener('click', () => {
