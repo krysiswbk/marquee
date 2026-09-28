@@ -103,9 +103,9 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("grid-template-columns: repeat(2, minmax(0, 1fr))", css)
         for page in (PAGES["cast-layout"], PAGES["live-layout"], PAGES["attention"], PAGES["tests"]):
             source = page.read_text()
-            self.assertIn("control-shell.css?v=2.10.30", source)
-            self.assertIn("control-shell.js?v=2.10.30", source)
-            self.assertIn("control-shell-narrow.css?v=2.10.30", source)
+            self.assertIn("control-shell.css?v=2.10.31", source)
+            self.assertIn("control-shell.js?v=2.10.31", source)
+            self.assertIn("control-shell-narrow.css?v=2.10.31", source)
 
     def test_layout_workspace_has_explicit_phone_composition_contract(self):
         source = PAGES["cast-layout"].read_text()
@@ -178,6 +178,16 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("#brain-activity{top:65vh;left:4vw;width:92vw;height:12vh}", styles)
         self.assertIn("#brain-agenda{display:none}", styles)
         self.assertNotIn("top:80vh", styles)
+
+    def test_customize_action_has_a_labeled_responsive_target(self):
+        brain = (ROOT / "output" / "brain.js").read_text()
+        styles = (ROOT / "output" / "brain.css").read_text()
+        self.assertIn('class="brain-customize" href="/settings/layout?profile=live"', brain)
+        self.assertIn('aria-label="Customize the household desk"', brain)
+        self.assertIn('class="brain-customize-label">Customize</span>', brain)
+        self.assertIn("display:inline-flex", styles)
+        self.assertIn("min-width:5.8em;min-height:2.2em", styles)
+        self.assertIn(".brain-live .brain-customize{min-width:44px;min-height:44px", styles)
         self.assertNotIn("#brain-house.device-alert .brain-openings{display:none}", styles)
         tablet = styles.split("@media (min-width:481px) and (max-width:700px)", 1)[1].split("@media (max-width:480px)", 1)[0]
         self.assertIn("box-sizing:border-box", tablet)

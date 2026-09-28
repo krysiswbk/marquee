@@ -1,3 +1,10 @@
+## 2.10.31
+
+- Make the dashboard Customize action a labeled, deliberate masthead control
+  with a minimum 44px target on narrow displays and a clear desktop target.
+- Preserve the existing layout destination, accessible name, and kiosk data
+  flows while preventing the inline action from collapsing to its glyph.
+
 ## 2.10.30
 
 - Give the desktop current-conditions outlook enough height for complete
