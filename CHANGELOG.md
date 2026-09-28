@@ -1,3 +1,9 @@
+## 2.10.50
+
+- Make kiosk destinations an accessible application state: hide and inert the
+  covered Home dashboard while browsing, restore its semantics on Home,
+  Escape, and browser back, and keep navigation focus truthful.
+
 ## 2.10.49
 
 - Recompose sparse Gaming/media browse queues so the lead item stays dominant

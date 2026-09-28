@@ -32,8 +32,38 @@
   menu.innerHTML = '<header><h2 id="kiosk-menu-title">More destinations</h2><button type="button" aria-label="Close menu">✕</button></header><nav aria-label="Additional Marquee destinations"></nav><details><summary>Settings</summary><nav aria-label="Marquee control pages"><a href="/live" aria-current="page">Live display</a><a href="/settings">Settings</a><a href="/settings/layout?profile=live">Edit screen layout</a><a href="/settings/attention">Alert rules</a><a href="/settings/tests">Test screens</a></nav></details>';
   document.body.append(menu);
   const overflow = menu.querySelector('nav');
-  const panel = document.createElement('section'); panel.className = 'kiosk-section'; panel.hidden = true; panel.setAttribute('aria-label', 'Selected kiosk section'); document.body.append(panel);
+  const panel = document.createElement('section'); panel.className = 'kiosk-section'; panel.hidden = true; panel.inert = true; panel.setAttribute('aria-hidden', 'true'); panel.setAttribute('aria-label', 'Selected kiosk section'); document.body.append(panel);
+  // The destination is a sibling overlay, so explicitly own the accessibility
+  // state of the dashboard it covers. Keep the original values so Home and
+  // browser history can restore the dashboard without stale inert/hidden state.
+  const backgroundNodes = [...document.body.children].filter(node => ![rail, menu, panel].includes(node));
+  const backgroundState = backgroundNodes.map(node => ({
+    node,
+    inert: node.inert,
+    ariaHidden: node.getAttribute('aria-hidden'),
+  }));
+  function setBackgroundActive(active) {
+    backgroundState.forEach(({node, inert, ariaHidden}) => {
+      if (active) {
+        node.inert = true;
+        node.setAttribute('aria-hidden', 'true');
+      } else {
+        node.inert = inert;
+        if (ariaHidden === null) node.removeAttribute('aria-hidden');
+        else node.setAttribute('aria-hidden', ariaHidden);
+      }
+    });
+    panel.hidden = !active;
+    panel.inert = !active;
+    if (active) panel.removeAttribute('aria-hidden');
+    else panel.setAttribute('aria-hidden', 'true');
+  }
   function href(key) { const u = new URL(location.href); key ? u.searchParams.set('view', key) : u.searchParams.delete('view'); return u.pathname + u.search; }
+  if (view) {
+    const initialDestination = href(view);
+    history.replaceState({marqueeHome: true}, '', href(''));
+    history.pushState({marqueeDestination: true}, '', initialDestination);
+  }
   function allDestinations() {
     return [['', 'Home', '⌂'], ...sections.map((key, index) => [key, label(key), icon(key), index])]
       .sort((a, b) => a[0] === '' ? -1 : b[0] === '' ? 1
@@ -133,7 +163,9 @@
     if (view === 'weather' && !selected && list.length) selected = (list.find(c => ['alert','extreme'].includes(c.subtype)) || list.find(c => c.subtype === 'current') || list[0]).id;
     const plexActive = view === 'plex' && nowPlaying?.playing === true;
     panel.classList.toggle('now-playing-surface', view === 'plex');
-    panel.hidden = interrupted || !view || view === 'household' || plexActive || Boolean(selected); if (panel.hidden) return;
+    const active = Boolean(view) && !interrupted && view !== 'household';
+    setBackgroundActive(active);
+    panel.hidden = !active || plexActive || Boolean(selected); panel.inert = !active || panel.hidden; if (panel.hidden) return;
     if (view === 'plex') {
       const unavailable = nowPlaying?.state === 'unavailable' || nowPlaying?.availability === 'unavailable';
       const loading = !nowPlaying;
@@ -152,7 +184,13 @@
     const html = `<header class="kiosk-section-head"><p>${esc(categoryFor(view).toUpperCase())}</p><h1>${esc(label(view))}</h1></header>` + (message ? sharedState(message, 'Return to Home', lifecycle.state === 'error' || lifecycle.state === 'stale' || lifecycle.state === 'unavailable', lifecycle.state) : renderDestination(view, list));
     if (panel.innerHTML !== html) panel.innerHTML = html;
   }
-  function change(key) { view = key; selected = ''; history.replaceState(null, '', href(key)); closeMenu(false); drawNavigation(); drawMenu(); drawPanel(); window.dispatchEvent(new Event('marquee-navigation')); }
+  function focusNavigation(key) {
+    const target = primary.querySelector(`[data-view="${CSS.escape(key)}"]`);
+    if (target && !target.hidden) target.focus();
+    else if (key) more.focus();
+    else primary.querySelector('[data-view=""]')?.focus();
+  }
+  function change(key, restoreFocus = true) { view = key; selected = ''; history.pushState({marqueeDestination: Boolean(key)}, '', href(key)); closeMenu(false); drawNavigation(); drawMenu(); drawPanel(); if (restoreFocus) focusNavigation(key); window.dispatchEvent(new Event('marquee-navigation')); }
   more.onclick = () => { drawMenu(); menu.showModal(); more.setAttribute('aria-expanded', 'true'); };
   function closeMenu(focus = true) {
     if (menu.open) menu.close();
@@ -165,9 +203,9 @@
   function handleLink(e) { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); } }
   primary.addEventListener('click', handleLink); overflow.addEventListener('click', handleLink);
   menu.addEventListener('click', e => { if (e.target === menu) { const r = menu.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closeMenu(); } });
-  panel.addEventListener('click', e => { const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); return; } const b = e.target.closest('button[data-item]'); if (b) { selected = b.dataset.item; drawPanel(); primary.querySelector(`[data-view="${CSS.escape(view)}"]`)?.focus(); window.dispatchEvent(new Event('marquee-navigation')); } });
+  panel.addEventListener('click', e => { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); return; } const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); return; } const b = e.target.closest('button[data-item]'); if (b) { selected = b.dataset.item; drawPanel(); primary.querySelector(`[data-view="${CSS.escape(view)}"]`)?.focus(); window.dispatchEvent(new Event('marquee-navigation')); } });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && view && !menu.open) { e.preventDefault(); change(''); } });
-  window.addEventListener('popstate', () => { view = new URLSearchParams(location.search).get('view') || ''; selected = ''; drawNavigation(); drawMenu(); drawPanel(); window.dispatchEvent(new Event('marquee-navigation')); });
+  window.addEventListener('popstate', () => { view = new URLSearchParams(location.search).get('view') || ''; selected = ''; drawNavigation(); drawMenu(); drawPanel(); focusNavigation(view); window.dispatchEvent(new Event('marquee-navigation')); });
   window.MarqueeNavigation = { resolve(payload) { nowPlaying = payload || {playing:false, state:'idle', availability:'idle'}; const wasInterrupted = interrupted; interrupted = Boolean(payload?.attention || payload?.householdFocus); if (interrupted && !wasInterrupted && menu.open) closeMenu(false); drawPanel(); if (interrupted || !view || view === 'plex') return payload; const c = !offline && sections.includes(view) && items(view).find(item => item.id === selected); return c ? c.payload || {playing:true,type:'media_context',key:'browse:'+c.id,context:c} : {playing:false}; } };
   async function refresh() {
     if (requestState === 'loading' && requestSerial > 0) return;

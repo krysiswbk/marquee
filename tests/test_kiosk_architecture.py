@@ -134,6 +134,16 @@ def test_empty_and_unavailable_states_share_home_and_retry_actions():
     assert ".kiosk-state" in SCREENS
 
 
+def test_destination_owns_background_accessibility_state_and_history_focus():
+    assert "const backgroundNodes = [...document.body.children].filter(node => ![rail, menu, panel].includes(node));" in MENU
+    assert "node.inert = true" in MENU
+    assert "node.setAttribute('aria-hidden', 'true')" in MENU
+    assert "if (ariaHidden === null) node.removeAttribute('aria-hidden');" in MENU
+    assert "history.pushState({marqueeDestination: Boolean(key)}, '', href(key))" in MENU
+    assert "primary.querySelector('[data-view=\"\"]')?.focus()" in MENU
+    assert "panel.inert = !active || panel.hidden" in MENU
+
+
 def test_provider_error_stale_and_empty_states_have_distinct_deterministic_copy():
     assert "function destinationLifecycle(key, list)" in MENU
     assert "state: 'error'" in MENU
