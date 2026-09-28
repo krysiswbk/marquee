@@ -195,9 +195,10 @@
     if (type === 'toggle') return `<label class="check-field"><input type="checkbox" data-config-path="${path}"> ${label}</label>`;
     if (type === 'select') return `<div class="field"><label for="${id}">${label}</label><select id="${id}" data-config-path="${path}">${min.map(([value, text]) => `<option value="${value}">${text}</option>`).join('')}</select></div>`;
     const inputType = type === 'list' ? 'text' : type === 'decimal' ? 'number' : type;
-    const attrs = ['number', 'decimal'].includes(type) ? `min="${min}" max="${max}" step="${type === 'decimal' ? 'any' : '1'}" required` : '';
-    const hint = type === 'list' ? (help || 'Comma-separated') : help;
-    return `<div class="field"><label for="${id}">${label}</label><input id="${id}" type="${inputType}" ${attrs} data-config-path="${path}" data-list="${type === 'list' ? '1' : '0'}" autocomplete="${type === 'password' ? 'new-password' : 'off'}"><small>${hint}</small></div>`;
+    const numeric = ['number', 'decimal'].includes(type);
+    const attrs = numeric ? `min="${min}" max="${max}" step="${type === 'decimal' ? 'any' : '1'}" required aria-describedby="${id}-help admin-numeric-help"` : '';
+    const hint = type === 'list' ? (help || 'Comma-separated') : numeric ? (help ? `${help}; bounded by the displayed range.` : 'Numeric provider setting; use the displayed unit and bounded range.') : help;
+    return `<div class="field"><label for="${id}">${label}</label><input id="${id}" type="${inputType}" ${attrs} data-config-path="${path}" data-list="${type === 'list' ? '1' : '0'}" autocomplete="${type === 'password' ? 'new-password' : 'off'}">${hint ? `<small id="${id}-help">${hint}</small>` : ''}</div>`;
   }
   function buildProviders() {
     const root = $('#provider-list');
@@ -212,7 +213,7 @@
         const target = name === 'calendar'
           ? `<label class="provider-target"><input type="checkbox" data-calendar-target="kiosk"> Live / Kiosk</label><label class="provider-target"><input type="checkbox" data-calendar-target="hubs"> Cast</label>`
           : `<span class="provider-target">${provider.target}</span>`;
-        card.innerHTML = `<div class="provider-main"><div class="provider-name"><h3>${provider.label}</h3><p>${provider.desc}</p></div><label class="provider-toggle"><input class="switch" type="checkbox" role="switch" data-config-path="providers.${name}.enabled"><span>Enabled</span></label><div class="provider-targets">${target}</div></div><details><summary>Timing and source details</summary><div class="field-grid"><div class="field"><label for="provider-${name}-priority">Source weight</label><input id="provider-${name}-priority" type="number" min="0" max="100" required data-config-path="providers.${name}.priority"><small>Compared with the eligibility threshold in Advanced.</small></div>${(provider.fields || []).map(field => providerField(name, field)).join('')}</div></details>`;
+        card.innerHTML = `<div class="provider-main"><div class="provider-name"><h3>${provider.label}</h3><p>${provider.desc}</p></div><label class="provider-toggle"><input class="switch" type="checkbox" role="switch" data-config-path="providers.${name}.enabled"><span>Enabled</span></label><div class="provider-targets">${target}</div></div><details><summary>Timing and source details</summary><div class="field-grid"><div class="field"><label for="provider-${name}-priority">Source weight</label><input id="provider-${name}-priority" type="number" min="0" max="100" step="1" required aria-describedby="provider-${name}-priority-help admin-numeric-help" data-config-path="providers.${name}.priority"><small id="provider-${name}-priority-help">Compared with the eligibility threshold in Advanced; bounded from 0 to 100 points.</small></div>${(provider.fields || []).map(field => providerField(name, field)).join('')}</div></details>`;
       }
       root.append(card);
     }
@@ -446,7 +447,9 @@
     }
     if (!control) return true;
     control.setAttribute('aria-invalid', 'true');
-    const note = document.createElement('small'); note.className = 'field-error'; note.textContent = message; note.setAttribute('role', 'alert'); control.insertAdjacentElement('afterend', note);
+    const note = document.createElement('small'); note.className = 'field-error'; note.textContent = message; note.setAttribute('role', 'alert'); note.id = `${control.id || control.dataset.configPath || 'settings-field'}-error`;
+    const described = new Set((control.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean)); described.add(note.id); control.setAttribute('aria-describedby', [...described].join(' '));
+    control.insertAdjacentElement('afterend', note);
     control.focus(); setAreaStatus(area, message, 'error'); return false;
   }
   async function request(url, options = {}) {

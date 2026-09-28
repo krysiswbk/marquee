@@ -4,6 +4,8 @@ import os
 from urllib.parse import urljoin
 
 from playwright.sync_api import sync_playwright
+from copy import deepcopy
+import json
 
 BASE = os.environ.get("MARQUEE_SMOKE_URL", "http://127.0.0.1:18086")
 ROUTES = [
@@ -50,6 +52,23 @@ with sync_playwright() as playwright:
             ):
                 assert control["min"] and control["max"] and control["step"], (route, control)
                 assert control["described"], (route, control)
+            audit = page.evaluate("""() => {
+                const ids = [...document.querySelectorAll('[id]')].map(node => node.id);
+                const duplicateIds = [...new Set(ids.filter((id, index) => ids.indexOf(id) !== index))];
+                const broken = [];
+                for (const node of document.querySelectorAll('label[for], [aria-describedby], [aria-controls]')) {
+                    for (const attribute of ['for', 'aria-describedby', 'aria-controls']) {
+                        const value = node.getAttribute(attribute);
+                        if (!value) continue;
+                        for (const id of (attribute === 'for' ? [value] : value.split(/\\s+/))) {
+                            if (id && !document.getElementById(id)) broken.push({attribute, id, tag: node.tagName});
+                        }
+                    }
+                }
+                return {duplicateIds, broken};
+            }""")
+            assert not audit["duplicateIds"], (route, audit)
+            assert not audit["broken"], (route, audit)
             assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), (width, height, route)
             if route != "/settings/layout?profile=live":
                 dock = page.locator(".savebar").last
@@ -59,5 +78,59 @@ with sync_playwright() as playwright:
                         assert dock_box["y"] + dock_box["height"] <= height + 1, (width, height, route)
             assert not errors, (width, height, route, errors)
             page.close()
+    seed = browser.new_page()
+    response = seed.request.get(BASE + "/api/attention")
+    if response.ok:
+        payload = response.json()
+        config = deepcopy(payload.get("config", {}))
+        rules = config.get("rules", [])
+        if rules:
+            fixture = deepcopy(rules[0])
+            fixture["id"] = "fixture-second-rule"
+            fixture["title"] = "Fixture duplicate-stage rule"
+            fixture.setdefault("escalation", []).append(deepcopy(fixture["escalation"][0]))
+            fixture["escalation"][0]["id"] = "repeated-stage"
+            fixture["escalation"][1]["id"] = "repeated-stage"
+            fixture["escalation"][0]["when"] = {"field": "context.home", "op": "eq", "value": True}
+            fixture["modifiers"] = [{"id": "same-modifier", "delta": 5, "when": {"field": "context.home", "op": "eq", "value": True}}]
+            rules[0]["escalation"][0]["id"] = "repeated-stage"
+            config["rules"] = [rules[0], fixture]
+            fixture_payload = dict(payload, config=config)
+            page = browser.new_page(viewport={"width": 393, "height": 852})
+            page.route("**/api/attention", lambda route: route.fulfill(json=fixture_payload))
+            errors = []
+            page.on("pageerror", lambda error: errors.append(str(error)))
+            page.goto(BASE + "/admin/attention", wait_until="domcontentloaded")
+            page.wait_for_function("document.getElementById('status').textContent.includes('Updated')")
+            audit = page.evaluate("""() => {
+                const ids = [...document.querySelectorAll('[id]')].map(node => node.id);
+                const duplicateIds = [...new Set(ids.filter((id, index) => ids.indexOf(id) !== index))];
+                const broken = [];
+                for (const node of document.querySelectorAll('label[for], [aria-describedby], [aria-controls]')) {
+                    for (const attribute of ['for', 'aria-describedby', 'aria-controls']) {
+                        const value = node.getAttribute(attribute);
+                        if (!value) continue;
+                        for (const id of (attribute === 'for' ? [value] : value.split(/\\s+/))) {
+                            if (id && !document.getElementById(id)) broken.push({attribute, id});
+                        }
+                    }
+                }
+                return {duplicateIds, broken};
+            }""")
+            assert not audit["duplicateIds"], audit
+            assert not audit["broken"], audit
+            stage_ids = page.locator('input[id*="stage"][id$="-after"]').evaluate_all("els => els.map(el => el.id)")
+            assert len(stage_ids) >= 3 and len(stage_ids) == len(set(stage_ids)), stage_ids
+            invalid = page.locator('input[type="number"]').first
+            invalid.fill("-1")
+            assert invalid.get_attribute("aria-invalid") == "true"
+            assert page.locator("#save").is_disabled()
+            for target in invalid.get_attribute("aria-describedby").split():
+                assert page.locator(f"#{target}").count() == 1
+            page.locator("#discard").click()
+            assert not page.locator('[aria-invalid="true"]').count()
+            assert not errors, errors
+            page.close()
+    seed.close()
     print("PASS: admin targets, numeric semantics, overflow, dock reachability, and console errors across 5 routes × 4 viewports")
     browser.close()

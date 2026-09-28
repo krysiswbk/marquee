@@ -13,6 +13,14 @@
     const node = document.createElement(tag); if (className) node.className = className; return node;
   };
   const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const slug = value => String(value || 'field').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'field';
+  function token(value) {
+    const source = String(value ?? '');
+    let hash = 2166136261;
+    for (let index = 0; index < source.length; index += 1) hash = Math.imul(hash ^ source.charCodeAt(index), 16777619);
+    return `${slug(source)}-${(hash >>> 0).toString(36)}`;
+  }
+  const scopedId = (...parts) => `attention-${parts.map(token).join('-')}`;
   function setStatus(message, type = '') { const node = $('#status'); node.textContent = message; node.className = 'status ' + type; }
   function changed() {
     const invalid = !!state.invalidEditors.size;
@@ -49,10 +57,10 @@
     } else { control = document.createElement('input'); control.type = type; control.value = value ?? ''; }
     Object.entries(attrs).forEach(([key, attrValue]) => { if (key !== 'error' && attrValue !== undefined) control.setAttribute(key, String(attrValue)); });
     const helpNode = help ? text('small', help) : null;
-    if (helpNode) { helpNode.id = `${control.id || 'attention-field'}-help`; control.setAttribute('aria-describedby', helpNode.id); }
+    if (helpNode) { helpNode.id = `${control.id || scopedId('field', label)}-help`; control.setAttribute('aria-describedby', helpNode.id); }
     const error = attrs.error ? text('small', '', 'mq-field-error') : null;
     if (error) {
-      error.id = `${control.id || 'attention-field'}-error`;
+      error.id = `${control.id || scopedId('field', label)}-error`;
       control.setAttribute('aria-describedby', [helpNode?.id, error.id].filter(Boolean).join(' '));
     }
     control.addEventListener(type === 'checkbox' || options ? 'change' : 'input', () => {
@@ -63,7 +71,6 @@
     });
     wrap.append(control); if (helpNode) wrap.append(helpNode); if (error) wrap.append(error); return wrap;
   }
-  const slug = value => String(value || 'field').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   function numeric(label, value, write, schemaKey, id, help = '') {
     const rule = state.schema[schemaKey] || {};
     const attrs = { id: `attention-${id}`, name: `attention.${id}`, min: rule.min, max: rule.max,
@@ -79,9 +86,10 @@
   function details(title, open = false) { const node = element('details', 'editor-row'); node.open = open; node.append(text('summary', title)); const body = element('div', 'editor-body'); node.append(body); return [node, body]; }
   function removeButton(label, callback) { const button = text('button', label, 'secondary delete'); button.type = 'button'; button.dataset.rebuild = ''; button.addEventListener('click', callback); return button; }
   function number(value, fallback = 0) { return Number.isFinite(Number(value)) ? Number(value) : fallback; }
-  function jsonEditor(label, value, write, description) {
-    const wrap = element('label'); wrap.textContent = label; const control = document.createElement('textarea'); control.value = JSON.stringify(value ?? {}, null, 2);
+  function jsonEditor(label, value, write, description, id) {
+    const wrap = element('label'); wrap.textContent = label; const control = document.createElement('textarea'); control.id = id || scopedId('condition', label); control.value = JSON.stringify(value ?? {}, null, 2);
     const error = text('small', description || 'Structured condition. Changes are validated before save.');
+    error.id = `${control.id}-error`; control.setAttribute('aria-describedby', error.id);
     control.addEventListener('input', () => { try { write(JSON.parse(control.value)); state.invalidEditors.delete(control); control.removeAttribute('aria-invalid'); error.textContent = description || 'Condition is valid JSON.'; error.className = ''; changed(); } catch (_) { state.invalidEditors.add(control); control.closest('.grouping')?.setAttribute('open', ''); control.setAttribute('aria-invalid', 'true'); error.textContent = 'Enter valid JSON before saving.'; error.className = 'mq-field-error'; changed(); } });
     wrap.append(control, error); return wrap;
   }
@@ -134,7 +142,7 @@
         input('Type', binding.type || '', value => value ? binding.type = value : delete binding.type),
         input('Category', binding.category || '', value => value ? binding.category = value : delete binding.category),
         input('Location', binding.location || '', value => value ? binding.location = value : delete binding.location),
-        numeric('TTL', binding.ttl ?? '', value => value ? binding.ttl = number(value) : delete binding.ttl, 'binding_ttl', `signal-binding-${index}-ttl`)
+        numeric('TTL', binding.ttl ?? '', value => value ? binding.ttl = number(value) : delete binding.ttl, 'binding_ttl', scopedId('signal-binding', index, 'ttl'))
       )); body.append(removeButton('Remove binding', () => { state.draft.signal_bindings.splice(index, 1); renderSignals(); changed(); })); root.append(row);
     });
     if (!root.children.length) root.append(text('p', 'No matching bindings.', 'empty'));
@@ -149,10 +157,10 @@
         input('Context name', name, value => { if (!value || value === name) return; state.draft.context_bindings[value] = binding; delete state.draft.context_bindings[name]; renderContexts(); }),
         input('Entity ID', binding.entity_id, value => binding.entity_id = value),
         input('Attribute', binding.attribute || '', value => value ? binding.attribute = value : delete binding.attribute),
-        numeric('TTL', binding.ttl ?? '', value => value ? binding.ttl = number(value) : delete binding.ttl, 'binding_ttl', `context-binding-${slug(name)}-ttl`)
+        numeric('TTL', binding.ttl ?? '', value => value ? binding.ttl = number(value) : delete binding.ttl, 'binding_ttl', scopedId('context-binding', name, 'ttl'))
       ));
       const maps = element('div', 'subsection'); maps.append(text('h3', 'Value map'));
-      maps.append(jsonEditor('Raw state → semantic value map', binding.values || {}, value => { if (Object.keys(value).length) binding.values = value; else delete binding.values; }, 'Map raw Home Assistant states to string, boolean, or numeric meanings.'));
+      maps.append(jsonEditor('Raw state → semantic value map', binding.values || {}, value => { if (Object.keys(value).length) binding.values = value; else delete binding.values; }, 'Map raw Home Assistant states to string, boolean, or numeric meanings.', scopedId('context-binding', name, 'values')));
       body.append(maps, removeButton('Remove context binding', () => { delete state.draft.context_bindings[name]; renderContexts(); changed(); })); root.append(row);
     });
     if (!root.children.length) root.append(text('p', 'No context bindings.', 'empty'));
@@ -168,30 +176,30 @@
         input('Persistence', rule.persistence, value => rule.persistence = value, 'text', [['while_active', 'While active'], ['timed', 'Timed']]),
         input('Strategy', rule.strategy, value => rule.strategy = value, 'text', [['global', 'Global'], ['local', 'Local'], ['targeted', 'Targeted'], ['ambient', 'Ambient'], ['critical', 'Critical']]),
         input('Preferred scene', rule.preferred_scene, value => rule.preferred_scene = value, 'text', sceneOptions.map(value => [value, value])), input('Fallback scene', rule.fallback_scene, value => rule.fallback_scene = value, 'text', sceneOptions.map(value => [value, value])),
-        input('Eligible displays', (rule.eligible_displays || []).join(', '), value => rule.eligible_displays = value.split(',').map(x => x.trim()).filter(Boolean), 'text', null, `Available: ${displays.join(', ') || 'none'}`),
+        input('Eligible displays', (rule.eligible_displays || []).join(', '), value => rule.eligible_displays = value.split(',').map(x => x.trim()).filter(Boolean), 'text', null, `Available: ${displays.join(', ') || 'none'}`, { id: scopedId('rule', rule.id, index, 'eligible-displays') }),
         input('Grouping key', rule.grouping_key, value => rule.grouping_key = value), input('Dedupe key', rule.dedupe_key, value => rule.dedupe_key = value),
         check('Interruptible', rule.interruptibility, value => rule.interruptibility = value), check('Acknowledgement required', rule.acknowledgement_required, value => rule.acknowledgement_required = value),
         input('Acknowledgement', rule.acknowledgement, value => rule.acknowledgement = value, 'text', [['reduce', 'Reduce score'], ['suppress', 'Suppress']])
       ); body.append(base);
       const timing = element('div', 'subsection'); timing.append(text('h3', 'Scoring and timing'), fieldGrid(
-        numeric('Debounce', rule.debounce, value => rule.debounce = number(value), 'debounce', `rule-${slug(rule.id)}-debounce`), numeric('Cooldown', rule.cooldown, value => rule.cooldown = number(value), 'cooldown', `rule-${slug(rule.id)}-cooldown`), numeric('Minimum display', rule.minimum_display_time, value => rule.minimum_display_time = number(value), 'minimum_display_time', `rule-${slug(rule.id)}-minimum-display`), numeric('Maximum display', rule.maximum_display_time, value => rule.maximum_display_time = number(value), 'maximum_display_time', `rule-${slug(rule.id)}-maximum-display`), numeric('Acknowledgement delta', rule.ack_delta, value => rule.ack_delta = number(value), 'ack_delta', `rule-${slug(rule.id)}-ack-delta`), numeric('Recent display delta', rule.recent_delta, value => rule.recent_delta = number(value), 'recent_delta', `rule-${slug(rule.id)}-recent-delta`), numeric('Confidence weight', rule.confidence_weight, value => rule.confidence_weight = number(value), 'confidence_weight', `rule-${slug(rule.id)}-confidence-weight`), numeric('Worsening window', rule.worsening_seconds, value => rule.worsening_seconds = number(value), 'worsening_seconds', `rule-${slug(rule.id)}-worsening-window`)
+        numeric('Debounce', rule.debounce, value => rule.debounce = number(value), 'debounce', scopedId('rule', rule.id, index, 'debounce')), numeric('Cooldown', rule.cooldown, value => rule.cooldown = number(value), 'cooldown', scopedId('rule', rule.id, index, 'cooldown')), numeric('Minimum display', rule.minimum_display_time, value => rule.minimum_display_time = number(value), 'minimum_display_time', scopedId('rule', rule.id, index, 'minimum-display')), numeric('Maximum display', rule.maximum_display_time, value => rule.maximum_display_time = number(value), 'maximum_display_time', scopedId('rule', rule.id, index, 'maximum-display')), numeric('Acknowledgement delta', rule.ack_delta, value => rule.ack_delta = number(value), 'ack_delta', scopedId('rule', rule.id, index, 'ack-delta')), numeric('Recent display delta', rule.recent_delta, value => rule.recent_delta = number(value), 'recent_delta', scopedId('rule', rule.id, index, 'recent-delta')), numeric('Confidence weight', rule.confidence_weight, value => rule.confidence_weight = number(value), 'confidence_weight', scopedId('rule', rule.id, index, 'confidence-weight')), numeric('Worsening window', rule.worsening_seconds, value => rule.worsening_seconds = number(value), 'worsening_seconds', scopedId('rule', rule.id, index, 'worsening-window'))
       )); body.append(timing);
       const match = element('div', 'subsection'); match.append(text('h3', 'Signal match'), fieldGrid(
         input('Type', rule.match?.type || '', value => value ? rule.match.type = value : delete rule.match.type), input('Source', rule.match?.source || '', value => value ? rule.match.source = value : delete rule.match.source), input('Category', rule.match?.category || '', value => value ? rule.match.category = value : delete rule.match.category), input('Entities', (rule.match?.entities || []).join(', '), value => { const values = value.split(',').map(x => x.trim()).filter(Boolean); values.length ? rule.match.entities = values : delete rule.match.entities; })
-      )); body.append(match, renderStages(rule), renderModifiers(rule), removeButton('Remove rule', () => { state.draft.rules.splice(index, 1); renderRules(); changed(); })); root.append(row);
+      )); body.append(match, renderStages(rule, index), renderModifiers(rule, index), removeButton('Remove rule', () => { state.draft.rules.splice(index, 1); renderRules(); changed(); })); root.append(row);
     });
     if (!root.children.length) root.append(text('p', 'No matching rules.', 'empty'));
   }
-  function renderStages(rule) {
+  function renderStages(rule, ruleIndex) {
     const section = element('div', 'subsection'); section.append(text('h3', 'Escalation stages'));
-    rule.escalation.forEach((stage, index) => { const [row, body] = details(`${stage.id} · ${stage.urgency} · priority ${stage.priority}`); body.append(fieldGrid(
-      input('Stage ID', stage.id, value => stage.id = value), numeric('After', stage.after, value => stage.after = number(value), 'stage_after', `stage-${slug(stage.id)}-after`), numeric('Priority', stage.priority, value => stage.priority = number(value), 'stage_priority', `stage-${slug(stage.id)}-priority`), input('Urgency', stage.urgency, value => stage.urgency = value, 'text', urgencyOptions.map(value => [value, value])), input('Persistence override', stage.persistence || '', value => value ? stage.persistence = value : delete stage.persistence, 'text', [['', 'Use rule'], ['while_active', 'While active'], ['timed', 'Timed']])
-    )); body.append(jsonEditor('Conditional escalation', stage.when || {}, value => { if (Object.keys(value).length) stage.when = value; else delete stage.when; }), removeButton('Remove stage', () => { rule.escalation.splice(index, 1); renderRules(); changed(); })); section.append(row); });
+    rule.escalation.forEach((stage, index) => { const scope = ['rule', rule.id, ruleIndex, 'stage', stage.id, index]; const [row, body] = details(`${stage.id} · ${stage.urgency} · priority ${stage.priority}`); body.append(fieldGrid(
+      input('Stage ID', stage.id, value => stage.id = value, 'text', null, '', { id: scopedId(...scope, 'id') }), numeric('After', stage.after, value => stage.after = number(value), 'stage_after', scopedId(...scope, 'after')), numeric('Priority', stage.priority, value => stage.priority = number(value), 'stage_priority', scopedId(...scope, 'priority')), input('Urgency', stage.urgency, value => stage.urgency = value, 'text', urgencyOptions.map(value => [value, value]), '', { id: scopedId(...scope, 'urgency') }), input('Persistence override', stage.persistence || '', value => value ? stage.persistence = value : delete stage.persistence, 'text', [['', 'Use rule'], ['while_active', 'While active'], ['timed', 'Timed']], '', { id: scopedId(...scope, 'persistence') })
+    )); body.append(jsonEditor('Conditional escalation', stage.when || {}, value => { if (Object.keys(value).length) stage.when = value; else delete stage.when; }, undefined, scopedId(...scope, 'condition')), removeButton('Remove stage', () => { rule.escalation.splice(index, 1); renderRules(); changed(); })); section.append(row); });
     const add = text('button', 'Add escalation stage', 'secondary'); add.type = 'button'; add.dataset.rebuild = ''; add.onclick = () => { rule.escalation.push({ id: 'stage-' + (rule.escalation.length + 1), after: 0, priority: 20, urgency: 'ACTIONABLE' }); renderRules(); changed(); }; section.append(add); return section;
   }
-  function renderModifiers(rule) {
+  function renderModifiers(rule, ruleIndex) {
     const section = element('div', 'subsection'); section.append(text('h3', 'Score modifiers'));
-    rule.modifiers.forEach((modifier, index) => { const [row, body] = details(`${modifier.id} · ${modifier.delta >= 0 ? '+' : ''}${modifier.delta}`); body.append(fieldGrid(input('Modifier ID', modifier.id, value => modifier.id = value), numeric('Score delta', modifier.delta, value => modifier.delta = number(value), 'modifier_delta', `modifier-${slug(modifier.id)}-delta`))); body.append(jsonEditor('When', modifier.when, value => modifier.when = value), removeButton('Remove modifier', () => { rule.modifiers.splice(index, 1); renderRules(); changed(); })); section.append(row); });
+    rule.modifiers.forEach((modifier, index) => { const scope = ['rule', rule.id, ruleIndex, 'modifier', modifier.id, index]; const [row, body] = details(`${modifier.id} · ${modifier.delta >= 0 ? '+' : ''}${modifier.delta}`); body.append(fieldGrid(input('Modifier ID', modifier.id, value => modifier.id = value, 'text', null, '', { id: scopedId(...scope, 'id') }), numeric('Score delta', modifier.delta, value => modifier.delta = number(value), 'modifier_delta', scopedId(...scope, 'delta')))); body.append(jsonEditor('When', modifier.when, value => modifier.when = value, undefined, scopedId(...scope, 'condition')), removeButton('Remove modifier', () => { rule.modifiers.splice(index, 1); renderRules(); changed(); })); section.append(row); });
     const add = text('button', 'Add score modifier', 'secondary'); add.type = 'button'; add.dataset.rebuild = ''; add.onclick = () => { rule.modifiers.push({ id: 'modifier-' + (rule.modifiers.length + 1), delta: 0, when: { field: 'context.home', op: 'eq', value: true } }); renderRules(); changed(); }; section.append(add); return section;
   }
   const HISTORY_PAGE_SIZE = 40;

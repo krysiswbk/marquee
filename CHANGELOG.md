@@ -1,3 +1,11 @@
+## 2.10.57
+
+- Eliminate duplicate attention-editor IDs with deterministic rule, stage,
+  modifier, binding, condition, help, and error associations.
+- Complete generated Main Settings provider numeric bounds and descriptions,
+  with browser contracts for references, invalid states, and responsive admin
+  surfaces.
+
 ## 2.10.56
 
 - Harden administration touch targets and numeric-input semantics across Main
