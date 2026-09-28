@@ -1,3 +1,10 @@
+## 2.10.3 — Tablet ambient weather refinement
+
+- Give the 481–700px Home weather summary a wide, balanced two-line composition
+  with explicit clearance before the household panel.
+- Omit unavailable daily high/low values instead of rendering placeholder dashes.
+- Add regression coverage for the weather phrase and tablet layout contract.
+
 ## 2.10.2 — Weather hierarchy and narrow-device repair
 
 - Promote Weather in the responsive destination rail so it displaces lower-priority sports when space is limited.

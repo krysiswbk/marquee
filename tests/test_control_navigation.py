@@ -106,6 +106,21 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("Feels", source)
         self.assertIn("High", source)
 
+    def test_home_weather_summary_omits_unavailable_high_or_low_values(self):
+        source = (ROOT / "output" / "index.html").read_text()
+        self.assertIn(".filter(Boolean).join(' / ')", source)
+        self.assertIn("if (highLow) summary.push(highLow)", source)
+        self.assertNotIn("'—'", source)
+
+    def test_tablet_home_weather_summary_has_width_and_panel_clearance(self):
+        styles = (ROOT / "output" / "brain.css").read_text()
+        self.assertIn("@media (min-width:481px) and (max-width:700px)", styles)
+        self.assertIn("width:92vw", styles)
+        self.assertIn("max-width:92vw", styles)
+        self.assertIn("line-height:1.2", styles)
+        self.assertIn("#brain-house{top:43vh}", styles)
+        self.assertNotIn("max-width:44vw", styles)
+
 
 if __name__ == "__main__":
     unittest.main()

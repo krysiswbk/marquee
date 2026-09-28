@@ -2220,9 +2220,11 @@ ${chase.join('')}
       const today = days[0] || {};
       const summary = [`${Math.round(lastWx.temp)}°C · ${readableCondition(lastWx.condition, lastWx.code)}`];
       if (Number.isFinite(lastWx.apparent_temperature)) summary.push(`Feels ${Math.round(lastWx.apparent_temperature)}°`);
-      if (Number.isFinite(today.temperature) || Number.isFinite(today.templow)) {
-        summary.push(`High ${Number.isFinite(today.temperature) ? Math.round(today.temperature) + '°' : '—'} / Low ${Number.isFinite(today.templow) ? Math.round(today.templow) + '°' : '—'}`);
-      }
+      const highLow = [
+        Number.isFinite(today.temperature) ? `High ${Math.round(today.temperature)}°` : '',
+        Number.isFinite(today.templow) ? `Low ${Math.round(today.templow)}°` : '',
+      ].filter(Boolean).join(' / ');
+      if (highLow) summary.push(highLow);
       const nextRain = forecast.find(row => Number.isFinite(row.precipitation_probability) && row.precipitation_probability >= 30);
       if (nextRain) summary.push(`Rain ${Math.round(nextRain.precipitation_probability)}% next`);
       $('idle-weather').textContent = (!LIVE_SURFACE || (fallbackCfg.screen !== 'blank'
