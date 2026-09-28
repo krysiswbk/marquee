@@ -1,3 +1,11 @@
+## 2.10.66
+
+- Make the persistent household feed truthful and readable on narrow kiosk
+  widths with explicit disconnected/offline state, counted device summaries,
+  bounded event/calendar summaries, and an accessible full-text contract.
+- Add deterministic browser coverage for target viewport overflow, readability,
+  full text, and desktop wording.
+
 ## 2.10.65
 
 - Refine the dedicated weather surface for narrow phones into a flowing,

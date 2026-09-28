@@ -124,7 +124,7 @@ with sync_playwright() as playwright:
             button.scroll_into_view_if_needed()
             assert button.is_visible(), (width, height, index)
 
-        page.screenshot(path=f"/tmp/marquee-2.10.65-weather-{width}x{height}.png")
+        page.screenshot(path=f"/tmp/marquee-2.10.66-weather-{width}x{height}.png")
         assert not errors, (width, height, errors)
         page.close()
 

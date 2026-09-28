@@ -14,6 +14,30 @@
   const dock=document.createElement('aside');dock.className='brain-dock';dock.setAttribute('aria-label','Household updates');dock.innerHTML='<span class="brain-dock-brand">M/ HOUSE FEED</span><span class="brain-dock-copy" id="brain-dock-copy">Connecting to the house…</span><div class="brain-dock-people" id="brain-people"></div>';document.body.append(dock);
   const toast=document.createElement('div');toast.className='brain-toast';toast.setAttribute('role','status');document.body.append(toast);
   const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const feedTier=()=>window.matchMedia('(max-width: 430px)').matches?'phone':window.matchMedia('(max-width: 700px)').matches?'tablet':'desktop';
+  function compactNames(names, noun) {
+    const values=(names||[]).filter(Boolean), count=values.length;
+    if(!count)return '';
+    if(count<=2)return values.join(', ');
+    return `${values.slice(0,2).join(', ')} + ${count-2} more ${noun}`;
+  }
+  function narrowLabel(value, max=52) {
+    const text=String(value||'').trim();
+    if(text.length<=max)return text;
+    const cut=text.slice(0,max-1).replace(/\s+\S*$/,'').trim();
+    return `${cut||text.slice(0,max-1)}…`;
+  }
+  function feedEntry(fullText, narrowText=fullText) {
+    return {fullText:String(fullText), narrowText:String(narrowText)};
+  }
+  function renderFeedEntry(entry) {
+    const fullText=entry.fullText, visible=feedTier()==='desktop'?fullText:entry.narrowText;
+    const copy=$('brain-dock-copy');
+    copy.textContent=visible;
+    copy.title=fullText;
+    copy.setAttribute('aria-label',fullText);
+    copy.dataset.fullText=fullText;
+  }
   let state=null, wx=null, received=0, theme='studio', visibility={}, lastToast='', toastUntil=0, alertId='', hiddenByBlank=false;
   let fitFrame=0;
   function elapsed(seconds){const n=Math.max(0,Math.floor(seconds));return n<60?'just now':n<3600?`${Math.floor(n/60)}m`: `${Math.floor(n/3600)}h ${Math.floor(n%3600/60)}m`}
@@ -26,6 +50,7 @@
     const serious=alerts.find(a=>['CRITICAL','IMPORTANT','ACTIONABLE'].includes(a.urgency));
     const primary=serious?opening.find(o=>o.id===serious.signal_id):(opening.find(o=>o.category!=='window')||opening[0]);
     const deviceHealth=fresh?(state.device_health||[]):[];
+    const healthNames=deviceHealth.map(d=>d.name).filter(Boolean);
     const healthText=deviceHealth.length?`Offline: ${deviceHealth.map(d=>d.name).join(', ')}. Check batteries or connection.`:'';
     $('brain-device-health').hidden=!deviceHealth.length;
     $('brain-house').classList.toggle('device-alert',Boolean(deviceHealth.length));
@@ -59,20 +84,23 @@
     $('brain-upnext').innerHTML=upcoming.length?`${upcoming.slice(0,1).map(c=>`<div class="brain-agenda-item"><strong>${esc(c.title)}</strong><span>${esc(c.subtitle||c.detail)}</span></div>`).join('')}${upcomingMore?`<div class="brain-agenda-more">+ ${upcomingMore} more upcoming item${upcomingMore===1?'':'s'} in this window.</div>`:''}`:'<p class="brain-empty">A little room in the calendar.</p>';
     $('brain-people').innerHTML=(state.people||[]).map(p=>`<span class="brain-person" data-home="${fresh&&p.state.toLowerCase()==='home'}">${esc(p.name)} · ${esc(fresh?p.state:'Unknown')}</span>`).join('');
     let feed=[];
-    if(!fresh)feed=['Household connection lost · Current door and lock states are unknown'];
+    if(!fresh)feed=[feedEntry('Household connection lost · Current door and lock states are unknown','Household connection lost · Current states unavailable')];
     else {
-      if(healthText)feed.push(healthText);
-      if(primary)feed.push(`${primary.name} ${primary.state} · observed for ${elapsed(duration)}`);
-      if(event)feed.push(`${event.title} · ${elapsed(now-event.at)}${now-event.at>=60?' ago':''}`);
-      if(state.guests)feed.push('Guest mode is on · The house is expecting company');
-      if(state.sleeping)feed.push('Someone is sleeping · Keep it low-key');
-      if(state.garage_occupied)feed.push('Garage occupied · Someone’s out in the workshop');
-      feed.push(...cards.filter(c=>c.type!=='weather'&&c.type!=='astronomy'&&(c.subtype==='birthday_rollup'||near(c))).map(c=>`${c.title} · ${c.subtitle||c.detail||''}`));
-      if(state.network==='online')feed.push('House network online');
-      if(state.unknown?.length)feed.push(`Not reporting: ${state.unknown.join(', ')}`);
-      if(!feed.length)feed=['The house is listening for its next real update'];
+      if(healthText)feed.push(feedEntry(healthText,`Offline: ${compactNames(healthNames,'devices')}. Check connection.`));
+      if(primary)feed.push(feedEntry(`${primary.name} ${primary.state} · observed for ${elapsed(duration)}`,`${primary.name} ${primary.state} · ${elapsed(duration)}`));
+      if(event)feed.push(feedEntry(`${event.title} · ${elapsed(now-event.at)}${now-event.at>=60?' ago':''}`,`Recent event: ${narrowLabel(event.title)} · ${elapsed(now-event.at)}`));
+      if(state.guests)feed.push(feedEntry('Guest mode is on · The house is expecting company','Guest mode is on'));
+      if(state.sleeping)feed.push(feedEntry('Someone is sleeping · Keep it low-key','Someone is sleeping · Keep it low-key'));
+      if(state.garage_occupied)feed.push(feedEntry('Garage occupied · Someone’s out in the workshop','Garage occupied · Someone’s out in the workshop'));
+      feed.push(...cards.filter(c=>c.type!=='weather'&&c.type!=='astronomy'&&(c.subtype==='birthday_rollup'||near(c))).map(c=>{
+        const full=`${c.title} · ${c.subtitle||c.detail||''}`;
+        return feedEntry(full,`Calendar: ${narrowLabel(c.title)}`);
+      }));
+      if(state.network==='online')feed.push(feedEntry('House network online','House network online'));
+      if(state.unknown?.length)feed.push(feedEntry(`Not reporting: ${state.unknown.join(', ')}`,feedTier()==='phone'?`${state.unknown.length} device${state.unknown.length===1?'':'s'} not reporting`:`Not reporting: ${compactNames(state.unknown,'devices')}`));
+      if(!feed.length)feed=[feedEntry('The house is listening for its next real update')];
     }
-    set('brain-dock-copy',feed[Math.floor(now/12)%feed.length]);
+    renderFeedEntry(feed[Math.floor(now/12)%feed.length]);
     if(event&&now-event.at<45&&event.id!==lastToast&&!demo){lastToast=event.id;toastUntil=now+12;toast.innerHTML=`<span aria-hidden="true">↗</span><div>${esc(event.title)}<small>Just happened at home</small></div>`}
     toast.classList.toggle('show',now<toastUntil);
     for(const [block,id]of [['house','brain-house'],['activity','brain-activity'],['agenda','brain-agenda']])$(id).hidden=visibility[block]===false;
