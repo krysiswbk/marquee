@@ -88,7 +88,7 @@ def test_calendar_full_agenda_contract_is_paginated_and_history_addressable():
         "e.key === 'ArrowLeft' || e.key === 'PageUp'",
         "e.key === 'ArrowRight' || e.key === 'PageDown'",
         "e.key === 'Escape' || e.key === 'BrowserBack'",
-        'calendarDisclosure?.focus', "history.replaceState({marqueeCalendarAgenda: true}",
+        'calendarDisclosure.focus({preventScroll: true})', "history.replaceState({marqueeCalendarAgenda: true}",
         'calendar-detail-surface',
     ):
         assert token in MENU
@@ -104,15 +104,21 @@ def test_calendar_full_agenda_contract_is_paginated_and_history_addressable():
 
 def test_calendar_focus_and_history_contracts_do_not_steal_control_focus():
     assert "let calendarFocusHeadingPending = Boolean(calendarMode);" in MENU
+    assert "let calendarFocusDisclosurePending = false;" in MENU
     assert "if (detail && calendarFocusHeadingPending)" in MENU
     assert "else if (detail && focusedCalendarControl)" in MENU
+    assert "if (!detail && calendarFocusDisclosurePending && calendarDisclosure)" in MENU
+    assert "if (preserveCalendarDisclosureFocus) calendarFocusDisclosurePending = true;" in MENU
     assert 'data-calendar-control="previous"' in MENU
     assert 'data-calendar-control="next"' in MENU
     assert "data-calendar-page]:not([disabled])" not in MENU
-    assert "calendarFocusHeadingPending = true; history.pushState" in MENU
+    assert "calendarFocusHeadingPending = true; calendarFocusDisclosurePending = false; history.pushState" in MENU
     assert "if (interrupted && !wasInterrupted && menu.open) closeMenu(false);" in MENU
     assert "history.back();" in MENU
     assert "function closeCalendarAgenda()" in MENU
+    assert "calendarFocusDisclosurePending = true;\n    history.back();" in MENU
+    assert "calendarFocusDisclosurePending = true; if (!(view === 'calendar' && !calendarMode)) calendarFocusDisclosurePending = false;" in MENU
+    assert "setTimeout(() => calendarDisclosure?.focus" not in MENU
     assert "if (detail) panel.querySelector('#calendar-agenda-title')?.focus" not in MENU
     assert "mediaIdle" not in MENU
     assert "payload.playing === false" not in MENU

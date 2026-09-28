@@ -52,6 +52,7 @@
   let calendarDisclosure = null;
   let calendarPageSize = 4;
   let calendarFocusHeadingPending = Boolean(calendarMode);
+  let calendarFocusDisclosurePending = false;
   let initialDirectFocusPending = Boolean(view);
   const label = key => destinations[key]?.[0] || key.replaceAll('_', ' ').replace(/^./, c => c.toUpperCase());
   const icon = key => destinations[key]?.[1] || moreIcon;
@@ -428,6 +429,10 @@
       ? document.activeElement.dataset.calendarControl || (document.activeElement.hasAttribute('data-calendar-summary') ? 'summary'
         : document.activeElement.dataset.view === '' ? 'home' : document.activeElement.id === 'calendar-agenda-title' ? 'heading' : '')
       : '';
+    const preserveCalendarDisclosureFocus = !detail && view === 'calendar'
+      && panel.contains(document.activeElement)
+      && document.activeElement.matches?.('[data-calendar-disclosure]');
+    if (preserveCalendarDisclosureFocus) calendarFocusDisclosurePending = true;
     if (panel.innerHTML !== html) panel.innerHTML = html;
     if (detail) {
       // Group headings, margins, and wrapped titles are part of the available
@@ -445,6 +450,10 @@
       if (canonical !== String(calendarPage)) history.replaceState({marqueeCalendarAgenda: true}, '', href('calendar', true, calendarPage));
     }
     calendarDisclosure = panel.querySelector('[data-calendar-disclosure]');
+    if (!detail && calendarFocusDisclosurePending && calendarDisclosure) {
+      calendarDisclosure.focus({preventScroll: true});
+      calendarFocusDisclosurePending = false;
+    }
     if (detail && calendarFocusHeadingPending) {
       panel.querySelector('#calendar-agenda-title')?.focus({preventScroll: true});
       calendarFocusHeadingPending = false;
@@ -466,10 +475,11 @@
     else if (key) more.focus();
     else primary.querySelector('[data-view=""]')?.focus();
   }
-  function change(key, restoreFocus = true) { view = key; selected = ''; calendarMode = ''; calendarPage = 1; history.pushState({marqueeDestination: Boolean(key)}, '', href(key)); closeMenu(false); drawNavigation(); drawMenu(); drawPanel(); if (restoreFocus) { focusNavigation(key); setTimeout(() => focusNavigation(key), 0); } window.dispatchEvent(new Event('marquee-navigation')); }
-  function openCalendarAgenda() { if (view !== 'calendar' || !items('calendar').length) return; calendarMode = 'all'; calendarPage = 1; calendarFocusHeadingPending = true; history.pushState({marqueeCalendarAgenda: true}, '', href('calendar', true, calendarPage)); drawPanel(); }
+  function change(key, restoreFocus = true) { view = key; selected = ''; calendarMode = ''; calendarPage = 1; calendarFocusDisclosurePending = false; history.pushState({marqueeDestination: Boolean(key)}, '', href(key)); closeMenu(false); drawNavigation(); drawMenu(); drawPanel(); if (restoreFocus) { focusNavigation(key); setTimeout(() => focusNavigation(key), 0); } window.dispatchEvent(new Event('marquee-navigation')); }
+  function openCalendarAgenda() { if (view !== 'calendar' || !items('calendar').length) return; calendarMode = 'all'; calendarPage = 1; calendarFocusHeadingPending = true; calendarFocusDisclosurePending = false; history.pushState({marqueeCalendarAgenda: true}, '', href('calendar', true, calendarPage)); drawPanel(); }
   function closeCalendarAgenda() {
     if (!calendarMode) return;
+    calendarFocusDisclosurePending = true;
     history.back();
   }
   function setCalendarPage(page) {
@@ -494,7 +504,7 @@
   menu.addEventListener('click', e => { if (e.target === menu) { const r = menu.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closeMenu(); } });
   panel.addEventListener('click', e => { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); return; } if (e.target.closest('[data-calendar-disclosure]')) { openCalendarAgenda(); return; } if (e.target.closest('[data-calendar-summary]')) { closeCalendarAgenda(); return; } const page = e.target.closest('[data-calendar-page]'); if (page && !page.disabled) { setCalendarPage(Number(page.dataset.calendarPage)); return; } const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); return; } const b = e.target.closest('button[data-item]'); if (b) { selected = b.dataset.item; drawPanel(); primary.querySelector(`[data-view="${CSS.escape(view)}"]`)?.focus(); window.dispatchEvent(new Event('marquee-navigation')); } });
   document.addEventListener('keydown', e => { if (menu.open || !view) return; if (!calendarMode && e.target.closest?.('[data-calendar-disclosure]') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openCalendarAgenda(); return; } if (calendarMode) { if (e.key === 'Escape' || e.key === 'BrowserBack') { e.preventDefault(); closeCalendarAgenda(); return; } if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); setCalendarPage(calendarPage - 1); return; } if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); setCalendarPage(calendarPage + 1); return; } } else if (e.key === 'Escape') { e.preventDefault(); change(''); } });
-  window.addEventListener('popstate', () => { const next = new URLSearchParams(location.search); view = next.get('view') || ''; calendarMode = view === 'calendar' && next.get('mode') === 'all' ? 'all' : ''; calendarPage = Math.max(1, Number.parseInt(next.get('page') || '1', 10) || 1); calendarFocusHeadingPending = Boolean(calendarMode); selected = ''; drawNavigation(); drawMenu(); drawPanel(); if (!calendarMode && view === 'calendar') setTimeout(() => calendarDisclosure?.focus({preventScroll: true}), 0); else if (!calendarMode) { focusNavigation(view); setTimeout(() => focusNavigation(view), 0); } window.dispatchEvent(new Event('marquee-navigation')); });
+  window.addEventListener('popstate', () => { const wasCalendarDetail = view === 'calendar' && calendarMode === 'all'; const next = new URLSearchParams(location.search); view = next.get('view') || ''; calendarMode = view === 'calendar' && next.get('mode') === 'all' ? 'all' : ''; if (wasCalendarDetail && view === 'calendar' && !calendarMode) calendarFocusDisclosurePending = true; if (!(view === 'calendar' && !calendarMode)) calendarFocusDisclosurePending = false; calendarPage = Math.max(1, Number.parseInt(next.get('page') || '1', 10) || 1); calendarFocusHeadingPending = Boolean(calendarMode); selected = ''; drawNavigation(); drawMenu(); drawPanel(); if (!calendarMode) { if (view !== 'calendar') focusNavigation(view); } window.dispatchEvent(new Event('marquee-navigation')); });
   window.addEventListener('resize', () => { if (calendarMode && view === 'calendar') drawPanel(); });
   window.addEventListener('marquee-surface-rendered', drawPanel);
   window.MarqueeNavigation = { resolve(payload) { nowPlaying = payload || {playing:false, state:'idle', availability:'idle'}; const wasInterrupted = interrupted; interrupted = Boolean(payload?.attention || payload?.householdFocus); if (interrupted && !wasInterrupted && menu.open) closeMenu(false); drawPanel(); if (interrupted || !view || view === 'plex') return payload; const c = !offline && sections.includes(view) && items(view).find(item => item.id === selected); return c ? c.payload || {playing:true,type:'media_context',key:'browse:'+c.id,context:c} : {playing:false}; }, refresh };

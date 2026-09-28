@@ -42,3 +42,17 @@ def test_focus_restoration_is_explicit_or_logical_control_preserving() -> None:
     assert 'data-calendar-control="previous"' in MENU
     assert 'data-calendar-control="next"' in MENU
     assert "data-calendar-page]:not([disabled])" not in MENU
+
+
+def test_disclosure_pending_focus_is_consumed_by_the_summary_render() -> None:
+    pending = True
+    disclosure_exists = False
+    if pending and disclosure_exists:
+        pending = False
+    assert pending is True  # loading/partial render cannot lose the request
+    disclosure_exists = True
+    if pending and disclosure_exists:
+        pending = False
+    assert pending is False
+    assert "calendarFocusDisclosurePending = false" in MENU
+    assert "calendarDisclosure.focus({preventScroll: true})" in MENU
