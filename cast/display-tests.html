@@ -17,10 +17,10 @@
     <section class="admin-card test-grid">
       <div>
         <div class="section-title"><div><h2>Choose a screen</h2><p>Live data uses the current provider result. Samples are safe fixtures.</p></div><button class="secondary" id="refresh" type="button">Refresh</button></div>
-        <label>Screen<select id="screen"></select></label>
-        <label>Destination<select id="destination"><option value="live">Live / Kiosk</option><option value="cast">Cast display</option><option value="both">Both displays</option></select></label>
-        <div id="cast-row"><label>Cast display<select id="cast"></select></label></div>
-        <label>Duration<select id="duration"><option value="30">30 seconds</option><option value="120" selected>2 minutes</option><option value="300">5 minutes</option><option value="900">15 minutes</option></select></label>
+        <label>Screen<select id="screen" name="screen"></select></label>
+        <label>Destination<select id="destination" name="destination"><option value="live">Live / Kiosk</option><option value="cast">Cast display</option><option value="both">Both displays</option></select></label>
+        <div id="cast-row"><label>Cast display<select id="cast" name="cast"></select></label><small id="cast-status" class="summary-copy" role="status" aria-live="polite">Cast discovery runs separately.</small></div>
+        <label>Duration<select id="duration" name="duration"><option value="30">30 seconds</option><option value="120" selected>2 minutes</option><option value="300">5 minutes</option><option value="900">15 minutes</option></select></label>
         <div class="inline-actions"><button class="primary" id="show" type="button">Show temporary screen</button><button class="secondary" id="clear" type="button">Clear active test</button></div>
       </div>
       <aside class="test-aside"><h2>Open a display</h2><a href="/live" target="_blank" rel="noopener">Live display ↗</a><a href="/kiosk" target="_blank" rel="noopener">Kiosk display ↗</a><a href="/image" target="_blank" rel="noopener">Cast receiver ↗</a><p>For a Cast test, select a discovered display. The test is removed when its timer finishes or when you clear it.</p><div id="active-test" class="summary-copy"></div></aside>

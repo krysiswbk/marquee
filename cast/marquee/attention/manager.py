@@ -344,9 +344,24 @@ class AttentionManager:
             self.history.record(now, action, id=member.id, stage=member.stage)
 
     def snapshot(self, now: float) -> dict[str, Any]:
+        items = []
+        for item in self.items.values():
+            snapshot = item.snapshot()
+            signal = self.store.values.get(item.signal_id)
+            if signal:
+                friendly_name = str(signal.attributes.get("friendly_name", "")).strip()
+                location = str(signal.attributes.get("location", "")).strip()
+                identity = {}
+                if friendly_name:
+                    identity["label"] = friendly_name
+                if location:
+                    identity["location"] = location
+                if identity:
+                    snapshot["identity"] = identity
+            items.append(snapshot)
         return {
             "signals": [s.snapshot(now) for s in self.store.values.values()],
-            "items": [item.snapshot() for item in self.items.values()],
+            "items": items,
             "displays": copy.deepcopy(self.explanations),
             "history": self.history.read(now),
         }

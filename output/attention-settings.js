@@ -2,7 +2,7 @@
   'use strict';
   const $ = selector => document.querySelector(selector);
   const clone = value => structuredClone(value);
-  const state = { base: null, draft: null, diagnostics: null, dirty: false, saving: false, conflict: false, invalidEditors: new Set(), lockState: null };
+  const state = { base: null, draft: null, diagnostics: null, schema: {}, dirty: false, saving: false, conflict: false, invalidEditors: new Set(), lockState: null };
   const sceneOptions = ['attention', 'source', 'image', 'radar'];
   const urgencyOptions = ['AMBIENT', 'CONTEXTUAL', 'ACTIONABLE', 'IMPORTANT', 'CRITICAL'];
   const text = (tag, value, className = '') => {
@@ -41,14 +41,30 @@
     if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
     return data;
   }
-  function input(label, value, write, type = 'text', options = null, help = '') {
+  function input(label, value, write, type = 'text', options = null, help = '', attrs = {}) {
     const wrap = element('label'); wrap.textContent = label;
     let control;
     if (options) {
       control = element('select'); options.forEach(([key, name]) => { const option = text('option', name); option.value = key; option.selected = String(value) === String(key); control.append(option); });
     } else { control = document.createElement('input'); control.type = type; control.value = value ?? ''; }
-    control.addEventListener(type === 'checkbox' || options ? 'change' : 'input', () => { write(options ? control.value : type === 'number' ? Number(control.value) : control.value); changed(); });
-    wrap.append(control); if (help) wrap.append(text('small', help)); return wrap;
+    Object.entries(attrs).forEach(([key, attrValue]) => { if (key !== 'error' && attrValue !== undefined) control.setAttribute(key, String(attrValue)); });
+    const error = attrs.error ? text('small', '', 'mq-field-error') : null;
+    if (error) { error.id = `${control.id || 'attention-field'}-error`; control.setAttribute('aria-describedby', error.id); }
+    control.addEventListener(type === 'checkbox' || options ? 'change' : 'input', () => {
+      const invalid = type === 'number' && (!control.value || !control.validity.valid);
+      if (invalid) { state.invalidEditors.add(control); control.setAttribute('aria-invalid', 'true'); if (error) error.textContent = `${label}: enter a value from ${control.min} to ${control.max}.`; }
+      else { state.invalidEditors.delete(control); control.removeAttribute('aria-invalid'); if (error) error.textContent = ''; write(options ? control.value : type === 'number' ? Number(control.value) : control.value); }
+      changed();
+    });
+    wrap.append(control); if (help) wrap.append(text('small', help)); if (error) wrap.append(error); return wrap;
+  }
+  const slug = value => String(value || 'field').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  function numeric(label, value, write, schemaKey, id, help = '') {
+    const rule = state.schema[schemaKey] || {};
+    const attrs = { id: `attention-${id}`, name: `attention.${id}`, min: rule.min, max: rule.max,
+      step: rule.step ?? 'any', required: rule.required !== false, error: true };
+    const unit = rule.unit ? ` (${rule.unit})` : '';
+    return input(label, value, write, 'number', null, help || `Allowed: ${rule.min}–${rule.max}${unit}.`, attrs);
   }
   function check(label, value, write) {
     const wrap = element('label', 'check'); const control = document.createElement('input'); control.type = 'checkbox'; control.checked = !!value;
@@ -70,13 +86,13 @@
     const globals = element('div'); globals.append(text('h3', 'Policy limits'));
     globals.append(fieldGrid(
       check('Attention enabled', c.enabled, value => c.enabled = value),
-      input('Signal TTL (seconds)', c.signal_ttl, value => c.signal_ttl = number(value), 'number'),
-      input('Switch margin', c.switch_margin, value => c.switch_margin = number(value), 'number'),
-      input('Maximum signals', c.max_signals, value => c.max_signals = number(value), 'number'),
-      input('History entries', c.history_limit, value => c.history_limit = number(value), 'number'),
-      input('History retention (seconds)', c.history_seconds, value => c.history_seconds = number(value), 'number'),
-      input('Quiet hours start', c.quiet_hours.start, value => c.quiet_hours.start = number(value), 'number'),
-      input('Quiet hours end', c.quiet_hours.end, value => c.quiet_hours.end = number(value), 'number')
+      numeric('Signal TTL', c.signal_ttl, value => c.signal_ttl = number(value), 'signal_ttl', 'signal-ttl'),
+      numeric('Switch margin', c.switch_margin, value => c.switch_margin = number(value), 'switch_margin', 'switch-margin'),
+      numeric('Maximum signals', c.max_signals, value => c.max_signals = number(value), 'max_signals', 'max-signals'),
+      numeric('History entries', c.history_limit, value => c.history_limit = number(value), 'history_limit', 'history-limit'),
+      numeric('History retention', c.history_seconds, value => c.history_seconds = number(value), 'history_seconds', 'history-retention'),
+      numeric('Quiet hours start', c.quiet_hours.start, value => c.quiet_hours.start = number(value), 'quiet_hours', 'quiet-hours-start', 'Local clock hour (0–23).'),
+      numeric('Quiet hours end', c.quiet_hours.end, value => c.quiet_hours.end = number(value), 'quiet_hours', 'quiet-hours-end', 'Local clock hour (0–23).')
     )); editor.append(globals);
     const delivery = element('div', 'subsection'); delivery.append(text('h3', 'Delivery displays'));
     const list = element('div', 'editable-list');
@@ -113,7 +129,7 @@
         input('Type', binding.type || '', value => value ? binding.type = value : delete binding.type),
         input('Category', binding.category || '', value => value ? binding.category = value : delete binding.category),
         input('Location', binding.location || '', value => value ? binding.location = value : delete binding.location),
-        input('TTL (seconds)', binding.ttl ?? '', value => value ? binding.ttl = number(value) : delete binding.ttl, 'number')
+        numeric('TTL', binding.ttl ?? '', value => value ? binding.ttl = number(value) : delete binding.ttl, 'binding_ttl', `signal-binding-${index}-ttl`)
       )); body.append(removeButton('Remove binding', () => { state.draft.signal_bindings.splice(index, 1); renderSignals(); changed(); })); root.append(row);
     });
     if (!root.children.length) root.append(text('p', 'No matching bindings.', 'empty'));
@@ -128,7 +144,7 @@
         input('Context name', name, value => { if (!value || value === name) return; state.draft.context_bindings[value] = binding; delete state.draft.context_bindings[name]; renderContexts(); }),
         input('Entity ID', binding.entity_id, value => binding.entity_id = value),
         input('Attribute', binding.attribute || '', value => value ? binding.attribute = value : delete binding.attribute),
-        input('TTL (seconds)', binding.ttl ?? '', value => value ? binding.ttl = number(value) : delete binding.ttl, 'number')
+        numeric('TTL', binding.ttl ?? '', value => value ? binding.ttl = number(value) : delete binding.ttl, 'binding_ttl', `context-binding-${slug(name)}-ttl`)
       ));
       const maps = element('div', 'subsection'); maps.append(text('h3', 'Value map'));
       maps.append(jsonEditor('Raw state → semantic value map', binding.values || {}, value => { if (Object.keys(value).length) binding.values = value; else delete binding.values; }, 'Map raw Home Assistant states to string, boolean, or numeric meanings.'));
@@ -153,7 +169,7 @@
         input('Acknowledgement', rule.acknowledgement, value => rule.acknowledgement = value, 'text', [['reduce', 'Reduce score'], ['suppress', 'Suppress']])
       ); body.append(base);
       const timing = element('div', 'subsection'); timing.append(text('h3', 'Scoring and timing'), fieldGrid(
-        input('Debounce', rule.debounce, value => rule.debounce = number(value), 'number'), input('Cooldown', rule.cooldown, value => rule.cooldown = number(value), 'number'), input('Minimum display', rule.minimum_display_time, value => rule.minimum_display_time = number(value), 'number'), input('Maximum display', rule.maximum_display_time, value => rule.maximum_display_time = number(value), 'number'), input('Acknowledgement delta', rule.ack_delta, value => rule.ack_delta = number(value), 'number'), input('Recent display delta', rule.recent_delta, value => rule.recent_delta = number(value), 'number'), input('Confidence weight', rule.confidence_weight, value => rule.confidence_weight = number(value), 'number'), input('Worsening window', rule.worsening_seconds, value => rule.worsening_seconds = number(value), 'number')
+        numeric('Debounce', rule.debounce, value => rule.debounce = number(value), 'debounce', `rule-${slug(rule.id)}-debounce`), numeric('Cooldown', rule.cooldown, value => rule.cooldown = number(value), 'cooldown', `rule-${slug(rule.id)}-cooldown`), numeric('Minimum display', rule.minimum_display_time, value => rule.minimum_display_time = number(value), 'minimum_display_time', `rule-${slug(rule.id)}-minimum-display`), numeric('Maximum display', rule.maximum_display_time, value => rule.maximum_display_time = number(value), 'maximum_display_time', `rule-${slug(rule.id)}-maximum-display`), numeric('Acknowledgement delta', rule.ack_delta, value => rule.ack_delta = number(value), 'ack_delta', `rule-${slug(rule.id)}-ack-delta`), numeric('Recent display delta', rule.recent_delta, value => rule.recent_delta = number(value), 'recent_delta', `rule-${slug(rule.id)}-recent-delta`), numeric('Confidence weight', rule.confidence_weight, value => rule.confidence_weight = number(value), 'confidence_weight', `rule-${slug(rule.id)}-confidence-weight`), numeric('Worsening window', rule.worsening_seconds, value => rule.worsening_seconds = number(value), 'worsening_seconds', `rule-${slug(rule.id)}-worsening-window`)
       )); body.append(timing);
       const match = element('div', 'subsection'); match.append(text('h3', 'Signal match'), fieldGrid(
         input('Type', rule.match?.type || '', value => value ? rule.match.type = value : delete rule.match.type), input('Source', rule.match?.source || '', value => value ? rule.match.source = value : delete rule.match.source), input('Category', rule.match?.category || '', value => value ? rule.match.category = value : delete rule.match.category), input('Entities', (rule.match?.entities || []).join(', '), value => { const values = value.split(',').map(x => x.trim()).filter(Boolean); values.length ? rule.match.entities = values : delete rule.match.entities; })
@@ -164,20 +180,20 @@
   function renderStages(rule) {
     const section = element('div', 'subsection'); section.append(text('h3', 'Escalation stages'));
     rule.escalation.forEach((stage, index) => { const [row, body] = details(`${stage.id} · ${stage.urgency} · priority ${stage.priority}`); body.append(fieldGrid(
-      input('Stage ID', stage.id, value => stage.id = value), input('After (seconds)', stage.after, value => stage.after = number(value), 'number'), input('Priority', stage.priority, value => stage.priority = number(value), 'number'), input('Urgency', stage.urgency, value => stage.urgency = value, 'text', urgencyOptions.map(value => [value, value])), input('Persistence override', stage.persistence || '', value => value ? stage.persistence = value : delete stage.persistence, 'text', [['', 'Use rule'], ['while_active', 'While active'], ['timed', 'Timed']])
+      input('Stage ID', stage.id, value => stage.id = value), numeric('After', stage.after, value => stage.after = number(value), 'stage_after', `stage-${slug(stage.id)}-after`), numeric('Priority', stage.priority, value => stage.priority = number(value), 'stage_priority', `stage-${slug(stage.id)}-priority`), input('Urgency', stage.urgency, value => stage.urgency = value, 'text', urgencyOptions.map(value => [value, value])), input('Persistence override', stage.persistence || '', value => value ? stage.persistence = value : delete stage.persistence, 'text', [['', 'Use rule'], ['while_active', 'While active'], ['timed', 'Timed']])
     )); body.append(jsonEditor('Conditional escalation', stage.when || {}, value => { if (Object.keys(value).length) stage.when = value; else delete stage.when; }), removeButton('Remove stage', () => { rule.escalation.splice(index, 1); renderRules(); changed(); })); section.append(row); });
     const add = text('button', 'Add escalation stage', 'secondary'); add.type = 'button'; add.dataset.rebuild = ''; add.onclick = () => { rule.escalation.push({ id: 'stage-' + (rule.escalation.length + 1), after: 0, priority: 20, urgency: 'ACTIONABLE' }); renderRules(); changed(); }; section.append(add); return section;
   }
   function renderModifiers(rule) {
     const section = element('div', 'subsection'); section.append(text('h3', 'Score modifiers'));
-    rule.modifiers.forEach((modifier, index) => { const [row, body] = details(`${modifier.id} · ${modifier.delta >= 0 ? '+' : ''}${modifier.delta}`); body.append(fieldGrid(input('Modifier ID', modifier.id, value => modifier.id = value), input('Score delta', modifier.delta, value => modifier.delta = number(value), 'number'))); body.append(jsonEditor('When', modifier.when, value => modifier.when = value), removeButton('Remove modifier', () => { rule.modifiers.splice(index, 1); renderRules(); changed(); })); section.append(row); });
+    rule.modifiers.forEach((modifier, index) => { const [row, body] = details(`${modifier.id} · ${modifier.delta >= 0 ? '+' : ''}${modifier.delta}`); body.append(fieldGrid(input('Modifier ID', modifier.id, value => modifier.id = value), numeric('Score delta', modifier.delta, value => modifier.delta = number(value), 'modifier_delta', `modifier-${slug(modifier.id)}-delta`))); body.append(jsonEditor('When', modifier.when, value => modifier.when = value), removeButton('Remove modifier', () => { rule.modifiers.splice(index, 1); renderRules(); changed(); })); section.append(row); });
     const add = text('button', 'Add score modifier', 'secondary'); add.type = 'button'; add.dataset.rebuild = ''; add.onclick = () => { rule.modifiers.push({ id: 'modifier-' + (rule.modifiers.length + 1), delta: 0, when: { field: 'context.home', op: 'eq', value: true } }); renderRules(); changed(); }; section.append(add); return section;
   }
   function table(root, heads, rows) { root.replaceChildren(); if (!rows.length) { root.append(text('p', 'Nothing to show.', 'empty')); return; } const table = element('table'); const head = element('tr'); heads.forEach(value => head.append(text('th', value))); table.append(head); rows.forEach(row => { const tr = element('tr'); row.forEach(value => { const cell = element('td'); cell.append(value instanceof Node ? value : text('span', String(value ?? ''))); tr.append(cell); }); table.append(tr); }); root.append(table); }
   function renderDiagnostics(data) {
     $('#active-count').textContent = data.items.length; $('#signal-count').textContent = data.signals.filter(item => item.fresh).length; $('#display-count').textContent = (data.config?.displays || []).length; $('#policy-state').textContent = data.enabled ? 'Enabled' : 'Off';
     const active = $('#active-items'); active.replaceChildren(); if (!data.items.length) active.append(text('p', 'No active household attention.', 'empty'));
-    data.items.forEach(item => { const row = element('article', 'item-row'); const top = element('div', 'item-top'); top.append(text('strong', item.title || item.id, 'item-title'), text('span', `${item.urgency} · ${item.score}`, 'pill ' + (item.urgency === 'CRITICAL' ? 'critical' : ''))); row.append(top, text('p', `${item.lifecycle}${item.suppression ? ' · ' + item.suppression : ''}${item.summary ? ' · ' + item.summary : ''}`, 'item-detail')); const actions = element('div', 'inline-actions'); ['acknowledge', 'suppress'].forEach(action => { const button = text('button', action === 'acknowledge' ? 'Acknowledge' : 'Suppress', 'secondary'); button.disabled = action === 'suppress' && item.urgency === 'CRITICAL'; button.onclick = async () => { try { await request('/api/attention/action', 'POST', { id: item.id, action }); await refresh(); } catch (error) { setStatus(error.message, 'error'); } }; actions.append(button); }); row.append(actions); active.append(row); });
+    data.items.forEach(item => { const row = element('article', 'item-row'); const top = element('div', 'item-top'); top.append(text('strong', item.title || item.id, 'item-title'), text('span', `${item.urgency} · ${item.score}`, 'pill ' + (item.urgency === 'CRITICAL' ? 'critical' : ''))); const identity = item.identity ? [item.identity.label, item.identity.location].filter(Boolean).join(' · ') : ''; row.append(top, text('p', `${identity ? identity + ' · ' : ''}${item.lifecycle}${item.suppression ? ' · ' + item.suppression : ''}${item.summary ? ' · ' + item.summary : ''}`, 'item-detail')); const actions = element('div', 'inline-actions'); ['acknowledge', 'suppress'].forEach(action => { const button = text('button', action === 'acknowledge' ? 'Acknowledge' : 'Suppress', 'secondary'); button.disabled = action === 'suppress' && item.urgency === 'CRITICAL'; button.onclick = async () => { try { await request('/api/attention/action', 'POST', { id: item.id, action }); await refresh(); } catch (error) { setStatus(error.message, 'error'); } }; actions.append(button); }); row.append(actions); active.append(row); });
     table($('#signals'), ['Signal', 'State', 'Age', 'Freshness'], data.signals.map(item => [item.id, item.state, `${Math.floor(item.duration || 0)}s`, item.fresh ? `Fresh until ${new Date(item.expires_at * 1000).toLocaleTimeString()}` : 'Expired']));
     table($('#history'), ['Time', 'Event', 'Details'], data.history.map(item => [new Date(item.at * 1000).toLocaleTimeString(), item.kind, JSON.stringify(item)]));
     const decisions = $('#display-decisions'); decisions.replaceChildren(); Object.entries(data.displays).forEach(([id, display]) => { const row = document.createElement('details'); row.append(text('summary', `${id} — ${display.winner?.title || display.winner?.id || 'Ambient fallback'}`), text('p', display.reason || 'No decision reason supplied', 'item-detail'), text('pre', JSON.stringify(display, null, 2))); decisions.append(row); });
@@ -186,6 +202,7 @@
   async function refresh() {
     try {
       const data = await request('/api/attention');
+      state.schema = data.input_schema || state.schema;
       const replaceDraft = !state.dirty || state.conflict;
       state.diagnostics = data;
       if (replaceDraft) {
@@ -220,7 +237,7 @@
     state.invalidEditors.clear(); state.draft = clone(state.base); renderPolicy(); renderSignals(); renderContexts(); renderRules(); $('#discard').textContent = 'Discard changes'; changed(); $('#save-status').textContent = 'Draft discarded.';
   };
   $('#save').onclick = async () => {
-    if (state.invalidEditors.size) { $('#save-status').textContent = 'Fix each invalid JSON condition or value map before saving.'; $('#save-status').className = 'mq-field-error'; document.querySelector('textarea[aria-invalid="true"]')?.focus(); return; }
+    if (state.invalidEditors.size) { $('#save-status').textContent = 'Fix each invalid field or JSON condition before saving.'; $('#save-status').className = 'mq-field-error'; document.querySelector('[aria-invalid="true"]')?.focus(); return; }
     lockEditing(true); $('#save-status').textContent = 'Checking for newer policy changes…'; $('#save-status').className = '';
     try {
       const latest = await request('/api/attention');

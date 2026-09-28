@@ -1,3 +1,8 @@
+## 2.10.17
+
+- Modernize Attention policy inputs with schema-backed constraints, inline validation, stable field identities, and tablet-safe save-bar clearance.
+- Load Test Screens samples independently from Cast discovery and expose authoritative identity for duplicate active attention items.
+
 ## 2.10.16
 
 - Make populated Calendar intentionally fit the selected-panel first view on 481–700px tablet displays by removing tablet-only feature dead space and tightening vertical rhythm without reducing comfortable tablet typography.

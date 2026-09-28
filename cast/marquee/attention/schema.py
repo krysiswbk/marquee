@@ -66,6 +66,29 @@ RULE: dict[str, Any] = {
 }
 STAGE: dict[str, Any] = {"after": 0, "priority": 20, "urgency": "ACTIONABLE"}
 
+# Shared with the admin editor. Keep presentation metadata beside the validator so
+# browser constraints cannot drift from the values accepted by the API.
+FORM_SCHEMA: dict[str, dict[str, Any]] = {
+    "signal_ttl": {"min": 5, "max": 86400, "step": 1, "unit": "seconds", "required": True},
+    "switch_margin": {"min": 0, "max": 1000, "step": "any", "unit": "points", "required": True},
+    "max_signals": {"min": 1, "max": 10000, "step": 1, "unit": "signals", "required": True},
+    "history_limit": {"min": 10, "max": 50000, "step": 1, "unit": "entries", "required": True},
+    "history_seconds": {"min": 60, "max": 2592000, "step": 1, "unit": "seconds", "required": True},
+    "quiet_hours": {"min": 0, "max": 23, "step": 1, "unit": "hour (0–23)", "required": True},
+    "debounce": {"min": 0, "max": 2592000, "step": "any", "unit": "seconds", "required": True},
+    "cooldown": {"min": 0, "max": 2592000, "step": "any", "unit": "seconds", "required": True},
+    "minimum_display_time": {"min": 0, "max": 2592000, "step": "any", "unit": "seconds", "required": True},
+    "maximum_display_time": {"min": 0, "max": 2592000, "step": "any", "unit": "seconds", "required": True},
+    "ack_delta": {"min": -1000, "max": 0, "step": "any", "unit": "points", "required": True},
+    "recent_delta": {"min": -1000, "max": 0, "step": "any", "unit": "points", "required": True},
+    "confidence_weight": {"min": 0, "max": 1000, "step": "any", "unit": "points", "required": True},
+    "worsening_seconds": {"min": 0, "max": 2592000, "step": "any", "unit": "seconds", "required": True},
+    "stage_after": {"min": 0, "max": 2592000, "step": "any", "unit": "seconds", "required": True},
+    "stage_priority": {"min": 0, "max": 1000, "step": "any", "unit": "points", "required": True},
+    "modifier_delta": {"min": -1000, "max": 1000, "step": "any", "unit": "points", "required": True},
+    "binding_ttl": {"min": 5, "max": 86400, "step": "any", "unit": "seconds", "required": False},
+}
+
 
 def keys(value: Any, allowed: set[str], name: str) -> None:
     if not isinstance(value, dict) or set(value) - allowed:

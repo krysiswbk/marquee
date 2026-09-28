@@ -3,7 +3,7 @@
 import json
 from typing import Any
 
-from ..attention.schema import number
+from ..attention.schema import FORM_SCHEMA, number
 
 
 def route(handler: Any, services: dict[str, Any], method: str) -> bool:
@@ -17,6 +17,7 @@ def route(handler: Any, services: dict[str, Any], method: str) -> bool:
     try:
         if method == "GET" and path == "/api/attention":
             result = service.diagnostics()
+            result["input_schema"] = FORM_SCHEMA
         elif method == "GET" and path == "/api/attention/bindings":
             config = service.config
             entities = {b["entity_id"] for b in config["signal_bindings"]}
