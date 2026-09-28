@@ -144,6 +144,16 @@ def test_destination_owns_background_accessibility_state_and_history_focus():
     assert "panel.inert = !active || panel.hidden" in MENU
 
 
+def test_direct_destination_focus_is_pending_only_for_visible_initial_region():
+    assert "let initialDirectFocusPending = Boolean(view);" in MENU
+    assert "panel.setAttribute('aria-labelledby', 'kiosk-section-title')" in MENU
+    assert "if (!initialDirectFocusPending || requestState === 'loading' || !view || panel.hidden || panel.inert) return;" in MENU
+    assert "heading.tabIndex = -1" in MENU
+    assert "heading.focus({preventScroll: true})" in MENU
+    assert "<h1 id=\"kiosk-section-title\">" in MENU
+    assert "focusInitialDestination();" in MENU
+
+
 def test_provider_error_stale_and_empty_states_have_distinct_deterministic_copy():
     assert "function destinationLifecycle(key, list)" in MENU
     assert "state: 'error'" in MENU

@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 with sync_playwright() as p:
     browser = p.chromium.launch(
-        executable_path=os.environ.get("MARQUEE_CHROMIUM"), args=["--no-sandbox"]
+        executable_path=os.environ.get("MARQUEE_CHROMIUM"), args=["--no-sandbox", "--disable-crashpad"]
     )
     page = browser.new_page(viewport={"width": 1024, "height": 600})
 
@@ -47,9 +47,11 @@ with sync_playwright() as p:
 
     # Home starts exposed and usable.
     assert page.locator(".stage").evaluate("el => !el.inert && !el.hasAttribute('aria-hidden')")
+    assert page.evaluate("document.activeElement === document.body")
 
     page.locator('.kiosk-primary [data-view="gaming"]').click()
     page.wait_for_function("document.querySelector('.kiosk-section:not([hidden])') !== null")
+    assert page.evaluate("document.activeElement?.dataset.view === 'gaming'")
     assert page.locator(".stage").evaluate("el => el.inert && el.getAttribute('aria-hidden') === 'true'")
     assert page.locator(".idle-screen").evaluate("el => el.inert && el.getAttribute('aria-hidden') === 'true'")
     assert page.locator(".kiosk-rail").evaluate("el => !el.inert")
@@ -71,8 +73,16 @@ with sync_playwright() as p:
     assert page.evaluate("document.activeElement?.dataset.view") == ""
     assert page.locator(".kiosk-section").evaluate("el => el.hidden && el.inert && el.getAttribute('aria-hidden') === 'true'")
 
+    page.goto("http://marquee.test/kiosk?audit=2.10.50&view=plex", wait_until="domcontentloaded")
+    page.wait_for_function("document.activeElement?.id === 'kiosk-section-title'")
+    assert page.locator(".kiosk-section").evaluate("el => !el.hidden && !el.inert")
+    page.evaluate("window.MarqueeNavigation.resolve({playing:true, title:'Active test playback'})")
+    assert page.locator(".kiosk-section").evaluate("el => el.hidden && el.inert && !el.contains(document.activeElement)")
+
     page.goto("http://marquee.test/kiosk?audit=2.10.50&view=gaming", wait_until="domcontentloaded")
     page.wait_for_function("document.querySelector('.kiosk-section:not([hidden])') !== null")
+    page.wait_for_function("document.activeElement?.id === 'kiosk-section-title'")
+    assert page.evaluate("document.activeElement !== document.body")
     assert page.locator(".stage").evaluate("el => el.inert && el.getAttribute('aria-hidden') === 'true'")
     page.go_back(wait_until="domcontentloaded")
     page.wait_for_function("new URL(location.href).searchParams.get('view') === null")

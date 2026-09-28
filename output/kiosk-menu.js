@@ -18,6 +18,7 @@
   // state from browse contexts or from the previous render.
   let nowPlaying = null;
   let view = params.get('view') || '', interrupted = false;
+  let initialDirectFocusPending = Boolean(view);
   const label = key => destinations[key]?.[0] || key.replaceAll('_', ' ').replace(/^./, c => c.toUpperCase());
   const icon = key => destinations[key]?.[1] || '•';
   const esc = text => String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -32,7 +33,7 @@
   menu.innerHTML = '<header><h2 id="kiosk-menu-title">More destinations</h2><button type="button" aria-label="Close menu">✕</button></header><nav aria-label="Additional Marquee destinations"></nav><details><summary>Settings</summary><nav aria-label="Marquee control pages"><a href="/live" aria-current="page">Live display</a><a href="/settings">Settings</a><a href="/settings/layout?profile=live">Edit screen layout</a><a href="/settings/attention">Alert rules</a><a href="/settings/tests">Test screens</a></nav></details>';
   document.body.append(menu);
   const overflow = menu.querySelector('nav');
-  const panel = document.createElement('section'); panel.className = 'kiosk-section'; panel.hidden = true; panel.inert = true; panel.setAttribute('aria-hidden', 'true'); panel.setAttribute('aria-label', 'Selected kiosk section'); document.body.append(panel);
+  const panel = document.createElement('section'); panel.className = 'kiosk-section'; panel.hidden = true; panel.inert = true; panel.setAttribute('aria-hidden', 'true'); panel.setAttribute('aria-label', 'Selected kiosk section'); panel.setAttribute('aria-labelledby', 'kiosk-section-title'); document.body.append(panel);
   // The destination is a sibling overlay, so explicitly own the accessibility
   // state of the dashboard it covers. Keep the original values so Home and
   // browser history can restore the dashboard without stale inert/hidden state.
@@ -57,6 +58,14 @@
     panel.inert = !active;
     if (active) panel.removeAttribute('aria-hidden');
     else panel.setAttribute('aria-hidden', 'true');
+  }
+  function focusInitialDestination() {
+    if (!initialDirectFocusPending || requestState === 'loading' || !view || panel.hidden || panel.inert) return;
+    const heading = panel.querySelector('#kiosk-section-title');
+    if (!heading || !heading.getClientRects().length) return;
+    heading.tabIndex = -1;
+    heading.focus({preventScroll: true});
+    initialDirectFocusPending = false;
   }
   function href(key) { const u = new URL(location.href); key ? u.searchParams.set('view', key) : u.searchParams.delete('view'); return u.pathname + u.search; }
   if (view) {
@@ -174,15 +183,17 @@
         ? 'Marquee is ready when the media service reconnects. No previous title or artwork is retained here.'
         : 'The room is quiet. Choose Home to return to the household view.';
       const ambient = document.querySelector('#idle-weather')?.textContent?.trim() || 'Home display ready';
-      panel.innerHTML = `<header class="kiosk-now-playing-head"><p>NOW PLAYING</p><h1>${esc(title)}</h1><p class="kiosk-now-playing-detail">${esc(detail)}</p></header><div class="kiosk-now-playing-body"><div class="kiosk-state-mark ${unavailable ? 'is-unavailable' : ''}" aria-hidden="true"><span>${unavailable ? '↻' : '·'}</span></div><div class="kiosk-now-playing-copy"><p class="kiosk-ambient">${esc(ambient)}</p><p class="kiosk-now-playing-note">${unavailable ? 'Try again when the service is reachable.' : 'Nothing needs your attention right now.'}</p><div class="kiosk-now-playing-actions"><a class="kiosk-home-action" href="${esc(href(''))}" data-view="">Return to Home</a>${unavailable ? '<button type="button" class="kiosk-retry" data-kiosk-retry>Check again</button>' : ''}</div></div></div>`;
+      panel.innerHTML = `<header class="kiosk-now-playing-head"><p>NOW PLAYING</p><h1 id="kiosk-section-title">${esc(title)}</h1><p class="kiosk-now-playing-detail">${esc(detail)}</p></header><div class="kiosk-now-playing-body"><div class="kiosk-state-mark ${unavailable ? 'is-unavailable' : ''}" aria-hidden="true"><span>${unavailable ? '↻' : '·'}</span></div><div class="kiosk-now-playing-copy"><p class="kiosk-ambient">${esc(ambient)}</p><p class="kiosk-now-playing-note">${unavailable ? 'Try again when the service is reachable.' : 'Nothing needs your attention right now.'}</p><div class="kiosk-now-playing-actions"><a class="kiosk-home-action" href="${esc(href(''))}" data-view="">Return to Home</a>${unavailable ? '<button type="button" class="kiosk-retry" data-kiosk-retry>Check again</button>' : ''}</div></div></div>`;
+      focusInitialDestination();
       return;
     }
     const lifecycle = requestState === 'loading'
       ? { state: 'loading', reason: 'provider request pending' }
       : destinationLifecycle(view, list);
     const message = lifecycle.state === 'loading' ? `Loading ${label(view)}…` : lifecycle.state === 'error' ? `${label(view)} is unavailable` : lifecycle.state === 'stale' ? `${label(view)} is stale` : lifecycle.state === 'unavailable' ? `${label(view)} is unavailable` : '';
-    const html = `<header class="kiosk-section-head"><p>${esc(categoryFor(view).toUpperCase())}</p><h1>${esc(label(view))}</h1></header>` + (message ? sharedState(message, 'Return to Home', lifecycle.state === 'error' || lifecycle.state === 'stale' || lifecycle.state === 'unavailable', lifecycle.state) : renderDestination(view, list));
+    const html = `<header class="kiosk-section-head"><p>${esc(categoryFor(view).toUpperCase())}</p><h1 id="kiosk-section-title">${esc(label(view))}</h1></header>` + (message ? sharedState(message, 'Return to Home', lifecycle.state === 'error' || lifecycle.state === 'stale' || lifecycle.state === 'unavailable', lifecycle.state) : renderDestination(view, list));
     if (panel.innerHTML !== html) panel.innerHTML = html;
+    focusInitialDestination();
   }
   function focusNavigation(key) {
     const target = primary.querySelector(`[data-view="${CSS.escape(key)}"]`);
