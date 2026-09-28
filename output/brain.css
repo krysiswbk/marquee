@@ -8,7 +8,13 @@ body.brain-live .idle-kicker{color:var(--desk-accent);font:700 1.05vw var(--desk
 body.brain-live .idle-greeting{font:500 2.5vw var(--desk-font);color:var(--desk-ink);letter-spacing:-.04em}
 body.brain-live .idle-clock{font:700 9vw/.94 var(--desk-font);letter-spacing:-.085em;white-space:nowrap;color:var(--desk-ink)}
 body.brain-live .idle-date{font:500 1.15vw var(--desk-font);color:var(--desk-muted);letter-spacing:0}
-body.brain-live .idle-weather{font:500 1.35vw var(--desk-font);color:var(--desk-ink);margin-top:1vh}
+body.brain-live .idle-weather{font-family:var(--desk-font);color:var(--desk-ink);margin-top:1.2vh;max-width:38vw}
+body.brain-live .idle-weather-primary{display:flex;align-items:baseline;gap:.75vw;line-height:1}
+body.brain-live .idle-weather-primary strong{font-size:3.4vw;letter-spacing:-.07em;font-weight:700;white-space:nowrap}
+body.brain-live .idle-weather-primary span{font-size:1.35vw;font-weight:500;color:var(--desk-muted);white-space:nowrap}
+body.brain-live .idle-weather-secondary{display:flex;flex-wrap:wrap;gap:.35vw 1vw;margin-top:.8vh;color:var(--desk-muted);font-size:.95vw;line-height:1.25}
+body.brain-live .idle-weather-secondary span:not(:empty)+span:not(:empty):before{content:'·';margin-right:1vw;color:var(--desk-accent)}
+body.brain-live .idle-weather-status{margin-top:.55vh;color:var(--desk-muted);font-size:.72vw;letter-spacing:.08em;text-transform:uppercase}
 body.brain-live.idle .brain-shell{display:block;position:fixed;inset:0;z-index:3;pointer-events:none;font-family:var(--desk-font);color:var(--desk-ink)}
 .brain-shell button,.brain-shell a{pointer-events:auto}
 .brain-mast{position:absolute;top:3.5vh;left:4vw;right:4vw;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--desk-accent);padding-bottom:1.8vh;font-size:1vw;letter-spacing:.13em}
@@ -62,3 +68,5 @@ body.brain-live nav[aria-label="Marquee control pages"]{opacity:0;transition:opa
 body.brain-live.live-editing .brain-panel{overflow:visible}
 .brain-customize{color:var(--desk-muted);text-decoration:none;font-size:1vw;margin-left:1vw}.brain-customize:hover{color:var(--desk-accent)}
 .brain-weather-link{position:fixed;bottom:9.5vh;right:4vw;font:600 .8vw system-ui,sans-serif;letter-spacing:.08em;text-decoration:none;color:#9cadb2;z-index:20}.brain-weather-link:hover{color:#fff}.brain-live.live-editing .brain-weather-link{display:none}
+@media(max-aspect-ratio:1/1){body.brain-live .idle-weather{max-width:92vw}.brain-live .idle-weather-primary strong{font-size:8vw}.brain-live .idle-weather-primary span{font-size:3.3vw}.brain-live .idle-weather-secondary{font-size:2.5vw;gap:.35vw 2vw}.brain-live .idle-weather-status{font-size:1.9vw}}
+@media (min-width:481px) and (max-width:700px){body.brain-live .idle-weather-primary strong{font-size:7vw}.brain-live .idle-weather-primary span{font-size:2.7vw}.brain-live .idle-weather-secondary{font-size:2.1vw}.brain-live .idle-weather-status{font-size:1.65vw}}

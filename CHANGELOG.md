@@ -1,3 +1,8 @@
+## 2.10.24
+
+- Promote dashboard weather to a persistent current-conditions hierarchy with
+  truthful stale, unknown, unavailable, and partial forecast states.
+
 ## 2.10.23
 
 - Give the Cast Layout workspace an explicit narrow composition: heading and

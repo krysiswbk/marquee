@@ -103,9 +103,9 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("grid-template-columns: repeat(2, minmax(0, 1fr))", css)
         for page in (PAGES["cast-layout"], PAGES["live-layout"], PAGES["attention"], PAGES["tests"]):
             source = page.read_text()
-            self.assertIn("control-shell.css?v=2.10.23", source)
-            self.assertIn("control-shell.js?v=2.10.23", source)
-            self.assertIn("control-shell-narrow.css?v=2.10.23", source)
+            self.assertIn("control-shell.css?v=2.10.24", source)
+            self.assertIn("control-shell.js?v=2.10.24", source)
+            self.assertIn("control-shell-narrow.css?v=2.10.24", source)
 
     def test_layout_workspace_has_explicit_phone_composition_contract(self):
         source = PAGES["cast-layout"].read_text()
@@ -142,8 +142,16 @@ class ControlNavigationTests(unittest.TestCase):
     def test_home_weather_summary_omits_unavailable_high_or_low_values(self):
         source = (ROOT / "output" / "index.html").read_text()
         self.assertIn(".filter(Boolean).join(' / ')", source)
-        self.assertIn("if (highLow) summary.push(highLow)", source)
+        self.assertIn("idle-weather-range", source)
         self.assertNotIn("'—'", source)
+
+    def test_home_weather_hierarchy_has_truthful_freshness_and_unavailable_states(self):
+        source = (ROOT / "output" / "index.html").read_text()
+        for token in ("idle-weather-primary", "idle-weather-secondary", "idle-weather-status",
+                      "observed_at", "forecast_updated", "Last observation is stale",
+                      "Freshness unknown", "Weather unavailable"):
+            self.assertIn(token, source)
+        self.assertIn("homeWeather.hidden = !showHomeWeather", source)
 
     def test_tablet_home_weather_summary_has_width_and_panel_clearance(self):
         styles = (ROOT / "output" / "brain.css").read_text()

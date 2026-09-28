@@ -693,9 +693,9 @@
   body.live-editing [data-layout] { outline:none; }
   body.live-editing .screen-controls, body.live-editing nav { display:none !important; }
 </style>
-<link rel="stylesheet" href="/brain.css?v=2.10.23">
-<link rel="stylesheet" href="/screens.css?v=2.10.23">
-<link rel="stylesheet" href="/weather-channel.css?v=2.10.23">
+<link rel="stylesheet" href="/brain.css?v=2.10.24">
+<link rel="stylesheet" href="/screens.css?v=2.10.24">
+<link rel="stylesheet" href="/weather-channel.css?v=2.10.24">
 <link rel="stylesheet" href="/scene-themes.css?v=2.9.7">
 <body data-template="spotlight">
 <img class="bg" id="bg" alt="">
@@ -792,10 +792,10 @@
   </div>
 </div>
 <time class="cast-clock-overlay" id="cast-clock-overlay"></time>
-<div class="idle-screen"><div class="idle-house"><div class="idle-kicker" id="idle-kicker">Home</div><div class="idle-greeting" id="idle-greeting"></div><div class="idle-state" id="idle-state" hidden></div><div class="idle-note" id="idle-note" hidden></div><time class="idle-clock" id="idle-clock"></time><div class="idle-date" id="idle-date"></div><div class="idle-weather" id="idle-weather"></div></div></div>
+<div class="idle-screen"><div class="idle-house"><div class="idle-kicker" id="idle-kicker">Home</div><div class="idle-greeting" id="idle-greeting"></div><div class="idle-state" id="idle-state" hidden></div><div class="idle-note" id="idle-note" hidden></div><time class="idle-clock" id="idle-clock"></time><div class="idle-date" id="idle-date"></div><div class="idle-weather" id="idle-weather" aria-label="Current weather"><div class="idle-weather-primary"><strong id="idle-weather-temp"></strong><span id="idle-weather-condition"></span></div><div class="idle-weather-secondary"><span id="idle-weather-feels"></span><span id="idle-weather-range"></span><span id="idle-weather-rain"></span></div><div class="idle-weather-status" id="idle-weather-status"></div></div></div></div>
 <div class="ambient-veil" aria-hidden="true"></div>
-<script src="/weather-channel.js?v=2.10.23"></script>
-<script src="/brain.js?v=2.10.23"></script>
+<script src="/weather-channel.js?v=2.10.24"></script>
+<script src="/brain.js?v=2.10.24"></script>
 <script>
 
   const $ = id => document.getElementById(id);
@@ -2211,6 +2211,15 @@ ${chase.join('')}
   function paintWx() {
     window.MarqueeWeather?.observation(lastWx);
     const c = activeCfg();
+    const observedAt = Date.parse(lastWx?.observed_at || '');
+    const observationAge = Number.isFinite(observedAt) ? Math.max(0, Date.now() - observedAt) : null;
+    const currentStale = observationAge != null && observationAge >= 2 * 60 * 60 * 1000;
+    const forecastAt = Number(lastWx?.forecast_updated) * 1000;
+    const forecastFresh = Number.isFinite(forecastAt) && forecastAt > 0
+      && Date.now() - forecastAt >= 0 && Date.now() - forecastAt < 30 * 60 * 1000;
+    const homeWeather = $('idle-weather');
+    const showHomeWeather = !LIVE_SURFACE || (fallbackCfg.screen !== 'blank'
+      && fallbackCfg.show_weather !== false);
     if ((CAST_DISPLAY || LIVE_SURFACE || c.showWeather) && lastWx && lastWx.temp != null) {
       const box = $('wx'); box.replaceChildren();
       const main = document.createElement('div'); main.className = 'wx-main';
@@ -2226,24 +2235,34 @@ ${chase.join('')}
       }
       const sportsWeather = $('sport-weather');
       if (sportsWeather) sportsWeather.textContent = `${Math.round(lastWx.temp)}°C · ${readableCondition(lastWx.condition, lastWx.code)}`;
-      const forecast = Array.isArray(lastWx.hourly) ? lastWx.hourly : [];
-      const days = Array.isArray(lastWx.daily) ? lastWx.daily : [];
+      const forecast = forecastFresh && Array.isArray(lastWx.hourly) ? lastWx.hourly : [];
+      const days = forecastFresh && Array.isArray(lastWx.daily) ? lastWx.daily : [];
       const today = days[0] || {};
-      const summary = [`${Math.round(lastWx.temp)}°C · ${readableCondition(lastWx.condition, lastWx.code)}`];
-      if (Number.isFinite(lastWx.apparent_temperature)) summary.push(`Feels ${Math.round(lastWx.apparent_temperature)}°`);
-      const highLow = [
+      const nextRain = forecast.find(row => Number.isFinite(row.precipitation_probability) && row.precipitation_probability >= 30);
+      const rain = nextRain ? `Rain ${Math.round(nextRain.precipitation_probability)}% next` : '';
+      $('idle-weather-temp').textContent = `${Math.round(lastWx.temp)}°C`;
+      $('idle-weather-condition').textContent = readableCondition(lastWx.condition, lastWx.code);
+      $('idle-weather-feels').textContent = Number.isFinite(lastWx.apparent_temperature)
+        ? `Feels ${Math.round(lastWx.apparent_temperature)}°` : '';
+      $('idle-weather-range').textContent = [
         Number.isFinite(today.temperature) ? `High ${Math.round(today.temperature)}°` : '',
         Number.isFinite(today.templow) ? `Low ${Math.round(today.templow)}°` : '',
       ].filter(Boolean).join(' / ');
-      if (highLow) summary.push(highLow);
-      const nextRain = forecast.find(row => Number.isFinite(row.precipitation_probability) && row.precipitation_probability >= 30);
-      if (nextRain) summary.push(`Rain ${Math.round(nextRain.precipitation_probability)}% next`);
-      $('idle-weather').textContent = (!LIVE_SURFACE || (fallbackCfg.screen !== 'blank'
-        && fallbackCfg.show_weather !== false)) ? summary.join(' · ') : '';
+      $('idle-weather-rain').textContent = rain;
+      $('idle-weather-status').textContent = currentStale ? 'Last observation is stale'
+        : observationAge == null ? 'Freshness unknown'
+        : !forecastFresh ? 'Current conditions · forecast unavailable' : '';
+      homeWeather.hidden = !showHomeWeather;
     } else {
       $('wx').textContent = '';
       if ($('sport-weather')) $('sport-weather').textContent = '';
-      $('idle-weather').textContent = '';
+      $('idle-weather-temp').textContent = '';
+      $('idle-weather-condition').textContent = '';
+      $('idle-weather-feels').textContent = '';
+      $('idle-weather-range').textContent = '';
+      $('idle-weather-rain').textContent = '';
+      $('idle-weather-status').textContent = 'Weather unavailable';
+      homeWeather.hidden = !showHomeWeather;
     }
     applyStreetWeather();
   }
@@ -2614,4 +2633,4 @@ ${chase.join('')}
   setInterval(paint, 1000);
 </script>
 
-<script src="/kiosk-menu.js?v=2.10.23"></script>
+<script src="/kiosk-menu.js?v=2.10.24"></script>
