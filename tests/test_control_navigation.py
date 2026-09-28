@@ -72,6 +72,24 @@ class ControlNavigationTests(unittest.TestCase):
                 self.assertIn("$('#tour-next').textContent", source)
                 self.assertNotIn("(i + 1) + ' of ' + TOUR.length", source)
 
+    def test_tutorial_is_an_action_and_tour_is_a_focus_managed_dialog(self):
+        for name in ('settings', 'cast layout'):
+            path = ROOT / 'cast' / ('settings.html' if name == 'settings' else 'cast-layout.html')
+            source = path.read_text()
+            with self.subTest(surface=name):
+                self.assertIn(
+                    'id="tab-tutorial" type="button" data-tab="tutorial" '
+                    'aria-haspopup="dialog" aria-controls="tour"', source)
+                self.assertNotIn('id="tab-tutorial" aria-selected=', source)
+                self.assertNotIn('id="tab-tutorial" role="tab"', source)
+                self.assertIn('id="tour" role="dialog" aria-modal="true"', source)
+                self.assertIn('aria-labelledby="tour-title" aria-describedby="tour-body"', source)
+                self.assertIn("event.key === 'Escape'", source)
+                self.assertIn("$('#tour-next').focus()", source)
+                self.assertIn("tourLauncher.focus()", source)
+                self.assertIn("event.key !== 'Tab'", source)
+                self.assertIn("button[role=\"tab\"]", source)
+
     def test_provider_diagnostics_use_safe_status_copy_and_authoritative_source(self):
         page = PAGES['settings'].read_text()
         renderer = (ROOT / 'output/settings-control.js').read_text()

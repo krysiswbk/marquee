@@ -61,6 +61,7 @@
   /* ── Tabs ── */
   .tabs { display: flex; gap: 4px; flex-wrap: wrap; margin: 12px 0 14px;
     border-bottom: 1px solid var(--line); }
+  .tab-items { display: contents; }
   .tabs button { background: none; border: 0; border-bottom: 2px solid transparent;
     color: var(--mut); font-family: var(--display); font-size: 17px;
     letter-spacing: .06em; text-transform: uppercase; padding: 8px 14px 9px;
@@ -385,9 +386,9 @@
     .mq-mode-link { padding: 12px; }
   }
 </style>
-<link rel="stylesheet" href="/control-shell.css?v=2.10.41">
-<link rel="stylesheet" href="/control-shell-narrow.css?v=2.10.41">
-<script defer src="/control-shell.js?v=2.10.41"></script>
+<link rel="stylesheet" href="/control-shell.css?v=2.10.42">
+<link rel="stylesheet" href="/control-shell-narrow.css?v=2.10.42">
+<script defer src="/control-shell.js?v=2.10.42"></script>
 
 <script src="/settings-draft.js?v=3"></script>
 <div class="wrap">
@@ -401,13 +402,15 @@
   </div>
 
   <nav class="mq-profile-picker" aria-label="Layout profile"><a href="/settings/layout?profile=cast" aria-current="page">Cast cards</a><a href="/settings/layout?profile=live">Live / Kiosk screens</a></nav>
-  <div class="tabs" role="tablist" aria-label="Cast editor tools">
+  <div class="tabs" aria-label="Cast editor tools">
+    <div class="tab-items" role="tablist" aria-label="Cast editor tools">
     <button role="tab" id="tab-design" aria-selected="true" data-tab="design">Layout</button>
     <button role="tab" id="tab-casting" aria-selected="false" data-tab="casting">Cast devices</button>
     <button role="tab" id="tab-connection" aria-selected="false" data-tab="connection">Media &amp; sharing</button>
-    <button role="tab" id="tab-tutorial" aria-selected="false" data-tab="tutorial">Tutorial</button>
     <button role="tab" id="tab-notes" aria-selected="false" data-tab="notes">What&rsquo;s new</button>
     <button role="tab" id="tab-about" aria-selected="false" data-tab="about">About</button>
+    </div>
+    <button id="tab-tutorial" type="button" data-tab="tutorial" aria-haspopup="dialog" aria-controls="tour">Tutorial</button>
   </div>
 
   <!-- ═══════════ DESIGN ═══════════ -->
@@ -846,9 +849,10 @@
   </div>
 
   <!-- Tour card -->
-  <div class="tour" id="tour" hidden>
+  <div class="tour" id="tour" role="dialog" aria-modal="true"
+       aria-labelledby="tour-title" aria-describedby="tour-body" hidden>
     <span class="arrow" aria-hidden="true">&uarr;</span>
-    <b id="tour-title"></b>
+    <b id="tour-title" tabindex="-1"></b>
     <p id="tour-body"></p>
     <div class="tour-foot">
       <button class="linkbtn" id="tour-skip" type="button">Skip</button>
@@ -1592,15 +1596,19 @@
     notes: 'pane-notes', about: 'pane-about' };
   let notesLoaded = false, aboutLoaded = false;
   function activateTab(tab) {
-    const target = tab === 'tutorial' ? 'design' : tab;
-    document.querySelectorAll('.tabs button').forEach(b =>
+    if (tab === 'tutorial') {
+      activateTab('design');
+      startTour($('#tab-tutorial'));
+      return;
+    }
+    const target = tab;
+    document.querySelectorAll('.tabs button[role="tab"]').forEach(b =>
       b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
     Object.entries(PANES).forEach(([name, id]) =>
       { document.getElementById(id).hidden = name !== target; });
     if (tab === 'notes' && !notesLoaded) loadNotes();
     if (tab === 'about' && !aboutLoaded) loadAbout();
-    if (tab === 'tutorial') startTour();
-    else stopTour();
+    stopTour();
     scaleFrame();
     const url = new URL(location.href); url.searchParams.set("tab", tab); history.replaceState(null, "", url);
   }
@@ -1663,6 +1671,7 @@
       b: 'Changes are drafts until you save — then the Hub picks them up within ~5 seconds.' },
   ];
   let tourStep = -1;
+  let tourLauncher = null;
   function clearHl() { document.querySelectorAll('.tut-hl').forEach(el => el.classList.remove('tut-hl')); }
   function stepTo(i) {
     tourStep = i;
@@ -1680,18 +1689,42 @@
     $('#tour-back').hidden = i === 0;
     $('#tour-next').textContent = i === TOUR.length - 1 ? 'Done' : 'Next';
   }
-  function startTour() {
+  function startTour(launcher) {
+    tourLauncher = launcher || document.activeElement;
     $('#tour').hidden = false;
     // Tour spotlights the editor: make sure it's open on phones.
     $('#editor').classList.remove('collapsed');
     stepTo(0);
+    $('#tour-next').focus();
   }
   function stopTour(done) {
     if ($('#tour').hidden) return;
+    const restore = $('#tour').contains(document.activeElement);
     $('#tour').hidden = true;
     clearHl();
     if (done) localStorage.marqueeTourDone = '1';
+    if (restore && tourLauncher && typeof tourLauncher.focus === 'function') tourLauncher.focus();
+    tourLauncher = null;
   }
+  $('#tour').addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      stopTour(true);
+      activateTab('design');
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const focusable = [...$('#tour').querySelectorAll('button:not([hidden])')];
+    if (!focusable.length) return;
+    const first = focusable[0], last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
   $('#tour-skip').addEventListener('click', () => { stopTour(true); activateTab('design'); });
   $('#tour-back').addEventListener('click', () => stepTo(Math.max(0, tourStep - 1)));
   $('#tour-next').addEventListener('click', () => {

@@ -1,3 +1,10 @@
+## 2.10.42
+
+- Make the settings walkthrough an accessible action dialog with truthful tab
+  state, managed focus, Escape/Skip/Done closure, and launcher focus restore.
+- Keep the ordered walkthrough behavior, responsive editor fit, reduced-motion
+  behavior, unsaved drafts, and legitimate numeric settings unchanged.
+
 ## 2.10.41
 
 - Remove decorative sequence labels from the public setup explanation and
