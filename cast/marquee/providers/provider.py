@@ -76,5 +76,6 @@ class Provider:
                 "lastFetch": None, "lastSuccess": None, "nextRefresh": None,
                 "lastSuccessReason": None,
                 "candidateContexts": 0, "eligibleContexts": 0, "error": None,
+                "errorSummary": None,
                 "stale": False, "cacheAgeSeconds": None, "durationMs": None,
                 "reason": ""}

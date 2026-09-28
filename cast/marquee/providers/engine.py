@@ -4,6 +4,18 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 
 
+def provider_error_summary(error):
+    """Return safe diagnostics copy while retaining the raw error for logs."""
+    text = str(error).lower()
+    if "returned non-zero exit status" in text or "subprocess" in text or "curl" in text:
+        return "The provider request failed. Check the source connection or try again."
+    if isinstance(error, TimeoutError) or "timed out" in text or "timeout" in text:
+        return "The provider took too long to respond. Check the source connection or try again."
+    if "http error" in text or "status code" in text:
+        return "The provider returned an error response. Check the source settings or try again."
+    return "The provider could not be reached. Check the source settings or try again."
+
+
 class ContextEngine:
     def __init__(self, providers, clock=None, event_bus=None):
         self.providers = {p.name: p for p in providers}
@@ -44,6 +56,7 @@ class ContextEngine:
                                       c.event_state.value != "POST_EVENT" and
                                       provider_weight >= threshold and
                                       c.relevance >= threshold for c in found), error=None,
+                                  errorSummary=None,
                                   cacheAgeSeconds=(round(provider.cache_age, 1)
                                                    if provider.cache_age is not None else None),
                                   durationMs=round((now_ts - started) * 1000, 1),
@@ -52,7 +65,9 @@ class ContextEngine:
                         self.event_bus.publish("provider.updated", provider=name,
                                                candidates=len(found), stale=stale)
                 except Exception as error:
-                    health.update(state="error", error=str(error), reason="provider fetch failed")
+                    summary = provider_error_summary(error)
+                    health.update(state="error", error=summary, errorSummary=summary,
+                                  reason="provider fetch failed")
                     if self.event_bus:
                         self.event_bus.publish("provider.error", provider=name,
                                                error=str(error))

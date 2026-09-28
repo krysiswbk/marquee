@@ -1,3 +1,9 @@
+## 2.10.34
+
+- Present provider diagnostics as concise, human-readable status with recency
+  while retaining raw provider failures in server-side evidence.
+- Correct the About source attribution to the authoritative Marquee fork.
+
 ## 2.10.33
 
 - Guard optional layout-editor resize targets so absent panels never receive an

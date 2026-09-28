@@ -5,7 +5,7 @@ import time
 import unittest
 from datetime import datetime, timedelta, timezone
 
-from cast.marquee.providers.engine import ContextEngine
+from cast.marquee.providers.engine import ContextEngine, provider_error_summary
 from cast.marquee.providers.model import Context, EventState
 from cast.marquee.providers.sonarr import SonarrProvider
 from cast.marquee.providers.weather import WeatherProvider
@@ -39,6 +39,13 @@ def forecast(prob=0, amount=0, current=0):
 
 
 class ModelTests(unittest.TestCase):
+    def test_provider_failure_summary_hides_implementation_details(self):
+        raw = "Command '['curl', '-sS', 'https://nhl.example.test/feed'] returned non-zero exit status 22."
+        summary = provider_error_summary(RuntimeError(raw))
+        self.assertEqual(summary, "The provider request failed. Check the source connection or try again.")
+        self.assertNotIn("curl", summary)
+        self.assertNotIn("returned non-zero exit status", summary)
+
     def test_context_expiration(self):
         c = Context("x", "test", "test", "X", expires_at=NOW-timedelta(seconds=1))
         self.assertTrue(c.expired(NOW))
@@ -81,6 +88,25 @@ class ProviderTests(unittest.TestCase):
         p = WeatherProvider({"enabled": False}, self.tmp.name, Client())
         engine = ContextEngine([p], clock=lambda: NOW.timestamp()); engine.tick()
         self.assertEqual(engine.health["weather"]["state"], "disabled")
+
+    def test_provider_diagnostics_are_safe_but_event_keeps_raw_evidence(self):
+        raw = "Command '['curl', '-sS', 'https://nhl.example.test/feed'] returned non-zero exit status 22."
+        p = WeatherProvider({"enabled": True, "latitude": 43.5, "longitude": -79.9},
+                            self.tmp.name, Client(error=RuntimeError(raw)))
+        p.fetch = Mock(side_effect=RuntimeError(raw))
+        events = Mock()
+        engine = ContextEngine([p], clock=lambda: NOW.timestamp(), event_bus=events)
+        engine.tick()
+        with self.assertRaises(RuntimeError):
+            engine.futures["weather"].result()
+        engine.tick()
+        health = engine.diagnostics()["providers"]["weather"]
+        self.assertEqual(health["state"], "error")
+        self.assertNotIn("curl", str(health))
+        self.assertNotIn("returned non-zero exit status", str(health))
+        event = next(call for call in events.publish.call_args_list
+                      if call.args[0] == "provider.error")
+        self.assertIn("curl", event.kwargs["error"])
 
     def test_timeout_without_cache(self):
         p = WeatherProvider({"enabled": True, "latitude": 43.5, "longitude": -79.9}, self.tmp.name,

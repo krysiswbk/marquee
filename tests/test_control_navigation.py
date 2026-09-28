@@ -42,6 +42,16 @@ class ControlNavigationTests(unittest.TestCase):
             self.assertIn(capability, cast)
         self.assertIn('href="/live"', (ROOT / 'output/control-shell.js').read_text())
 
+    def test_provider_diagnostics_use_safe_status_copy_and_authoritative_source(self):
+        page = PAGES['settings'].read_text()
+        renderer = (ROOT / 'output/settings-control.js').read_text()
+        self.assertIn('https://github.com/krysiswbk/marquee', page)
+        self.assertNotIn('https://github.com/Jamisonfitz/marquee', page)
+        for token in ('health-provider', 'health-status', 'health-explanation',
+                      'Last checked:', 'labels = {ok:'):
+            self.assertIn(token, renderer)
+        self.assertNotIn('Latest error:', renderer)
+
     def test_editors_warn_before_abandoning_unsaved_drafts(self):
         sources = {
             'settings': PAGES['settings'].read_text() + (ROOT / 'output/settings-control.js').read_text(),
@@ -112,9 +122,9 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("grid-template-columns: repeat(2, minmax(0, 1fr))", css)
         for page in (PAGES["cast-layout"], PAGES["live-layout"], PAGES["attention"], PAGES["tests"]):
             source = page.read_text()
-            self.assertIn("control-shell.css?v=2.10.33", source)
-            self.assertIn("control-shell.js?v=2.10.33", source)
-            self.assertIn("control-shell-narrow.css?v=2.10.33", source)
+            self.assertIn("control-shell.css?v=2.10.34", source)
+            self.assertIn("control-shell.js?v=2.10.34", source)
+            self.assertIn("control-shell-narrow.css?v=2.10.34", source)
 
     def test_layout_workspace_has_explicit_phone_composition_contract(self):
         source = PAGES["cast-layout"].read_text()

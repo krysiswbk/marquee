@@ -351,10 +351,11 @@
       if (provider.unavailable) continue;
       const health = state.providerHealth?.providers?.[name];
       const item = document.createElement('div'); item.className = 'health-item';
-      const title = document.createElement('b'); title.textContent = provider.label;
+      const title = document.createElement('b'); title.className = 'health-provider'; title.textContent = provider.label;
       const status = document.createElement('span');
-      status.textContent = !health ? 'Status unavailable' : health.state === 'ok' ? 'Working' : health.state === 'disabled' ? 'Off or unavailable' : health.reason || health.state;
-      status.className = health?.state === 'ok' ? 'ok' : health?.state === 'error' ? 'error' : '';
+      const labels = {ok: 'Working', error: 'Failed', stale: 'Stale', disabled: 'Unavailable', fetching: 'Checking', starting: 'Starting'};
+      status.textContent = !health ? 'Status unavailable' : labels[health.state] || 'Status unavailable';
+      status.className = `health-status ${health?.state === 'ok' ? 'ok' : health?.state === 'error' ? 'error' : health?.state === 'stale' ? 'stale' : ''}`;
       item.append(title, status);
       if (health) {
         const candidates = health.candidateContexts ?? 0;
@@ -366,15 +367,12 @@
           const excluded = document.createElement('span'); excluded.textContent = `Excluded from normal rotation: source weight ${weight} is below ${minimum}.`; item.append(excluded);
         }
         if (health.error) {
-          const error = document.createElement('span'); error.className = 'error'; error.textContent = `Latest error: ${health.error}`; item.append(error);
+          const error = document.createElement('span'); error.className = 'health-explanation error'; error.textContent = health.errorSummary || health.error; item.append(error);
         }
         if (health.stale) {
-          const stale = document.createElement('span'); stale.textContent = `Using stale cached data${health.cacheAgeSeconds != null ? ` (${Math.round(health.cacheAgeSeconds)}s old)` : ''}.`; item.append(stale);
+          const stale = document.createElement('span'); stale.className = 'health-explanation'; stale.textContent = `Using cached data${health.cacheAgeSeconds != null ? ` (${Math.round(health.cacheAgeSeconds)}s old)` : ''}.`; item.append(stale);
         }
-        if (health.reason && health.reason !== status.textContent) {
-          const reason = document.createElement('span'); reason.textContent = health.reason; item.append(reason);
-        }
-        const last = document.createElement('span'); last.textContent = `Last success: ${health.lastSuccess ? new Date(health.lastSuccess).toLocaleString() : 'none reported'}`; item.append(last);
+        const last = document.createElement('span'); last.className = 'health-recency'; last.textContent = `Last checked: ${health.lastFetch ? new Date(health.lastFetch).toLocaleString() : 'not checked'}${health.lastSuccess ? ` · Last successful: ${new Date(health.lastSuccess).toLocaleString()}` : ''}`; item.append(last);
       }
       root.append(item);
     }
