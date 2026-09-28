@@ -44,9 +44,18 @@ body .wx-broadcast [hidden]{display:none!important}
  body .wx-broadcast #wx-radar-panel{grid-template-columns:1fr;grid-template-rows:minmax(180px,1fr) auto;gap:10px}.wx-radar-copy>p,.wx-radar-copy h2,.wx-radar-copy small{display:none}.wx-radar-copy>div{font-size:12px}.wx-footer{padding:1vh 5vw;gap:0 3vw}.wx-footer>strong{font-size:9px;max-width:50px}.wx-footer>div{font-size:11px}.wx-footer>span{font-size:8px}
 }
 @media(max-width:700px){
- body .wx-broadcast .wx-main{overflow:auto}
- body .wx-broadcast .wx-panel{overflow:visible}
+ /* Phones use one honest reading order. The panel must grow with the
+    narrative; the card owns scrolling when the kiosk rail leaves less room. */
+ body .stage.weather-context .weather-card.wx-broadcast{
+  overflow-y:auto;overflow-x:hidden;align-content:start;
+  grid-template-rows:auto auto auto auto auto auto;
+ }
+ body .wx-broadcast .wx-main{overflow:visible;min-height:0}
+ body .wx-broadcast .wx-panel{position:static;inset:auto;height:auto;overflow:visible}
+ body .wx-broadcast .channel-current{align-items:start}
  body .wx-broadcast .channel-outlook{max-height:none;overflow:visible}
+ body .wx-broadcast .wx-footer{min-height:42px}
+ body .wx-broadcast .wx-footer>div{display:none}
 }
 /* Nest Hub-class landscape: make the current view a complete first-look card.
    The data stays intact; the hierarchy shares the short stage instead of

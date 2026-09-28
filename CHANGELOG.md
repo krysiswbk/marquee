@@ -1,3 +1,12 @@
+## 2.10.65
+
+- Refine the dedicated weather surface for narrow phones into a flowing,
+  scrollable hierarchy that keeps current conditions and near-term context
+  ahead of reachable forecast controls without clipping the Today narrative.
+- Preserve alert, stale/unavailable, forecast-mode, touch, keyboard, kiosk
+  rail, and desktop/TV behavior while adding deterministic viewport coverage
+  for overflow, clipping, overlap, reachability, and touch targets.
+
 ## 2.10.64
 
 - Keep the active/current destination text label visible in the narrow kiosk
