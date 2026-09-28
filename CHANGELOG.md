@@ -1,3 +1,11 @@
+## 2.10.32
+
+- Keep the authoritative now-playing progress display monotonic while playing;
+  paused, idle, unavailable, and recovered states retain their explicit reset
+  and stationary behavior.
+- Add readable separators to compact Home weather facts on browser-controlled
+  kiosk surfaces without changing the weather payload or entity model.
+
 ## 2.10.31
 
 - Make the dashboard Customize action a labeled, deliberate masthead control

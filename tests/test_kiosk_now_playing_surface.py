@@ -40,6 +40,20 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         version = (ROOT / "VERSION").read_text().strip()
         self.assertIn(f"kiosk-menu.js?v={version}", INDEX)
 
+    def test_progress_uses_reconciled_display_state_and_resets_outside_playback(self):
+        source = (ROOT / "output/index.html").read_text()
+        helper = (ROOT / "output/now-playing-progress.js").read_text()
+        self.assertIn("MarqueeNowPlayingProgress.reconcile", source)
+        self.assertIn("prior displayed/estimated offset", helper)
+        self.assertIn("SOURCE_JITTER_TOLERANCE_MS = 2000", helper)
+        self.assertIn("progressState = window.MarqueeNowPlayingProgress.reconcile(d, progressState", source)
+
+    def test_compact_weather_facts_have_nonempty_fact_separators(self):
+        self.assertIn("weather-fact-separator:before", SCREENS)
+        self.assertIn(".idle-weather-primary", SCREENS)
+        self.assertIn(".idle-weather-secondary", SCREENS)
+        self.assertIn("markWeatherFactSeparators", INDEX)
+
     def test_narrow_orbit_cannot_create_a_horizontal_scroller(self):
         self.assertIn("body.browser-controls{overflow-x:hidden}", SCREENS)
         self.assertIn("overflow-x:hidden;overflow-y:auto", SCREENS)

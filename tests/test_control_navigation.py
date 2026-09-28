@@ -103,9 +103,9 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("grid-template-columns: repeat(2, minmax(0, 1fr))", css)
         for page in (PAGES["cast-layout"], PAGES["live-layout"], PAGES["attention"], PAGES["tests"]):
             source = page.read_text()
-            self.assertIn("control-shell.css?v=2.10.31", source)
-            self.assertIn("control-shell.js?v=2.10.31", source)
-            self.assertIn("control-shell-narrow.css?v=2.10.31", source)
+            self.assertIn("control-shell.css?v=2.10.32", source)
+            self.assertIn("control-shell.js?v=2.10.32", source)
+            self.assertIn("control-shell-narrow.css?v=2.10.32", source)
 
     def test_layout_workspace_has_explicit_phone_composition_contract(self):
         source = PAGES["cast-layout"].read_text()

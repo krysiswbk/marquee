@@ -35,7 +35,7 @@ class DisplayTemplateTests(unittest.TestCase):
         self.assertIn("context.type === 'calendar_event'", DISPLAY)
 
     def test_context_transition_uses_identity_and_cancels_stale_handoff(self):
-        self.assertIn("const key = d.key ||", DISPLAY)
+        self.assertIn("MarqueeNowPlayingProgress.reconcile", DISPLAY)
         self.assertIn("if (transitionTimer) clearTimeout(transitionTimer)", DISPLAY)
         self.assertIn("prefers-reduced-motion: reduce", DISPLAY)
 
@@ -131,7 +131,7 @@ class KioskFallbackContractTests(unittest.TestCase):
         self.assertNotIn("fallback_every", DISPLAY)
 
     def test_context_identity_drives_clean_transition_between_plex_and_household(self):
-        self.assertIn("const key = d.key ||", DISPLAY)
+        self.assertIn("MarqueeNowPlayingProgress.reconcile", DISPLAY)
         self.assertIn("if (key !== shownKey)", DISPLAY)
         self.assertIn("if (transitionTimer) clearTimeout(transitionTimer)", DISPLAY)
 
