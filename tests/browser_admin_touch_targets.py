@@ -35,8 +35,8 @@ with sync_playwright() as playwright:
             page = browser.new_page(viewport={"width": width, "height": height})
             errors: list[str] = []
             page.on("pageerror", lambda error: errors.append(str(error)))
-            page.goto(urljoin(BASE, route), wait_until="networkidle")
-            page.wait_for_timeout(150)
+            page.goto(urljoin(BASE, route), wait_until="domcontentloaded")
+            page.wait_for_timeout(500)
             for selector in TARGETS:
                 for box in page.locator(selector).evaluate_all(
                     "els => els.filter(el => { const s=getComputedStyle(el); "
