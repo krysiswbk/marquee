@@ -208,6 +208,8 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("#brain-agenda{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)", tablet)
         self.assertIn("#brain-agenda .brain-upnext{display:block;min-width:0}", tablet)
         self.assertNotIn("height:16vh;bottom:auto;overflow:visible", tablet)
+        self.assertIn("#brain-activity,body.brain-live #brain-agenda{overflow:visible}", styles)
+        self.assertIn(".brain-empty{font-size:clamp(12px,1.55vw,16px);line-height:1.2;margin:.4vh 0}", styles)
         self.assertIn("grid-template-columns:minmax(0,1fr) minmax(0,1fr)", tablet)
         self.assertIn("brain-agenda-more", tablet)
         self.assertIn("events.length>3", brain)
