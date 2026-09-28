@@ -24,14 +24,29 @@ def test_every_in_scope_surface_loads_the_shared_contract() -> None:
     assert "min-height:44px" in contract
     for route, path in SURFACES.items():
         source = path.read_text()
-        assert "/control-touch-contract.css?v=2.10.80" in source, route
+        assert "/control-touch-contract.css?v=2.10.81" in source, route
         assert "min-height:44px" in contract
+
+
+def test_every_numeric_surface_loads_one_helper_before_its_consumers() -> None:
+    helper = "/numeric-controls.js?v=2.10.81"
+    for route, path in SURFACES.items():
+        source = path.read_text()
+        assert source.count(helper) == 1, route
+        assert "window.MarqueeNumericControls" in (ROOT / "output/numeric-controls.js").read_text()
+        helper_position = source.index(helper)
+        if route == "/settings":
+            assert "/control-shell.js" not in source
+            assert helper_position < source.index("/settings-control.js"), route
+        else:
+            assert helper_position < source.index("/control-shell.js"), route
 
 
 def test_static_numeric_controls_have_truthful_bounds_steps_and_descriptions() -> None:
     for route, path in SURFACES.items():
         source = path.read_text()
-        association_source = source + (ROOT / "output/control-shell.js").read_text()
+        association_source = source + (ROOT / "output/numeric-controls.js").read_text()
+        association_source += (ROOT / "output/control-shell.js").read_text()
         if route == "/settings":
             association_source += (ROOT / "output/settings-control.js").read_text()
         for control in numeric_controls(source):

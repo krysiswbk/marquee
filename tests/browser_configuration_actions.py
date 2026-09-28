@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 LIVE = (ROOT / "cast/live-layout.html").read_text()
 DRAFT = (ROOT / "output/settings-draft.js").read_text()
 SHELL = (ROOT / "output/control-shell.js").read_text()
+NUMERIC = (ROOT / "output/numeric-controls.js").read_text()
 FRAME = "<!doctype html><html><body><main>fixture preview</main><script>window.addEventListener('message', () => {});</script></body></html>"
 
 
@@ -38,6 +39,8 @@ with sync_playwright() as playwright:
             return route.fulfill(body=DRAFT, content_type="application/javascript")
         if path == "control-shell.js":
             return route.fulfill(body=SHELL, content_type="application/javascript")
+        if path == "numeric-controls.js":
+            return route.fulfill(body=NUMERIC, content_type="application/javascript")
         if path in {"control-shell.css", "control-shell-narrow.css"}:
             return route.fulfill(body="", content_type="text/css")
         if path == "live-settings.json":

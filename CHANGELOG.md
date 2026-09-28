@@ -1,3 +1,11 @@
+## 2.10.81
+
+- Load numeric-control accessibility behavior as a standalone shared helper so
+  `/settings` can enhance dynamic provider controls without importing the
+  specialist workspace navigation shell.
+- Preserve the 2.10.80 validation cleanup and cache-bust all administration
+  assets for the repaired clean-load path.
+
 ## 2.10.80
 
 - Clear stale numeric validation descriptions without removing persistent helper context.

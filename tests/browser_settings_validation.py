@@ -37,8 +37,12 @@ with sync_playwright() as playwright:
         return request.abort()
 
     page.route("**/*", route)
+    page_errors = []
+    page.on("pageerror", lambda error: page_errors.append(str(error)))
     page.goto("http://marquee.test/settings#displays")
     page.wait_for_selector("#app:not([hidden])")
+    assert page.evaluate("typeof window.MarqueeNumericControls.enhance") == "function"
+    assert not any("MarqueeNumericControls" in error for error in page_errors)
 
     item = page.locator("#fallback-item")
     rotation = page.locator("#fallback-rotation")
