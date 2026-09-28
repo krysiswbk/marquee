@@ -1,3 +1,11 @@
+## 2.10.83
+
+- Settle kiosk config, context, and provider refreshes independently, retaining
+  last-good snapshots through partial failures and recovering each resource
+  without erasing healthy destinations.
+- Keep Plex navigation authoritative to `/now-playing.json?display=kiosk` and
+  add deterministic browser coverage for partial failure and recovery.
+
 ## 2.10.82
 
 - Keep direct kiosk destination heading focus for assistive technology while

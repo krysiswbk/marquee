@@ -26,11 +26,22 @@
   const destinationPriority = { plex:100, weather:95, nhl:85, ufc:75, pfl:65,
     calendar:55, tv:50, astronomy:45, gaming:40, music:35, movies:30,
     trailers:25, major_events:20 };
-  let sections = [], contexts = [], browseContexts = [], health = {}, selected = '', loaded = false, offline = false;
-  // A destination is loading until its first provider snapshot commits. Keep
-  // this separate from provider failure: an empty list during a request is not
-  // evidence that the destination is unavailable.
+  let sections = [], contexts = [], browseContexts = [], health = {}, selected = '', offline = false;
+  // These are independent authoritative resources. A failed refresh retains
+  // the last committed snapshot and reports degradation for that resource;
+  // it never invalidates a sibling resource.
+  const resources = {
+    config: {phase: 'loading', snapshot: null, error: null},
+    contexts: {phase: 'loading', snapshot: null, error: null},
+    providers: {phase: 'loading', snapshot: null, error: null},
+  };
   let requestState = 'loading', requestSerial = 0;
+  const resourceHasSnapshot = () => Object.values(resources).some(resource => resource.snapshot !== null);
+  const resourceFailure = resource => resource.phase === 'stale' || resource.phase === 'unavailable';
+  const refreshPhase = resource => resource.snapshot === null
+    ? (resource.error ? 'unavailable' : 'loading')
+    : (resource.error ? 'stale' : 'ready');
+  let refreshInFlight = false;
   // The server payload is the only media truth. Navigation may choose which
   // surface is visible, but it must never manufacture a replacement Plex
   // state from browse contexts or from the previous render.
@@ -188,9 +199,13 @@
   const combatView = key => key === 'ufc' || key === 'pfl';
   const combatName = key => key === 'pfl' ? 'PFL' : 'UFC';
   function destinationLifecycle(key, list) {
-    if (offline) return { state: 'unavailable', reason: 'connection' };
-    if (!sections.includes(key)) return { state: 'unavailable', reason: 'not-enabled' };
+    if (!sections.includes(key)) {
+      return { state: resources.config.phase === 'unavailable' ? 'unavailable' : 'unavailable', reason: 'not-enabled' };
+    }
+    if (resources.contexts.phase === 'loading') return { state: 'loading', reason: 'context request pending' };
+    if (resources.contexts.phase === 'unavailable') return { state: 'unavailable', reason: 'context source cannot be reached' };
     const provider = health[key] || {};
+    if (resources.contexts.phase === 'stale') return { state: 'stale', reason: 'retained context snapshot' };
     if (provider.stale || provider.state === 'degraded') return { state: 'stale', reason: provider.reason || 'provider data is delayed' };
     if (provider.state === 'error') return { state: 'error', reason: provider.error || provider.reason || 'provider fetch failed' };
     if (provider.state === 'disabled') return { state: 'unavailable', reason: provider.reason || 'provider is disabled' };
@@ -324,8 +339,11 @@
   function renderDestination(key, list) { const category = categoryFor(key); return key === 'nhl' ? renderNhl(list) : category === 'sports' ? renderSports(list) : category === 'agenda' ? renderAgenda(list) : category === 'media' ? renderMedia(list) : category === 'ambient' ? renderAmbient(list) : list.length ? `<div class="kiosk-items">${list.slice(0, 8).map(button).join('')}</div>` : sharedState('Nothing to show here right now.', 'Return to Home', false, 'empty'); }
   function drawPanel() {
     const preserveHeadingFocus = Boolean(view && document.activeElement?.id === 'kiosk-section-title');
-    panel.dataset.section = view; status.textContent = interrupted ? 'Household attention' : view === 'household' ? 'Household' : view ? label(view) : 'Marquee · Auto';
-    const valid = sections.includes(view), list = valid && !offline ? items(view) : [];
+    panel.dataset.section = view;
+    const failedResources = Object.values(resources).filter(resourceFailure).length;
+    const resourceNotice = offline ? ' · Sources unavailable' : failedResources ? ` · ${failedResources} source${failedResources === 1 ? '' : 's'} delayed` : '';
+    status.textContent = interrupted ? 'Household attention' : view === 'household' ? 'Household' : (view ? label(view) : 'Marquee · Auto') + resourceNotice;
+    const valid = sections.includes(view), list = valid ? items(view) : [];
     if (selected && !list.some(c => c.id === selected)) selected = '';
     if (view === 'weather' && !selected && list.length) selected = (list.find(c => ['alert','extreme'].includes(c.subtype)) || list.find(c => c.subtype === 'current') || list[0]).id;
     const plexActive = view === 'plex' && nowPlaying?.playing === true;
@@ -395,14 +413,58 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && view && !menu.open) { e.preventDefault(); change(''); } });
   window.addEventListener('popstate', () => { view = new URLSearchParams(location.search).get('view') || ''; selected = ''; drawNavigation(); drawMenu(); drawPanel(); focusNavigation(view); setTimeout(() => focusNavigation(view), 0); window.dispatchEvent(new Event('marquee-navigation')); });
   window.addEventListener('marquee-surface-rendered', drawPanel);
-  window.MarqueeNavigation = { resolve(payload) { nowPlaying = payload || {playing:false, state:'idle', availability:'idle'}; const wasInterrupted = interrupted; interrupted = Boolean(payload?.attention || payload?.householdFocus); if (interrupted && !wasInterrupted && menu.open) closeMenu(false); drawPanel(); if (interrupted || !view || view === 'plex') return payload; const c = !offline && sections.includes(view) && items(view).find(item => item.id === selected); return c ? c.payload || {playing:true,type:'media_context',key:'browse:'+c.id,context:c} : {playing:false}; } };
+  window.MarqueeNavigation = { resolve(payload) { nowPlaying = payload || {playing:false, state:'idle', availability:'idle'}; const wasInterrupted = interrupted; interrupted = Boolean(payload?.attention || payload?.householdFocus); if (interrupted && !wasInterrupted && menu.open) closeMenu(false); drawPanel(); if (interrupted || !view || view === 'plex') return payload; const c = !offline && sections.includes(view) && items(view).find(item => item.id === selected); return c ? c.payload || {playing:true,type:'media_context',key:'browse:'+c.id,context:c} : {playing:false}; }, refresh };
   async function refresh() {
-    if (requestState === 'loading' && requestSerial > 0) return;
+    if (refreshInFlight) return;
+    refreshInFlight = true;
     const serial = ++requestSerial;
-    requestState = 'loading';
-    drawPanel();
-    try { const data = await Promise.all(['/api/config','/contexts','/providers'].map(async url => { const r = await fetch(url); if (!r.ok) throw Error(); return r.json(); })); if (serial !== requestSerial) return; sections = Object.entries(data[0].providers || {}).filter(([,cfg]) => cfg.enabled && (!cfg.targets || cfg.targets.includes('kiosk'))).map(([key]) => key); health = data[2].providers || {}; const clean = values => { const seen = new Set(); return (values || []).filter(c => { if (!c.id || c.id.startsWith('screen-test:') || (c.targets && !c.targets.includes('kiosk')) || !fresh(c)) return false; const key=(c.provider||c.source)+'|'+c.title+'|'+(c.starts||''); if (seen.has(key)) return false; seen.add(key); return true; }); }; contexts = clean(data[1].contexts); browseContexts = clean(data[1].browse?.nhl); for (const p of health.plex?.contexts || []) if (p.playing) contexts.push({id:'plex:now',source:'plex',title:p.title,subtitle:p.subtitle,payload:p}); loaded = true; requestState = 'ready'; offline = false; } catch (_) { if (serial !== requestSerial) return; requestState = 'failed'; offline = true; contexts = []; browseContexts = []; }
-    if (!menu.open) { drawNavigation(); drawMenu(); } drawPanel(); window.dispatchEvent(new Event('marquee-navigation'));
+    const clean = values => { const seen = new Set(); return (values || []).filter(c => { if (!c.id || c.id.startsWith('screen-test:') || (c.targets && !c.targets.includes('kiosk')) || !fresh(c)) return false; const key=(c.provider||c.source)+'|'+c.title+'|'+(c.starts||''); if (seen.has(key)) return false; seen.add(key); return true; }); };
+    const requests = {
+      config: fetch('/api/config'),
+      contexts: fetch('/contexts'),
+      providers: fetch('/providers'),
+    };
+    try {
+      const settled = await Promise.allSettled(Object.entries(requests).map(async ([name, request]) => {
+        try {
+          const response = await request;
+          if (!response.ok) throw Error(`${name} request failed (${response.status})`);
+          return [name, await response.json()];
+        } catch (error) {
+          throw {name, error};
+        }
+      }));
+      if (serial !== requestSerial) return;
+      for (const result of settled) {
+        if (result.status === 'fulfilled') {
+          const [name, value] = result.value;
+          resources[name].snapshot = value;
+          resources[name].error = null;
+        } else {
+          resources[result.reason.name].error = result.reason.error;
+        }
+        const name = result.status === 'fulfilled' ? result.value[0] : result.reason.name;
+        const resource = resources[name];
+        resource.phase = refreshPhase(resource);
+      }
+      if (resources.config.snapshot) {
+        const config = resources.config.snapshot;
+        sections = Object.entries(config.providers || {}).filter(([, cfg]) => cfg.enabled && (!cfg.targets || cfg.targets.includes('kiosk'))).map(([key]) => key);
+      }
+      if (resources.providers.snapshot) health = resources.providers.snapshot.providers || {};
+      if (resources.contexts.snapshot) {
+        const snapshot = resources.contexts.snapshot;
+        contexts = clean(snapshot.contexts);
+        browseContexts = clean(snapshot.browse?.nhl);
+      }
+      // Plex remains exclusively authoritative through now-playing.json. The
+      // provider diagnostics payload must not manufacture a second Plex item.
+      offline = !resourceHasSnapshot();
+      requestState = resourceHasSnapshot() ? 'ready' : 'failed';
+      if (!menu.open) { drawNavigation(); drawMenu(); } drawPanel(); window.dispatchEvent(new Event('marquee-navigation'));
+    } finally {
+      refreshInFlight = false;
+    }
   }
   const resize = new ResizeObserver(() => { if (!menu.open) { drawNavigation(); drawMenu(); } }); resize.observe(rail);
   drawNavigation(); drawMenu(); drawPanel(); refresh(); setInterval(refresh, 15000);

@@ -44,7 +44,7 @@ def test_large_display_rail_has_explicit_scale_and_balanced_distribution_tiers()
 def test_sports_contract_keeps_matchup_status_and_next_event_hierarchy():
     for token in ("kiosk-sport-feature", "kiosk-matchup", "NEXT RELEVANT", "stateCopy(feature)"):
         assert token in MENU
-    assert "data[1].browse?.nhl" in MENU
+    assert "snapshot.browse?.nhl" in MENU
     assert "function renderNhl(list)" in MENU
     assert "No followed-team games are scheduled." in MENU
     assert "sourceStatus" in MENU and "broadcast" in MENU
@@ -270,10 +270,9 @@ def test_pending_fetch_is_loading_without_failure_copy_or_retry():
     assert "Fetching the latest information for this destination." in MENU
     assert "lifecycle.state === 'loading' ? `Loading ${label(view)}…`" in MENU
     assert "lifecycle.state === 'error' || lifecycle.state === 'stale' || lifecycle.state === 'unavailable'" in MENU
-    assert "if (requestState === 'loading' && requestSerial > 0) return;" in MENU
+    assert "if (refreshInFlight) return;" in MENU
     assert "if (serial !== requestSerial) return;" in MENU
-    assert "requestState = 'ready'" in MENU
-    assert "requestState = 'failed'" in MENU
+    assert "requestState = resourceHasSnapshot() ? 'ready' : 'failed'" in MENU
     assert "data-lifecycle=\"${esc(lifecycle)}\"" in MENU
 
 
