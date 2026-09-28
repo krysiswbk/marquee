@@ -1,3 +1,8 @@
+## 2.10.21
+
+- Finalize the kiosk editorial fixed-stage correction with explicit desktop and
+  tablet compaction contracts and refreshed shared asset cache identities.
+
 ## 2.10.20
 
 - Correct the exposed kiosk Gaming, UFC, and TV editorial stages with

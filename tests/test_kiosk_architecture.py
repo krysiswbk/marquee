@@ -62,6 +62,27 @@ def test_actual_kiosk_destinations_have_fixed_stage_geometry_contracts():
         assert token in SCREENS
 
 
+def test_kiosk_editorial_desktop_compaction_contract_is_deterministic():
+    desktop = SCREENS.split("@media(min-width:901px)", 1)[1].split("@media", 1)[0]
+    for token in (
+        ".kiosk-section:is([data-section=gaming],[data-section=tv],[data-section=ufc]){padding:36px 44px}",
+        ".kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial-feature{padding:40px}",
+        ".kiosk-section:is([data-section=gaming],[data-section=tv],[data-section=ufc]) :is(.kiosk-editorial-feature h2,.kiosk-sport-feature h2){font-size:clamp(56px,4.3vw,64px);line-height:1}",
+    ):
+        assert token in desktop
+
+
+def test_kiosk_editorial_tablet_compaction_contract_is_deterministic():
+    tablet = SCREENS.split("@media(min-width:481px) and (max-width:900px)", 1)[1].split("@media", 1)[0]
+    for token in (
+        ".kiosk-section:is([data-section=gaming],[data-section=tv]){padding:28px}",
+        ".kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial-feature{padding:20px}",
+        ".kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial-feature h2{font-size:52px;line-height:1}",
+        ".kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-lede{font-size:20px;line-height:1.2}",
+    ):
+        assert token in tablet
+
+
 def test_narrow_agenda_and_ufc_fit_contract_is_destination_scoped():
     for token in (
         ".kiosk-section[data-section=ufc]",

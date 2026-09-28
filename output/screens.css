@@ -208,7 +208,7 @@ body.browser-controls{overflow-x:hidden}.kiosk-section.now-playing-surface{displ
 
 /* The exposed kiosk destinations render their own editorial/sports markup;
    keep those fixed stages independent from the base context-card renderer. */
-.kiosk-editorial-feature h2,.kiosk-sport-feature h2{overflow-wrap:anywhere;word-break:normal}
+.kiosk-editorial-feature h2,.kiosk-sport-feature h2{overflow-wrap:anywhere;word-break:normal;padding-bottom:.15em}
 .kiosk-queue-more{display:none;color:#aebdcd;font-size:15px;margin:10px 0 0}
 @media(min-width:701px){
   .kiosk-section:is([data-section=gaming],[data-section=tv],[data-section=ufc]) .kiosk-editorial-feature,
