@@ -21,7 +21,7 @@ body .wx-broadcast .channel-condition{grid-column:1/-1;font:500 clamp(24px,3vw,5
 .wx-readings{border-left:1px solid var(--wx-line);padding-left:3vw;min-width:0}
 body .wx-broadcast .channel-metrics{display:grid;grid-template-columns:1fr;gap:0;margin:0}body .wx-broadcast .channel-metrics>div{display:flex;justify-content:space-between;align-items:baseline;gap:1em;border-bottom:1px solid var(--wx-line);padding:1.1vh 0}
 body .wx-broadcast .channel-metrics span{font:400 clamp(15px,1.7vw,30px) var(--wx-font);color:var(--wx-muted);text-transform:none;letter-spacing:0}body .wx-broadcast .channel-metrics strong{font:700 clamp(17px,2vw,36px) var(--wx-font);color:var(--wx-ink);white-space:nowrap}
-body .wx-broadcast .channel-outlook{font:400 clamp(12px,1.2vw,21px)/1.4 var(--wx-font);color:var(--wx-muted);margin:1.5vh 0 0;max-height:8vh;overflow:auto}
+body .wx-broadcast .channel-outlook{font:400 clamp(12px,1.2vw,21px)/1.4 var(--wx-font);color:var(--wx-muted);margin:1.5vh 0 0;max-height:10vh;overflow:auto}
 body .wx-broadcast #channel-hours,body .wx-broadcast #channel-days{height:100%;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1vw}
 body .wx-broadcast #channel-days{grid-template-columns:repeat(5,minmax(0,1fr))}
 body .wx-broadcast .channel-hour,body .wx-broadcast .channel-day{position:static;padding:1.8vh 1vw;display:flex;flex-direction:column;justify-content:space-around;align-items:center;gap:1vh;min-height:0;height:auto;background:var(--wx-panel);border:1px solid var(--wx-line);border-top:4px solid var(--wx-accent);border-radius:var(--desk-radius,0px);text-align:center}

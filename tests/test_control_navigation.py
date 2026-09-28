@@ -103,9 +103,9 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("grid-template-columns: repeat(2, minmax(0, 1fr))", css)
         for page in (PAGES["cast-layout"], PAGES["live-layout"], PAGES["attention"], PAGES["tests"]):
             source = page.read_text()
-            self.assertIn("control-shell.css?v=2.10.29", source)
-            self.assertIn("control-shell.js?v=2.10.29", source)
-            self.assertIn("control-shell-narrow.css?v=2.10.29", source)
+            self.assertIn("control-shell.css?v=2.10.30", source)
+            self.assertIn("control-shell.js?v=2.10.30", source)
+            self.assertIn("control-shell-narrow.css?v=2.10.30", source)
 
     def test_layout_workspace_has_explicit_phone_composition_contract(self):
         source = PAGES["cast-layout"].read_text()
@@ -129,6 +129,7 @@ class ControlNavigationTests(unittest.TestCase):
         weather = (ROOT / "output" / "weather-channel.css").read_text()
         screens = (ROOT / "output" / "screens.css").read_text()
         self.assertIn("min-height:44px", weather)
+        self.assertIn("channel-outlook{font:400 clamp(12px,1.2vw,21px)/1.4 var(--wx-font);color:var(--wx-muted);margin:1.5vh 0 0;max-height:10vh;overflow:auto}", weather)
         self.assertIn("channel-outlook{max-height:none;overflow:visible}", weather)
         self.assertIn("clip-path:inset(50%)", screens)
 

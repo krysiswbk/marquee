@@ -1,3 +1,9 @@
+## 2.10.30
+
+- Give the desktop current-conditions outlook enough height for complete
+  authoritative forecast narratives without the unnecessary internal scrollbar.
+- Preserve the existing narrow weather hierarchy and full-text behavior.
+
 ## 2.10.29
 
 - Give the empty activity state a deliberate compact treatment on phone and
