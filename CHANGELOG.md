@@ -1,3 +1,7 @@
+## 2.10.16
+
+- Make populated Calendar intentionally fit the selected-panel first view on 481–700px tablet displays by removing tablet-only feature dead space and tightening vertical rhythm without reducing comfortable tablet typography.
+
 ## 2.10.15
 
 - Fit UFC’s complete single-event summary and the bounded Calendar agenda in the 393px first view with deliberate narrow hierarchy and responsive agenda remainder counts.

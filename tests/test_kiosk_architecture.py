@@ -57,6 +57,20 @@ def test_narrow_agenda_and_ufc_fit_contract_is_destination_scoped():
         assert token in SCREENS
 
 
+def test_tablet_calendar_fit_contract_removes_feature_dead_space():
+    tablet = SCREENS.split("@media(min-width:481px) and (max-width:700px)", 1)[1].split("@media", 1)[0]
+    for token in (
+        ".kiosk-section[data-section=calendar] .kiosk-agenda{gap:14px}",
+        ".kiosk-section[data-section=calendar] .kiosk-agenda-feature{min-height:0;justify-content:flex-start}",
+        ".kiosk-section[data-section=calendar] .kiosk-agenda-groups section{margin-bottom:14px}",
+        ".kiosk-section[data-section=calendar] .kiosk-agenda-row{padding:10px 0;gap:10px}",
+        ".kiosk-section[data-section=calendar] .kiosk-agenda-more{margin:10px 0 0;font-size:14px}",
+    ):
+        assert token in tablet
+    assert "@media(min-width:481px) and (max-width:700px)" in SCREENS
+    assert "agendaLimit())" in MENU
+
+
 def test_presentation_does_not_promote_raw_email_or_entity_source_names():
     assert "@/.test(value)" in MENU
     assert "Household calendar" in MENU
