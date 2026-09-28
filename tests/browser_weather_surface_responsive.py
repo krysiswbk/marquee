@@ -2,7 +2,9 @@
 
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 from playwright.sync_api import sync_playwright
 
@@ -13,9 +15,23 @@ VIEWPORTS = [(320, 720), (360, 720), (393, 852), (430, 852),
 
 
 def route_for(route):
-    path = route.request.url.split("?", 1)[0].split("marquee.test", 1)[-1]
+    parsed = urlparse(route.request.url)
+    path = parsed.path
+    query = parse_qs(parsed.query)
+    referer = route.request.headers.get("referer", "")
+    query.update(parse_qs(urlparse(referer).query))
     if path in ("/live", "/kiosk"):
         return route.fulfill(path=str(ROOT / "output/index.html"), content_type="text/html")
+    if path == "/api/config":
+        return route.fulfill(json={"providers": {"weather": {"enabled": True, "targets": ["kiosk"]}}})
+    if path == "/providers":
+        return route.fulfill(json={"providers": {"weather": {"state": "ok"}}})
+    if path == "/contexts":
+        return route.fulfill(json={"contexts": [weather_context(query)]})
+    if path == "/now-playing.json":
+        return route.fulfill(json={"playing": True, "type": "media_context",
+                                   "key": "weather-contract",
+                                   "context": weather_context(query)})
     asset = ROOT / "output" / path.lstrip("/")
     if asset.is_file():
         return route.fulfill(path=str(asset))
@@ -24,6 +40,32 @@ def route_for(route):
     if path == "/ambient.json":
         return route.fulfill(json={"opacity": 0})
     return route.fulfill(json={})
+
+
+def weather_context(query):
+    alert = "weather-alert" in query
+    now = datetime.now(timezone.utc)
+    return {
+        "id": "weather:contract",
+        "source": "weather",
+        "provider": "weather",
+        "type": "weather",
+        "subtype": "alert" if alert else "current",
+        "title": "Heat warning" if alert else "Weather at home",
+        "subtitle": "Urgent local alert" if alert else "",
+        "detail": ("Hot conditions are expected this afternoon. Follow the guidance "
+                    "in the local weather warning." if alert else
+                    "A bright afternoon. Comfortable through the evening."),
+        "starts": now.isoformat(),
+        "weather": {
+            "timezone": "America/Toronto",
+            "generated_at": now.isoformat(),
+            "current": {"temperature_2m": 24, "apparent_temperature": 26,
+                         "relative_humidity_2m": 49, "wind_speed_10m": 12,
+                         "weather_code": 0, "is_day": 1},
+            "hours": [], "days": [],
+        },
+    }
 
 
 with sync_playwright() as playwright:
@@ -35,12 +77,23 @@ with sync_playwright() as playwright:
         errors = []
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.route("**/*", route_for)
-        page.goto(
-            "http://marquee.test/kiosk?view=weather&demo=1&context-demo=weather-clear",
-            wait_until="domcontentloaded",
-        )
+        page.goto("http://marquee.test/kiosk?view=weather", wait_until="domcontentloaded")
         page.wait_for_selector(".stage.weather-context .wx-broadcast")
+        page.wait_for_selector('.kiosk-rail .kiosk-primary [data-view="weather"][aria-current="page"]')
         page.wait_for_timeout(250)
+
+        assert page.locator(".kiosk-rail").is_visible()
+        assert page.locator('.kiosk-primary [data-view=""]:visible').count() == 1
+        assert page.locator('.kiosk-primary [data-view="weather"]:visible').count() == 1
+        assert page.locator(".kiosk-rail").evaluate(
+            "el => { const r = el.getBoundingClientRect(); "
+            "return r.bottom >= innerHeight - 1 && r.height >= 56; }"
+        )
+        assert page.locator(".wx-broadcast").evaluate(
+            "el => { const r = el.getBoundingClientRect(), rail = "
+            "document.querySelector('.kiosk-rail').getBoundingClientRect(); "
+            "return r.bottom <= rail.top + 1; }"
+        )
 
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         assert page.locator(".wx-broadcast").evaluate(
@@ -51,6 +104,11 @@ with sync_playwright() as playwright:
             "return !text || text.getBoundingClientRect().bottom <= "
             "el.getBoundingClientRect().bottom + 1; }"
         )
+
+        if width <= 700:
+            assert page.locator(".wx-footer").evaluate("el => getComputedStyle(el).display === 'none'")
+        else:
+            assert page.locator(".wx-footer").evaluate("el => getComputedStyle(el).display !== 'none'")
         assert page.locator(".wx-main").evaluate(
             "el => { const nav = el.parentElement.querySelector('.wx-segments'); "
             "return el.getBoundingClientRect().bottom <= nav.getBoundingClientRect().top + 1; }"
@@ -69,6 +127,18 @@ with sync_playwright() as playwright:
         page.screenshot(path=f"/tmp/marquee-2.10.65-weather-{width}x{height}.png")
         assert not errors, (width, height, errors)
         page.close()
+
+        if width == 320:
+            alert = browser.new_page(viewport={"width": width, "height": height})
+            alert.route("**/*", route_for)
+            alert.goto("http://marquee.test/kiosk?view=weather&weather-alert=1", wait_until="domcontentloaded")
+            alert.wait_for_selector(".stage.weather-context .wx-broadcast")
+            alert.wait_for_function("document.querySelector('.channel-warning:not([hidden])') !== null")
+            assert alert.locator(".channel-warning").is_visible()
+            assert alert.locator(".wx-broadcast").get_attribute("data-alert") == "true"
+            assert alert.locator(".channel-warning").inner_text().strip()
+            assert alert.locator(".wx-footer").evaluate("el => getComputedStyle(el).display === 'none'")
+            alert.close()
     browser.close()
 
 print("PASS: weather hierarchy has no clipping/overlap, horizontal overflow, or undersized controls across target viewports")
