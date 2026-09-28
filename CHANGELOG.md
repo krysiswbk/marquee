@@ -1,3 +1,12 @@
+## 2.10.77
+
+- Scale the kiosk destination rail for large displays with explicit 1024px and
+  wide-TV icon/type tiers, a centered destination grouping, and preserved
+  brand/status and More regions.
+- Keep the accepted phone/tablet rail, deliberate overflow, active state,
+  touch targets, focus restoration, and Home return behavior unchanged while
+  adding breakpoint-specific sizing and distribution coverage.
+
 ## 2.10.76
 
 - Replace OS-dependent kiosk rail emoji with a deterministic, product-owned

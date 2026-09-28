@@ -9,7 +9,7 @@ from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 VIEWPORTS = [(360, 800), (393, 852), (430, 932), (700, 900),
-             (1024, 600), (1500, 900), (1280, 480)]
+             (1024, 600), (1280, 600), (1500, 900)]
 DESTINATIONS = ("plex", "nhl", "ufc", "pfl", "weather", "tv", "astronomy", "gaming", "calendar")
 TEST_DESTINATIONS = DESTINATIONS
 LABELS = {"plex": "Now playing", "nhl": "NHL", "ufc": "UFC", "pfl": "PFL",
@@ -85,6 +85,19 @@ with sync_playwright() as playwright:
                 "el => el.scrollWidth <= el.clientWidth + 1")
             assert page.locator(".kiosk-primary").evaluate(
                 "el => [...el.querySelectorAll('a:not([hidden])')].every(a => a.offsetHeight >= 44)")
+            rail_metrics = page.locator(".kiosk-rail").evaluate("el => { const icon = el.querySelector('.kiosk-primary a:not([hidden]) .kiosk-icon'); const primary = el.querySelector('.kiosk-primary'); const brand = el.querySelector('.kiosk-brand'); return {height: el.getBoundingClientRect().height, icon: icon.getBoundingClientRect().width, type: getComputedStyle(primary.querySelector('a')).fontSize, justify: getComputedStyle(primary).justifyContent, centered: primary.getBoundingClientRect().left + primary.getBoundingClientRect().width / 2, brandRight: brand.getBoundingClientRect().right}; }")
+            assert rail_metrics["height"] == 62, (width, rail_metrics)
+            if width <= 700:
+                assert abs(rail_metrics["icon"] - 16.8) < 0.1, (width, rail_metrics)
+            elif width < 1200:
+                assert rail_metrics["icon"] == 18, (width, rail_metrics)
+                assert rail_metrics["type"] == "16px", (width, rail_metrics)
+                assert rail_metrics["justify"] == "center", (width, rail_metrics)
+            else:
+                assert rail_metrics["icon"] == 22, (width, rail_metrics)
+                assert rail_metrics["type"] == "17px", (width, rail_metrics)
+                assert rail_metrics["justify"] == "center", (width, rail_metrics)
+                assert rail_metrics["centered"] > rail_metrics["brandRight"], (width, rail_metrics)
 
             destination_links = page.locator(
                 f'.kiosk-primary [data-view="{destination}"], .kiosk-menu [data-view="{destination}"]'

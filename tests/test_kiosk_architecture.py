@@ -26,6 +26,21 @@ def test_rail_uses_unique_product_owned_current_color_marks():
     assert "${esc(glyph)}" not in MENU
 
 
+def test_large_display_rail_has_explicit_scale_and_balanced_distribution_tiers():
+    for token in (
+        "@media(min-width:701px)",
+        "@media(min-width:1200px)",
+        ".kiosk-primary{flex:1 1 auto;justify-content:center;gap:6px}",
+        ".kiosk-icon{width:18px;height:18px}",
+        ".kiosk-icon{width:22px;height:22px}",
+        ".kiosk-brand{min-width:88px}",
+        ".kiosk-brand{min-width:112px;font-size:17px}",
+    ):
+        assert token in SCREENS
+    assert "font-size:16px" in SCREENS and "font-size:17px;padding-inline:12px" in SCREENS
+    assert "min-height:44px" in SCREENS
+
+
 def test_sports_contract_keeps_matchup_status_and_next_event_hierarchy():
     for token in ("kiosk-sport-feature", "kiosk-matchup", "NEXT RELEVANT", "stateCopy(feature)"):
         assert token in MENU
