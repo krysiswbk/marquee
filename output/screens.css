@@ -227,7 +227,7 @@ body.browser-controls{overflow-x:hidden}.kiosk-section.now-playing-surface{displ
 }
 @media(min-width:481px) and (max-width:900px){
   .kiosk-section:is([data-section=gaming],[data-section=tv]){padding:28px}
-  .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial-feature{padding:28px}
+  .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial-feature{padding:20px}
   .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial-feature h2{font-size:52px;line-height:1}
   .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-lede{font-size:20px;line-height:1.2}
 }
