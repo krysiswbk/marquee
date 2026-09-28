@@ -78,7 +78,9 @@ with sync_playwright() as playwright:
                 page.keyboard.press("Escape")
                 page.wait_for_function("document.querySelector('.kiosk-menu[open]') === null")
 
-            page.locator('.kiosk-primary [data-view=""]').press("Enter")
+            home = page.locator('.kiosk-primary [data-view=""]')
+            home.focus()
+            home.press("Enter")
             page.wait_for_function("new URL(location.href).searchParams.get('view') === null")
             assert page.locator('.kiosk-primary [data-view=""][aria-current="page"]').count() == 1
             assert page.evaluate("document.activeElement?.dataset.view === ''")

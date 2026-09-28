@@ -92,7 +92,14 @@
   }
   function link([key, title, glyph], detail = '') { return `<a href="${esc(href(key))}" data-view="${esc(key)}" aria-label="${esc(title)}" title="${esc(title)}" ${key===view?'aria-current="page"':''}><span class="kiosk-icon" aria-hidden="true">${esc(glyph)}</span><span class="kiosk-label">${esc(title)}</span>${detail ? `<small>${esc(detail)}</small>` : ''}</a>`; }
   function drawNavigation() {
-    const all = allDestinations(); primary.innerHTML = all.map(d => link(d)).join(''); primary.querySelectorAll('a').forEach(a => a.hidden = false); more.hidden = false;
+    const focusedView = document.activeElement?.closest?.('a[data-view]')?.dataset.view;
+    const all = allDestinations();
+    const primarySignature = all.map(([key]) => `${key}:${key === view}`).join('|');
+    if (primary.dataset.signature !== primarySignature) {
+      primary.innerHTML = all.map(d => link(d)).join('');
+      primary.dataset.signature = primarySignature;
+    }
+    primary.querySelectorAll('a').forEach(a => a.hidden = false); more.hidden = false;
     const brand = rail.querySelector('.kiosk-brand');
     const railGap = parseFloat(getComputedStyle(rail).columnGap) || 0;
     const primaryGap = parseFloat(getComputedStyle(primary).columnGap) || 0;
@@ -108,12 +115,22 @@
       candidate.hidden = true;
     }
     const hidden = all.filter(([key]) => primary.querySelector(`[data-view="${CSS.escape(key)}"]`)?.hidden);
-    overflow.innerHTML = hidden.map(d => link(d, offline ? 'Connection unavailable' : `${items(d[0]).length} current item${items(d[0]).length === 1 ? '' : 's'}`)).join(''); more.hidden = hidden.length === 0;
+    const overflowSignature = hidden.map(([key]) => `${key}:${offline ? 'offline' : items(key).length}`).join('|');
+    if (overflow.dataset.signature !== overflowSignature) {
+      overflow.innerHTML = hidden.map(d => link(d, offline ? 'Connection unavailable' : `${items(d[0]).length} current item${items(d[0]).length === 1 ? '' : 's'}`)).join('');
+      overflow.dataset.signature = overflowSignature;
+    }
+    more.hidden = hidden.length === 0;
     const activeInOverflow = hidden.some(([key]) => key === view);
     more.classList.toggle('is-active', activeInOverflow);
     more.setAttribute('aria-label', activeInOverflow ? `More destinations; current destination is ${label(view)}` : 'More destinations');
     more.setAttribute('aria-current', activeInOverflow ? 'page' : 'false');
     more.setAttribute('aria-expanded', 'false');
+    if (focusedView !== undefined) {
+      const replacement = primary.querySelector(`[data-view="${CSS.escape(focusedView)}"]`)
+        || overflow.querySelector(`[data-view="${CSS.escape(focusedView)}"]`);
+      if (replacement && !replacement.hidden) replacement.focus({preventScroll: true});
+    }
   }
   function drawMenu() { const hiddenKeys = new Set([...overflow.querySelectorAll('[data-view]')].map(a => a.dataset.view)); overflow.innerHTML = allDestinations().filter(([key]) => hiddenKeys.has(key)).map(d => link(d, offline ? 'Connection unavailable' : `${items(d[0]).length} current item${items(d[0]).length === 1 ? '' : 's'}`)).join(''); }
   const sportViews = new Set(['nhl', 'ufc', 'pfl']);
