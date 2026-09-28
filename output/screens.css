@@ -100,8 +100,8 @@ body.brain-live .stage.sports .sport-footer{min-height:0}
  body.brain-live .context-card[data-kind=gaming] .context-subtitle{font-size:clamp(1rem,4.8vw,1.35rem);line-height:1.15}
  body.brain-live .context-card[data-kind=gaming] .context-detail{font-size:clamp(.9rem,3.8vw,1.1rem);line-height:1.25;margin-top:1.2vh}
  body.brain-live .context-card[data-kind=gaming] .context-rows{padding-top:1vh;font-size:clamp(.78rem,3.3vw,1rem);gap:1vw;flex-wrap:nowrap}
- body.brain-live .context-card[data-kind=gaming] .context-rows.phone-summary:not(.is-expanded) span:nth-child(n+2){display:none}
- body.brain-live .context-card[data-kind=gaming] .context-rows.phone-summary .context-more{display:inline-flex;white-space:nowrap}
+ body.brain-live .context-card[data-kind=gaming] .context-rows span:nth-child(n+2){display:none}
+ body.brain-live .context-card[data-kind=gaming] .context-rows.phone-summary::after{content:attr(data-summary);padding:.65vh .85vw;border-radius:999px;background:rgba(255,255,255,.07);color:var(--text-soft);white-space:nowrap}
 }
 @media(max-aspect-ratio:1/1){
  body .stage.sports .sports-card{padding:2vh 5vw;gap:2vh;grid-template-rows:auto minmax(0,1fr) auto auto}

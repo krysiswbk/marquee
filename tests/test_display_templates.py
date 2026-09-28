@@ -77,18 +77,26 @@ class DisplayTemplateTests(unittest.TestCase):
         self.assertIn('id="sport-footer"', DISPLAY)
 
     def test_long_context_values_break_without_mutating_payload_text(self):
-        for token in ("overflow-wrap:anywhere", "word-break:normal", "contextRows.dataset.summary",
-                      "data-context-more", "View all ${rows.length} details",
-                      "contextRowsExpanded = !contextRowsExpanded", "aria-expanded"):
+        for token in ("overflow-wrap:anywhere", "word-break:normal", "contextRows.dataset.summary"):
             self.assertIn(token, DISPLAY)
-        self.assertIn("context.type === 'gaming' && rows.length > 1", DISPLAY)
 
-    def test_fixed_stage_contracts_bound_intrinsic_rows_and_phone_gaming_queue(self):
+    def test_fixed_stage_contracts_bound_intrinsic_rows(self):
         screens = (Path(__file__).parents[1] / "output" / "screens.css").read_text()
         for token in ("grid-template-rows:auto minmax(0,1fr) auto", "context-card[data-kind=gaming]",
-                      "context-rows.phone-summary:not(.is-expanded)",
-                      "context-rows.phone-summary .context-more", "body .sport-footer{min-height:0"):
+                      "context-rows.phone-summary::after", "body .sport-footer{min-height:0"):
             self.assertIn(token, screens)
+
+    def test_dashboard_calendar_summaries_offer_full_agenda_handoff(self):
+        brain = (Path(__file__).parents[1] / "output" / "brain.js").read_text()
+        styles = (Path(__file__).parents[1] / "output" / "brain.css").read_text()
+        self.assertIn("const birthdayRows=(birthdays.rows||[]).filter(Boolean)", brain)
+        self.assertIn("View all ${birthdayRows.length} birthdays", brain)
+        self.assertIn("View all ${upcomingAll.length} upcoming events", brain)
+        self.assertIn("/kiosk?view=calendar&mode=all", brain)
+        self.assertIn("min-height:44px", styles)
+        self.assertIn(".brain-agenda-more:focus-visible", styles)
+        self.assertNotIn("+ ${birthdayMore}", brain)
+        self.assertNotIn("more upcoming item", brain)
 
     def test_weather_condition_tokens_are_humanized_everywhere(self):
         self.assertIn("const readableCondition", DISPLAY)

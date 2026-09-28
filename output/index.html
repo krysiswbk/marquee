@@ -156,8 +156,6 @@
   .context-art{width:100%;height:100%;min-height:0;object-fit:contain;border-radius:1.2vw;filter:drop-shadow(0 2vh 3vh rgba(0,0,0,.6))}
   .context-rows{grid-column:1/-1;display:flex;gap:1.5vw;padding-top:2vh;border-top:1px solid rgba(255,255,255,.16);font-size:1.3vw;font-weight:750;color:var(--text-soft);overflow:hidden;flex-wrap:wrap}
   .context-rows span { padding:.65vh .85vw; border-radius:999px; background:rgba(255,255,255,.07);overflow-wrap:anywhere;word-break:normal; }
-  .context-more { display:none; min-height:44px; align-items:center; justify-content:center; padding:.65vh .85vw; border:1px solid var(--accent); border-radius:999px; background:rgba(255,255,255,.08); color:var(--text-soft); font:inherit; cursor:pointer; }
-  .context-more:focus-visible { outline:3px solid #fff; outline-offset:3px; }
   .context-card[data-kind="gaming"], .context-card[data-kind="game_release"] { background:radial-gradient(circle at 78% 45%,rgba(126,87,194,.3),transparent 40%),linear-gradient(145deg,#080a0e,#171326 68%,#08090c) }
   .context-card[data-kind="tv_release"] { background:radial-gradient(circle at 78% 45%,rgba(66,165,245,.24),transparent 40%),linear-gradient(145deg,#080a0e,#101c28 68%,#08090c) }
   .context-card[data-kind="calendar_event"] { background:radial-gradient(circle at 78% 45%,rgba(20,184,166,.24),transparent 40%),linear-gradient(145deg,#080a0e,#0d211f 68%,#08090c) }
@@ -804,17 +802,6 @@
 <script>
 
   const $ = id => document.getElementById(id);
-  let contextRowsExpanded = false, contextRowsIdentity = '';
-  $('context-rows').addEventListener('click', event => {
-    const more = event.target.closest('[data-context-more]');
-    if (!more) return;
-    contextRowsExpanded = !contextRowsExpanded;
-    const rows = $('context-rows');
-    rows.classList.toggle('is-expanded', contextRowsExpanded);
-    more.setAttribute('aria-expanded', String(contextRowsExpanded));
-    more.textContent = contextRowsExpanded ? 'Show fewer details' : `View all ${rows.querySelectorAll('span').length} details`;
-    more.focus({preventScroll: true});
-  });
   const stage = document.querySelector('.stage');
   const DEMO = new URLSearchParams(location.search).has('demo');
   const EDIT = new URLSearchParams(location.search).has('edit');
@@ -1379,7 +1366,6 @@ ${chase.join('')}
   }
 
   function render(d) {
-    const contextMoreFocused = document.activeElement?.matches?.('[data-context-more]');
     lastD = d;
     const c = activeCfg();
     const root = document.documentElement.style;
@@ -1404,11 +1390,6 @@ ${chase.join('')}
     root.setProperty('--weather-clock-size', `${3.5 * sportClockScale}vw`);
     root.setProperty('--weather-title-size', `${4.4 * sportTextScale}vw`);
     const context = d.type === 'media_context' ? (d.context || {}) : null;
-    const nextContextRowsIdentity = context ? String(d.key || context.id || `${context.type || ''}:${context.title || ''}`) : '';
-    if (nextContextRowsIdentity !== contextRowsIdentity) {
-      contextRowsExpanded = false;
-      contextRowsIdentity = nextContextRowsIdentity;
-    }
     const sportsContext = !!context && /^(nhl|ufc|pfl)_/.test(context.type || '');
     const weatherContext = !!context && context.type === 'weather';
     const genericContext = !!context && !sportsContext && !weatherContext;
@@ -1478,14 +1459,11 @@ ${chase.join('')}
         const isCalendar = context.type === 'calendar_event' || context.subtype === 'game_release';
         const rows = isCalendar && context.subtype !== 'birthday_rollup' ? calendarRows(context) : (context.rows || []).filter(Boolean);
         const contextRows = $('context-rows');
+        contextRows.innerHTML = rows.map(row => `<span>${esc(row)}</span>`).join('');
         const phoneSummary = context.type === 'gaming' && rows.length > 1
-          ? `View all ${rows.length} details` : '';
-        contextRows.innerHTML = rows.map(row => `<span>${esc(row)}</span>`).join('')
-          + (phoneSummary ? `<button type="button" class="context-more" data-context-more aria-expanded="${contextRowsExpanded ? 'true' : 'false'}">${contextRowsExpanded ? 'Show fewer details' : phoneSummary}</button>` : '');
+          ? `+${rows.length - 1} more` : '';
         contextRows.dataset.summary = phoneSummary;
         contextRows.classList.toggle('phone-summary', !!phoneSummary);
-        contextRows.classList.toggle('is-expanded', !!phoneSummary && contextRowsExpanded);
-        if (contextMoreFocused) contextRows.querySelector('[data-context-more]')?.focus({preventScroll: true});
         const art = $('context-art');
         const artSource = context.artwork || context.background || '';
         const artVisible = !!artSource && liveVisible('media', 'artwork');

@@ -84,14 +84,16 @@
     const cards=fresh?(state.cards||[]).filter(c=>!c.expires||Date.parse(c.expires)>Date.now()):[];
     const birthdays=cards.find(c=>c.subtype==='birthday_rollup');
     if(birthdays){
-      const birthdayRows=(birthdays.rows||[]).filter(Boolean), birthdayMore=Math.max(0,birthdayRows.length-1);
-      $('brain-birthdays').innerHTML=`<h2>${esc(birthdays.title)}</h2><div class="birthday-when">${esc(birthdays.subtitle)}</div><ul>${birthdayRows.slice(0,1).map(r=>`<li>${esc(r)}</li>`).join('')}${birthdayMore?`<li class="brain-agenda-more">+ ${birthdayMore} more birthday${birthdayMore===1?'':'s'} in this window.</li>`:''}</ul>`;
+      const birthdayRows=(birthdays.rows||[]).filter(Boolean), birthdayHref='/kiosk?view=calendar&mode=all';
+      const birthdayMore=birthdayRows.length>1?`<li><a class="brain-agenda-more" href="${birthdayHref}" aria-label="View all ${birthdayRows.length} birthdays">View all ${birthdayRows.length} birthdays</a></li>`:'';
+      $('brain-birthdays').innerHTML=`<h2>${esc(birthdays.title)}</h2><div class="birthday-when">${esc(birthdays.subtitle)}</div><ul>${birthdayRows.slice(0,1).map(r=>`<li>${esc(r)}</li>`).join('')}${birthdayMore}</ul>`;
     }else $('brain-birthdays').innerHTML='<p class="brain-empty">No birthdays in the next three weeks.</p>';
     const near=c=>!c.starts||Date.parse(c.starts)<=Date.now()+3*86400000;
-    const upcoming=cards.filter(c=>c.type==='calendar_event'&&c.subtype!=='birthday_rollup'&&near(c))
-      .sort((a,b)=>(Number(b.priority)||0)-(Number(a.priority)||0)||String(a.starts||'').localeCompare(String(b.starts||''))).slice(0,3);
-    const upcomingMore=Math.max(0,upcoming.length-1);
-    $('brain-upnext').innerHTML=upcoming.length?`${upcoming.slice(0,1).map(c=>`<div class="brain-agenda-item"><strong>${esc(c.title)}</strong><span>${esc(c.subtitle||c.detail)}</span></div>`).join('')}${upcomingMore?`<div class="brain-agenda-more">+ ${upcomingMore} more upcoming item${upcomingMore===1?'':'s'} in this window.</div>`:''}`:'<p class="brain-empty">A little room in the calendar.</p>';
+    const upcomingAll=cards.filter(c=>c.type==='calendar_event'&&c.subtype!=='birthday_rollup'&&near(c))
+      .sort((a,b)=>(Number(b.priority)||0)-(Number(a.priority)||0)||String(a.starts||'').localeCompare(String(b.starts||'')));
+    const upcoming=upcomingAll.slice(0,3), upcomingHref='/kiosk?view=calendar&mode=all';
+    const upcomingMore=upcomingAll.length>1?`<a class="brain-agenda-more" href="${upcomingHref}" aria-label="View all ${upcomingAll.length} upcoming events">View all ${upcomingAll.length} upcoming events</a>`:'';
+    $('brain-upnext').innerHTML=upcoming.length?`${upcoming.slice(0,1).map(c=>`<div class="brain-agenda-item"><strong>${esc(c.title)}</strong><span>${esc(c.subtitle||c.detail)}</span></div>`).join('')}${upcomingMore}`:'<p class="brain-empty">A little room in the calendar.</p>';
     const agendaState=!fresh?'stale':(birthdays||upcoming.length?'ready':'empty');
     $('brain-agenda').dataset.agendaState=agendaState;
     if(!fresh){

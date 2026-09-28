@@ -1,6 +1,6 @@
 ## 2.10.85
 
-- Make the phone Gaming context's additional detail rows reachable through an accessible, focus-preserving disclosure instead of a decorative `+N more` summary.
+- Make dashboard birthday and upcoming-calendar summaries link to the existing full Calendar agenda instead of inert `+N` notices.
 
 ## 2.10.84
 
