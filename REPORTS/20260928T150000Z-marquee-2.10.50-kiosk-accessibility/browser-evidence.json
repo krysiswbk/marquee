@@ -1,4 +1,17 @@
 {
+  "final_runtime_sha": "0afae52bccde5d44c51f26c3beb28e36e68e24f0",
+  "final_runtime_viewports": ["1500x900", "1024x600", "700x900", "393x852"],
+  "final_runtime_checks": {
+    "fresh_home_active_element": "BODY",
+    "direct_gaming_focus": "#kiosk-section-title",
+    "direct_idle_now_playing_focus": "#kiosk-section-title",
+    "background_inert_and_aria_hidden": true,
+    "active_now_playing_hidden_inert_focus_inside": false,
+    "overflow": false,
+    "duplicate_ids": [],
+    "console_errors": [],
+    "failed_requests": []
+  },
   "results": [
     {
       "viewport": [
