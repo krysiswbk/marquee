@@ -124,7 +124,8 @@ class ControlNavigationTests(unittest.TestCase):
     def test_home_responsive_panels_respect_dock_safe_area(self):
         styles = (ROOT / "output" / "brain.css").read_text()
         self.assertIn("body.brain-live .brain-panel{box-sizing:border-box;padding-block:1.2vh}", styles)
-        self.assertIn("#brain-activity,body.brain-live #brain-agenda{top:70vh;bottom:16vh;height:auto}", styles)
+        self.assertIn("#brain-activity,body.brain-live #brain-agenda{top:70vh;height:13vh;bottom:auto;overflow:hidden}", styles)
+        self.assertNotIn("top:70vh;bottom:16vh;height:auto", styles)
         self.assertNotIn("top:70vh;height:20vh", styles)
         self.assertIn("#brain-activity{top:65vh;left:4vw;width:92vw;height:12vh}", styles)
         self.assertIn("#brain-agenda{display:none}", styles)
@@ -134,8 +135,7 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("box-sizing:border-box", tablet)
         self.assertIn("padding-block:1.2vh", tablet)
         self.assertIn("bottom:32vh", tablet)
-        self.assertIn("bottom:16vh", tablet)
-        self.assertLessEqual(100 - 16, 85)
+        self.assertLessEqual(70 + 13, 85.1)
         self.assertLessEqual(100 - 32, 75)
         self.assertIn("device-alert .brain-openings{display:none}", tablet)
         brain = (ROOT / "output" / "brain.js").read_text()
@@ -152,10 +152,15 @@ class ControlNavigationTests(unittest.TestCase):
 
     def test_tablet_support_copy_is_deliberately_bounded_above_dock(self):
         styles = (ROOT / "output" / "brain.css").read_text()
+        brain = (ROOT / "output" / "brain.js").read_text()
         tablet = styles.split("@media (min-width:481px) and (max-width:700px)", 1)[1].split("@media (max-width:480px)", 1)[0]
-        self.assertIn("bottom:16vh", tablet)
+        self.assertIn("top:70vh;height:13vh;bottom:auto;overflow:hidden", tablet)
+        self.assertNotIn("bottom:16vh", tablet)
         self.assertIn(".brain-event:nth-child(n+3){display:none}", tablet)
         self.assertIn(".brain-agenda-item span{display:none}", tablet)
+        self.assertIn("No new door or lock activity in the last 15 minutes.", brain)
+        self.assertIn("Activity feed reconnecting; recent activity is unavailable.", brain)
+        self.assertNotIn("The next real change lands here.", brain)
 
 
 if __name__ == "__main__":

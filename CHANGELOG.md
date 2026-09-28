@@ -1,3 +1,12 @@
+## 2.10.7 — Tablet support geometry contract
+
+- Give 481–700px activity and agenda panels explicit dock-safe heights instead
+  of relying on an unbounded auto-height plus bottom inset.
+- Recompose the tablet activity empty state as a complete, recency-preserving
+  phrase within the available panel height.
+- Replace the prior bottom-inset regression proof with explicit geometry and
+  content-treatment coverage.
+
 ## 2.10.6 — Tablet alert content refinement
 
 - Prioritize the specific actionable device-health message in urgent tablet
