@@ -1,3 +1,8 @@
+## 2.10.79
+
+- Centralize numeric-control naming, stable IDs, range help, and validation cleanup in the shared control shell.
+- Preserve existing numeric required/optional semantics and keep the direct kiosk rail/Home browser contract wording current.
+
 ## 2.10.78
 
 - Give every numeric administration control a programmatic name, explicit unit/range context, bounded validation, and tablet-safe focus clearance.

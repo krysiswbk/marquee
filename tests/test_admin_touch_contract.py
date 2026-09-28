@@ -24,14 +24,16 @@ def test_every_in_scope_surface_loads_the_shared_contract() -> None:
     assert "min-height:44px" in contract
     for route, path in SURFACES.items():
         source = path.read_text()
-        assert "/control-touch-contract.css?v=2.10.78" in source, route
+        assert "/control-touch-contract.css?v=2.10.79" in source, route
         assert "min-height:44px" in contract
 
 
 def test_static_numeric_controls_have_truthful_bounds_steps_and_descriptions() -> None:
     for route, path in SURFACES.items():
         source = path.read_text()
-        association_source = source + ((ROOT / "output/settings-control.js").read_text() if route == "/settings" else "")
+        association_source = source + (ROOT / "output/control-shell.js").read_text()
+        if route == "/settings":
+            association_source += (ROOT / "output/settings-control.js").read_text()
         for control in numeric_controls(source):
             assert re.search(r"\bmin=[\"'][^\"']+[\"']", control), (route, control)
             assert re.search(r"\bmax=[\"'][^\"']+[\"']", control), (route, control)

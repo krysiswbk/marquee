@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
-<link rel="stylesheet" href="/control-touch-contract.css?v=2.10.78">
+<link rel="stylesheet" href="/control-touch-contract.css?v=2.10.79">
 <style>
   :root { --bg:#0B0D10; --panel:#14171C; --line:#262B33; --text:#F2EEE6;
     --mut:#9AA1AB; --amber:#E5A83B;
@@ -1938,6 +1938,5 @@
     $('#status').textContent = 'This template reset to its defaults — save to apply.';
   });
 
-  document.querySelectorAll('input[type="number"], input[type="range"]').forEach(control => { if (!control.id) control.id = 'numeric-' + Math.random().toString(36).slice(2, 8); if (!control.getAttribute('aria-label') && !document.querySelector(`label[for="${CSS.escape(control.id)}"]`) && !control.closest('label')) control.setAttribute('aria-label', control.id); let help = (control.getAttribute('aria-describedby') || '').split(/\s+/).map(id => document.getElementById(id)).find(Boolean); if (!help) { help = document.createElement('small'); help.id = control.id + '-help'; help.className = 'numeric-help'; help.textContent = `Range ${control.min}–${control.max}; step ${control.step || 'any'}.`; control.insertAdjacentElement('afterend', help); control.setAttribute('aria-describedby', help.id); } const report = () => { document.getElementById(control.id + '-error')?.remove(); if (control.checkValidity()) { control.removeAttribute('aria-invalid'); return; } control.setAttribute('aria-invalid', 'true'); const error = document.createElement('small'); error.id = control.id + '-error'; error.className = 'field-error'; error.setAttribute('role', 'alert'); error.textContent = control.validationMessage; control.insertAdjacentElement('afterend', error); control.setAttribute('aria-describedby', `${control.getAttribute('aria-describedby')} ${error.id}`); }; control.addEventListener('input', report); control.addEventListener('blur', report); });
   load();
 </script>

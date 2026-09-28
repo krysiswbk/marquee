@@ -1,29 +1,5 @@
 (() => {
   'use strict';
-  function numericAccessibility(root = document) {
-    root.querySelectorAll('input[type="number"], input[type="range"]').forEach(control => {
-      if (!control.id) control.id = `numeric-${Math.random().toString(36).slice(2, 8)}`;
-      const label = root.querySelector(`label[for="${CSS.escape(control.id)}"]`) || control.closest('label');
-      if (!label && !control.getAttribute('aria-label')) control.setAttribute('aria-label', control.dataset.label || 'Numeric setting');
-      let help = control.getAttribute('aria-describedby')?.split(/\s+/).map(id => document.getElementById(id)).find(Boolean);
-      if (!help) {
-        help = document.createElement('small'); help.id = `${control.id}-help`;
-        help.textContent = `Allowed range: ${control.min}–${control.max}; step ${control.step || 'any'}.`;
-        control.insertAdjacentElement('afterend', help); control.setAttribute('aria-describedby', help.id);
-      }
-      const report = () => {
-        document.getElementById(`${control.id}-error`)?.remove();
-        if (control.checkValidity()) { control.removeAttribute('aria-invalid'); return; }
-        control.setAttribute('aria-invalid', 'true');
-        const error = document.createElement('small'); error.id = `${control.id}-error`; error.className = 'field-error'; error.setAttribute('role', 'alert'); error.textContent = control.validationMessage;
-        control.insertAdjacentElement('afterend', error);
-        const described = new Set((control.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean)); described.add(error.id); control.setAttribute('aria-describedby', [...described].join(' '));
-      };
-      control.addEventListener('input', report); control.addEventListener('blur', report);
-    });
-  }
-  numericAccessibility();
-
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const clone = value => structuredClone(value);
@@ -238,7 +214,7 @@
         card.innerHTML = `<div class="provider-main"><div class="provider-name"><h3>${provider.label}</h3><p>${provider.desc}</p></div><label class="provider-toggle"><input class="switch" type="checkbox" role="switch" data-config-path="providers.${name}.enabled"><span>Enabled</span></label><div class="provider-targets">${target}</div></div><details><summary>Timing and source details</summary><div class="field-grid"><div class="field"><label for="provider-${name}-priority">Source weight</label><input id="provider-${name}-priority" type="number" min="0" max="100" step="1" required aria-describedby="provider-${name}-priority-help" data-config-path="providers.${name}.priority"><small id="provider-${name}-priority-help">Points; whole number from 0 to 100, compared with the eligibility threshold in Advanced.</small></div>${(provider.fields || []).map(field => providerField(name, field)).join('')}</div></details>`;
       }
       root.append(card);
-      numericAccessibility(card);
+      MarqueeNumericControls.enhance(card);
     }
     $$('[data-config-path]', root).forEach(control => {
       const path = control.dataset.configPath;
@@ -459,7 +435,14 @@
   function validateArea(area) {
     const panel = $(`#panel-${area}`);
     $$('[aria-invalid="true"]', panel).forEach(input => input.removeAttribute('aria-invalid'));
-    $$('.field-error', panel).forEach(item => item.remove());
+    $$('.field-error', panel).forEach(item => {
+      $$(`[aria-describedby~="${CSS.escape(item.id)}"]`, panel).forEach(input => {
+        const ids = (input.getAttribute('aria-describedby') || '').split(/\s+/).filter(id => id && id !== item.id);
+        if (ids.length) input.setAttribute('aria-describedby', ids.join(' '));
+        else input.removeAttribute('aria-describedby');
+      });
+      item.remove();
+    });
     const invalid = $$('input,select', panel).find(input => !input.disabled && !input.checkValidity());
     let control = invalid, message = invalid?.validationMessage;
     if (!control && area === 'displays' && Number(configValue('fallback.single_item_seconds')) > Number(configValue('fallback.rotation_seconds'))) {
