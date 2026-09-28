@@ -1,5 +1,13 @@
 ## 2.10.25
 
+- Fit the populated portrait Home household panel after layout: compact only
+  when its rendered content exceeds the panel, while preserving complete
+  opening tags, device-health copy, and acknowledgement actions.
+- Refit household content after data renders, viewport changes, and supported
+  font readiness; refresh all cache-busted assets.
+
+## 2.10.26
+
 - Harden the portrait Home composition with explicit masthead, identity,
   household, activity, agenda, and dock zones.
 - Promote phone weather temperature, condition, and secondary facts to a

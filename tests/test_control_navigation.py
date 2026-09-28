@@ -103,9 +103,9 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("grid-template-columns: repeat(2, minmax(0, 1fr))", css)
         for page in (PAGES["cast-layout"], PAGES["live-layout"], PAGES["attention"], PAGES["tests"]):
             source = page.read_text()
-            self.assertIn("control-shell.css?v=2.10.25", source)
-            self.assertIn("control-shell.js?v=2.10.25", source)
-            self.assertIn("control-shell-narrow.css?v=2.10.25", source)
+            self.assertIn("control-shell.css?v=2.10.26", source)
+            self.assertIn("control-shell.js?v=2.10.26", source)
+            self.assertIn("control-shell-narrow.css?v=2.10.26", source)
 
     def test_layout_workspace_has_explicit_phone_composition_contract(self):
         source = PAGES["cast-layout"].read_text()
@@ -160,7 +160,8 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("max-width:92vw", styles)
         self.assertIn("line-height:1.2", styles)
         self.assertIn("#brain-house{top:43vh;bottom:auto;height:25vh}", styles)
-        self.assertIn("#brain-house .brain-openings{max-height:4vh;overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap}", styles)
+        self.assertIn("#brain-house.fit-compact", styles)
+        self.assertNotIn("#brain-house .brain-openings{max-height:4vh;overflow-x:auto;overflow-y:hidden;flex-wrap:nowrap}", styles)
         self.assertNotIn("max-width:44vw", styles)
 
     def test_home_responsive_panels_respect_dock_safe_area(self):
@@ -172,14 +173,13 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("#brain-activity{top:65vh;left:4vw;width:92vw;height:12vh}", styles)
         self.assertIn("#brain-agenda{display:none}", styles)
         self.assertNotIn("top:80vh", styles)
-        self.assertIn("#brain-house.device-alert .brain-openings{display:none}", styles)
+        self.assertNotIn("#brain-house.device-alert .brain-openings{display:none}", styles)
         tablet = styles.split("@media (min-width:481px) and (max-width:700px)", 1)[1].split("@media (max-width:480px)", 1)[0]
         self.assertIn("box-sizing:border-box", tablet)
         self.assertIn("padding-block:1.2vh", tablet)
         self.assertIn("height:25vh", tablet)
         self.assertLessEqual(70 + 13, 85.1)
         self.assertLessEqual(43 + 25, 70)
-        self.assertIn("device-alert .brain-openings{display:none}", tablet)
         brain = (ROOT / "output" / "brain.js").read_text()
         self.assertIn("classList.toggle('device-alert',Boolean(deviceHealth.length))", brain)
 
@@ -190,7 +190,7 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("if(deviceHealth.length)summary='Device status needs attention.'", brain)
         self.assertIn("else if(fresh&&state.unknown?.length)", brain)
         self.assertIn("#brain-house.device-alert #brain-device-health{display:block", styles)
-        self.assertIn("#brain-house.device-alert .brain-openings{display:none}", styles)
+        self.assertNotIn("#brain-house.device-alert .brain-openings{display:none}", styles)
 
     def test_tablet_support_copy_is_deliberately_bounded_above_dock(self):
         styles = (ROOT / "output" / "brain.css").read_text()
@@ -211,8 +211,12 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("top:12vh;right:4vw;bottom:auto;height:26vh", styles)
         self.assertIn("#brain-house{top:40vh;left:4vw;height:22vh}", styles)
         self.assertIn("#brain-house{top:43vh;bottom:auto;height:25vh}", styles)
-        self.assertIn("#brain-house.dense .brain-summary", styles)
-        self.assertIn("classList.toggle('dense', summary.length > 110 || healthText.length > 80)", brain)
+        self.assertIn("#brain-house.fit-compact .brain-summary", styles)
+        self.assertIn("panel.scrollHeight>panel.clientHeight", brain)
+        self.assertIn("document.fonts.ready.then(fitHousePanel)", brain)
+        self.assertIn("opening.map(o=>", brain)
+        self.assertNotIn("opening.slice(0,5)", brain)
+        self.assertNotIn("summary.length > 110", brain)
 
     def test_portrait_weather_has_legible_minimums_without_losing_secondary_facts(self):
         styles = (ROOT / "output" / "brain.css").read_text()
