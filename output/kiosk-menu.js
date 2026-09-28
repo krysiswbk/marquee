@@ -139,14 +139,25 @@
     const kicker = lifecycle === 'loading' ? 'LOADING' : lifecycle === 'error' ? 'SOURCE ERROR' : lifecycle === 'stale' ? 'STALE SOURCE' : lifecycle === 'unavailable' ? 'UNAVAILABLE' : 'MARQUEE';
     return `<div class="kiosk-state" data-lifecycle="${esc(lifecycle)}"><div class="kiosk-state-mark" aria-hidden="true">·</div><div><p class="kiosk-kicker">${kicker}</p><h2>${esc(message)}</h2><p class="kiosk-empty">${copy}</p><div class="kiosk-now-playing-actions"><a class="kiosk-home-action" href="${esc(href(''))}" data-view="">${esc(action)}</a>${retry ? '<button type="button" class="kiosk-retry" data-kiosk-retry>Try again</button>' : ''}</div></div></div>`;
   }
-  const nhlDate = c => { const date = dateOf(c); return date ? new Intl.DateTimeFormat(undefined, {weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit'}).format(date) : ''; };
+  const nhlDate = c => { const date = dateOf(c); return date ? new Intl.DateTimeFormat(undefined, {weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true}).format(date) : ''; };
   const nhlSense = side => side.homeAway === 'home' ? 'Home' : side.homeAway === 'away' ? 'Away' : '';
+  const nhlName = (side, fallback) => side.name || fallback;
+  const nhlMatchupName = (left, right) => `${nhlName(left, 'Followed team')} vs ${nhlName(right, 'Opponent')}`;
+  const nhlStatus = c => {
+    const value = String(c.sourceStatus || '').trim();
+    if (!value || /scheduled|upcoming/i.test(value) || /\d{1,2}\/\d{1,2}|\b\d{1,2}:\d{2}\b/.test(value)) return '';
+    return value;
+  };
+  const nhlLogo = side => side.logo
+    ? `<img class="kiosk-team-logo" src="${esc(side.logo)}" alt="${esc(nhlName(side, 'Team'))} logo" onerror="this.remove()">`
+    : '';
   function renderNhl(list) {
     const feature = ordered(list)[0];
     if (!feature) return sharedState('No followed-team games are scheduled.', 'Return to Home', false, 'empty');
-    const left = feature.left || {}, right = feature.right || {}, details = [nhlDate(feature), feature.sourceStatus || '', feature.broadcast || '', feature.detail || ''].filter(Boolean);
-    const matchup = `<div class="kiosk-matchup"><div><strong>${esc(left.name || feature.title)}</strong><small>${esc(nhlSense(left))}</small></div><span>vs</span><div><strong>${esc(right.name || 'Opponent')}</strong><small>${esc(nhlSense(right))}</small></div></div>`;
-    return `<div class="kiosk-sports-layout kiosk-nhl-layout"><article class="kiosk-sport-feature"><p class="kiosk-kicker">UP NEXT · NHL</p><h2>${esc(left.name || feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || 'Followed-team game')}</p>${matchup}<p class="kiosk-meta">${details.map(esc).join(' · ')}</p></article></div>`;
+    const left = feature.left || {}, right = feature.right || {}, matchupName = nhlMatchupName(left, right);
+    const details = [nhlDate(feature), feature.detail || '', feature.broadcast || '', nhlStatus(feature)].filter(Boolean);
+    const matchup = `<div class="kiosk-matchup" aria-label="${esc(matchupName)}"><div>${nhlLogo(left)}<strong>${esc(nhlName(left, feature.title))}</strong><small>${esc(nhlSense(left))}</small></div><span aria-hidden="true">vs</span><div>${nhlLogo(right)}<strong>${esc(nhlName(right, 'Opponent'))}</strong><small>${esc(nhlSense(right))}</small></div></div>`;
+    return `<div class="kiosk-sports-layout kiosk-nhl-layout"><article class="kiosk-sport-feature"><p class="kiosk-kicker">UP NEXT · NHL</p>${matchup}<p class="kiosk-meta">${details.map(esc).join(' · ')}</p></article></div>`;
   }
   function renderSports(list) {
     const [feature, ...queue] = ordered(list);
@@ -217,7 +228,9 @@
       ? { state: 'loading', reason: 'provider request pending' }
       : destinationLifecycle(view, list);
     const message = lifecycle.state === 'loading' ? `Loading ${label(view)}…` : lifecycle.state === 'error' ? `${label(view)} is unavailable` : lifecycle.state === 'stale' ? `${label(view)} is stale` : lifecycle.state === 'unavailable' ? `${label(view)} is unavailable` : '';
-    const html = `<header class="kiosk-section-head"><p>${esc(categoryFor(view).toUpperCase())}</p><h1 id="kiosk-section-title">${esc(label(view))}</h1></header>` + (message ? sharedState(message, 'Return to Home', lifecycle.state === 'error' || lifecycle.state === 'stale' || lifecycle.state === 'unavailable', lifecycle.state) : renderDestination(view, list));
+    const feature = view === 'nhl' && list.length ? ordered(list)[0] : null;
+    const headingName = feature ? nhlMatchupName(feature.left || {}, feature.right || {}) : label(view);
+    const html = `<header class="kiosk-section-head"><p>${esc(categoryFor(view).toUpperCase())}</p><h1 id="kiosk-section-title"${feature ? ` aria-label="${esc(headingName)}"` : ''}>${esc(label(view))}</h1></header>` + (message ? sharedState(message, 'Return to Home', lifecycle.state === 'error' || lifecycle.state === 'stale' || lifecycle.state === 'unavailable', lifecycle.state) : renderDestination(view, list));
     if (panel.innerHTML !== html) panel.innerHTML = html;
     focusInitialDestination();
     preserveDirectHeadingFocus(preserveHeadingFocus);

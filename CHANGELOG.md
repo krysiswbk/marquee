@@ -1,3 +1,10 @@
+## 2.10.62
+
+- Refine the NHL browse matchup into a single team-vs-team composition with
+  authoritative logos, one local date/time, venue and broadcast details, and
+  useful live/delayed/final status without repeated ESPN timestamps.
+- Give the semantic matchup heading a scoped, accessible focus treatment.
+
 ## 2.10.61
 
 - Add a truthful NHL browse contract sourced from the authoritative aggregated

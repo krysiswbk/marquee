@@ -22,6 +22,27 @@ def test_sports_contract_keeps_matchup_status_and_next_event_hierarchy():
     assert "sourceStatus" in MENU and "broadcast" in MENU
 
 
+def test_nhl_matchup_contract_deduplicates_composition_and_scopes_heading_focus():
+    for token in (
+        "const nhlMatchupName",
+        "const nhlStatus",
+        "hour12:true",
+        "!value || /scheduled|upcoming/i.test(value)",
+        "/\\d{1,2}\\/\\d{1,2}|\\b\\d{1,2}:\\d{2}\\b/.test(value)",
+        "feature.detail || '', feature.broadcast || '', nhlStatus(feature)",
+        "aria-label=\"${esc(matchupName)}\"",
+        "const nhlLogo",
+        "alt=\"${esc(nhlName(side, 'Team'))} logo\"",
+        "aria-label=\"${esc(headingName)}\"",
+        ".kiosk-section-head h1{display:inline-block;width:fit-content;max-width:100%}",
+        ".kiosk-section-head h1:focus-visible",
+    ):
+        assert token in MENU or token in SCREENS
+    assert "feature.subtitle || 'Followed-team game'" not in MENU
+    assert "feature.sourceStatus || ''" not in MENU
+    assert "onerror=\"this.remove()\"" in MENU
+
+
 def test_calendar_contract_groups_and_limits_chronological_agenda():
     for token in ("agendaGroup", "Today", "Tomorrow", "This week", "agendaLimit", "max-width: 480px", "values.slice(1, 1 + agendaLimit())", "remaining", "kiosk-agenda-more", "is-birthday"):
         assert token in MENU
