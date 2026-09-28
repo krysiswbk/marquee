@@ -350,7 +350,7 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("grid-template-columns:minmax(0,1fr) minmax(0,1fr)", tablet)
         self.assertIn("brain-agenda-more", tablet)
         self.assertIn("events.length>3", brain)
-        self.assertIn("more recent event", brain)
+        self.assertIn('aria-label="View all ${events.length} recent events"', brain)
         self.assertIn("const birthdayCount=birthdayRows.length+1", brain)
         self.assertIn("View all ${birthdayCount} birthdays", brain)
         self.assertIn("View all ${upcomingAll.length} upcoming events", brain)

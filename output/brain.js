@@ -6,9 +6,10 @@
   document.body.classList.add('brain-live');
   const shell = document.createElement('section'); shell.className='brain-shell';shell.setAttribute('aria-label','Household desk');
   shell.innerHTML=`<header class="brain-mast"><div class="brain-brand"><em>M/</em> MARQUEE <a class="brain-customize" href="/settings/layout?profile=live" aria-label="Customize the household desk"><span class="brain-customize-icon" aria-hidden="true">↗</span><span class="brain-customize-label">Customize</span></a></div><div class="brain-edition">THE HOUSEHOLD EDITION</div><div class="brain-connection" id="brain-connection">CONNECTING</div></header>
-  <section class="brain-panel" id="brain-house"><div class="brain-eyebrow"><span>Right now</span><b id="brain-house-label">THE HOUSE</b></div><div class="brain-lead"><div><h1 class="brain-headline" id="brain-headline">Listening to the house.</h1><div class="brain-summary" id="brain-summary">Waiting for a fresh household snapshot.</div></div><div class="brain-orbit" id="brain-symbol" aria-hidden="true">⌂</div></div><div class="brain-openings" id="brain-openings"></div><div id="brain-device-health" class="brain-summary" role="status" hidden></div><button class="brain-ack" id="brain-ack" hidden>Got it · keep monitoring</button></section>
+  <section class="brain-panel" id="brain-house"><div class="brain-eyebrow"><span>Right now</span><b id="brain-house-label">THE HOUSE</b></div><div class="brain-lead"><div><h1 class="brain-headline" id="brain-headline" data-history-focus-owner tabindex="-1">Listening to the house.</h1><div class="brain-summary" id="brain-summary">Waiting for a fresh household snapshot.</div></div><div class="brain-orbit" id="brain-symbol" aria-hidden="true">⌂</div></div><div class="brain-openings" id="brain-openings"></div><div id="brain-device-health" class="brain-summary" role="status" hidden></div><button class="brain-ack" id="brain-ack" hidden>Got it · keep monitoring</button></section>
   <section class="brain-panel" id="brain-activity"><div class="brain-eyebrow"><span>Just happened</span><b>LAST 15 MIN</b></div><div id="brain-events"></div></section>
-  <section class="brain-panel" id="brain-agenda"><div class="brain-birthday"><div class="brain-eyebrow"><span>People first</span><b>✳</b></div><div id="brain-birthdays"></div></div><div class="brain-upnext"><div class="brain-eyebrow"><span>On the horizon</span><b>↗</b></div><div id="brain-upnext"></div></div></section>`;
+  <section class="brain-panel" id="brain-agenda"><div class="brain-birthday"><div class="brain-eyebrow"><span>People first</span><b>✳</b></div><div id="brain-birthdays"></div></div><div class="brain-upnext"><div class="brain-eyebrow"><span>On the horizon</span><b>↗</b></div><div id="brain-upnext"></div></div></section>
+  <section class="brain-activity-view" id="brain-activity-view" role="dialog" aria-modal="true" aria-labelledby="brain-activity-title" hidden><div class="brain-activity-dialog"><header><div><p class="brain-eyebrow">Household record</p><h2 id="brain-activity-title" tabindex="-1">Recent activity</h2><p id="brain-activity-count"></p></div><button type="button" id="brain-activity-close" aria-label="Close recent activity">Close</button></header><div id="brain-activity-list" role="region" aria-label="Recent activity records; use arrow keys or scroll to review" tabindex="0"></div></div></section>`;
   document.body.append(shell);
   const weatherLink=document.createElement('a');weatherLink.className='brain-weather-link';weatherLink.href=q.get('view')==='weather'?'/live':'/live?view=weather';weatherLink.textContent=q.get('view')==='weather'?'← HOUSEHOLD DESK':'LOCAL WEATHER ↗';document.body.append(weatherLink);
   const dock=document.createElement('aside');dock.className='brain-dock';dock.setAttribute('aria-label','Household updates');dock.innerHTML='<span class="brain-dock-brand">M/ HOUSE FEED</span><span class="brain-dock-copy" id="brain-dock-copy">Connecting to the house…</span><div class="brain-dock-people" id="brain-people"></div>';document.body.append(dock);
@@ -77,8 +78,12 @@
     $('brain-openings').innerHTML=opening.map(o=>`<span class="brain-tag warm">${esc(o.name)} <small>${esc(o.state)} · ${elapsed(Math.max(o.duration||0,now-o.since))}</small></span>`).join('');
     const actionable=serious?.acknowledgement_required?serious:null;alertId=actionable?.id||'';$('brain-ack').hidden=!actionable||demo;
     const eventRows=events.slice(0,3).map(e=>`<div class="brain-event"><span>${esc(e.title)}</span><time>${elapsed(now-e.at)}${now-e.at>=60?' ago':''}</time></div>`);
-    if(events.length>3)eventRows.push(`<div class="brain-event brain-event-more"><span>+ ${events.length-3} more recent event${events.length-3===1?'':'s'} in this window.</span></div>`);
-    $('brain-events').innerHTML=events.length?eventRows.join(''):`<p class="brain-empty">${fresh?'No new door or lock activity in the last 15 minutes.':'Activity feed reconnecting; recent activity is unavailable.'}</p>`;
+    if(events.length>3)eventRows.push(`<div class="brain-event brain-event-more"><button type="button" id="brain-activity-open" data-history-focus-owner aria-label="View all ${events.length} recent events">View all ${events.length} recent events</button></div>`);
+    const activityOpenerFocused=$('brain-activity-open')===document.activeElement;
+    if(!activityOpenerFocused)$('brain-events').innerHTML=events.length?eventRows.join(''):`<p class="brain-empty">${fresh?'No new door or lock activity in the last 15 minutes.':'Activity feed reconnecting; recent activity is unavailable.'}</p>`;
+    if(events.length>3) $('brain-activity-open').onclick=()=>openActivity(events,false,$('brain-activity-open'));
+    renderActivity(events, fresh);
+    reconcileActivityHash(events, fresh);
     // Context cards share the household briefing freshness boundary. Do not
     // turn a disconnected snapshot into current agenda guidance.
     const cards=fresh?(state.cards||[]).filter(c=>!c.expires||Date.parse(c.expires)>Date.now()):[];
@@ -136,6 +141,67 @@
       panel.classList.toggle('fit-compact',panel.scrollHeight>panel.clientHeight);
     });
   }
+  let activityOpenState=false, activityReturnFocus=null, activityHistoryState=false, activityHistoryTraversalPending=false;
+  let activityHashConsumed=location.hash!=='#activity';
+  const activityView=$('brain-activity-view'), activityDialog=activityView.querySelector('.brain-activity-dialog');
+  const activityBackground=[...document.body.children].filter(node=>node!==shell);
+  const activityShellBackground=[...shell.children].filter(node=>node!==activityView);
+  const activityFallback=$('brain-headline');
+  const activityBackgroundState=new Map();
+  function setActivityBackground(inert){
+    [...activityBackground,...activityShellBackground].forEach(node=>{
+      if(inert){
+        if(!activityBackgroundState.has(node))activityBackgroundState.set(node,{ariaHidden:node.getAttribute('aria-hidden'),inert:node.hasAttribute('inert')});
+        node.setAttribute('aria-hidden','true');node.setAttribute('inert','');
+      }else{
+        const prior=activityBackgroundState.get(node);if(!prior)return;
+        if(prior.ariaHidden===null)node.removeAttribute('aria-hidden');else node.setAttribute('aria-hidden',prior.ariaHidden);
+        if(prior.inert)node.setAttribute('inert','');else node.removeAttribute('inert');activityBackgroundState.delete(node);
+      }
+    });
+  }
+  function activityFocusables(){return [...activityDialog.querySelectorAll('button:not([disabled]),[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(node=>node.getClientRects().length)}
+  function reconcileActivityHash(events,fresh){
+    if(fresh&&events.length&&location.hash==='#activity'&&!activityHashConsumed&&!activityOpenState)openActivity(events,true);
+  }
+  function renderActivity(events, fresh){
+    if(!activityOpenState)return;
+    const list=$('brain-activity-list');
+    $('brain-activity-count').textContent=!fresh?'Activity is unavailable while the household feed is offline.':`${events.length} event${events.length===1?'':'s'} in the current 15-minute activity window.`;
+    list.innerHTML=fresh&&events.length?events.map(e=>`<article class="brain-activity-record"><time datetime="${esc(new Date(Number(e.at)*1000).toISOString())}">${esc(new Date(Number(e.at)*1000).toLocaleString())} · ${esc(elapsed(Date.now()/1000-e.at))}${Date.now()/1000-e.at>=60?' ago':''}</time><strong>${esc(e.title)}</strong><span>${esc(e.category||'Household activity')}</span></article>`).join(''):'<p class="brain-empty">'+(fresh?'No recent activity is recorded.':'Activity is unavailable while the household feed is offline.')+'</p>';
+  }
+  function openActivity(events, fromHistory=false, opener=null){
+    if(!events.length)return;
+    activityReturnFocus=fromHistory?activityFallback:(opener||(document.activeElement?.isConnected&&document.activeElement!==document.body?document.activeElement:null));activityOpenState=true;activityHashConsumed=true;
+    if(!fromHistory){history.pushState({marqueeActivity:true},'',`${location.pathname}${location.search}#activity`);activityHistoryState=true;}
+    setActivityBackground(true);activityView.hidden=false;activityView.setAttribute('aria-hidden','false');renderActivity(events,true);$('brain-activity-close').focus();
+  }
+  function closeActivity(fromHistory=false){
+    if(!activityOpenState)return;
+    if(activityHistoryState&&!fromHistory){activityHistoryState=false;activityHistoryTraversalPending=true;window.dispatchEvent(new Event('marquee-history-focus-owned'));history.back();return;}
+    activityOpenState=false;activityHistoryState=false;if(location.hash==='#activity'){history.replaceState(history.state,'',`${location.pathname}${location.search}`);activityHashConsumed=true;}
+    activityView.hidden=true;activityView.setAttribute('aria-hidden','true');setActivityBackground(false);
+    const activityReturnTarget=activityReturnFocus?.isConnected?activityReturnFocus:activityReturnFocus?.id==='brain-activity-open'?$('brain-activity-open'):null;
+    const destination=activityReturnTarget&&!activityReturnTarget.matches('[inert]')?activityReturnTarget:activityFallback;
+    // History navigation also lets kiosk-menu restore its destination focus;
+    // hand back focus at the next render boundary after that lifecycle settles.
+    const returnFocusId=activityReturnFocus?.id;
+    requestAnimationFrame(()=>{const focusTarget=(returnFocusId==='brain-activity-open'&&$('brain-activity-open'))||(destination.isConnected?destination:activityFallback);if(focusTarget.isConnected&&!focusTarget.matches('[inert]'))focusTarget.focus()});activityReturnFocus=null;
+  }
+  $('brain-activity-close').onclick=()=>closeActivity();
+  activityView.addEventListener('click',event=>{if(event.target===activityView)closeActivity()});
+  document.addEventListener('keydown',event=>{
+    if(!activityOpenState)return;
+    if(event.key==='Escape'){event.preventDefault();closeActivity();return;}
+    if(event.key!=='Tab')return;
+    const focusables=activityFocusables(), first=focusables[0], last=focusables[focusables.length-1];
+    if(!first)return;
+    if(!activityView.contains(document.activeElement)||(event.shiftKey&&document.activeElement===first)||(!event.shiftKey&&document.activeElement===last)){event.preventDefault();(event.shiftKey?last:first).focus();}
+  });
+  window.addEventListener('popstate',()=>{
+    if(activityOpenState){if(activityHistoryTraversalPending)activityHistoryTraversalPending=false;else window.dispatchEvent(new Event('marquee-history-focus-owned'));closeActivity(true);}
+    else if(location.hash==='#activity'){activityHashConsumed=false;reconcileActivityHash((state?.events||[]).filter(e=>e.expires>Date.now()/1000),state?.fresh&&Date.now()/1000-received<45);}
+  });
   $('brain-ack').onclick=async()=>{const b=$('brain-ack');b.disabled=true;try{const r=await fetch('/api/attention/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:alertId,action:'acknowledge'})});if(!r.ok)throw Error();await poll()}catch(_){b.textContent='Could not acknowledge · try again'}finally{b.disabled=false}};
   function weather(){window.MarqueeWeather?.observation(wx)}
   async function poll(){if(demo)return;try{const r=await fetch('/api/brain');if(!r.ok)throw Error();state=await r.json();received=Date.now()/1000;render();window.dispatchEvent(new Event('marquee-brain'))}catch(_){if(state){state.fresh=false;render()}}}

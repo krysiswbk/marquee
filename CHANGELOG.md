@@ -1,3 +1,10 @@
+## 2.10.87
+
+- Replace the inert recent-activity remainder with an accessible full activity
+  presentation backed by the authoritative household event payload.
+- Preserve the compact ambient summary while supporting touch, keyboard,
+  browser-history, stale, empty, and unavailable activity states.
+
 ## 2.10.86
 
 - Gate Calendar page fitting on font and layout settlement so the measured capacity cannot change after paging begins.
