@@ -36,6 +36,17 @@ def test_empty_and_unavailable_states_share_home_and_retry_actions():
     assert ".kiosk-state" in SCREENS
 
 
+def test_provider_error_stale_and_empty_states_have_distinct_deterministic_copy():
+    assert "function destinationLifecycle(key, list)" in MENU
+    assert "state: 'error'" in MENU
+    assert "state: 'stale'" in MENU
+    assert "state: list.length ? 'populated' : 'empty'" in MENU
+    assert "The source did not answer. No last-known results are being presented as current." in MENU
+    assert "The source has not refreshed. Last-known results are not being presented as current." in MENU
+    assert "New items will appear automatically when this destination has something relevant." in MENU
+    assert "data-lifecycle=\"${esc(lifecycle)}\"" in MENU
+
+
 def test_responsive_contract_contains_dock_safe_containment_and_narrow_layouts():
     assert "inset:0 0 calc(8vh + var(--control-rail))" in SCREENS
     assert "@media(max-width:900px)" in SCREENS

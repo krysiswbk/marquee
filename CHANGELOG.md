@@ -1,3 +1,8 @@
+## 2.10.13
+
+- Resolve each forced kiosk destination from its provider lifecycle, distinguishing populated, empty, stale, unavailable, and provider-error states.
+- Present provider failures as unavailable/error copy without treating failed data as current; preserve calm empty-state copy for healthy providers.
+
 ## 2.10.12
 
 - Replace forced kiosk browse cards with category-specific sports, agenda,
