@@ -1,3 +1,8 @@
+## 2.10.11 — Contain narrow now-playing overflow
+
+- Clip the forced now-playing surface’s horizontal scrollable overflow while preserving the ambient orbit composition at tablet and phone widths.
+- Keep the document and kiosk panel x-axes contained and add a regression contract for the actual scrolling element.
+
 ## 2.10.10 — Purposeful now-playing surface
 
 - Keep the authoritative now-playing lifecycle payload intact through forced Plex navigation.
