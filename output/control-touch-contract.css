@@ -1,0 +1,26 @@
+/* Administration interaction contract: compact desktop controls, 44px hit areas. */
+.admin-touch-contract.admin-touch-contract button,
+.admin-touch-contract.admin-touch-contract select,
+.admin-touch-contract.admin-touch-contract input[type="number"],
+.admin-touch-contract.admin-touch-contract input[type="range"],
+.admin-touch-contract.admin-touch-contract summary,
+.admin-touch-contract.admin-touch-contract a,
+.settings-admin.settings-admin button,
+.settings-admin.settings-admin select,
+.settings-admin.settings-admin input[type="number"],
+.settings-admin.settings-admin input[type="range"],
+.settings-admin.settings-admin summary,
+.settings-admin.settings-admin a { min-height:44px!important; }
+.admin-touch-contract button,
+.admin-touch-contract select,
+.admin-touch-contract input[type="number"],
+.settings-admin button,
+.settings-admin select,
+.settings-admin input[type="number"] { padding-block:9px; }
+.admin-touch-contract input[type="range"],
+.settings-admin input[type="range"] { height:44px; }
+.admin-touch-contract summary,
+.admin-touch-contract a,
+.settings-admin summary,
+.settings-admin a { display:inline-flex; align-items:center; }
+.admin-touch-contract .numeric-help { display:block; color:var(--muted,#a9b2c2); font-size:12px; line-height:1.4; }

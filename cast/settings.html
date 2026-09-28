@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="admin-touch-contract">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Marquee — Settings</title>
@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+<link rel="stylesheet" href="/control-touch-contract.css?v=2.10.56">
 <style>
   :root { --bg:#0B0D10; --panel:#14171C; --line:#262B33; --text:#F2EEE6;
     --mut:#9AA1AB; --amber:#E5A83B;
@@ -362,6 +363,7 @@
 </style>
 
 <div class="wrap">
+  <p id="admin-numeric-help" class="visually-hidden">Numeric settings use the displayed unit and are bounded by the shown control range. Use arrow keys for precise changes.</p>
   <div class="top">
     <h1>Marquee <span>settings</span></h1>
     <div class="actions">
@@ -436,13 +438,13 @@
           </label>
           <div class="display-custom" id="display-custom" hidden>
             <label for="display-width">Width
-              <input id="display-width" type="number" min="320" max="3840" step="1" value="1280">
+              <input id="display-width" type="number" min="320" max="3840" step="1" value="1280" aria-describedby="display-size-help">
             </label>
             <span class="display-times" aria-hidden="true">×</span>
             <label for="display-height">Height
-              <input id="display-height" type="number" min="240" max="2160" step="1" value="800">
+              <input id="display-height" type="number" min="240" max="2160" step="1" value="800" aria-describedby="display-size-help">
             </label>
-          </div>
+          </div><small id="display-size-help" class="numeric-help">Pixels. Width 320–3840; height 240–2160.</small>
           <span class="display-size-note" id="display-size-note">Previewing 1280 × 800 · 16:10</span>
         </div>
         <div class="frame-box"><iframe id="frame" title="Live card preview" tabindex="-1"></iframe></div>
@@ -1936,5 +1938,6 @@
     $('#status').textContent = 'This template reset to its defaults — save to apply.';
   });
 
+  document.querySelectorAll('input[type="number"], input[type="range"]').forEach(control => control.setAttribute('aria-describedby', 'admin-numeric-help'));
   load();
 </script>

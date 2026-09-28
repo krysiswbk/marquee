@@ -48,15 +48,20 @@
       control = element('select'); options.forEach(([key, name]) => { const option = text('option', name); option.value = key; option.selected = String(value) === String(key); control.append(option); });
     } else { control = document.createElement('input'); control.type = type; control.value = value ?? ''; }
     Object.entries(attrs).forEach(([key, attrValue]) => { if (key !== 'error' && attrValue !== undefined) control.setAttribute(key, String(attrValue)); });
+    const helpNode = help ? text('small', help) : null;
+    if (helpNode) { helpNode.id = `${control.id || 'attention-field'}-help`; control.setAttribute('aria-describedby', helpNode.id); }
     const error = attrs.error ? text('small', '', 'mq-field-error') : null;
-    if (error) { error.id = `${control.id || 'attention-field'}-error`; control.setAttribute('aria-describedby', error.id); }
+    if (error) {
+      error.id = `${control.id || 'attention-field'}-error`;
+      control.setAttribute('aria-describedby', [helpNode?.id, error.id].filter(Boolean).join(' '));
+    }
     control.addEventListener(type === 'checkbox' || options ? 'change' : 'input', () => {
       const invalid = type === 'number' && (!control.value || !control.validity.valid);
       if (invalid) { state.invalidEditors.add(control); control.setAttribute('aria-invalid', 'true'); if (error) error.textContent = `${label}: enter a value from ${control.min} to ${control.max}.`; }
       else { state.invalidEditors.delete(control); control.removeAttribute('aria-invalid'); if (error) error.textContent = ''; write(options ? control.value : type === 'number' ? Number(control.value) : control.value); }
       changed();
     });
-    wrap.append(control); if (help) wrap.append(text('small', help)); if (error) wrap.append(error); return wrap;
+    wrap.append(control); if (helpNode) wrap.append(helpNode); if (error) wrap.append(error); return wrap;
   }
   const slug = value => String(value || 'field').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   function numeric(label, value, write, schemaKey, id, help = '') {

@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  document.querySelectorAll('input[type="number"], input[type="range"]').forEach(control => control.setAttribute('aria-describedby', 'admin-numeric-help'));
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];

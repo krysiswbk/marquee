@@ -1,3 +1,10 @@
+## 2.10.56
+
+- Harden administration touch targets and numeric-input semantics across Main
+  Settings, Cast and Live layout, Attention policy, and Test screens. Numeric
+  controls now expose truthful model-backed bounds, units, helper text, and
+  accessible descriptions while preserving dirty Save/Discard lifecycles.
+
 ## 2.10.55
 
 - Include attention event outcome/state in full-payload disclosure names so
