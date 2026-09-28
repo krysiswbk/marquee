@@ -9,6 +9,10 @@
     calendar:55, tv:50, astronomy:45, gaming:40, music:35, movies:30,
     trailers:25, major_events:20 };
   let sections = [], contexts = [], health = {}, selected = '', loaded = false, offline = false;
+  // The server payload is the only media truth. Navigation may choose which
+  // surface is visible, but it must never manufacture a replacement Plex
+  // state from browse contexts or from the previous render.
+  let nowPlaying = null;
   let view = params.get('view') || '', interrupted = false;
   const label = key => destinations[key]?.[0] || key.replaceAll('_', ' ').replace(/^./, c => c.toUpperCase());
   const icon = key => destinations[key]?.[1] || '•';
@@ -46,7 +50,20 @@
     const valid = sections.includes(view), list = valid && !offline ? items(view) : [];
     if (selected && !list.some(c => c.id === selected)) selected = '';
     if (view === 'weather' && !selected && list.length) selected = (list.find(c => ['alert','extreme'].includes(c.subtype)) || list.find(c => c.subtype === 'current') || list[0]).id;
-    panel.hidden = interrupted || !view || view === 'household' || Boolean(selected); if (panel.hidden) return;
+    const plexActive = view === 'plex' && nowPlaying?.playing === true;
+    panel.classList.toggle('now-playing-surface', view === 'plex');
+    panel.hidden = interrupted || !view || view === 'household' || plexActive || Boolean(selected); if (panel.hidden) return;
+    if (view === 'plex') {
+      const unavailable = nowPlaying?.state === 'unavailable' || nowPlaying?.availability === 'unavailable';
+      const loading = !nowPlaying;
+      const title = loading ? 'Checking the media room' : unavailable ? 'Media service unavailable' : 'Nothing is playing';
+      const detail = loading ? 'Reading the current playback state.' : unavailable
+        ? 'Marquee is ready when the media service reconnects. No previous title or artwork is retained here.'
+        : 'The room is quiet. Choose Home to return to the household view.';
+      const ambient = document.querySelector('#idle-weather')?.textContent?.trim() || 'Home display ready';
+      panel.innerHTML = `<header class="kiosk-now-playing-head"><p>NOW PLAYING</p><h1>${esc(title)}</h1><p class="kiosk-now-playing-detail">${esc(detail)}</p></header><div class="kiosk-now-playing-body"><div class="kiosk-state-mark ${unavailable ? 'is-unavailable' : ''}" aria-hidden="true"><span>${unavailable ? '↻' : '·'}</span></div><div class="kiosk-now-playing-copy"><p class="kiosk-ambient">${esc(ambient)}</p><p class="kiosk-now-playing-note">${unavailable ? 'Try again when the service is reachable.' : 'Nothing needs your attention right now.'}</p><div class="kiosk-now-playing-actions"><a class="kiosk-home-action" href="${esc(href(''))}" data-view="">Return to Home</a>${unavailable ? '<button type="button" class="kiosk-retry" data-kiosk-retry>Check again</button>' : ''}</div></div></div>`;
+      return;
+    }
     const message = !loaded ? 'Loading your sections…' : offline ? 'This section is temporarily unavailable. Trying again…' : !valid ? 'This section is not enabled. Choose another section.' : health[view]?.state === 'error' || health[view]?.stale || health[view]?.state === 'disabled' ? 'This source is unavailable. Check its configuration in Sources / Admin.' : 'Nothing to show here right now. New items will appear automatically.';
     const html = `<header><p>EXPLORE</p><h1>${esc(label(view))}</h1></header>` + (list.length ? `<div class="kiosk-items">${list.map(c => `<button type="button" data-item="${esc(c.id)}"><small>${esc(c.status || c.source || '')}</small><strong>${esc(c.title)}</strong><span>${esc(c.subtitle || c.detail || '')}</span>${(c.rows || []).slice(0,3).map(row=>`<span>${esc(row)}</span>`).join('')}</button>`).join('')}</div>` : `<p class="kiosk-empty" role="status">${esc(message)}</p>`);
     if (panel.innerHTML !== html) panel.innerHTML = html;
@@ -64,9 +81,10 @@
   function handleLink(e) { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); } }
   primary.addEventListener('click', handleLink); overflow.addEventListener('click', handleLink);
   menu.addEventListener('click', e => { if (e.target === menu) { const r = menu.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closeMenu(); } });
-  panel.addEventListener('click', e => { const b = e.target.closest('button[data-item]'); if (b) { selected = b.dataset.item; drawPanel(); primary.querySelector(`[data-view="${CSS.escape(view)}"]`)?.focus(); window.dispatchEvent(new Event('marquee-navigation')); } });
+  panel.addEventListener('click', e => { const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); return; } const b = e.target.closest('button[data-item]'); if (b) { selected = b.dataset.item; drawPanel(); primary.querySelector(`[data-view="${CSS.escape(view)}"]`)?.focus(); window.dispatchEvent(new Event('marquee-navigation')); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && view === 'plex' && !menu.open) { e.preventDefault(); change(''); } });
   window.addEventListener('popstate', () => { view = new URLSearchParams(location.search).get('view') || ''; selected = ''; drawNavigation(); drawMenu(); drawPanel(); window.dispatchEvent(new Event('marquee-navigation')); });
-  window.MarqueeNavigation = { resolve(payload) { const wasInterrupted = interrupted; interrupted = Boolean(payload.attention || payload.householdFocus); if (interrupted && !wasInterrupted && menu.open) closeMenu(false); drawPanel(); if (interrupted || !view) return payload; const c = !offline && sections.includes(view) && items(view).find(item => item.id === selected); return c ? c.payload || {playing:true,type:'media_context',key:'browse:'+c.id,context:c} : {playing:false}; } };
+  window.MarqueeNavigation = { resolve(payload) { nowPlaying = payload || {playing:false, state:'idle', availability:'idle'}; const wasInterrupted = interrupted; interrupted = Boolean(payload?.attention || payload?.householdFocus); if (interrupted && !wasInterrupted && menu.open) closeMenu(false); drawPanel(); if (interrupted || !view || view === 'plex') return payload; const c = !offline && sections.includes(view) && items(view).find(item => item.id === selected); return c ? c.payload || {playing:true,type:'media_context',key:'browse:'+c.id,context:c} : {playing:false}; } };
   async function refresh() {
     try { const data = await Promise.all(['/api/config','/contexts','/providers'].map(async url => { const r = await fetch(url); if (!r.ok) throw Error(); return r.json(); })); sections = Object.entries(data[0].providers || {}).filter(([,cfg]) => cfg.enabled && (!cfg.targets || cfg.targets.includes('kiosk'))).map(([key]) => key); health = data[2].providers || {}; const seen = new Set(); contexts = (data[1].contexts || []).filter(c => { if (!c.id || c.id.startsWith('screen-test:') || (c.targets && !c.targets.includes('kiosk')) || !fresh(c)) return false; const key=(c.provider||c.source)+'|'+c.title+'|'+(c.starts||''); if (seen.has(key)) return false; seen.add(key); return true; }); for (const p of health.plex?.contexts || []) if (p.playing) contexts.push({id:'plex:now',source:'plex',title:p.title,subtitle:p.subtitle,payload:p}); loaded = true; offline = false; } catch (_) { offline = true; contexts = []; }
     if (!menu.open) { drawNavigation(); drawMenu(); } drawPanel(); window.dispatchEvent(new Event('marquee-navigation'));

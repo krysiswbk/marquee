@@ -1,3 +1,9 @@
+## 2.10.10 — Purposeful now-playing surface
+
+- Keep the authoritative now-playing lifecycle payload intact through forced Plex navigation.
+- Add composed idle and unavailable states with Home return, retry, keyboard escape, and responsive kiosk geometry.
+- Let active and paused media continue through the existing presentation and progress renderer without cached titles.
+
 ## 2.10.9 — Unified now-playing lifecycle
 
 - Clear the authoritative media payload immediately when Plex/Emby becomes unavailable; the API now distinguishes unavailable media from genuine idle without replaying the last title.
