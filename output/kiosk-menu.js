@@ -51,6 +51,7 @@
   let calendarPage = Math.max(1, Number.parseInt(params.get('page') || '1', 10) || 1);
   let calendarDisclosure = null;
   let calendarPageSize = 4;
+  let calendarPageSizeViewport = '';
   let calendarFocusHeadingPending = Boolean(calendarMode);
   let calendarFocusDisclosurePending = false;
   let initialDirectFocusPending = Boolean(view);
@@ -209,6 +210,17 @@
   };
   const safeRows = (c, limit = 3) => (c.rows || []).filter(row => row && !/@/.test(String(row))).slice(0, limit);
   const ordered = list => [...list].sort((a, b) => (dateOf(a)?.valueOf() || Infinity) - (dateOf(b)?.valueOf() || Infinity));
+  // CalendarProvider's birthday rollup keeps the nearest birthday in title
+  // and publishes the remaining authoritative birthdays in rows. Expand only
+  // this presentation shape for the full agenda; the provider remains the
+  // sole source of every display value.
+  function calendarEntries(list) {
+    return list.flatMap(c => c.subtype === 'birthday_rollup'
+      ? [{...c, subtype: 'birthday_entry', id: `${c.id}:featured`}, ...(c.rows || []).filter(Boolean).map((row, index) => ({
+        ...c, subtype: 'birthday_entry', id: `${c.id}:additional:${index}`, title: String(row), subtitle: 'Birthday', rows: []
+      }))]
+      : [c]);
+  }
   const button = c => `<button type="button" data-item="${esc(c.id)}"><small>${esc(stateCopy(c))}</small><strong>${esc(c.title || 'Untitled')}</strong><span>${esc(c.subtitle || c.detail || '')}</span></button>`;
   const combatView = key => key === 'ufc' || key === 'pfl';
   const combatName = key => key === 'pfl' ? 'PFL' : 'UFC';
@@ -338,7 +350,8 @@
   }
   const calendarPageCount = list => Math.max(1, Math.ceil(list.length / calendarPageSize));
   function calendarRow(c) {
-    return `<div class="kiosk-agenda-row ${c.subtype === 'birthday_rollup' ? 'is-birthday' : ''}"><time>${esc(c.subtitle || 'All day')}</time><strong>${esc(c.title || 'Untitled')}</strong><small>${esc(c.subtype === 'birthday_rollup' ? 'Birthday' : sourceLabel(c))}</small></div>`;
+    const birthday = c.subtype === 'birthday_rollup' || c.subtype === 'birthday_entry';
+    return `<div class="kiosk-agenda-row ${birthday ? 'is-birthday' : ''}"><time>${esc(c.subtitle || 'All day')}</time><strong>${esc(c.title || 'Untitled')}</strong><small>${esc(birthday ? 'Birthday' : sourceLabel(c))}</small></div>`;
   }
   function calendarDetail(list) {
     const pages = calendarPageCount(list);
@@ -352,9 +365,11 @@
   function renderAgenda(list) {
     const values = ordered(list), feature = values[0];
     if (!feature) return sharedState('Your agenda is clear.', 'Return to Home', false, 'empty');
-    const upcoming = values.slice(1, 1 + agendaLimit()), remaining = Math.max(0, values.length - 1 - upcoming.length);
+    const upcoming = values.slice(1, 1 + agendaLimit());
     const grouped = upcoming.reduce((map, c) => { const key = agendaGroup(dateOf(c)); (map[key] ||= []).push(c); return map; }, {});
-    const remainder = remaining ? `<button type="button" class="kiosk-agenda-more" data-calendar-disclosure aria-label="View all ${values.length} events">View all ${values.length} events</button>` : '';
+    const fullValues = view === 'calendar' ? calendarEntries(values) : values;
+    const remaining = Math.max(0, fullValues.length - 1 - upcoming.length);
+    const remainder = remaining ? `<button type="button" class="kiosk-agenda-more" data-calendar-disclosure aria-label="View all ${fullValues.length} events">View all ${fullValues.length} events</button>` : '';
     return `<div class="kiosk-agenda"><article class="kiosk-agenda-feature"><p class="kiosk-kicker">UP NEXT</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || feature.detail || '')}</p><p class="kiosk-meta">${esc(feature.location || feature.detail || sourceLabel(feature))}</p></article><div class="kiosk-agenda-groups">${Object.entries(grouped).map(([group, entries]) => `<section><h3>${esc(group)}</h3>${entries.map(calendarRow).join('')}</section>`).join('') || '<p class="kiosk-empty">No later events in view.</p>'}${remainder}</div></div>`;
   }
   function renderMedia(list) {
@@ -421,9 +436,15 @@
     const headingName = feature ? nhlMatchupName(feature.left || {}, feature.right || {}) : label(view);
     const detail = view === 'calendar' && calendarMode === 'all' && lifecycle.state === 'populated';
     panel.classList.toggle('calendar-detail-surface', detail);
-    if (detail) calendarPageSize = measuredAgendaPageSize();
+    if (detail) {
+      const viewport = `${window.innerWidth}x${window.innerHeight}`;
+      if (calendarPageSizeViewport !== viewport) {
+        calendarPageSize = measuredAgendaPageSize();
+        calendarPageSizeViewport = viewport;
+      }
+    }
     let html = detail
-      ? `<header class="kiosk-section-head kiosk-section-head-detail"><p>CALENDAR</p><h1 id="kiosk-section-title">Calendar</h1></header>${calendarDetail(ordered(list))}`
+      ? `<header class="kiosk-section-head kiosk-section-head-detail"><p>CALENDAR</p><h1 id="kiosk-section-title">Calendar</h1></header>${calendarDetail(calendarEntries(ordered(list)))}`
       : `<header class="kiosk-section-head"><p>${esc(categoryFor(view).toUpperCase())}</p><h1 id="kiosk-section-title"${feature ? ` aria-label="${esc(headingName)}"` : ''}>${esc(label(view))}</h1></header>` + (message ? sharedState(message, 'Return to Home', lifecycle.state === 'error' || lifecycle.state === 'stale' || lifecycle.state === 'unavailable', lifecycle.state, view) : renderDestination(view, list));
     const focusedCalendarControl = detail && panel.contains(document.activeElement)
       ? document.activeElement.dataset.calendarControl || (document.activeElement.hasAttribute('data-calendar-summary') ? 'summary'
@@ -442,7 +463,7 @@
       let page = panel.querySelector('.kiosk-calendar-page');
       while (page && page.scrollHeight > page.clientHeight + 1 && calendarPageSize > 1) {
         calendarPageSize -= 1;
-        html = `<header class="kiosk-section-head kiosk-section-head-detail"><p>CALENDAR</p><h1 id="kiosk-section-title">Calendar</h1></header>${calendarDetail(ordered(list))}`;
+        html = `<header class="kiosk-section-head kiosk-section-head-detail"><p>CALENDAR</p><h1 id="kiosk-section-title">Calendar</h1></header>${calendarDetail(calendarEntries(ordered(list)))}`;
         panel.innerHTML = html;
         page = panel.querySelector('.kiosk-calendar-page');
       }
@@ -476,14 +497,15 @@
     else primary.querySelector('[data-view=""]')?.focus();
   }
   function change(key, restoreFocus = true) { view = key; selected = ''; calendarMode = ''; calendarPage = 1; calendarFocusDisclosurePending = false; history.pushState({marqueeDestination: Boolean(key)}, '', href(key)); closeMenu(false); drawNavigation(); drawMenu(); drawPanel(); if (restoreFocus) { focusNavigation(key); setTimeout(() => focusNavigation(key), 0); } window.dispatchEvent(new Event('marquee-navigation')); }
-  function openCalendarAgenda() { if (view !== 'calendar' || !items('calendar').length) return; calendarMode = 'all'; calendarPage = 1; calendarFocusHeadingPending = true; calendarFocusDisclosurePending = false; history.pushState({marqueeCalendarAgenda: true}, '', href('calendar', true, calendarPage)); drawPanel(); }
+  function openCalendarAgenda() { if (view !== 'calendar' || !items('calendar').length) return; calendarMode = 'all'; calendarPage = 1; calendarPageSizeViewport = ''; calendarFocusHeadingPending = true; calendarFocusDisclosurePending = false; history.pushState({marqueeCalendarAgenda: true}, '', href('calendar', true, calendarPage)); drawPanel(); }
   function closeCalendarAgenda() {
     if (!calendarMode) return;
     calendarFocusDisclosurePending = true;
     history.back();
+    calendarPageSizeViewport = '';
   }
   function setCalendarPage(page) {
-    const list = ordered(items('calendar')); const pages = calendarPageCount(list);
+    const list = calendarEntries(ordered(items('calendar'))); const pages = calendarPageCount(list);
     const nextPage = Math.max(1, Math.min(pages, page));
     if (nextPage === calendarPage) return;
     calendarPage = nextPage;
@@ -504,7 +526,7 @@
   menu.addEventListener('click', e => { if (e.target === menu) { const r = menu.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closeMenu(); } });
   panel.addEventListener('click', e => { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); return; } if (e.target.closest('[data-calendar-disclosure]')) { openCalendarAgenda(); return; } if (e.target.closest('[data-calendar-summary]')) { closeCalendarAgenda(); return; } const page = e.target.closest('[data-calendar-page]'); if (page && !page.disabled) { setCalendarPage(Number(page.dataset.calendarPage)); return; } const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); return; } const b = e.target.closest('button[data-item]'); if (b) { selected = b.dataset.item; drawPanel(); primary.querySelector(`[data-view="${CSS.escape(view)}"]`)?.focus(); window.dispatchEvent(new Event('marquee-navigation')); } });
   document.addEventListener('keydown', e => { if (menu.open || !view) return; if (!calendarMode && e.target.closest?.('[data-calendar-disclosure]') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openCalendarAgenda(); return; } if (calendarMode) { if (e.key === 'Escape' || e.key === 'BrowserBack') { e.preventDefault(); closeCalendarAgenda(); return; } if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); setCalendarPage(calendarPage - 1); return; } if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); setCalendarPage(calendarPage + 1); return; } } else if (e.key === 'Escape') { e.preventDefault(); change(''); } });
-  window.addEventListener('popstate', () => { const wasCalendarDetail = view === 'calendar' && calendarMode === 'all'; const next = new URLSearchParams(location.search); view = next.get('view') || ''; calendarMode = view === 'calendar' && next.get('mode') === 'all' ? 'all' : ''; if (wasCalendarDetail && view === 'calendar' && !calendarMode) calendarFocusDisclosurePending = true; if (!(view === 'calendar' && !calendarMode)) calendarFocusDisclosurePending = false; calendarPage = Math.max(1, Number.parseInt(next.get('page') || '1', 10) || 1); calendarFocusHeadingPending = Boolean(calendarMode); selected = ''; drawNavigation(); drawMenu(); drawPanel(); if (!calendarMode) { if (view !== 'calendar') focusNavigation(view); } window.dispatchEvent(new Event('marquee-navigation')); });
+  window.addEventListener('popstate', () => { const wasCalendarDetail = view === 'calendar' && calendarMode === 'all'; const next = new URLSearchParams(location.search); view = next.get('view') || ''; calendarMode = view === 'calendar' && next.get('mode') === 'all' ? 'all' : ''; calendarPageSizeViewport = ''; if (wasCalendarDetail && view === 'calendar' && !calendarMode) calendarFocusDisclosurePending = true; if (!(view === 'calendar' && !calendarMode)) calendarFocusDisclosurePending = false; calendarPage = Math.max(1, Number.parseInt(next.get('page') || '1', 10) || 1); calendarFocusHeadingPending = Boolean(calendarMode); selected = ''; drawNavigation(); drawMenu(); drawPanel(); if (!calendarMode) { if (view !== 'calendar') focusNavigation(view); } window.dispatchEvent(new Event('marquee-navigation')); });
   window.addEventListener('resize', () => { if (calendarMode && view === 'calendar') drawPanel(); });
   window.addEventListener('marquee-surface-rendered', drawPanel);
   window.MarqueeNavigation = { resolve(payload) { nowPlaying = payload || {playing:false, state:'idle', availability:'idle'}; const wasInterrupted = interrupted; interrupted = Boolean(payload?.attention || payload?.householdFocus); if (interrupted && !wasInterrupted && menu.open) closeMenu(false); drawPanel(); if (interrupted || !view || view === 'plex') return payload; const c = !offline && sections.includes(view) && items(view).find(item => item.id === selected); return c ? c.payload || {playing:true,type:'media_context',key:'browse:'+c.id,context:c} : {playing:false}; }, refresh };

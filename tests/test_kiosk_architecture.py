@@ -78,7 +78,7 @@ def test_calendar_contract_groups_and_limits_chronological_agenda():
 
 def test_calendar_full_agenda_contract_is_paginated_and_history_addressable():
     for token in (
-        'data-calendar-disclosure', 'View all ${values.length} events',
+        'data-calendar-disclosure', 'View all ${fullValues.length} events',
         'calendarMode = params.get(\'mode\') === \'all\'',
         'u.searchParams.set(\'mode\', \'all\')',
         'u.searchParams.set(\'page\', String(page))',

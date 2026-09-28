@@ -56,3 +56,13 @@ def test_disclosure_pending_focus_is_consumed_by_the_summary_render() -> None:
     assert pending is False
     assert "calendarFocusDisclosurePending = false" in MENU
     assert "calendarDisclosure.focus({preventScroll: true})" in MENU
+
+
+def test_birthday_rollup_expands_provider_title_and_rows_for_full_agenda() -> None:
+    assert "function calendarEntries(list)" in MENU
+    assert "c.subtype === 'birthday_rollup'" in MENU
+    assert "subtype: 'birthday_entry'" in MENU
+    assert "calendarDetail(calendarEntries(ordered(list)))" in MENU
+    assert "const birthday = c.subtype === 'birthday_rollup' || c.subtype === 'birthday_entry'" in MENU
+    assert "calendarEntries(ordered(items('calendar'))); const pages" in MENU
+    assert "calendarPageSizeViewport" in MENU
