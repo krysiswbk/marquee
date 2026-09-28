@@ -1,3 +1,10 @@
+## 2.10.88
+
+- Replace the narrow gaming `+N more` dead end with an accessible expander
+  backed by the existing authoritative gaming context rows.
+- Preserve the compact ambient card, full desktop rows, keyboard/touch sizing,
+  and non-interactive Cast presentation.
+
 ## 2.10.87
 
 - Replace the inert recent-activity remainder with an accessible full activity

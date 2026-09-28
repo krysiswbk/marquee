@@ -143,7 +143,7 @@
   .stage.contextual > .block, .stage.contextual > .sports-card,
   .stage.contextual > .weather-card { display: none !important; }
   .stage.contextual .context-card { display: grid; grid-template-columns: minmax(0,1fr) var(--context-art-width,34vw);
-    grid-template-rows: auto minmax(0,1fr) auto; gap: 3vh 4vw; }
+    grid-template-rows: auto minmax(0,1fr) auto auto; gap: 3vh 4vw; }
   .stage.contextual .context-card.no-art { grid-template-columns: minmax(0, 1fr); }
   .context-card.no-art .context-copy { max-width: 76vw; }
   .context-head { grid-column:1/-1;display:flex;justify-content:space-between;align-items:flex-start }
@@ -154,8 +154,10 @@
   .context-title{font-size:clamp(2.4rem,var(--context-title-size,5vw),5.5rem);line-height:.96;font-weight:900;margin:.8vh 0 1.5vh;text-wrap:balance;overflow-wrap:anywhere;word-break:normal}.context-subtitle{font-size:clamp(1.1rem,var(--context-subtitle-size,2vw),2.2rem);font-weight:750;color:#dce3ee;text-wrap:balance;overflow-wrap:anywhere;word-break:normal}
   .context-detail{margin-top:2.2vh;font-size:var(--context-detail-size,1.45vw);line-height:1.45;color:var(--text-soft);overflow-wrap:anywhere;word-break:normal}
   .context-art{width:100%;height:100%;min-height:0;object-fit:contain;border-radius:1.2vw;filter:drop-shadow(0 2vh 3vh rgba(0,0,0,.6))}
-  .context-rows{grid-column:1/-1;display:flex;gap:1.5vw;padding-top:2vh;border-top:1px solid rgba(255,255,255,.16);font-size:1.3vw;font-weight:750;color:var(--text-soft);overflow:hidden;flex-wrap:wrap}
-  .context-rows span { padding:.65vh .85vw; border-radius:999px; background:rgba(255,255,255,.07);overflow-wrap:anywhere;word-break:normal; }
+  .context-rows{grid-column:1/-1;display:flex;gap:1.5vw;padding-top:2vh;border-top:1px solid rgba(255,255,255,.16);font-size:1.3vw;font-weight:750;color:var(--text-soft);overflow:auto;overflow-x:hidden;flex-wrap:wrap;align-content:flex-start;max-height:min(22vh,14rem);scrollbar-gutter:stable;overscroll-behavior:contain}
+  .context-rows span { min-width:0;max-width:100%;padding:.65vh .85vw;border-radius:999px;background:rgba(255,255,255,.07);overflow-wrap:anywhere;word-break:normal;white-space:normal; }
+  .context-rows-more { grid-column:1/-1; display:none; min-height:44px; align-self:flex-start; margin-top:1vh; padding:.65vh .85vw; border:1px solid var(--accent); border-radius:10px; background:transparent; color:var(--text-soft); font:inherit; font-size:clamp(.78rem,1.1vw,1rem); cursor:pointer; }
+  .context-rows-more:focus-visible { outline:3px solid #c3fc86; outline-offset:3px; }
   .context-card[data-kind="gaming"], .context-card[data-kind="game_release"] { background:radial-gradient(circle at 78% 45%,rgba(126,87,194,.3),transparent 40%),linear-gradient(145deg,#080a0e,#171326 68%,#08090c) }
   .context-card[data-kind="tv_release"] { background:radial-gradient(circle at 78% 45%,rgba(66,165,245,.24),transparent 40%),linear-gradient(145deg,#080a0e,#101c28 68%,#08090c) }
   .context-card[data-kind="calendar_event"] { background:radial-gradient(circle at 78% 45%,rgba(20,184,166,.24),transparent 40%),linear-gradient(145deg,#080a0e,#0d211f 68%,#08090c) }
@@ -694,9 +696,9 @@
   body.live-editing [data-layout] { outline:none; }
   body.live-editing .screen-controls, body.live-editing nav { display:none !important; }
 </style>
-<link rel="stylesheet" href="/brain.css?v=2.10.87">
-<link rel="stylesheet" href="/screens.css?v=2.10.87">
-<link rel="stylesheet" href="/weather-channel.css?v=2.10.87">
+<link rel="stylesheet" href="/brain.css?v=2.10.88">
+<link rel="stylesheet" href="/screens.css?v=2.10.88">
+<link rel="stylesheet" href="/weather-channel.css?v=2.10.88">
 <link rel="stylesheet" href="/scene-themes.css?v=2.9.7">
 <body data-template="spotlight">
 <img class="bg" id="bg" alt="">
@@ -704,7 +706,7 @@
 <div class="bg-shade"></div>
 <div class="scene" id="scene"></div>
 <canvas class="wx-canvas" id="wxcanvas" aria-hidden="true"></canvas>
-<div class="stage hidden">
+<div class="stage hidden" id="stage" tabindex="-1">
   <section class="weather-card" id="weather-card">
     <header class="weather-head"><span class="weather-source">Marquee Weather / Local conditions</span><time class="weather-clock" id="weather-clock"></time></header>
     <img class="weather-radar" id="weather-radar" alt="Weather radar centered on home">
@@ -712,9 +714,10 @@
   </section>
   <section class="context-card" id="context-card">
     <header class="context-head"><div class="context-source" id="context-source"></div><div class="context-time" id="context-time"><time class="context-clock" id="context-clock"></time><div class="context-weather" id="context-weather"></div></div></header>
-    <div class="context-copy"><div class="context-status" id="context-status"></div><div class="context-title" id="context-title"></div><div class="context-subtitle" id="context-subtitle"></div><div class="context-detail" id="context-detail"></div></div>
+    <div class="context-copy"><div class="context-status" id="context-status"></div><div class="context-title" id="context-title" tabindex="-1"></div><div class="context-subtitle" id="context-subtitle"></div><div class="context-detail" id="context-detail"></div></div>
     <img class="context-art" id="context-art" alt="">
-    <footer class="context-rows" id="context-rows"></footer>
+    <footer class="context-rows" id="context-rows" role="region" aria-label="Context details" tabindex="0"></footer>
+    <button type="button" class="context-rows-more" id="context-rows-more" aria-controls="context-rows" aria-expanded="false" hidden></button>
   </section>
   <section class="sports-card" id="sports-card">
     <header class="sport-head"><span id="sport-league"></span><div class="sport-title" id="sport-title"></div><span id="sport-kicker"></span></header>
@@ -795,10 +798,10 @@
 <time class="cast-clock-overlay" id="cast-clock-overlay"></time>
 <div class="idle-screen"><div class="idle-house"><div class="idle-kicker" id="idle-kicker">Home</div><div class="idle-greeting" id="idle-greeting"></div><div class="idle-state" id="idle-state" hidden></div><div class="idle-note" id="idle-note" hidden></div><time class="idle-clock" id="idle-clock"></time><div class="idle-date" id="idle-date"></div><div class="idle-weather" id="idle-weather" aria-label="Current weather"><div class="idle-weather-primary"><strong id="idle-weather-temp"></strong><span id="idle-weather-condition"></span></div><div class="idle-weather-secondary"><span id="idle-weather-feels"></span><span id="idle-weather-range"></span><span id="idle-weather-rain"></span></div><div class="idle-weather-status" id="idle-weather-status"></div></div></div></div>
 <div class="ambient-veil" aria-hidden="true"></div>
-<script src="/weather-channel.js?v=2.10.87"></script>
-<script src="/weather-summary.js?v=2.10.87"></script>
-<script src="/now-playing-progress.js?v=2.10.87"></script>
-<script src="/brain.js?v=2.10.87"></script>
+<script src="/weather-channel.js?v=2.10.88"></script>
+<script src="/weather-summary.js?v=2.10.88"></script>
+<script src="/now-playing-progress.js?v=2.10.88"></script>
+<script src="/brain.js?v=2.10.88"></script>
 <script>
 
   const $ = id => document.getElementById(id);
@@ -848,6 +851,7 @@
     return shown;
   }
   let shownKey = null, prog = null, state = 'playing', fetchedAt = 0;
+  let disclosureContextKey = null, disclosureExpanded = false;
   let progressState = {key:null, state:'idle', progress:null, fetchedAt:0, displayedOffsetMs:0};
   let transitionTimer = null;
   let fallbackCfg = {screen:'clock_weather',show_clock:true,show_weather:true,
@@ -1367,6 +1371,9 @@ ${chase.join('')}
 
   function render(d) {
     lastD = d;
+    const previouslyFocused = document.activeElement;
+    const focusWasContextDetail = previouslyFocused === $('context-rows-more')
+      || $('context-rows').contains(previouslyFocused);
     const c = activeCfg();
     const root = document.documentElement.style;
     const sportClockScale = Math.max(.6, Math.min(1.8, Number(c.sportsClockSize || 100) / 100));
@@ -1393,6 +1400,13 @@ ${chase.join('')}
     const sportsContext = !!context && /^(nhl|ufc|pfl)_/.test(context.type || '');
     const weatherContext = !!context && context.type === 'weather';
     const genericContext = !!context && !sportsContext && !weatherContext;
+    if (!genericContext) {
+      disclosureContextKey = null; disclosureExpanded = false;
+      $('context-rows').replaceChildren(); $('context-rows').hidden = true; $('context-rows').inert = true;
+      $('context-rows-more').hidden = true; $('context-rows-more').inert = true;
+      $('context-rows-more').setAttribute('aria-expanded', 'false'); $('context-rows-more').textContent = '';
+      if (focusWasContextDetail) $('stage').focus({preventScroll:true});
+    }
     stage.classList.toggle('sports', sportsContext);
     stage.classList.toggle('weather-context', weatherContext);
     stage.classList.toggle('contextual', genericContext);
@@ -1459,11 +1473,39 @@ ${chase.join('')}
         const isCalendar = context.type === 'calendar_event' || context.subtype === 'game_release';
         const rows = isCalendar && context.subtype !== 'birthday_rollup' ? calendarRows(context) : (context.rows || []).filter(Boolean);
         const contextRows = $('context-rows');
+        const contextRowsMore = $('context-rows-more');
+        const contextIdentity = String(context.id || d.key || [context.source, context.type, context.subtype, context.title].filter(Boolean).join(':'));
+        if (contextIdentity !== disclosureContextKey) {
+          disclosureContextKey = contextIdentity;
+          disclosureExpanded = false;
+        }
+        const rowsVisible = rows.length > 0 && liveVisible('media', 'rows');
+        const narrowGaming = LIVE_SURFACE && !CAST_DISPLAY && matchMedia('(max-width: 480px)').matches;
+        const hasRowsDisclosure = narrowGaming && context.type === 'gaming' && rows.length > 1 && rowsVisible;
         contextRows.innerHTML = rows.map(row => `<span>${esc(row)}</span>`).join('');
-        const phoneSummary = context.type === 'gaming' && rows.length > 1
-          ? `+${rows.length - 1} more` : '';
-        contextRows.dataset.summary = phoneSummary;
-        contextRows.classList.toggle('phone-summary', !!phoneSummary);
+        const syncDisclosure = () => {
+          const expanded = hasRowsDisclosure && disclosureExpanded;
+          contextRows.classList.toggle('phone-expanded', expanded);
+          contextRows.querySelectorAll('span').forEach((row, index) => {
+            row.hidden = hasRowsDisclosure && index > 0 && !expanded;
+          });
+          contextRows.hidden = !rowsVisible;
+          contextRows.inert = !rowsVisible;
+          contextRowsMore.hidden = !hasRowsDisclosure;
+          contextRowsMore.inert = !hasRowsDisclosure;
+          contextRowsMore.setAttribute('aria-expanded', String(expanded));
+          contextRowsMore.textContent = hasRowsDisclosure
+            ? expanded ? 'Show fewer gaming details' : `Show all ${rows.length} gaming details` : '';
+          if (focusWasContextDetail && !hasRowsDisclosure) {
+            $('context-title').focus({preventScroll:true});
+          }
+        };
+        syncDisclosure();
+        contextRowsMore.onclick = hasRowsDisclosure ? () => {
+          disclosureExpanded = !disclosureExpanded;
+          syncDisclosure();
+        } : null;
+        $('context-card').dataset.contextKey = contextIdentity;
         const art = $('context-art');
         const artSource = context.artwork || context.background || '';
         const artVisible = !!artSource && liveVisible('media', 'artwork');
@@ -1479,7 +1521,7 @@ ${chase.join('')}
         $('context-subtitle').hidden = !liveVisible('media', 'title');
         $('context-status').hidden = !liveVisible('media', 'status');
         $('context-detail').hidden = !liveVisible('media', 'details');
-        $('context-rows').hidden = !rows.length || !liveVisible('media', 'rows');
+        syncDisclosure();
       }
       if (sportsContext) {
         $('sport-timebox').hidden = false;
@@ -2319,10 +2361,17 @@ ${chase.join('')}
       WX_FORCE = msg.wx || null;
       DAY_FORCE = msg.day != null ? String(msg.day) : null;
       wxTick();
-    } else if (msg.type === 'marquee-demo-next') {
-      if (DEMO && DEMOS.length) {
+    // Demo-only preview hooks must never replace an authoritative editor payload.
+    } else if (DEMO && msg.type === 'marquee-demo-context-reset') {
+      const d = {playing:true,type:'media_context',key:'calendar-preview',context:{source:'calendar',type:'calendar_event',id:'calendar-preview',title:'Household calendar',subtitle:'Today',detail:'A stable non-gaming context.'}};
+      lastD = d; render(d); refreshPoster(d); paint();
+    } else if (DEMO && msg.type === 'marquee-demo-next') {
+      if (DEMOS.length) {
         demoIdx = (demoIdx + 1) % DEMOS.length;
-        const d = demoM().data;
+        const contextDemo = new URLSearchParams(location.search).get('context-demo');
+        const d = contextDemo === 'media' || contextDemo === 'media-long'
+          ? {playing:true,type:'media_context',key:'media-alt-preview',context:{source:'gaming',type:'gaming',id:'gaming-alt',title:'Nintendo Direct encore',subtitle:'Tomorrow · 10:00 AM',detail:'A refreshed gaming context.',status:'UPCOMING',rows:['40 minute presentation','Watch live on YouTube','Nintendo Switch 2','Direct feed · 10:00 AM','Hosted by Nintendo','All regions · English'],artwork:'https://upload.wikimedia.org/wikipedia/commons/0/0d/Nintendo.svg'}}
+          : demoM().data;
         lastD = d; render(d); refreshPoster(d); paint();
       }
     } else if (msg.type === 'marquee-layout-preview') {
@@ -2551,6 +2600,13 @@ ${chase.join('')}
       const unavailable = d.state === 'unavailable' || d.availability === 'unavailable';
       document.body.classList.toggle('unavailable', unavailable);
       document.body.classList.add('idle'); shownKey = null; prog = null;
+      const focusWasContextDetail = document.activeElement === $('context-rows-more')
+        || $('context-rows').contains(document.activeElement);
+      disclosureContextKey = null; disclosureExpanded = false;
+      $('context-rows').replaceChildren(); $('context-rows').hidden = true; $('context-rows').inert = true;
+      $('context-rows-more').hidden = true; $('context-rows-more').inert = true;
+      $('context-rows-more').setAttribute('aria-expanded', 'false'); $('context-rows-more').textContent = '';
+      if (focusWasContextDetail) $('stage').focus({preventScroll:true});
       progressState = window.MarqueeNowPlayingProgress.reconcile(d, progressState, Date.now());
       $('idle-state').hidden = !unavailable;
       $('idle-note').hidden = !unavailable;
@@ -2620,7 +2676,8 @@ ${chase.join('')}
         days:Array.from({length:5},(_,i)=>({date:new Date(+now+i*86400000).toISOString().slice(0,10),high:[24,25,22,20,23][i],low:[14,15,13,12,14][i],code:[0,2,61,3,0][i],rain:[0,10,80,20,5][i],uv:6}))};
     }
     if (demoSurface === 'birthdays') d = {playing:true,type:'media_context',key:'birthday-preview',context:{source:'calendar',type:'calendar_event',subtype:'birthday_rollup',title:"Casey's Birthday",subtitle:'Tomorrow · Sep 12',detail:'Coming up',status:'Next birthday',rows:["Jordan's Birthday · In 6 days · Sep 17","Sam's Birthday · In 12 days · Sep 23"],accent:'#f7b2d9'}};
-    if (demoSurface === 'media') d = {playing:true,type:'media_context',key:'media-preview',context:{source:'gaming',type:'gaming',title:'Nintendo Direct',subtitle:'Tomorrow · 10:00 AM',detail:'A notable showcase matching your Nintendo interests.',status:'UPCOMING',rows:['40 minute presentation','Watch live on YouTube'],artwork:'https://upload.wikimedia.org/wikipedia/commons/0/0d/Nintendo.svg'}};
+    if (demoSurface === 'media') d = {playing:true,type:'media_context',key:'media-preview',context:{source:'gaming',type:'gaming',title:'Nintendo Direct',subtitle:'Tomorrow · 10:00 AM',detail:'A notable showcase matching your Nintendo interests.',status:'UPCOMING',rows:['40 minute presentation','Watch live on YouTube','Nintendo Switch 2','Direct feed · 10:00 AM','Hosted by Nintendo','All regions · English'],artwork:'https://upload.wikimedia.org/wikipedia/commons/0/0d/Nintendo.svg'}};
+    if (demoSurface === 'media-long') d = {playing:true,type:'media_context',key:'media-long-preview',context:{source:'gaming',type:'gaming',title:'Nintendo Direct',subtitle:'Tomorrow · 10:00 AM',detail:'A notable showcase matching your Nintendo interests.',status:'UPCOMING',rows:['40 minute presentation','unbroken-' + 'x'.repeat(500),'Nintendo Switch 2','Direct feed · 10:00 AM','Hosted by Nintendo','All regions · English'],artwork:'https://upload.wikimedia.org/wikipedia/commons/0/0d/Nintendo.svg'}};
     try {
       if (!baseCfg) await settingsTick();
       if (!DEMO) {
@@ -2687,4 +2744,4 @@ ${chase.join('')}
   setInterval(paint, 1000);
 </script>
 
-<script src="/kiosk-menu.js?v=2.10.87"></script>
+<script src="/kiosk-menu.js?v=2.10.88"></script>

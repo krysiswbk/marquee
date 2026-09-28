@@ -76,14 +76,23 @@ class DisplayTemplateTests(unittest.TestCase):
         self.assertIn('id="sport-timebox"', DISPLAY)
         self.assertIn('id="sport-footer"', DISPLAY)
 
-    def test_long_context_values_break_without_mutating_payload_text(self):
-        for token in ("overflow-wrap:anywhere", "word-break:normal", "contextRows.dataset.summary"):
+    def test_gaming_remainder_has_an_accessible_expander(self):
+        for token in ("context-rows-more", "Show all ${rows.length} gaming details",
+                      "phone-expanded", "aria-expanded", "aria-controls=\"context-rows\"",
+                      "disclosureContextKey", "disclosureExpanded", "row.hidden"):
             self.assertIn(token, DISPLAY)
+        self.assertNotIn("contextRows.dataset.summary", DISPLAY)
+
+    def test_long_context_values_break_without_mutating_payload_text(self):
+        screens = (Path(__file__).parents[1] / "output" / "screens.css").read_text()
+        for token in ("overflow-wrap:anywhere", "word-break:normal", "max-width:100%"):
+            self.assertIn(token, DISPLAY)
+        self.assertIn("overflow-y:auto", screens)
 
     def test_fixed_stage_contracts_bound_intrinsic_rows(self):
         screens = (Path(__file__).parents[1] / "output" / "screens.css").read_text()
         for token in ("grid-template-rows:auto minmax(0,1fr) auto", "context-card[data-kind=gaming]",
-                      "context-rows.phone-summary::after", "body .sport-footer{min-height:0"):
+                      "context-rows-more:not([hidden])", "body .sport-footer{min-height:0"):
             self.assertIn(token, screens)
 
     def test_dashboard_calendar_summaries_offer_full_agenda_handoff(self):
