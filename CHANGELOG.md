@@ -1,3 +1,9 @@
+## 2.10.38
+
+- Fit UFC and PFL truthful empty-state headings, copy, and Return Home actions
+  inside the shared 435px short-wide kiosk stage while retaining readable type
+  and the 48px action target.
+
 ## 2.10.37
 
 - Extend truthful shallow-landscape destination fitting through 17:10 displays.

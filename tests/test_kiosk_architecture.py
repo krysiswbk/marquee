@@ -171,4 +171,23 @@ def test_short_wide_presentation_contract_is_scoped_and_summarizes_secondary_con
     assert ".kiosk-queue-more{display:block;margin:8px 0 0}" in SCREENS
     assert "const shortWide = () =>" in MENU
     assert "shortWide() ? 2 : 3" in MENU
+
+
+def test_short_wide_sports_empty_state_keeps_action_reachable_with_readable_rhythm():
+    shallow = SCREENS.rsplit(
+        "@media(min-width:1000px) and (max-height:700px) and (min-aspect-ratio:3/2)", 1
+    )[1]
+    for token in (
+        ".kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-state{align-items:flex-start;gap:20px;margin-top:18px}",
+        ".kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-state-mark{width:72px;height:72px;font-size:54px}",
+        ".kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-state h2{font-size:clamp(32px,3.2vw,48px);line-height:1.05}",
+        ".kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-state .kiosk-empty{margin:8px 0;font-size:20px;line-height:1.25}",
+        ".kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-state .kiosk-now-playing-actions{margin-top:12px}",
+    ):
+        assert token in shallow
+    assert ".kiosk-home-action,.kiosk-retry{display:inline-flex" in SCREENS
+    assert "min-height:48px" in SCREENS
+    assert "No games or fights are on the board." in MENU
+    assert "New items will appear automatically when this destination has something relevant." in MENU
+    assert "Return to Home" in MENU
     assert "(min-width: 1000px)" in MENU
