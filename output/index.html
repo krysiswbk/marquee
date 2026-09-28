@@ -142,25 +142,25 @@
   .stage.contextual > .block, .stage.contextual > .sports-card,
   .stage.contextual > .weather-card { display: none !important; }
   .stage.contextual .context-card { display: grid; grid-template-columns: minmax(0,1fr) var(--context-art-width,34vw);
-    grid-template-rows: auto 1fr auto; gap: 3vh 4vw; }
+    grid-template-rows: auto minmax(0,1fr) auto; gap: 3vh 4vw; }
   .stage.contextual .context-card.no-art { grid-template-columns: minmax(0, 1fr); }
   .context-card.no-art .context-copy { max-width: 76vw; }
   .context-head { grid-column:1/-1;display:flex;justify-content:space-between;align-items:flex-start }
   .context-source { color:var(--accent);font-size:1.35vw;font-weight:900;letter-spacing:.2em;text-transform:uppercase }
   .context-time { text-align:right }.context-clock {font-size:var(--context-clock-size,6.8vw);line-height:.9;font-weight:900;font-variant-numeric:tabular-nums}
   .context-weather {margin-top:1vh;color:#dbeafe;font-size:1.6vw;font-weight:750}
-  .context-copy {align-self:center;min-width:0}.context-status{color:var(--accent);font-size:1.5vw;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
-  .context-title{font-size:clamp(2.4rem,var(--context-title-size,5vw),5.5rem);line-height:.96;font-weight:900;margin:.8vh 0 1.5vh;text-wrap:balance}.context-subtitle{font-size:clamp(1.1rem,var(--context-subtitle-size,2vw),2.2rem);font-weight:750;color:#dce3ee;text-wrap:balance}
-  .context-detail{margin-top:2.2vh;font-size:var(--context-detail-size,1.45vw);line-height:1.45;color:var(--text-soft)}
+  .context-copy,.context-art,.context-rows{min-width:0;min-height:0}.context-copy {align-self:center;overflow:hidden}.context-status{color:var(--accent);font-size:1.5vw;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+  .context-title{font-size:clamp(2.4rem,var(--context-title-size,5vw),5.5rem);line-height:.96;font-weight:900;margin:.8vh 0 1.5vh;text-wrap:balance;overflow-wrap:anywhere;word-break:normal}.context-subtitle{font-size:clamp(1.1rem,var(--context-subtitle-size,2vw),2.2rem);font-weight:750;color:#dce3ee;text-wrap:balance;overflow-wrap:anywhere;word-break:normal}
+  .context-detail{margin-top:2.2vh;font-size:var(--context-detail-size,1.45vw);line-height:1.45;color:var(--text-soft);overflow-wrap:anywhere;word-break:normal}
   .context-art{width:100%;height:100%;min-height:0;object-fit:contain;border-radius:1.2vw;filter:drop-shadow(0 2vh 3vh rgba(0,0,0,.6))}
-  .context-rows{grid-column:1/-1;display:flex;gap:1.5vw;padding-top:2vh;border-top:1px solid rgba(255,255,255,.16);font-size:1.3vw;font-weight:750;color:var(--text-soft)}
-  .context-rows span { padding:.65vh .85vw; border-radius:999px; background:rgba(255,255,255,.07); }
+  .context-rows{grid-column:1/-1;display:flex;gap:1.5vw;padding-top:2vh;border-top:1px solid rgba(255,255,255,.16);font-size:1.3vw;font-weight:750;color:var(--text-soft);overflow:hidden;flex-wrap:wrap}
+  .context-rows span { padding:.65vh .85vw; border-radius:999px; background:rgba(255,255,255,.07);overflow-wrap:anywhere;word-break:normal; }
   .context-card[data-kind="gaming"], .context-card[data-kind="game_release"] { background:radial-gradient(circle at 78% 45%,rgba(126,87,194,.3),transparent 40%),linear-gradient(145deg,#080a0e,#171326 68%,#08090c) }
   .context-card[data-kind="tv_release"] { background:radial-gradient(circle at 78% 45%,rgba(66,165,245,.24),transparent 40%),linear-gradient(145deg,#080a0e,#101c28 68%,#08090c) }
   .context-card[data-kind="calendar_event"] { background:radial-gradient(circle at 78% 45%,rgba(20,184,166,.24),transparent 40%),linear-gradient(145deg,#080a0e,#0d211f 68%,#08090c) }
   .context-card[data-state="starting_soon"] .context-status { color:#fbbf24; }
   .context-card [hidden], .sports-card [hidden], .weather-card [hidden] {display:none!important}
-  .stage.sports .sports-card { display: grid; grid-template-rows: auto 1fr auto auto;
+  .stage.sports .sports-card { display: grid; grid-template-rows: auto minmax(0,1fr) auto auto;
     gap: 1.2vh; }
   .sport-head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
     color: var(--accent); font-size: 1.35vw; font-weight: 900; letter-spacing: .22em;
@@ -181,8 +181,8 @@
     font-variant-numeric: tabular-nums; white-space: nowrap;
     text-shadow: 0 .6vh 2.2vh rgba(0,0,0,.92); }
   body.cast-display .stage.sports .sport-timebox { display: none; }
-  .sport-title { max-width: 62vw; text-align: center; color: #fff; font-size: var(--sport-title-size, 3.5vw);
-    line-height: .98; font-weight: 900; letter-spacing: -.025em; }
+  .sport-title { max-width: 62vw; min-width:0; text-align: center; color: #fff; font-size: var(--sport-title-size, 3.5vw);
+    line-height: .98; font-weight: 900; letter-spacing: -.025em; overflow-wrap:anywhere; word-break:normal; }
   .sport-matchup { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
     gap: 4vw; }
   .sport-side { display: grid; justify-items: center; text-align: center; gap: 1vh; }
@@ -693,9 +693,9 @@
   body.live-editing [data-layout] { outline:none; }
   body.live-editing .screen-controls, body.live-editing nav { display:none !important; }
 </style>
-<link rel="stylesheet" href="/brain.css?v=2.10.18">
-<link rel="stylesheet" href="/screens.css?v=2.10.18">
-<link rel="stylesheet" href="/weather-channel.css?v=2.10.18">
+<link rel="stylesheet" href="/brain.css?v=2.10.19">
+<link rel="stylesheet" href="/screens.css?v=2.10.19">
+<link rel="stylesheet" href="/weather-channel.css?v=2.10.19">
 <link rel="stylesheet" href="/scene-themes.css?v=2.9.7">
 <body data-template="spotlight">
 <img class="bg" id="bg" alt="">
@@ -794,8 +794,8 @@
 <time class="cast-clock-overlay" id="cast-clock-overlay"></time>
 <div class="idle-screen"><div class="idle-house"><div class="idle-kicker" id="idle-kicker">Home</div><div class="idle-greeting" id="idle-greeting"></div><div class="idle-state" id="idle-state" hidden></div><div class="idle-note" id="idle-note" hidden></div><time class="idle-clock" id="idle-clock"></time><div class="idle-date" id="idle-date"></div><div class="idle-weather" id="idle-weather"></div></div></div>
 <div class="ambient-veil" aria-hidden="true"></div>
-<script src="/weather-channel.js?v=2.10.18"></script>
-<script src="/brain.js?v=2.10.18"></script>
+<script src="/weather-channel.js?v=2.10.19"></script>
+<script src="/brain.js?v=2.10.19"></script>
 <script>
 
   const $ = id => document.getElementById(id);
@@ -1454,7 +1454,12 @@ ${chase.join('')}
         $('context-detail').textContent = context.detail || '';
         const isCalendar = context.type === 'calendar_event' || context.subtype === 'game_release';
         const rows = isCalendar && context.subtype !== 'birthday_rollup' ? calendarRows(context) : (context.rows || []).filter(Boolean);
-        $('context-rows').innerHTML = rows.map(row => `<span>${esc(row)}</span>`).join('');
+        const contextRows = $('context-rows');
+        contextRows.innerHTML = rows.map(row => `<span>${esc(row)}</span>`).join('');
+        const phoneSummary = context.type === 'gaming' && rows.length > 1
+          ? `+${rows.length - 1} more` : '';
+        contextRows.dataset.summary = phoneSummary;
+        contextRows.classList.toggle('phone-summary', !!phoneSummary);
         const art = $('context-art');
         const artSource = context.artwork || context.background || '';
         const artVisible = !!artSource && liveVisible('media', 'artwork');
@@ -2609,4 +2614,4 @@ ${chase.join('')}
   setInterval(paint, 1000);
 </script>
 
-<script src="/kiosk-menu.js?v=2.10.18"></script>
+<script src="/kiosk-menu.js?v=2.10.19"></script>

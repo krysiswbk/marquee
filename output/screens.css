@@ -8,13 +8,13 @@ body .sport-weather{font-size:var(--sport-weather-size,1.4vw);line-height:1.15}
 body .sport-head{grid-template-columns:minmax(0,1fr) minmax(0,5fr) minmax(0,1fr);gap:2vw;border-bottom:1px solid #ffffff24;padding-bottom:1.5vh}
 body .sport-title{max-width:100%;font-family:'Oswald',sans-serif;text-wrap:balance;font-size:var(--sport-title-size,3.2vw);line-height:1.04}
 body .sport-matchup{height:100%;min-height:0;gap:3vw;grid-template-columns:minmax(0,1fr) minmax(0,.8fr) minmax(0,1fr)}
-body .sport-side{min-width:0;min-height:0;height:100%;grid-template-rows:minmax(0,1fr) auto auto auto;gap:.8vh}
+body .sport-side{min-width:0;min-height:0;height:100%;grid-template-rows:minmax(0,1fr) auto auto auto;gap:.8vh;overflow:hidden}
 body .sport-side img{height:100%;max-height:var(--sport-art-height,25vh);width:var(--sport-art-width,17vw);max-width:100%;align-self:center}
 body .sport-name{font-family:'Oswald',sans-serif;font-size:var(--sport-name-size,2.5vw);text-wrap:balance;max-width:100%}
 body .sport-score:empty,body .sport-record:empty{display:none}
 body .sport-score{font-size:5.5vw}
 body .sport-center{min-width:0}.sport-center .sport-subtitle{max-width:100%;font-size:1.3vw}.sport-center .sport-league-logo{height:8vh;width:8vw}
-body .sport-footer{padding-top:1vh;align-items:center}.sport-footer .sport-rows{font-size:1.1vw}
+body .sport-footer{min-height:0;padding-top:1vh;align-items:center;overflow:hidden}.sport-footer .sport-rows{font-size:1.1vw;overflow-wrap:anywhere;word-break:normal}
 body .context-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,45%);gap:2vw;align-items:start}
 body .context-time{min-width:0}.context-time .context-clock{display:block;white-space:nowrap;font-size:var(--context-clock-size,5.2vw);line-height:1}
 body .context-time .context-weather{font-size:1.4vw}
@@ -78,7 +78,29 @@ body .sport-matchup{align-items:center}
 body .sport-footer{grid-template-columns:minmax(0,1fr);gap:.7vh}
 body .sport-detail{text-align:left;font-size:clamp(11px,1.1vw,18px)}
 body .sport-footer .sport-rows{font-size:clamp(11px,1.15vw,18px);flex-wrap:wrap;gap:.4em 1.3em}
-body .sport-rows span{white-space:normal}
+body .sport-rows span{white-space:normal;overflow-wrap:anywhere;word-break:normal}
+
+/* Fixed-stage contracts: contain intrinsic content without a hidden tail. */
+body.brain-live .context-card{grid-template-rows:auto minmax(0,1fr) auto}
+body.brain-live .context-head{min-height:0}
+body.brain-live .context-copy{overflow:hidden}
+body.brain-live .context-rows{min-height:0;align-content:start}
+body.brain-live .stage.sports .sport-timebox{min-height:0;overflow:hidden}
+body.brain-live .stage.sports .sport-footer{min-height:0}
+
+/* Gaming phone hierarchy: keep the complete hero copy, one useful queue item,
+   and an explicit count for remaining items instead of stage scrolling. */
+@media(max-width:480px){
+ body.brain-live .context-card[data-kind=gaming]{padding:2.5vh 5vw 1.5vh;gap:1.5vh}
+ body.brain-live .context-card[data-kind=gaming] .context-art{display:none}
+ body.brain-live .context-card[data-kind=gaming] .context-copy{padding:0;align-self:start}
+ body.brain-live .context-card[data-kind=gaming] .context-title{font-size:clamp(2rem,9vw,2.8rem);line-height:1.02;margin:.5vh 0 1vh}
+ body.brain-live .context-card[data-kind=gaming] .context-subtitle{font-size:clamp(1rem,4.8vw,1.35rem);line-height:1.15}
+ body.brain-live .context-card[data-kind=gaming] .context-detail{font-size:clamp(.9rem,3.8vw,1.1rem);line-height:1.25;margin-top:1.2vh}
+ body.brain-live .context-card[data-kind=gaming] .context-rows{padding-top:1vh;font-size:clamp(.78rem,3.3vw,1rem);gap:1vw;flex-wrap:nowrap}
+ body.brain-live .context-card[data-kind=gaming] .context-rows span:nth-child(n+2){display:none}
+ body.brain-live .context-card[data-kind=gaming] .context-rows.phone-summary::after{content:attr(data-summary);padding:.65vh .85vw;border-radius:999px;background:rgba(255,255,255,.07);color:var(--text-soft);white-space:nowrap}
+}
 @media(max-aspect-ratio:1/1){
  body .stage.sports .sports-card{padding:2vh 5vw;gap:2vh;grid-template-rows:auto minmax(0,1fr) auto auto}
  body .sport-head{grid-template-columns:1fr 1fr;font-size:11px;letter-spacing:.12em;gap:8px}

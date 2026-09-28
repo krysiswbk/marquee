@@ -1,3 +1,9 @@
+## 2.10.19
+
+- Recompose Gaming, UFC, and TV kiosk stages to fit the fixed primary surface
+  without hidden internal scrolling; long platform metadata now has safe visual
+  break opportunities and Gaming summarizes extra queue items on phones.
+
 ## 2.10.18
 
 - Distinguish the initial and retry loading lifecycle from unavailable and

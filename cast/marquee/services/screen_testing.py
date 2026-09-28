@@ -48,10 +48,10 @@ SAMPLES = {
     },
     "gaming": {
         "source": "gaming", "type": "gaming", "title": "Nintendo Direct",
-        "subtitle": "Tomorrow · 10:00 AM", "status": "UPCOMING",
+        "subtitle": "Tomorrow · 10:00 AM (PS5/Xbox/Series X/Switch/Steam/PC)", "status": "UPCOMING",
         "detail": "A notable showcase matching your Nintendo interests.",
         "artwork": "https://upload.wikimedia.org/wikipedia/commons/0/0d/Nintendo.svg",
-        "rows": ["40 minute presentation", "Watch live on YouTube"],
+        "rows": ["40 minute presentation", "Watch live on YouTube", "Nintendo platform showcase"],
     },
     "tv": {
         "source": "tv", "type": "tv_release", "title": "New episode available",
