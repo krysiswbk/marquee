@@ -24,7 +24,7 @@ def test_every_in_scope_surface_loads_the_shared_contract() -> None:
     assert "min-height:44px" in contract
     for route, path in SURFACES.items():
         source = path.read_text()
-        assert "/control-touch-contract.css?v=2.10.79" in source, route
+        assert "/control-touch-contract.css?v=2.10.80" in source, route
         assert "min-height:44px" in contract
 
 

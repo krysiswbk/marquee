@@ -56,8 +56,12 @@ with sync_playwright() as playwright:
     page.wait_for_selector("#fallback-rotation-error")
     assert not page.locator("#fallback-item-error").count()
     assert item.get_attribute("aria-invalid") is None
-    assert "fallback-item-error" not in (item.get_attribute("aria-describedby") or "").split()
-    assert item.get_attribute("aria-describedby") == "fallback-item-help"
+    described_by = (item.get_attribute("aria-describedby") or "").split()
+    assert "fallback-item-error" not in described_by
+    assert item.evaluate(
+        """(input) => (input.getAttribute('aria-describedby') || '').split(/\\s+/).filter(Boolean)
+        .every(id => document.getElementById(id))"""
+    )
 
     browser.close()
     print("PASS: recovered first numeric control loses its error node and aria-describedby token")

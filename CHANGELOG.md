@@ -1,3 +1,7 @@
+## 2.10.80
+
+- Clear stale numeric validation descriptions without removing persistent helper context.
+
 ## 2.10.79
 
 - Centralize numeric-control naming, stable IDs, range help, and validation cleanup in the shared control shell.
