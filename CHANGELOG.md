@@ -1,3 +1,9 @@
+## 2.10.41
+
+- Remove decorative sequence labels from the public setup explanation and
+  editor walkthrough while preserving the walkthrough's ordered Back/Next
+  navigation and meaningful numeric settings.
+
 ## 2.10.40
 
 - Correct the UFC short-wide empty-state heading's fractional line-box

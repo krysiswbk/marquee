@@ -1,4 +1,5 @@
 import pathlib
+import re
 import unittest
 
 
@@ -41,6 +42,35 @@ class ControlNavigationTests(unittest.TestCase):
                            'id="import"', 'id="sessions-btn"', 'id="scan"'):
             self.assertIn(capability, cast)
         self.assertIn('href="/live"', (ROOT / 'output/control-shell.js').read_text())
+
+    def test_user_surfaces_have_no_decorative_sequence_labels(self):
+        sources = {
+            'public docs': ROOT / 'docs' / 'index.html',
+            'settings': ROOT / 'cast' / 'settings.html',
+            'cast layout': ROOT / 'cast' / 'cast-layout.html',
+            'settings control': ROOT / 'cast' / 'settings-control.html',
+            'attention': ROOT / 'cast' / 'attention-settings.html',
+            'display tests': ROOT / 'cast' / 'display-tests.html',
+            'live layout': ROOT / 'cast' / 'live-layout.html',
+            'kiosk renderer': ROOT / 'output' / 'kiosk-menu.js',
+            'home renderer': ROOT / 'output' / 'brain.js',
+        }
+        decorative = re.compile(
+            r'(?:01|02|03)\s*(?:[/·|:-])\s*[A-Za-z]|'
+            r'\b(?:Step|STEP)\s*[0-9]+\b')
+        for name, path in sources.items():
+            with self.subTest(surface=name):
+                source = path.read_text()
+                self.assertIsNone(decorative.search(source))
+                self.assertNotIn('id="tour-n"', source)
+                self.assertNotIn('.tour-n', source)
+        for name in ('settings', 'cast layout'):
+            source = sources[name].read_text()
+            with self.subTest(surface=f'{name} walkthrough'):
+                self.assertIn('const TOUR = [', source)
+                self.assertIn('stepTo(tourStep + 1)', source)
+                self.assertIn("$('#tour-next').textContent", source)
+                self.assertNotIn("(i + 1) + ' of ' + TOUR.length", source)
 
     def test_provider_diagnostics_use_safe_status_copy_and_authoritative_source(self):
         page = PAGES['settings'].read_text()
