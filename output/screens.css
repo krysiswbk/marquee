@@ -316,4 +316,8 @@ body.browser-controls{overflow-x:hidden}.kiosk-section.now-playing-surface{displ
 /* Every current media item remains visible; these destination-scoped rules
    override compact event-summary hiding without changing event queues. */
 .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-queue-row{display:flex}
+.kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-queue-row:nth-of-type(n+2){display:flex}
 .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-support{align-self:stretch;justify-content:flex-start}
+@media(min-width:481px) and (max-width:900px){
+  .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial-feature{box-sizing:border-box}
+}
