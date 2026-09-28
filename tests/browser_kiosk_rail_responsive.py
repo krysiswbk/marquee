@@ -8,13 +8,13 @@ from playwright.sync_api import sync_playwright
 
 
 ROOT = Path(__file__).resolve().parents[1]
-VIEWPORTS = [(320, 720), (360, 720), (393, 852), (430, 852),
-             (700, 900), (1024, 600), (1500, 900)]
-DESTINATIONS = ("nhl", "ufc", "pfl", "weather", "tv", "gaming", "calendar")
+VIEWPORTS = [(360, 800), (393, 852), (430, 932), (700, 900),
+             (1024, 600), (1500, 900), (1280, 480)]
+DESTINATIONS = ("plex", "nhl", "ufc", "pfl", "weather", "tv", "astronomy", "gaming", "calendar")
 TEST_DESTINATIONS = DESTINATIONS
-LABELS = {"nhl": "NHL", "ufc": "UFC", "pfl": "PFL", "weather": "Weather",
-          "tv": "TV", "gaming": "Gaming", "calendar": "Calendar"}
-GLYPHS = {"nhl": "🏒", "ufc": "🥊", "pfl": "🥋", "tv": "📺", "calendar": "📅"}
+LABELS = {"plex": "Now playing", "nhl": "NHL", "ufc": "UFC", "pfl": "PFL",
+          "weather": "Weather", "tv": "TV", "astronomy": "Sky", "gaming": "Gaming",
+          "calendar": "Calendar"}
 
 
 with sync_playwright() as playwright:
@@ -35,7 +35,7 @@ with sync_playwright() as playwright:
                 if path == "/api/config":
                     return route.fulfill(json={
                         "providers": {key: {"enabled": True, "targets": ["kiosk"]}
-                                      for key in DESTINATIONS},
+                                      for key in (*DESTINATIONS, "plex")},
                         "fallback": {},
                     })
                 if path == "/contexts":
@@ -46,7 +46,8 @@ with sync_playwright() as playwright:
                     ]})
                 if path == "/providers":
                     return route.fulfill(json={"providers": {
-                        key: {"state": "ok"} for key in DESTINATIONS
+                        **{key: {"state": "ok"} for key in DESTINATIONS},
+                        "plex": {"state": "ok", "contexts": [{"playing": True, "title": "Fixture"}]},
                     }})
                 if path in ("/settings.json", "/live-settings.json"):
                     return route.fulfill(json={"transitionMs": 0})
@@ -61,6 +62,10 @@ with sync_playwright() as playwright:
             assert page.locator('.kiosk-more[aria-current]').count() == 0
             assert page.locator('.kiosk-menu a[href="/live"][aria-current]').count() == 0
             assert page.evaluate("new URL(location.href).searchParams.get('view') === null")
+            assert page.locator('.kiosk-primary a[data-view]').evaluate(
+                "els => { const marks = els.map(el => el.querySelector('svg')?.innerHTML); "
+                "return marks.length === new Set(marks).size && marks.every(Boolean); }"
+            )
 
             page.goto(f"http://marquee.test/kiosk?view={destination}", wait_until="domcontentloaded")
             page.wait_for_selector(f'.kiosk-primary [data-view="{destination}"][aria-current="page"]')
@@ -81,9 +86,15 @@ with sync_playwright() as playwright:
             assert page.locator(".kiosk-primary").evaluate(
                 "el => [...el.querySelectorAll('a:not([hidden])')].every(a => a.offsetHeight >= 44)")
 
-            if destination in GLYPHS:
-                assert page.locator(f'.kiosk-primary [data-view="{destination}"], .kiosk-menu [data-view="{destination}"]').first.locator(
-                    ".kiosk-icon").inner_text() == GLYPHS[destination]
+            destination_links = page.locator(
+                f'.kiosk-primary [data-view="{destination}"], .kiosk-menu [data-view="{destination}"]'
+            )
+            assert destination_links.first.locator(".kiosk-icon svg").count() == 1
+            assert destination_links.first.locator(".kiosk-icon").get_attribute("aria-hidden") == "true"
+            assert destination_links.first.get_attribute("aria-label") == LABELS[destination]
+            assert destination_links.first.locator(".kiosk-icon svg").evaluate(
+                "el => getComputedStyle(el).stroke === 'currentColor' || getComputedStyle(el).stroke !== 'none'"
+            )
 
             if width <= 430:
                 assert page.locator(".kiosk-more").evaluate(

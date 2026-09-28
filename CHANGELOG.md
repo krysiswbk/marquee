@@ -1,3 +1,14 @@
+## 2.10.76
+
+- Replace OS-dependent kiosk rail emoji with a deterministic, product-owned
+  monochrome SVG icon system that inherits the active cyan/green state color.
+- Keep destination identity distinct for Home, Now Playing, Weather, NHL, UFC,
+  PFL, Calendar, TV, Sky, Gaming, and More while preserving direct labels,
+  overflow priority, touch targets, accessibility, and Home return behavior.
+- Add source and browser coverage for icon uniqueness, decorative semantics,
+  current-color rendering, responsive rail composition, and single-current
+  destination state.
+
 ## 2.10.75
 
 - Rebalance the phone People First / On the Horizon continuation so its date,

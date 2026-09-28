@@ -2,7 +2,25 @@
 (() => {
   const params = new URLSearchParams(location.search);
   if (!['/live', '/kiosk'].includes(location.pathname) || params.has('demo') || params.has('edit') || params.has('receiver')) return;
-  const destinations = { plex:['Now playing','▶'], nhl:['NHL','🏒'], ufc:['UFC','🥊'], pfl:['PFL','🥋'], weather:['Weather','☼'], tv:['TV','📺'], astronomy:['Sky','✦'], movies:['Movies','▶'], trailers:['Trailers','▶'], major_events:['Events','◆'], gaming:['Gaming','⌘'], music:['Music','♫'], calendar:['Calendar','📅'] };
+  // Product-owned, monochrome marks. Keep the paths inline so the rail is
+  // deterministic across browsers and inherits the active/current color.
+  const destinations = {
+    plex: ['Now playing', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg>'],
+    nhl: ['NHL', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 18h16M6 6l3 6-3 6m12-12-3 6 3 6"/></svg>'],
+    ufc: ['UFC', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 7 4 4m10-4-4 4M9 11l-2 6m8-6 2 6M8 17h8M9 11h6"/></svg>'],
+    pfl: ['PFL', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17 8 7l4 10 4-10 4 10M6 12h12"/></svg>'],
+    weather: ['Weather', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1M16 16a5.7 5.7 0 1 1-8-8 5.7 5.7 0 0 1 8 8Z"/></svg>'],
+    tv: ['TV', '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="m8 3 4 3 4-3M7 16h4m2 0h4"/></svg>'],
+    astronomy: ['Sky', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></svg>'],
+    movies: ['Movies', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM4 10h16M8 6v4m4-4v4m4-4v4"/></svg>'],
+    trailers: ['Trailers', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM4 9h16M8 5v4m4-4v4m4-4v4M10 12l5 3-5 3z"/></svg>'],
+    major_events: ['Events', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 9-8 9-8-9zM12 8v8m-4-4h8"/></svg>'],
+    gaming: ['Gaming', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8h10a4 4 0 0 1 3.8 5.2l-1 3.2a2.2 2.2 0 0 1-3.8.7L14 15H10l-2 2.1a2.2 2.2 0 0 1-3.8-.7l-1-3.2A4 4 0 0 1 7 8Z"/><path d="M7 11v4m-2-2h4m8-1h.01m2 2h.01"/></svg>'],
+    music: ['Music', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l10-2v13M9 9l10-2M9 18a3 3 0 1 1-3-3 3 3 0 0 1 3 3Zm10-2a3 3 0 1 1-3-3 3 3 0 0 1 3 3Z"/></svg>'],
+    calendar: ['Calendar', '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="1.5"/><path d="M8 3v4m8-4v4M4 10h16M8 14h.01m4 0h.01m4 0h.01m-8 3h.01m4 0h.01"/></svg>']
+  };
+  const homeIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-7 9 7v9H5v-7h6v7"/></svg>';
+  const moreIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>';
   // Weather is a first-class ambient destination. Keep urgent weather visible
   // ahead of lower-priority sports when the rail has to compact or overflow.
   const destinationPriority = { plex:100, weather:95, nhl:85, ufc:75, pfl:65,
@@ -20,7 +38,7 @@
   let view = params.get('view') || '', interrupted = false;
   let initialDirectFocusPending = Boolean(view);
   const label = key => destinations[key]?.[0] || key.replaceAll('_', ' ').replace(/^./, c => c.toUpperCase());
-  const icon = key => destinations[key]?.[1] || '•';
+  const icon = key => destinations[key]?.[1] || moreIcon;
   const esc = text => String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   // Keep normal word boundaries intact while allowing platform suffixes such
   // as PS5/Xbox/Switch/PC to wrap at their deliberate slash opportunities.
@@ -29,7 +47,7 @@
   const items = key => (key === 'nhl' ? browseContexts : contexts).filter(c => (c.provider || c.source) === key && fresh(c));
   document.body.classList.add('browser-controls');
   const rail = document.createElement('div'); rail.className = 'screen-controls kiosk-rail';
-  rail.innerHTML = '<span class="kiosk-brand" role="status" aria-live="polite">Marquee</span><nav class="kiosk-primary" aria-label="Marquee destinations"></nav><button class="kiosk-more" type="button" aria-haspopup="dialog" aria-expanded="false"><span aria-hidden="true">•••</span><span class="kiosk-label">More</span></button>';
+  rail.innerHTML = '<span class="kiosk-brand" role="status" aria-live="polite">Marquee</span><nav class="kiosk-primary" aria-label="Marquee destinations"></nav><button class="kiosk-more" type="button" aria-haspopup="dialog" aria-expanded="false"><span class="kiosk-icon" aria-hidden="true">' + moreIcon + '</span><span class="kiosk-label">More</span></button>';
   document.body.append(rail);
   const primary = rail.querySelector('.kiosk-primary'), more = rail.querySelector('.kiosk-more'), status = rail.querySelector('[role=status]');
   const menu = document.createElement('dialog'); menu.className = 'kiosk-menu'; menu.setAttribute('aria-labelledby', 'kiosk-menu-title');
@@ -98,12 +116,12 @@
     history.pushState({marqueeDestination: true}, '', initialDestination);
   }
   function allDestinations() {
-    return [['', 'Home', '⌂'], ...sections.map((key, index) => [key, label(key), icon(key), index])]
+    return [['', 'Home', homeIcon], ...sections.map((key, index) => [key, label(key), icon(key), index])]
       .sort((a, b) => a[0] === '' ? -1 : b[0] === '' ? 1
         : (destinationPriority[b[0]] ?? 0) - (destinationPriority[a[0]] ?? 0) || a[3] - b[3])
       .map(([key, title, glyph]) => [key, title, glyph]);
   }
-  function link([key, title, glyph], detail = '') { return `<a href="${esc(href(key))}" data-view="${esc(key)}" aria-label="${esc(title)}" title="${esc(title)}"><span class="kiosk-icon" aria-hidden="true">${esc(glyph)}</span><span class="kiosk-label">${esc(title)}</span>${detail ? `<small>${esc(detail)}</small>` : ''}</a>`; }
+  function link([key, title, glyph], detail = '') { return `<a href="${esc(href(key))}" data-view="${esc(key)}" aria-label="${esc(title)}" title="${esc(title)}"><span class="kiosk-icon" aria-hidden="true">${glyph}</span><span class="kiosk-label">${esc(title)}</span>${detail ? `<small>${esc(detail)}</small>` : ''}</a>`; }
   function updateCurrentDestination() {
     document.querySelectorAll('.kiosk-rail a[data-view], .kiosk-menu a[data-view]').forEach(a => a.removeAttribute('aria-current'));
     const currentView = view || '';

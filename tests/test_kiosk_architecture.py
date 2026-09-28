@@ -14,6 +14,18 @@ def test_forced_destinations_have_purposeful_category_renderers():
     assert "renderDestination(view, list)" in MENU
 
 
+def test_rail_uses_unique_product_owned_current_color_marks():
+    for token in ("const homeIcon = '<svg", "const moreIcon = '<svg", "currentColor",
+                  "aria-hidden=\"true\"", "plex: ['Now playing'", "nhl: ['NHL'",
+                  "ufc: ['UFC'", "pfl: ['PFL'", "weather: ['Weather'", "calendar: ['Calendar'"):
+        assert token in MENU or token in SCREENS
+    assert "🏒" not in MENU and "🥊" not in MENU and "🥋" not in MENU
+    assert "📺" not in MENU and "📅" not in MENU
+    assert ".kiosk-icon svg{display:block" in SCREENS
+    assert "fill:none;stroke:currentColor" in SCREENS
+    assert "${esc(glyph)}" not in MENU
+
+
 def test_sports_contract_keeps_matchup_status_and_next_event_hierarchy():
     for token in ("kiosk-sport-feature", "kiosk-matchup", "NEXT RELEVANT", "stateCopy(feature)"):
         assert token in MENU
