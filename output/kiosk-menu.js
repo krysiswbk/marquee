@@ -216,7 +216,7 @@
     else if (key) more.focus();
     else primary.querySelector('[data-view=""]')?.focus();
   }
-  function change(key, restoreFocus = true) { view = key; selected = ''; history.pushState({marqueeDestination: Boolean(key)}, '', href(key)); closeMenu(false); drawNavigation(); drawMenu(); drawPanel(); if (restoreFocus) focusNavigation(key); window.dispatchEvent(new Event('marquee-navigation')); }
+  function change(key, restoreFocus = true) { view = key; selected = ''; history.pushState({marqueeDestination: Boolean(key)}, '', href(key)); closeMenu(false); drawNavigation(); drawMenu(); drawPanel(); if (restoreFocus) { focusNavigation(key); setTimeout(() => focusNavigation(key), 0); } window.dispatchEvent(new Event('marquee-navigation')); }
   more.onclick = () => { drawMenu(); menu.showModal(); more.setAttribute('aria-expanded', 'true'); };
   function closeMenu(focus = true) {
     if (menu.open) menu.close();
