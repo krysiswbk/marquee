@@ -216,6 +216,15 @@ body.browser-controls{overflow-x:hidden}.kiosk-section.now-playing-surface{displ
   .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial,
   .kiosk-section[data-section=ufc] .kiosk-sports-layout{min-height:0}
 }
+@media(min-width:901px){
+  .kiosk-section:is([data-section=gaming],[data-section=tv],[data-section=ufc]){padding:36px 44px}
+  .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial-feature{padding:40px}
+  .kiosk-section:is([data-section=gaming],[data-section=tv],[data-section=ufc]) :is(.kiosk-editorial-feature h2,.kiosk-sport-feature h2){font-size:clamp(56px,4.3vw,64px);line-height:1}
+  .kiosk-section:is([data-section=gaming],[data-section=tv],[data-section=ufc]) .kiosk-lede{font-size:24px;line-height:1.2}
+  .kiosk-section[data-section=ufc] .kiosk-matchup{margin:24px 0;font-size:28px}
+  .kiosk-section[data-section=ufc] .kiosk-matchup b{font-size:52px}
+  .kiosk-section[data-section=ufc] .kiosk-meta{margin:10px 0}
+}
 @media(max-width:480px){
   .kiosk-section:is([data-section=gaming],[data-section=tv]){overflow:hidden;padding:20px 20px 24px}
   .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-section-head h1{font-size:36px;margin-bottom:16px}
