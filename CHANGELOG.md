@@ -1,3 +1,12 @@
+## 2.10.4 — Responsive household hierarchy and release asset identity
+
+- Give the current household state deliberate vertical clearance from activity
+  and agenda content at tablet widths.
+- Preserve complete actionable device-health detail on phone layouts while
+  simplifying and reprioritizing supporting panels below it.
+- Align local stylesheet cache-busters with the release version and add a
+  regression contract for stale asset identities.
+
 ## 2.10.3 — Tablet ambient weather refinement
 
 - Give the 481–700px Home weather summary a wide, balanced two-line composition

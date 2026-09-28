@@ -27,6 +27,7 @@
     const deviceHealth=fresh?(state.device_health||[]):[];
     const healthText=deviceHealth.length?`Nursery devices offline: ${deviceHealth.map(d=>d.name).join(', ')}. Check their batteries or connection.`:'';
     $('brain-device-health').hidden=!deviceHealth.length;
+    $('brain-house').classList.toggle('device-alert',Boolean(deviceHealth.length));
     set('brain-device-health',healthText);
     $('brain-device-health').style.color='var(--brain-amber, #ffd28a)';
     const event=events[0];

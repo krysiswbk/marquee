@@ -118,8 +118,19 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("width:92vw", styles)
         self.assertIn("max-width:92vw", styles)
         self.assertIn("line-height:1.2", styles)
-        self.assertIn("#brain-house{top:43vh}", styles)
+        self.assertIn("#brain-house{top:43vh;height:25vh}", styles)
         self.assertNotIn("max-width:44vw", styles)
+
+    def test_home_responsive_panels_respect_dock_safe_area(self):
+        styles = (ROOT / "output" / "brain.css").read_text()
+        self.assertIn("#brain-activity,body.brain-live #brain-agenda{top:70vh;height:13vh}", styles)
+        self.assertNotIn("top:70vh;height:20vh", styles)
+        self.assertIn("#brain-activity{top:65vh;left:4vw;width:92vw;height:12vh}", styles)
+        self.assertIn("#brain-agenda{display:none}", styles)
+        self.assertNotIn("top:80vh", styles)
+        self.assertIn("#brain-house.device-alert .brain-openings{display:none}", styles)
+        brain = (ROOT / "output" / "brain.js").read_text()
+        self.assertIn("classList.toggle('device-alert',Boolean(deviceHealth.length))", brain)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import unittest
 
 
@@ -6,6 +7,21 @@ DISPLAY = (Path(__file__).parents[1] / "output" / "index.html").read_text()
 
 
 class DisplayTemplateTests(unittest.TestCase):
+    def test_local_asset_cache_busters_match_release_version(self):
+        version = (Path(__file__).parents[1] / "VERSION").read_text().strip()
+        local_assets = re.findall(
+            r'<(?:link rel="stylesheet" href|script src)="(/[^"?]+)(?:\?v=([^"&]+))?"',
+            DISPLAY,
+        )
+        independently_versioned = {"/scene-themes.css": "2.9.7"}
+        self.assertTrue(local_assets)
+        for path, query_version in local_assets:
+            with self.subTest(path=path):
+                if path in independently_versioned:
+                    self.assertEqual(query_version, independently_versioned[path])
+                else:
+                    self.assertEqual(query_version, version)
+
     def test_generic_context_collapses_when_artwork_is_missing(self):
         self.assertIn("context-card.no-art", DISPLAY)
         self.assertIn("contextCard.classList.toggle('no-art', !artVisible)", DISPLAY)
