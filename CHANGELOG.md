@@ -1,3 +1,10 @@
+## 2.10.46
+
+- Restore viewing-distance readability for the complete shallow-landscape
+  weather first look by widening the readings composition and raising the
+  narrative, metric-label, metric-value, and provenance type hierarchy while
+  preserving exact source values and no-scroll fit.
+
 ## 2.10.45
 
 - Fit normal current weather conditions completely on shallow landscape

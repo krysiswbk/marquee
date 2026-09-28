@@ -244,9 +244,11 @@ class ControlNavigationTests(unittest.TestCase):
         )[1].split("@media(prefers-reduced-motion", 1)[0]
         for token in (
             ".wx-broadcast .wx-panel{overflow:visible}",
-            ".channel-current{grid-template-columns:minmax(0,44%) minmax(0,1fr)",
+            ".channel-current{grid-template-columns:minmax(0,40%) minmax(0,1fr)",
             ".channel-metrics{grid-template-columns:repeat(2,minmax(0,1fr))",
-            ".channel-outlook{font-size:clamp(11px,1vw,16px);line-height:1.25;max-height:none;overflow:visible",
+            ".channel-metrics span{font-size:clamp(14px,1.4vw,18px)}",
+            ".channel-metrics strong{font-size:clamp(17px,1.7vw,24px)}",
+            ".channel-outlook{font-size:clamp(14px,1.37vw,19px);line-height:1.3;max-height:none;overflow:visible",
         ):
             self.assertIn(token, shallow)
 
