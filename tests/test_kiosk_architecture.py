@@ -88,7 +88,7 @@ def test_calendar_full_agenda_contract_is_paginated_and_history_addressable():
         "e.key === 'ArrowLeft' || e.key === 'PageUp'",
         "e.key === 'ArrowRight' || e.key === 'PageDown'",
         "e.key === 'Escape' || e.key === 'BrowserBack'",
-        'calendarDisclosure?.focus', 'history.back()',
+        'calendarDisclosure?.focus', "history.replaceState({marqueeCalendarAgenda: true}",
         'calendar-detail-surface',
     ):
         assert token in MENU
@@ -100,6 +100,40 @@ def test_calendar_full_agenda_contract_is_paginated_and_history_addressable():
         assert token in SCREENS
     assert 'more event${remaining === 1 ?' not in MENU
     assert 'remaining beyond this summary' not in MENU
+
+
+def test_calendar_focus_and_history_contracts_do_not_steal_control_focus():
+    assert "let calendarFocusHeadingPending = Boolean(calendarMode);" in MENU
+    assert "if (detail && calendarFocusHeadingPending)" in MENU
+    assert "else if (detail && focusedCalendarControl)" in MENU
+    assert 'data-calendar-control="previous"' in MENU
+    assert 'data-calendar-control="next"' in MENU
+    assert "data-calendar-page]:not([disabled])" not in MENU
+    assert "calendarFocusHeadingPending = true; history.pushState" in MENU
+    assert "if (interrupted && !wasInterrupted && menu.open) closeMenu(false);" in MENU
+    assert "history.back();" in MENU
+    assert "function closeCalendarAgenda()" in MENU
+    assert "if (detail) panel.querySelector('#calendar-agenda-title')?.focus" not in MENU
+    assert "mediaIdle" not in MENU
+    assert "payload.playing === false" not in MENU
+
+
+def test_calendar_fit_and_disclosure_contracts_use_real_geometry_and_touch_target():
+    detail_start = MENU.index("function calendarDetail(list)")
+    detail_end = MENU.index("function renderAgenda", detail_start)
+    assert "measuredAgendaPageSize" not in MENU[detail_start:detail_end]
+    assert "while (page && page.scrollHeight > page.clientHeight + 1 && calendarPageSize > 1)" in MENU
+    assert "calendarPageSize -= 1" in MENU
+    assert "history.replaceState({marqueeCalendarAgenda: true}, '', href('calendar', true, calendarPage))" in MENU
+    for token in (
+        ".kiosk-agenda-more{display:inline-flex",
+        "min-height:44px",
+        "padding:10px 16px",
+        "border:1px solid #b6f378",
+        "cursor:pointer",
+        ".kiosk-agenda-more:focus-visible",
+    ):
+        assert token in SCREENS
 
 
 def test_overflow_trigger_and_escape_are_remote_visible_contracts():
@@ -117,7 +151,7 @@ def test_overflow_trigger_and_escape_are_remote_visible_contracts():
     assert "join(''); updateCurrentDestination();" in MENU
     assert 'aria-current="false"' not in MENU
     assert "aria-current=\"page\"" not in MENU
-    assert "e.key === 'Escape' && view && !menu.open" in MENU
+    assert "e.key === 'Escape' || e.key === 'BrowserBack'" in MENU
     assert "menu.addEventListener('cancel'" in MENU
 
 
