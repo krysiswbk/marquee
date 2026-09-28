@@ -45,6 +45,53 @@
     const hidden = all.slice(cutoff); overflow.innerHTML = hidden.map(d => link(d, offline ? 'Connection unavailable' : `${items(d[0]).length} current item${items(d[0]).length === 1 ? '' : 's'}`)).join(''); more.hidden = hidden.length === 0; more.setAttribute('aria-expanded', 'false');
   }
   function drawMenu() { const hiddenKeys = new Set([...overflow.querySelectorAll('[data-view]')].map(a => a.dataset.view)); overflow.innerHTML = allDestinations().filter(([key]) => hiddenKeys.has(key)).map(d => link(d, offline ? 'Connection unavailable' : `${items(d[0]).length} current item${items(d[0]).length === 1 ? '' : 's'}`)).join(''); }
+  const sportViews = new Set(['nhl', 'ufc', 'pfl']);
+  const mediaViews = new Set(['tv', 'movies', 'trailers', 'gaming', 'music', 'major_events']);
+  const categoryFor = key => sportViews.has(key) ? 'sports' : key === 'calendar' ? 'agenda' : key === 'astronomy' ? 'ambient' : mediaViews.has(key) ? 'media' : 'generic';
+  const dateOf = c => { const value = c.starts || c.start_time || c.start || ''; const date = value ? new Date(value) : null; return date && !Number.isNaN(date.valueOf()) ? date : null; };
+  const stateCopy = c => c.status || ({LIVE:'Live now', STARTING_SOON:'Starting soon', UPCOMING:'Coming up', RESULT:'Result', POST_EVENT:'Recently finished'}[c.eventState] || '');
+  const sourceLabel = c => {
+    const value = String((c.rows || [])[0] || c.source || c.provider || '').trim();
+    if (!value || /@/.test(value) || /(?:entity|calendar\.)[\w.-]+/i.test(value)) return 'Household calendar';
+    return value.replace(/^(?:mdi:|provider:)/i, '').replace(/[_-]+/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase());
+  };
+  const safeRows = (c, limit = 3) => (c.rows || []).filter(row => row && !/@/.test(String(row))).slice(0, limit);
+  const ordered = list => [...list].sort((a, b) => (dateOf(a)?.valueOf() || Infinity) - (dateOf(b)?.valueOf() || Infinity));
+  const button = c => `<button type="button" data-item="${esc(c.id)}"><small>${esc(stateCopy(c))}</small><strong>${esc(c.title || 'Untitled')}</strong><span>${esc(c.subtitle || c.detail || '')}</span></button>`;
+  function sharedState(message, action = 'Return to Home', retry = false) {
+    return `<div class="kiosk-state"><div class="kiosk-state-mark" aria-hidden="true">·</div><div><p class="kiosk-kicker">${offline ? 'CONNECTION' : 'MARQUEE'}</p><h2>${esc(message)}</h2><p class="kiosk-empty">${offline ? 'The source did not answer. The last known data is not being presented as current.' : 'New items will appear automatically when this destination has something relevant.'}</p><div class="kiosk-now-playing-actions"><a class="kiosk-home-action" href="${esc(href(''))}" data-view="">${esc(action)}</a>${retry ? '<button type="button" class="kiosk-retry" data-kiosk-retry>Try again</button>' : ''}</div></div></div>`;
+  }
+  function renderSports(list) {
+    const [feature, ...queue] = ordered(list);
+    if (!feature) return sharedState('No games or fights are on the board.', 'Return to Home', true);
+    const left = feature.left || {}, right = feature.right || {};
+    const matchup = left.name && right.name ? `<div class="kiosk-matchup"><div><strong>${esc(left.name)}</strong><b>${esc(left.score || '')}</b></div><span>vs</span><div><strong>${esc(right.name)}</strong><b>${esc(right.score || '')}</b></div></div>` : '';
+    return `<div class="kiosk-sports-layout"><article class="kiosk-sport-feature"><p class="kiosk-kicker">${esc(stateCopy(feature))} · ${esc(label(view))}</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || feature.detail || '')}</p>${matchup}<p class="kiosk-meta">${esc(feature.detail || '')}</p><div class="kiosk-sport-rows">${safeRows(feature).map(row => `<span>${esc(row)}</span>`).join('')}</div></article><aside class="kiosk-support"><p class="kiosk-kicker">NEXT RELEVANT</p>${queue.slice(0, 3).map(c => `<div class="kiosk-queue-row"><strong>${esc(c.title)}</strong><span>${esc(c.subtitle || stateCopy(c))}</span></div>`).join('') || '<p class="kiosk-empty">No other current event.</p>'}</aside></div>`;
+  }
+  function agendaGroup(date) {
+    if (!date) return 'Later';
+    const now = new Date(); const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const days = Math.round((new Date(date.getFullYear(), date.getMonth(), date.getDate()) - start) / 86400000);
+    return days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : days < 7 ? 'This week' : 'Later';
+  }
+  function renderAgenda(list) {
+    const values = ordered(list), feature = values[0];
+    if (!feature) return sharedState('Your agenda is clear.', 'Return to Home', true);
+    const grouped = values.slice(1, 9).reduce((map, c) => { const key = agendaGroup(dateOf(c)); (map[key] ||= []).push(c); return map; }, {});
+    return `<div class="kiosk-agenda"><article class="kiosk-agenda-feature"><p class="kiosk-kicker">UP NEXT</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || feature.detail || '')}</p><p class="kiosk-meta">${esc(feature.location || feature.detail || sourceLabel(feature))}</p></article><div class="kiosk-agenda-groups">${Object.entries(grouped).map(([group, entries]) => `<section><h3>${esc(group)}</h3>${entries.map(c => `<div class="kiosk-agenda-row ${c.subtype === 'birthday_rollup' ? 'is-birthday' : ''}"><time>${esc(c.subtitle || 'All day')}</time><strong>${esc(c.title)}</strong><small>${esc(c.subtype === 'birthday_rollup' ? 'Birthday' : sourceLabel(c))}</small></div>`).join('')}</section>`).join('') || '<p class="kiosk-empty">No later events in view.</p>'}</div></div>`;
+  }
+  function renderMedia(list) {
+    const [feature, ...queue] = ordered(list);
+    if (!feature) return sharedState(`${label(view)} is quiet right now.`, 'Return to Home', true);
+    const art = feature.artwork || feature.background || '';
+    return `<div class="kiosk-editorial"><article class="kiosk-editorial-feature${art ? ' has-art' : ''}"${art ? ` style="--kiosk-art:url('${esc(art)}')"` : ''}><div><p class="kiosk-kicker">${esc(stateCopy(feature))} · ${esc(label(view))}</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || feature.detail || '')}</p><p class="kiosk-meta">${esc(feature.detail || safeRows(feature, 1)[0] || '')}</p></div></article><aside class="kiosk-support"><p class="kiosk-kicker">UP NEXT</p>${queue.slice(0, 4).map(c => `<div class="kiosk-queue-row"><strong>${esc(c.title)}</strong><span>${esc(c.subtitle || stateCopy(c))}</span></div>`).join('') || '<p class="kiosk-empty">No supporting items.</p>'}</aside></div>`;
+  }
+  function renderAmbient(list) {
+    const feature = ordered(list)[0];
+    if (!feature) return sharedState('The sky is quiet for now.', 'Return to Home', true);
+    return `<div class="kiosk-ambient-surface"><p class="kiosk-kicker">SKY · ${esc(stateCopy(feature))}</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || '')}</p><p class="kiosk-empty">${esc(feature.detail || '')}</p><div class="kiosk-ambient-rows">${safeRows(feature).map(row => `<span>${esc(row)}</span>`).join('')}</div></div>`;
+  }
+  function renderDestination(key, list) { const category = categoryFor(key); return category === 'sports' ? renderSports(list) : category === 'agenda' ? renderAgenda(list) : category === 'media' ? renderMedia(list) : category === 'ambient' ? renderAmbient(list) : list.length ? `<div class="kiosk-items">${list.slice(0, 8).map(button).join('')}</div>` : sharedState('Nothing to show here right now.', 'Return to Home', true); }
   function drawPanel() {
     panel.dataset.section = view; status.textContent = interrupted ? 'Household attention' : view === 'household' ? 'Household' : view ? label(view) : 'Marquee · Auto';
     const valid = sections.includes(view), list = valid && !offline ? items(view) : [];
@@ -64,8 +111,9 @@
       panel.innerHTML = `<header class="kiosk-now-playing-head"><p>NOW PLAYING</p><h1>${esc(title)}</h1><p class="kiosk-now-playing-detail">${esc(detail)}</p></header><div class="kiosk-now-playing-body"><div class="kiosk-state-mark ${unavailable ? 'is-unavailable' : ''}" aria-hidden="true"><span>${unavailable ? '↻' : '·'}</span></div><div class="kiosk-now-playing-copy"><p class="kiosk-ambient">${esc(ambient)}</p><p class="kiosk-now-playing-note">${unavailable ? 'Try again when the service is reachable.' : 'Nothing needs your attention right now.'}</p><div class="kiosk-now-playing-actions"><a class="kiosk-home-action" href="${esc(href(''))}" data-view="">Return to Home</a>${unavailable ? '<button type="button" class="kiosk-retry" data-kiosk-retry>Check again</button>' : ''}</div></div></div>`;
       return;
     }
-    const message = !loaded ? 'Loading your sections…' : offline ? 'This section is temporarily unavailable. Trying again…' : !valid ? 'This section is not enabled. Choose another section.' : health[view]?.state === 'error' || health[view]?.stale || health[view]?.state === 'disabled' ? 'This source is unavailable. Check its configuration in Sources / Admin.' : 'Nothing to show here right now. New items will appear automatically.';
-    const html = `<header><p>EXPLORE</p><h1>${esc(label(view))}</h1></header>` + (list.length ? `<div class="kiosk-items">${list.map(c => `<button type="button" data-item="${esc(c.id)}"><small>${esc(c.status || c.source || '')}</small><strong>${esc(c.title)}</strong><span>${esc(c.subtitle || c.detail || '')}</span>${(c.rows || []).slice(0,3).map(row=>`<span>${esc(row)}</span>`).join('')}</button>`).join('')}</div>` : `<p class="kiosk-empty" role="status">${esc(message)}</p>`);
+    const unavailable = offline || !valid || health[view]?.state === 'error' || health[view]?.stale || health[view]?.state === 'disabled';
+    const message = !loaded ? 'Loading this destination…' : unavailable ? `${label(view)} is unavailable` : '';
+    const html = `<header class="kiosk-section-head"><p>${esc(categoryFor(view).toUpperCase())}</p><h1>${esc(label(view))}</h1></header>` + (message ? sharedState(message, 'Return to Home', true) : renderDestination(view, list));
     if (panel.innerHTML !== html) panel.innerHTML = html;
   }
   function change(key) { view = key; selected = ''; history.replaceState(null, '', href(key)); closeMenu(false); drawNavigation(); drawMenu(); drawPanel(); window.dispatchEvent(new Event('marquee-navigation')); }

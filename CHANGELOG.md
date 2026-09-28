@@ -1,3 +1,11 @@
+## 2.10.12
+
+- Replace forced kiosk browse cards with category-specific sports, agenda,
+  editorial media, and calm astronomy compositions.
+- Add chronological calendar grouping, human-friendly source presentation,
+  shared unavailable/empty actions, responsive dock-safe containment, and
+  deterministic architecture contracts.
+
 ## 2.10.11 — Contain narrow now-playing overflow
 
 - Clip the forced now-playing surface’s horizontal scrollable overflow while preserving the ambient orbit composition at tablet and phone widths.
@@ -152,8 +160,6 @@
 - Three distinct Live visual directions: Studio, After Hours, and Dispatch. Each has its own typography, surfaces, and graphic treatment. New household panels remain positionable in the builder.
 - Broadcast-style local weather presentation with original radar, current observations, and a direct weather view. Offline household feeds visibly stop asserting current state.
 - Updated HA kiosk delivery to open the household desk and foreground household attention. Saved Cast profiles remain separate.
-
-# Changelog
 
 ## 2.8.2 — 2026-09-10
 
