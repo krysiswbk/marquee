@@ -1,3 +1,8 @@
+## 2.10.14
+
+- Mark the active overflow destination on the narrow More control and make Escape return any forced destination to Home while preserving dialog close/focus behavior.
+- Keep healthy empty destinations neutral, bound agenda summaries with an explicit remainder count, and remove narrow single-event layout overflow for UFC and TV.
+
 ## 2.10.13
 
 - Resolve each forced kiosk destination from its provider lifecycle, distinguishing populated, empty, stale, unavailable, and provider-error states.

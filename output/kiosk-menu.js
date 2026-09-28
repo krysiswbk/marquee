@@ -42,7 +42,12 @@
     const available = () => Math.max(0, rail.clientWidth - rail.querySelector('.kiosk-brand').offsetWidth - more.offsetWidth - 44);
     let used = [...primary.children].reduce((sum, a) => sum + a.offsetWidth, 0), cutoff = all.length;
     while (used > available() && cutoff > 1) { const a = primary.children[--cutoff]; used -= a.offsetWidth; a.hidden = true; }
-    const hidden = all.slice(cutoff); overflow.innerHTML = hidden.map(d => link(d, offline ? 'Connection unavailable' : `${items(d[0]).length} current item${items(d[0]).length === 1 ? '' : 's'}`)).join(''); more.hidden = hidden.length === 0; more.setAttribute('aria-expanded', 'false');
+    const hidden = all.slice(cutoff); overflow.innerHTML = hidden.map(d => link(d, offline ? 'Connection unavailable' : `${items(d[0]).length} current item${items(d[0]).length === 1 ? '' : 's'}`)).join(''); more.hidden = hidden.length === 0;
+    const activeInOverflow = hidden.some(([key]) => key === view);
+    more.classList.toggle('is-active', activeInOverflow);
+    more.setAttribute('aria-label', activeInOverflow ? `More destinations; current destination is ${label(view)}` : 'More destinations');
+    more.setAttribute('aria-current', activeInOverflow ? 'page' : 'false');
+    more.setAttribute('aria-expanded', 'false');
   }
   function drawMenu() { const hiddenKeys = new Set([...overflow.querySelectorAll('[data-view]')].map(a => a.dataset.view)); overflow.innerHTML = allDestinations().filter(([key]) => hiddenKeys.has(key)).map(d => link(d, offline ? 'Connection unavailable' : `${items(d[0]).length} current item${items(d[0]).length === 1 ? '' : 's'}`)).join(''); }
   const sportViews = new Set(['nhl', 'ufc', 'pfl']);
@@ -80,7 +85,7 @@
   }
   function renderSports(list) {
     const [feature, ...queue] = ordered(list);
-    if (!feature) return sharedState('No games or fights are on the board.', 'Return to Home', true, 'empty');
+    if (!feature) return sharedState('No games or fights are on the board.', 'Return to Home', false, 'empty');
     const left = feature.left || {}, right = feature.right || {};
     const matchup = left.name && right.name ? `<div class="kiosk-matchup"><div><strong>${esc(left.name)}</strong><b>${esc(left.score || '')}</b></div><span>vs</span><div><strong>${esc(right.name)}</strong><b>${esc(right.score || '')}</b></div></div>` : '';
     return `<div class="kiosk-sports-layout"><article class="kiosk-sport-feature"><p class="kiosk-kicker">${esc(stateCopy(feature))} · ${esc(label(view))}</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || feature.detail || '')}</p>${matchup}<p class="kiosk-meta">${esc(feature.detail || '')}</p><div class="kiosk-sport-rows">${safeRows(feature).map(row => `<span>${esc(row)}</span>`).join('')}</div></article><aside class="kiosk-support"><p class="kiosk-kicker">NEXT RELEVANT</p>${queue.slice(0, 3).map(c => `<div class="kiosk-queue-row"><strong>${esc(c.title)}</strong><span>${esc(c.subtitle || stateCopy(c))}</span></div>`).join('') || '<p class="kiosk-empty">No other current event.</p>'}</aside></div>`;
@@ -93,22 +98,24 @@
   }
   function renderAgenda(list) {
     const values = ordered(list), feature = values[0];
-    if (!feature) return sharedState('Your agenda is clear.', 'Return to Home', true, 'empty');
-    const grouped = values.slice(1, 9).reduce((map, c) => { const key = agendaGroup(dateOf(c)); (map[key] ||= []).push(c); return map; }, {});
-    return `<div class="kiosk-agenda"><article class="kiosk-agenda-feature"><p class="kiosk-kicker">UP NEXT</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || feature.detail || '')}</p><p class="kiosk-meta">${esc(feature.location || feature.detail || sourceLabel(feature))}</p></article><div class="kiosk-agenda-groups">${Object.entries(grouped).map(([group, entries]) => `<section><h3>${esc(group)}</h3>${entries.map(c => `<div class="kiosk-agenda-row ${c.subtype === 'birthday_rollup' ? 'is-birthday' : ''}"><time>${esc(c.subtitle || 'All day')}</time><strong>${esc(c.title)}</strong><small>${esc(c.subtype === 'birthday_rollup' ? 'Birthday' : sourceLabel(c))}</small></div>`).join('')}</section>`).join('') || '<p class="kiosk-empty">No later events in view.</p>'}</div></div>`;
+    if (!feature) return sharedState('Your agenda is clear.', 'Return to Home', false, 'empty');
+    const upcoming = values.slice(1, 4), remaining = Math.max(0, values.length - 1 - upcoming.length);
+    const grouped = upcoming.reduce((map, c) => { const key = agendaGroup(dateOf(c)); (map[key] ||= []).push(c); return map; }, {});
+    const remainder = remaining ? `<p class="kiosk-agenda-more">${remaining} more event${remaining === 1 ? '' : 's'} remain beyond this summary.</p>` : '';
+    return `<div class="kiosk-agenda"><article class="kiosk-agenda-feature"><p class="kiosk-kicker">UP NEXT</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || feature.detail || '')}</p><p class="kiosk-meta">${esc(feature.location || feature.detail || sourceLabel(feature))}</p></article><div class="kiosk-agenda-groups">${Object.entries(grouped).map(([group, entries]) => `<section><h3>${esc(group)}</h3>${entries.map(c => `<div class="kiosk-agenda-row ${c.subtype === 'birthday_rollup' ? 'is-birthday' : ''}"><time>${esc(c.subtitle || 'All day')}</time><strong>${esc(c.title)}</strong><small>${esc(c.subtype === 'birthday_rollup' ? 'Birthday' : sourceLabel(c))}</small></div>`).join('')}</section>`).join('') || '<p class="kiosk-empty">No later events in view.</p>'}${remainder}</div></div>`;
   }
   function renderMedia(list) {
     const [feature, ...queue] = ordered(list);
-    if (!feature) return sharedState(`${label(view)} is quiet right now.`, 'Return to Home', true, 'empty');
+    if (!feature) return sharedState(`${label(view)} is quiet right now.`, 'Return to Home', false, 'empty');
     const art = feature.artwork || feature.background || '';
     return `<div class="kiosk-editorial"><article class="kiosk-editorial-feature${art ? ' has-art' : ''}"${art ? ` style="--kiosk-art:url('${esc(art)}')"` : ''}><div><p class="kiosk-kicker">${esc(stateCopy(feature))} · ${esc(label(view))}</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || feature.detail || '')}</p><p class="kiosk-meta">${esc(feature.detail || safeRows(feature, 1)[0] || '')}</p></div></article><aside class="kiosk-support"><p class="kiosk-kicker">UP NEXT</p>${queue.slice(0, 4).map(c => `<div class="kiosk-queue-row"><strong>${esc(c.title)}</strong><span>${esc(c.subtitle || stateCopy(c))}</span></div>`).join('') || '<p class="kiosk-empty">No supporting items.</p>'}</aside></div>`;
   }
   function renderAmbient(list) {
     const feature = ordered(list)[0];
-    if (!feature) return sharedState('The sky is quiet for now.', 'Return to Home', true, 'empty');
+    if (!feature) return sharedState('The sky is quiet for now.', 'Return to Home', false, 'empty');
     return `<div class="kiosk-ambient-surface"><p class="kiosk-kicker">SKY · ${esc(stateCopy(feature))}</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || '')}</p><p class="kiosk-empty">${esc(feature.detail || '')}</p><div class="kiosk-ambient-rows">${safeRows(feature).map(row => `<span>${esc(row)}</span>`).join('')}</div></div>`;
   }
-  function renderDestination(key, list) { const category = categoryFor(key); return category === 'sports' ? renderSports(list) : category === 'agenda' ? renderAgenda(list) : category === 'media' ? renderMedia(list) : category === 'ambient' ? renderAmbient(list) : list.length ? `<div class="kiosk-items">${list.slice(0, 8).map(button).join('')}</div>` : sharedState('Nothing to show here right now.', 'Return to Home', true, 'empty'); }
+  function renderDestination(key, list) { const category = categoryFor(key); return category === 'sports' ? renderSports(list) : category === 'agenda' ? renderAgenda(list) : category === 'media' ? renderMedia(list) : category === 'ambient' ? renderAmbient(list) : list.length ? `<div class="kiosk-items">${list.slice(0, 8).map(button).join('')}</div>` : sharedState('Nothing to show here right now.', 'Return to Home', false, 'empty'); }
   function drawPanel() {
     panel.dataset.section = view; status.textContent = interrupted ? 'Household attention' : view === 'household' ? 'Household' : view ? label(view) : 'Marquee · Auto';
     const valid = sections.includes(view), list = valid && !offline ? items(view) : [];
@@ -147,7 +154,7 @@
   primary.addEventListener('click', handleLink); overflow.addEventListener('click', handleLink);
   menu.addEventListener('click', e => { if (e.target === menu) { const r = menu.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closeMenu(); } });
   panel.addEventListener('click', e => { const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); return; } const b = e.target.closest('button[data-item]'); if (b) { selected = b.dataset.item; drawPanel(); primary.querySelector(`[data-view="${CSS.escape(view)}"]`)?.focus(); window.dispatchEvent(new Event('marquee-navigation')); } });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && view === 'plex' && !menu.open) { e.preventDefault(); change(''); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && view && !menu.open) { e.preventDefault(); change(''); } });
   window.addEventListener('popstate', () => { view = new URLSearchParams(location.search).get('view') || ''; selected = ''; drawNavigation(); drawMenu(); drawPanel(); window.dispatchEvent(new Event('marquee-navigation')); });
   window.MarqueeNavigation = { resolve(payload) { nowPlaying = payload || {playing:false, state:'idle', availability:'idle'}; const wasInterrupted = interrupted; interrupted = Boolean(payload?.attention || payload?.householdFocus); if (interrupted && !wasInterrupted && menu.open) closeMenu(false); drawPanel(); if (interrupted || !view || view === 'plex') return payload; const c = !offline && sections.includes(view) && items(view).find(item => item.id === selected); return c ? c.payload || {playing:true,type:'media_context',key:'browse:'+c.id,context:c} : {playing:false}; } };
   async function refresh() {

@@ -19,8 +19,31 @@ def test_sports_contract_keeps_matchup_status_and_next_event_hierarchy():
 
 
 def test_calendar_contract_groups_and_limits_chronological_agenda():
-    for token in ("agendaGroup", "Today", "Tomorrow", "This week", "values.slice(1, 9)", "is-birthday"):
+    for token in ("agendaGroup", "Today", "Tomorrow", "This week", "values.slice(1, 4)", "remaining", "kiosk-agenda-more", "is-birthday"):
         assert token in MENU
+
+
+def test_overflow_trigger_and_escape_are_remote_visible_contracts():
+    assert "activeInOverflow" in MENU
+    assert "more.classList.toggle('is-active', activeInOverflow)" in MENU
+    assert "current destination is ${label(view)}" in MENU
+    assert "aria-current', activeInOverflow ? 'page' : 'false'" in MENU
+    assert "e.key === 'Escape' && view && !menu.open" in MENU
+    assert "menu.addEventListener('cancel'" in MENU
+
+
+def test_healthy_empty_states_do_not_offer_failure_retry():
+    assert "The sky is quiet for now.', 'Return to Home', false, 'empty'" in MENU
+    assert "`${label(view)} is quiet right now.`, 'Return to Home', false, 'empty'" in MENU
+    assert "No games or fights are on the board.', 'Return to Home', false, 'empty'" in MENU
+    assert "lifecycle.state)" in MENU
+    assert "data-kiosk-retry" in MENU
+
+
+def test_narrow_single_event_surfaces_remove_artificial_minimum_height():
+    assert ".kiosk-sport-feature,.kiosk-editorial-feature{min-height:0" in SCREENS
+    assert ".kiosk-support{margin-top:18px}" in SCREENS
+    assert ".kiosk-more.is-active" in SCREENS
 
 
 def test_presentation_does_not_promote_raw_email_or_entity_source_names():
