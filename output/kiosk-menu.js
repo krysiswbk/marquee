@@ -2,7 +2,7 @@
 (() => {
   const params = new URLSearchParams(location.search);
   if (!['/live', '/kiosk'].includes(location.pathname) || params.has('demo') || params.has('edit') || params.has('receiver')) return;
-  const destinations = { plex:['Now playing','▶'], nhl:['NHL','⚑'], ufc:['UFC','⚑'], pfl:['PFL','⚑'], weather:['Weather','☼'], tv:['TV','▣'], astronomy:['Sky','✦'], movies:['Movies','▶'], trailers:['Trailers','▶'], major_events:['Events','◆'], gaming:['Gaming','⌘'], music:['Music','♫'], calendar:['Calendar','□'] };
+  const destinations = { plex:['Now playing','▶'], nhl:['NHL','🏒'], ufc:['UFC','🥊'], pfl:['PFL','🥋'], weather:['Weather','☼'], tv:['TV','📺'], astronomy:['Sky','✦'], movies:['Movies','▶'], trailers:['Trailers','▶'], major_events:['Events','◆'], gaming:['Gaming','⌘'], music:['Music','♫'], calendar:['Calendar','📅'] };
   // Weather is a first-class ambient destination. Keep urgent weather visible
   // ahead of lower-priority sports when the rail has to compact or overflow.
   const destinationPriority = { plex:100, weather:95, nhl:85, ufc:75, pfl:65,
@@ -33,7 +33,7 @@
   document.body.append(rail);
   const primary = rail.querySelector('.kiosk-primary'), more = rail.querySelector('.kiosk-more'), status = rail.querySelector('[role=status]');
   const menu = document.createElement('dialog'); menu.className = 'kiosk-menu'; menu.setAttribute('aria-labelledby', 'kiosk-menu-title');
-  menu.innerHTML = '<header><h2 id="kiosk-menu-title">More destinations</h2><button type="button" aria-label="Close menu">✕</button></header><nav aria-label="Additional Marquee destinations"></nav><details><summary>Settings</summary><nav aria-label="Marquee control pages"><a href="/live" aria-current="page">Live display</a><a href="/settings">Settings</a><a href="/settings/layout?profile=live">Edit screen layout</a><a href="/settings/attention">Alert rules</a><a href="/settings/tests">Test screens</a></nav></details>';
+  menu.innerHTML = '<header><h2 id="kiosk-menu-title">More destinations</h2><button type="button" aria-label="Close menu">✕</button></header><nav aria-label="Additional Marquee destinations"></nav><details><summary>Settings</summary><nav aria-label="Marquee control pages"><a href="/live">Live display</a><a href="/settings">Settings</a><a href="/settings/layout?profile=live">Edit screen layout</a><a href="/settings/attention">Alert rules</a><a href="/settings/tests">Test screens</a></nav></details>';
   document.body.append(menu);
   const overflow = menu.querySelector('nav');
   const panel = document.createElement('section'); panel.className = 'kiosk-section'; panel.hidden = true; panel.inert = true; panel.setAttribute('aria-hidden', 'true'); panel.setAttribute('aria-label', 'Selected kiosk section'); panel.setAttribute('aria-labelledby', 'kiosk-section-title'); document.body.append(panel);
@@ -90,7 +90,14 @@
         : (destinationPriority[b[0]] ?? 0) - (destinationPriority[a[0]] ?? 0) || a[3] - b[3])
       .map(([key, title, glyph]) => [key, title, glyph]);
   }
-  function link([key, title, glyph], detail = '') { return `<a href="${esc(href(key))}" data-view="${esc(key)}" aria-label="${esc(title)}" title="${esc(title)}" ${key===view?'aria-current="page"':''}><span class="kiosk-icon" aria-hidden="true">${esc(glyph)}</span><span class="kiosk-label">${esc(title)}</span>${detail ? `<small>${esc(detail)}</small>` : ''}</a>`; }
+  function link([key, title, glyph], detail = '') { return `<a href="${esc(href(key))}" data-view="${esc(key)}" aria-label="${esc(title)}" title="${esc(title)}"><span class="kiosk-icon" aria-hidden="true">${esc(glyph)}</span><span class="kiosk-label">${esc(title)}</span>${detail ? `<small>${esc(detail)}</small>` : ''}</a>`; }
+  function updateCurrentDestination() {
+    document.querySelectorAll('.kiosk-rail a[data-view], .kiosk-menu a[data-view]').forEach(a => a.removeAttribute('aria-current'));
+    if (!view) return;
+    const direct = primary.querySelector(`[data-view="${CSS.escape(view)}"]`);
+    const active = direct && !direct.hidden ? direct : overflow.querySelector(`[data-view="${CSS.escape(view)}"]`);
+    if (active) active.setAttribute('aria-current', 'page');
+  }
   function drawNavigation() {
     const focusedView = document.activeElement?.closest?.('a[data-view]')?.dataset.view;
     const all = allDestinations();
@@ -124,15 +131,16 @@
     const activeInOverflow = hidden.some(([key]) => key === view);
     more.classList.toggle('is-active', activeInOverflow);
     more.setAttribute('aria-label', activeInOverflow ? `More destinations; current destination is ${label(view)}` : 'More destinations');
-    more.setAttribute('aria-current', activeInOverflow ? 'page' : 'false');
+    more.removeAttribute('aria-current');
     more.setAttribute('aria-expanded', 'false');
+    updateCurrentDestination();
     if (focusedView !== undefined) {
       const replacement = primary.querySelector(`[data-view="${CSS.escape(focusedView)}"]`)
         || overflow.querySelector(`[data-view="${CSS.escape(focusedView)}"]`);
       if (replacement && !replacement.hidden) replacement.focus({preventScroll: true});
     }
   }
-  function drawMenu() { const hiddenKeys = new Set([...overflow.querySelectorAll('[data-view]')].map(a => a.dataset.view)); overflow.innerHTML = allDestinations().filter(([key]) => hiddenKeys.has(key)).map(d => link(d, offline ? 'Connection unavailable' : `${items(d[0]).length} current item${items(d[0]).length === 1 ? '' : 's'}`)).join(''); }
+  function drawMenu() { const hiddenKeys = new Set([...overflow.querySelectorAll('[data-view]')].map(a => a.dataset.view)); overflow.innerHTML = allDestinations().filter(([key]) => hiddenKeys.has(key)).map(d => link(d, offline ? 'Connection unavailable' : `${items(d[0]).length} current item${items(d[0]).length === 1 ? '' : 's'}`)).join(''); updateCurrentDestination(); }
   const sportViews = new Set(['nhl', 'ufc', 'pfl']);
   const mediaViews = new Set(['tv', 'movies', 'trailers', 'gaming', 'music', 'major_events']);
   const categoryFor = key => sportViews.has(key) ? 'sports' : key === 'calendar' ? 'agenda' : key === 'astronomy' ? 'ambient' : mediaViews.has(key) ? 'media' : 'generic';

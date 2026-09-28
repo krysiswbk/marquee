@@ -52,7 +52,14 @@ def test_overflow_trigger_and_escape_are_remote_visible_contracts():
     assert "activeInOverflow" in MENU
     assert "more.classList.toggle('is-active', activeInOverflow)" in MENU
     assert "current destination is ${label(view)}" in MENU
-    assert "aria-current', activeInOverflow ? 'page' : 'false'" in MENU
+    assert "function updateCurrentDestination()" in MENU
+    assert "document.querySelectorAll('.kiosk-rail a[data-view], .kiosk-menu a[data-view]').forEach(a => a.removeAttribute('aria-current'));" in MENU
+    assert "more.removeAttribute('aria-current')" in MENU
+    assert '<a href="/live">Live display</a>' in MENU
+    assert "overflow.innerHTML = allDestinations().filter" in MENU
+    assert "join(''); updateCurrentDestination();" in MENU
+    assert 'aria-current="false"' not in MENU
+    assert "aria-current=\"page\"" not in MENU
     assert "e.key === 'Escape' && view && !menu.open" in MENU
     assert "menu.addEventListener('cancel'" in MENU
 

@@ -1,3 +1,12 @@
+## 2.10.69
+
+- Correct kiosk current-destination semantics so only the active destination
+  link exposes `aria-current="page"`; More and utility links remain neutral.
+- Give narrow kiosk navigation distinct NHL, UFC, PFL, Calendar, and TV marks
+  while preserving direct Home/current destinations, overflow, and touch targets.
+- Add responsive browser coverage for current-state cardinality and destination
+  identity across phone, tablet, desktop, and TV rail widths.
+
 ## 2.10.68
 
 - Recompose the shared kiosk sports stage into an overscan-safe broadcast matchup surface with stronger team marks, a centered scheduled/live/final state, balanced identities, and cohesive date/venue/broadcast context.

@@ -11,8 +11,10 @@ ROOT = Path(__file__).resolve().parents[1]
 VIEWPORTS = [(320, 720), (360, 720), (393, 852), (430, 852),
              (700, 900), (1024, 600), (1500, 900)]
 DESTINATIONS = ("nhl", "ufc", "pfl", "weather", "tv", "gaming", "calendar")
-TEST_DESTINATIONS = DESTINATIONS[:4]
-LABELS = {"nhl": "NHL", "ufc": "UFC", "pfl": "PFL", "weather": "Weather"}
+TEST_DESTINATIONS = DESTINATIONS
+LABELS = {"nhl": "NHL", "ufc": "UFC", "pfl": "PFL", "weather": "Weather",
+          "tv": "TV", "gaming": "Gaming", "calendar": "Calendar"}
+GLYPHS = {"nhl": "🏒", "ufc": "🥊", "pfl": "🥋", "tv": "📺", "calendar": "📅"}
 
 
 with sync_playwright() as playwright:
@@ -56,6 +58,10 @@ with sync_playwright() as playwright:
             page.goto(f"http://marquee.test/kiosk?view={destination}", wait_until="domcontentloaded")
             page.wait_for_selector(f'.kiosk-primary [data-view="{destination}"][aria-current="page"]')
 
+            assert page.locator('[aria-current="page"]').count() == 1, (width, destination)
+            assert page.locator('.kiosk-more[aria-current]').count() == 0
+            assert page.locator('.kiosk-menu a[href="/live"][aria-current]').count() == 0
+
             active = page.locator(f'.kiosk-primary [data-view="{destination}"]')
             assert active.locator(".kiosk-label").is_visible(), (width, destination)
             assert active.locator(".kiosk-label").inner_text() == LABELS[destination]
@@ -67,6 +73,10 @@ with sync_playwright() as playwright:
                 "el => el.scrollWidth <= el.clientWidth + 1")
             assert page.locator(".kiosk-primary").evaluate(
                 "el => [...el.querySelectorAll('a:not([hidden])')].every(a => a.offsetHeight >= 44)")
+
+            if destination in GLYPHS:
+                assert page.locator(f'.kiosk-primary [data-view="{destination}"], .kiosk-menu [data-view="{destination}"]').first.locator(
+                    ".kiosk-icon").inner_text() == GLYPHS[destination]
 
             if width <= 430:
                 assert page.locator(".kiosk-more").evaluate(
