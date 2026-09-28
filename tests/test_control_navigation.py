@@ -103,9 +103,9 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("grid-template-columns: repeat(2, minmax(0, 1fr))", css)
         for page in (PAGES["cast-layout"], PAGES["live-layout"], PAGES["attention"], PAGES["tests"]):
             source = page.read_text()
-            self.assertIn("control-shell.css?v=2.10.28", source)
-            self.assertIn("control-shell.js?v=2.10.28", source)
-            self.assertIn("control-shell-narrow.css?v=2.10.28", source)
+            self.assertIn("control-shell.css?v=2.10.29", source)
+            self.assertIn("control-shell.js?v=2.10.29", source)
+            self.assertIn("control-shell-narrow.css?v=2.10.29", source)
 
     def test_layout_workspace_has_explicit_phone_composition_contract(self):
         source = PAGES["cast-layout"].read_text()
@@ -208,8 +208,13 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("#brain-agenda{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)", tablet)
         self.assertIn("#brain-agenda .brain-upnext{display:block;min-width:0}", tablet)
         self.assertNotIn("height:16vh;bottom:auto;overflow:visible", tablet)
-        self.assertIn("#brain-activity,body.brain-live #brain-agenda{overflow:visible}", styles)
-        self.assertIn(".brain-empty{font-size:clamp(12px,1.55vw,16px);line-height:1.2;margin:.4vh 0}", styles)
+        self.assertNotIn("#brain-activity,body.brain-live #brain-agenda{overflow:visible}", styles)
+        self.assertIn(".brain-empty{font-size:1.06vw;line-height:1.55;color:var(--desk-muted);max-width:32vw;margin:0}", styles)
+        self.assertIn("#brain-activity:has(.brain-empty){padding-block:.4vh}", styles)
+        self.assertIn("#brain-activity:has(.brain-empty){padding-block:.5vh}", styles)
+        self.assertIn(".brain-empty{font-size:clamp(12px,3.05vw,16px);line-height:1.1}", styles)
+        self.assertNotIn(".brain-empty{font-size:2.2vw", styles)
+        self.assertNotIn(".brain-live .brain-empty,.brain-live .brain-tag", styles)
         self.assertIn("grid-template-columns:minmax(0,1fr) minmax(0,1fr)", tablet)
         self.assertIn("brain-agenda-more", tablet)
         self.assertIn("events.length>3", brain)

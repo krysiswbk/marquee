@@ -1,3 +1,10 @@
+## 2.10.29
+
+- Give the empty activity state a deliberate compact treatment on phone and
+  tablet displays so its complete message fits inside the bounded panel.
+- Preserve the 2.10.28 agenda geometry and explicit `+N more` summaries while
+  removing the tablet overflow escape hatch.
+
 ## 2.10.28
 
 - Recompose the 481–700px Home support band so activity and agenda content
