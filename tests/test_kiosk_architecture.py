@@ -16,6 +16,10 @@ def test_forced_destinations_have_purposeful_category_renderers():
 def test_sports_contract_keeps_matchup_status_and_next_event_hierarchy():
     for token in ("kiosk-sport-feature", "kiosk-matchup", "NEXT RELEVANT", "stateCopy(feature)"):
         assert token in MENU
+    assert "data[1].browse?.nhl" in MENU
+    assert "function renderNhl(list)" in MENU
+    assert "No followed-team games are scheduled." in MENU
+    assert "sourceStatus" in MENU and "broadcast" in MENU
 
 
 def test_calendar_contract_groups_and_limits_chronological_agenda():
@@ -164,6 +168,8 @@ def test_provider_error_stale_and_empty_states_have_distinct_deterministic_copy(
     assert "The source has not refreshed. Last-known results are not being presented as current." in MENU
     assert "New items will appear automatically when this destination has something relevant." in MENU
     assert "data-lifecycle=\"${esc(lifecycle)}\"" in MENU
+    assert "provider.state === 'degraded'" in MENU
+    assert "data is delayed" in MENU
 
 
 def test_pending_fetch_is_loading_without_failure_copy_or_retry():
@@ -185,6 +191,7 @@ def test_responsive_contract_contains_dock_safe_containment_and_narrow_layouts()
     assert "@media(max-width:900px)" in SCREENS
     assert "@media(max-width:480px)" in SCREENS
     assert "overflow-x:hidden" in SCREENS
+    assert ".kiosk-nhl-layout" in SCREENS
 
 
 def test_short_wide_presentation_contract_is_scoped_and_summarizes_secondary_content():

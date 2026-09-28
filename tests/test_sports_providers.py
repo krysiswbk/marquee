@@ -67,6 +67,29 @@ class SportsProviderTests(unittest.TestCase):
         self.assertEqual(len(values), 1)
         self.assertEqual(values[0].event_state, EventState.LIVE)
 
+    def test_nhl_browse_keeps_future_followed_game_out_of_interruption_candidates(self):
+        payload = {"events": [{"id": "future", "name": "Maple Leafs at Canadiens",
+            "date": "2026-09-12T23:00Z", "status": {"type": {"state": "pre", "shortDetail": "Scheduled"}},
+            "competitions": [{"broadcasts": [{"names": ["Sportsnet"]}], "competitors": [
+                {"homeAway": "away", "team": {"abbreviation": "TOR", "displayName": "Maple Leafs"}},
+                {"homeAway": "home", "team": {"abbreviation": "MTL", "displayName": "Canadiens"}}]}]}]}
+        provider = NHLProvider({"enabled": True, "priority": 90, "teams": ["TOR"]}, self.tmp.name)
+        self.assertEqual(provider.contexts(payload, NOW), [])
+        browse = provider.browse_contexts(payload, NOW)
+        self.assertEqual(len(browse), 1)
+        rendered = browse[0].display_dict()
+        self.assertEqual(rendered["left"]["homeAway"], "away")
+        self.assertEqual(rendered["right"]["homeAway"], "home")
+        self.assertEqual(rendered["sourceStatus"], "Scheduled")
+        self.assertEqual(rendered["broadcast"], "Sportsnet")
+
+    def test_nhl_browse_omits_games_without_a_followed_team(self):
+        payload = {"events": [{"id": "other", "date": "2026-09-12T23:00Z",
+            "competitions": [{"competitors": [{"team": {"abbreviation": "MTL"}},
+                                                 {"team": {"abbreviation": "BOS"}}]}]}]}
+        provider = NHLProvider({"enabled": True, "teams": ["TOR"]}, self.tmp.name)
+        self.assertEqual(provider.browse_contexts(payload, NOW), [])
+
     def test_nhl_aggregates_single_dates_deduplicates_and_maps_lifecycle(self):
         calls = []
         def event(ident, state, date):

@@ -55,6 +55,14 @@ class Provider:
     def contexts(self, payload, now):
         raise NotImplementedError
 
+    def browse_contexts(self, payload, now):
+        """Contexts safe for a manually opened destination.
+
+        Providers may expose a wider browse horizon than their interruption
+        candidates without introducing another payload or entity model.
+        """
+        return self.contexts(payload, now)
+
     def health_details(self, payload):
         """Optional payload-backed health details, retained by disk caches."""
         return {}

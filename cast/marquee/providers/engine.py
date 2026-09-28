@@ -24,6 +24,7 @@ class ContextEngine:
         self.lock = threading.Lock()
         self.health = {p.name: p.health_template() for p in providers}
         self.candidates = {p.name: [] for p in providers}
+        self.browse_candidates = {p.name: [] for p in providers}
         self.futures = {}
         self.pool = ThreadPoolExecutor(max_workers=min(4, max(1, len(providers))),
                                        thread_name_prefix="marquee-provider")
@@ -44,15 +45,18 @@ class ContextEngine:
                     payload, stale = future.result()
                     now = datetime.fromtimestamp(now_ts, timezone.utc)
                     found = provider.contexts(payload, now)
+                    browse_found = provider.browse_contexts(payload, now)
                     provider_weight = int(provider.config.get("priority", 0))
-                    for context in found:
+                    for context in found + browse_found:
                         context.raw.setdefault("providerWeight", provider_weight)
                     threshold = float(provider.config.get("_minimum_relevance", 0))
                     with self.lock: self.candidates[name] = found
+                    with self.lock: self.browse_candidates[name] = browse_found
                     success_reason = getattr(provider, "reason", "fetched successfully")
                     health_details = provider.health_details(payload)
                     health.update(state="stale" if stale else "ok", stale=stale,
                                   lastSuccess=now.isoformat(), candidateContexts=len(found),
+                                  browseContexts=len(browse_found),
                                   eligibleContexts=sum(not c.expired(now) and
                                       c.event_state.value != "POST_EVENT" and
                                       provider_weight >= threshold and
@@ -99,7 +103,8 @@ class ContextEngine:
         self.tick()
         with self.lock:
             result = {name: {**self.health[name],
-                             "contexts": [c.to_dict() for c in self.candidates[name]]}
+                             "contexts": [c.to_dict() for c in self.candidates[name]],
+                             "browseContexts": [c.to_dict() for c in self.browse_candidates[name]]}
                       for name in self.providers}
         return {"providers": result,
                 "active": {d: (self.winner(display=d).to_dict()

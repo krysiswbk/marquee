@@ -1,3 +1,9 @@
+## 2.10.61
+
+- Add a truthful NHL browse contract sourced from the authoritative aggregated
+  ESPN snapshot, showing the next followed-team game without widening automatic
+  interruption eligibility.
+
 ## 2.10.60
 
 - Restore NHL schedule freshness by aggregating bounded single-date ESPN

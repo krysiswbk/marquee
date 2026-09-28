@@ -27,6 +27,7 @@ def _side(item):
         "abbr": participant.get("abbreviation") or "",
         "score": item.get("score") or "",
         "record": ((item.get("records") or [{}])[0]).get("summary", ""),
+        "homeAway": item.get("homeAway") or "",
         "logo": (participant.get("logo") or headshot.get("href") or
                  ((logos or [{}])[0]).get("href", "") or flag.get("href", "")),
     }
@@ -142,7 +143,7 @@ class NHLProvider(ESPNProvider):
         return {"state": "degraded", "error": message, "errorSummary": message,
                 "reason": "NHL schedule partially fetched", "lastSuccessReason": message}
 
-    def contexts(self, payload, now):
+    def _contexts(self, payload, now, browse=False):
         teams = {str(x).upper() for x in self.config.get("teams", ["TOR"])}
         pregame = int(self.config.get("pregame_minutes", 120))
         postgame = int(self.config.get("postgame_minutes", 180))
@@ -159,10 +160,17 @@ class NHLProvider(ESPNProvider):
             if not starts:
                 continue
             lifecycle = _lifecycle(_state(event), starts, now, pregame)
-            if lifecycle == EventState.UPCOMING and starts - now > timedelta(hours=24):
+            if (not browse and lifecycle == EventState.UPCOMING
+                    and starts - now > timedelta(hours=24)):
+                continue
+            if browse and lifecycle in (EventState.POST_EVENT, EventState.RESULT):
                 continue
             opponent = next((x for x in competitors if x is not followed), {})
             status = (((event.get("status") or {}).get("type") or {}).get("shortDetail", ""))
+            broadcasts = []
+            for broadcast in competition.get("broadcasts") or []:
+                broadcasts.extend(str(name).strip() for name in broadcast.get("names", [])
+                                  if str(name).strip())
             values.append(Context(
                 "nhl:" + str(event.get("id")), self.name, "nhl_" + _state(event),
                 (followed.get("team") or {}).get("displayName", "NHL"),
@@ -173,8 +181,15 @@ class NHLProvider(ESPNProvider):
                 expires_at=starts + timedelta(hours=6, minutes=postgame),
                 targets=["kiosk", "hubs"] if lifecycle in (EventState.LIVE, EventState.POST_EVENT) else ["kiosk"],
                 accent="#1f67b1", raw={"left": _side(followed), "right": _side(opponent),
-                                        "status": status}))
+                                        "status": status,
+                                        "broadcast": ", ".join(dict.fromkeys(broadcasts))}))
         return values
+
+    def contexts(self, payload, now):
+        return self._contexts(payload, now)
+
+    def browse_contexts(self, payload, now):
+        return self._contexts(payload, now, browse=True)
 
 
 def _fight_label(fight):

@@ -126,7 +126,11 @@ class WebHandler(BaseHTTPRequestHandler):
             values = saved_contexts(now)
             if engine:
                 values += [c.display_dict() for c in engine.all_contexts(now)]
-            self._send(json.dumps({"contexts": values,
+            browse = {}
+            if engine:
+                browse = {name: [c.display_dict() for c in contexts]
+                          for name, contexts in engine.browse_candidates.items()}
+            self._send(json.dumps({"contexts": values, "browse": browse,
                                    "active": max(values, key=lambda c: c.get("priority", 0),
                                                  default=None)}), "application/json")
         elif path == "/providers":

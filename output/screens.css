@@ -326,3 +326,6 @@ body.browser-controls{overflow-x:hidden}.kiosk-section.now-playing-surface{displ
   .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-queue-row{padding:6px 0}
   .kiosk-section:is([data-section=gaming],[data-section=tv]){padding-bottom:8px}
 }
+/* NHL browse keeps the existing sports hierarchy while giving the next game
+   enough room for matchup, local time, and authoritative source details. */
+.kiosk-nhl-layout{grid-template-columns:minmax(0,1fr);max-width:1000px}.kiosk-nhl-layout .kiosk-sport-feature{min-height:0;justify-content:flex-start}.kiosk-nhl-layout .kiosk-matchup small{color:#9fb0c2;font-size:14px;letter-spacing:.08em;text-transform:uppercase}.kiosk-nhl-layout .kiosk-meta{max-width:760px}

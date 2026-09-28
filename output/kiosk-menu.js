@@ -8,7 +8,7 @@
   const destinationPriority = { plex:100, weather:95, nhl:85, ufc:75, pfl:65,
     calendar:55, tv:50, astronomy:45, gaming:40, music:35, movies:30,
     trailers:25, major_events:20 };
-  let sections = [], contexts = [], health = {}, selected = '', loaded = false, offline = false;
+  let sections = [], contexts = [], browseContexts = [], health = {}, selected = '', loaded = false, offline = false;
   // A destination is loading until its first provider snapshot commits. Keep
   // this separate from provider failure: an empty list during a request is not
   // evidence that the destination is unavailable.
@@ -26,7 +26,7 @@
   // as PS5/Xbox/Switch/PC to wrap at their deliberate slash opportunities.
   const titleMarkup = text => esc(text).replace(/\//g, '/<wbr>');
   const fresh = c => (!c.expires || Date.parse(c.expires) > Date.now()) && c.eventState !== 'EXPIRED';
-  const items = key => contexts.filter(c => (c.provider || c.source) === key && fresh(c));
+  const items = key => (key === 'nhl' ? browseContexts : contexts).filter(c => (c.provider || c.source) === key && fresh(c));
   document.body.classList.add('browser-controls');
   const rail = document.createElement('div'); rail.className = 'screen-controls kiosk-rail';
   rail.innerHTML = '<span class="kiosk-brand" role="status" aria-live="polite">Marquee</span><nav class="kiosk-primary" aria-label="Marquee destinations"></nav><button class="kiosk-more" type="button" aria-haspopup="dialog" aria-expanded="false"><span aria-hidden="true">•••</span><span class="kiosk-label">More</span></button>';
@@ -121,7 +121,7 @@
     if (offline) return { state: 'unavailable', reason: 'connection' };
     if (!sections.includes(key)) return { state: 'unavailable', reason: 'not-enabled' };
     const provider = health[key] || {};
-    if (provider.stale) return { state: 'stale', reason: provider.reason || 'provider data is stale' };
+    if (provider.stale || provider.state === 'degraded') return { state: 'stale', reason: provider.reason || 'provider data is delayed' };
     if (provider.state === 'error') return { state: 'error', reason: provider.error || provider.reason || 'provider fetch failed' };
     if (provider.state === 'disabled') return { state: 'unavailable', reason: provider.reason || 'provider is disabled' };
     return { state: list.length ? 'populated' : 'empty', reason: provider.reason || '' };
@@ -138,6 +138,15 @@
           : 'New items will appear automatically when this destination has something relevant.';
     const kicker = lifecycle === 'loading' ? 'LOADING' : lifecycle === 'error' ? 'SOURCE ERROR' : lifecycle === 'stale' ? 'STALE SOURCE' : lifecycle === 'unavailable' ? 'UNAVAILABLE' : 'MARQUEE';
     return `<div class="kiosk-state" data-lifecycle="${esc(lifecycle)}"><div class="kiosk-state-mark" aria-hidden="true">·</div><div><p class="kiosk-kicker">${kicker}</p><h2>${esc(message)}</h2><p class="kiosk-empty">${copy}</p><div class="kiosk-now-playing-actions"><a class="kiosk-home-action" href="${esc(href(''))}" data-view="">${esc(action)}</a>${retry ? '<button type="button" class="kiosk-retry" data-kiosk-retry>Try again</button>' : ''}</div></div></div>`;
+  }
+  const nhlDate = c => { const date = dateOf(c); return date ? new Intl.DateTimeFormat(undefined, {weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit'}).format(date) : ''; };
+  const nhlSense = side => side.homeAway === 'home' ? 'Home' : side.homeAway === 'away' ? 'Away' : '';
+  function renderNhl(list) {
+    const feature = ordered(list)[0];
+    if (!feature) return sharedState('No followed-team games are scheduled.', 'Return to Home', false, 'empty');
+    const left = feature.left || {}, right = feature.right || {}, details = [nhlDate(feature), feature.sourceStatus || '', feature.broadcast || '', feature.detail || ''].filter(Boolean);
+    const matchup = `<div class="kiosk-matchup"><div><strong>${esc(left.name || feature.title)}</strong><small>${esc(nhlSense(left))}</small></div><span>vs</span><div><strong>${esc(right.name || 'Opponent')}</strong><small>${esc(nhlSense(right))}</small></div></div>`;
+    return `<div class="kiosk-sports-layout kiosk-nhl-layout"><article class="kiosk-sport-feature"><p class="kiosk-kicker">UP NEXT · NHL</p><h2>${esc(left.name || feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || 'Followed-team game')}</p>${matchup}<p class="kiosk-meta">${details.map(esc).join(' · ')}</p></article></div>`;
   }
   function renderSports(list) {
     const [feature, ...queue] = ordered(list);
@@ -175,7 +184,7 @@
     if (!feature) return sharedState('The sky is quiet for now.', 'Return to Home', false, 'empty');
     return `<div class="kiosk-ambient-surface"><p class="kiosk-kicker">SKY · ${esc(stateCopy(feature))}</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || '')}</p><p class="kiosk-empty">${esc(feature.detail || '')}</p><div class="kiosk-ambient-rows">${safeRows(feature).map(row => `<span>${esc(row)}</span>`).join('')}</div></div>`;
   }
-  function renderDestination(key, list) { const category = categoryFor(key); return category === 'sports' ? renderSports(list) : category === 'agenda' ? renderAgenda(list) : category === 'media' ? renderMedia(list) : category === 'ambient' ? renderAmbient(list) : list.length ? `<div class="kiosk-items">${list.slice(0, 8).map(button).join('')}</div>` : sharedState('Nothing to show here right now.', 'Return to Home', false, 'empty'); }
+  function renderDestination(key, list) { const category = categoryFor(key); return key === 'nhl' ? renderNhl(list) : category === 'sports' ? renderSports(list) : category === 'agenda' ? renderAgenda(list) : category === 'media' ? renderMedia(list) : category === 'ambient' ? renderAmbient(list) : list.length ? `<div class="kiosk-items">${list.slice(0, 8).map(button).join('')}</div>` : sharedState('Nothing to show here right now.', 'Return to Home', false, 'empty'); }
   function drawPanel() {
     const preserveHeadingFocus = Boolean(view && document.activeElement?.id === 'kiosk-section-title');
     panel.dataset.section = view; status.textContent = interrupted ? 'Household attention' : view === 'household' ? 'Household' : view ? label(view) : 'Marquee · Auto';
@@ -241,7 +250,7 @@
     const serial = ++requestSerial;
     requestState = 'loading';
     drawPanel();
-    try { const data = await Promise.all(['/api/config','/contexts','/providers'].map(async url => { const r = await fetch(url); if (!r.ok) throw Error(); return r.json(); })); if (serial !== requestSerial) return; sections = Object.entries(data[0].providers || {}).filter(([,cfg]) => cfg.enabled && (!cfg.targets || cfg.targets.includes('kiosk'))).map(([key]) => key); health = data[2].providers || {}; const seen = new Set(); contexts = (data[1].contexts || []).filter(c => { if (!c.id || c.id.startsWith('screen-test:') || (c.targets && !c.targets.includes('kiosk')) || !fresh(c)) return false; const key=(c.provider||c.source)+'|'+c.title+'|'+(c.starts||''); if (seen.has(key)) return false; seen.add(key); return true; }); for (const p of health.plex?.contexts || []) if (p.playing) contexts.push({id:'plex:now',source:'plex',title:p.title,subtitle:p.subtitle,payload:p}); loaded = true; requestState = 'ready'; offline = false; } catch (_) { if (serial !== requestSerial) return; requestState = 'failed'; offline = true; contexts = []; }
+    try { const data = await Promise.all(['/api/config','/contexts','/providers'].map(async url => { const r = await fetch(url); if (!r.ok) throw Error(); return r.json(); })); if (serial !== requestSerial) return; sections = Object.entries(data[0].providers || {}).filter(([,cfg]) => cfg.enabled && (!cfg.targets || cfg.targets.includes('kiosk'))).map(([key]) => key); health = data[2].providers || {}; const clean = values => { const seen = new Set(); return (values || []).filter(c => { if (!c.id || c.id.startsWith('screen-test:') || (c.targets && !c.targets.includes('kiosk')) || !fresh(c)) return false; const key=(c.provider||c.source)+'|'+c.title+'|'+(c.starts||''); if (seen.has(key)) return false; seen.add(key); return true; }); }; contexts = clean(data[1].contexts); browseContexts = clean(data[1].browse?.nhl); for (const p of health.plex?.contexts || []) if (p.playing) contexts.push({id:'plex:now',source:'plex',title:p.title,subtitle:p.subtitle,payload:p}); loaded = true; requestState = 'ready'; offline = false; } catch (_) { if (serial !== requestSerial) return; requestState = 'failed'; offline = true; contexts = []; browseContexts = []; }
     if (!menu.open) { drawNavigation(); drawMenu(); } drawPanel(); window.dispatchEvent(new Event('marquee-navigation'));
   }
   const resize = new ResizeObserver(() => { if (!menu.open) { drawNavigation(); drawMenu(); } }); resize.observe(rail);

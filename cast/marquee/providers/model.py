@@ -112,6 +112,8 @@ class Context:
             "accent": self.accent, "starts": value["start_time"],
             "expires": value["expires_at"], "targets": self.targets,
             "left": raw.get("left", {}), "right": raw.get("right", {}),
+            "sourceStatus": str(raw.get("status", "")).strip(),
+            "broadcast": str(raw.get("broadcast", "")).strip(),
             "rows": self.stats[:5], "artwork": self.artwork_url,
             "background": self.background_url, "icon": self.icon,
             "sourceUrl": self.source_url, "live": self.live,
