@@ -60,4 +60,3 @@ opening-heavy state, and an injected long-device state were checked.
   for rendered fitting measurement.
 - Masthead and household weather remained present at every size; live weather
   temperature rendered as `16°C`.
-
