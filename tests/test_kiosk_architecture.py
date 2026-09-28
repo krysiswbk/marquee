@@ -192,3 +192,15 @@ def test_short_wide_sports_empty_state_keeps_action_reachable_with_readable_rhyt
     assert "New items will appear automatically when this destination has something relevant." in MENU
     assert "Return to Home" in MENU
     assert "(min-width: 1000px)" in MENU
+
+
+def test_ufc_short_wide_empty_heading_avoids_fractional_scroll_rounding():
+    shallow = SCREENS.rsplit(
+        "@media(min-width:1000px) and (max-height:700px) and (min-aspect-ratio:3/2)", 1
+    )[1]
+    assert ".kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-state h2{font-size:clamp(32px,3.2vw,42px);line-height:1.05}" in shallow
+    assert "/* UFC's two-line empty heading otherwise gets a fractional 1.05 line box;" in shallow
+    assert ".kiosk-section[data-section=ufc] .kiosk-state h2{line-height:1}" in shallow
+    assert ".kiosk-section[data-section=ufc] .kiosk-state h2{line-height:1}" not in shallow.split(".kiosk-section[data-section=ufc] .kiosk-state h2{line-height:1}", 1)[0]
+    assert ".kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-home-action" in shallow
+    assert "min-height:48px" in SCREENS

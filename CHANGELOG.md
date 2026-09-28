@@ -1,3 +1,9 @@
+## 2.10.40
+
+- Correct the UFC short-wide empty-state heading's fractional line-box
+  rounding so its selected stage reports an exact 435px scroll height while
+  preserving the complete readable action and PFL's exact fit.
+
 ## 2.10.39
 
 - Correct the shared short-wide UFC/PFL empty-state box so its readable
