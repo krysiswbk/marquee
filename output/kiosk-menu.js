@@ -167,6 +167,8 @@
   const safeRows = (c, limit = 3) => (c.rows || []).filter(row => row && !/@/.test(String(row))).slice(0, limit);
   const ordered = list => [...list].sort((a, b) => (dateOf(a)?.valueOf() || Infinity) - (dateOf(b)?.valueOf() || Infinity));
   const button = c => `<button type="button" data-item="${esc(c.id)}"><small>${esc(stateCopy(c))}</small><strong>${esc(c.title || 'Untitled')}</strong><span>${esc(c.subtitle || c.detail || '')}</span></button>`;
+  const combatView = key => key === 'ufc' || key === 'pfl';
+  const combatName = key => key === 'pfl' ? 'PFL' : 'UFC';
   function destinationLifecycle(key, list) {
     if (offline) return { state: 'unavailable', reason: 'connection' };
     if (!sections.includes(key)) return { state: 'unavailable', reason: 'not-enabled' };
@@ -176,18 +178,23 @@
     if (provider.state === 'disabled') return { state: 'unavailable', reason: provider.reason || 'provider is disabled' };
     return { state: list.length ? 'populated' : 'empty', reason: provider.reason || '' };
   }
-  function sharedState(message, action = 'Return to Home', retry = false, lifecycle = 'empty') {
+  function sharedState(message, action = 'Return to Home', retry = false, lifecycle = 'empty', destination = view) {
+    const combat = combatView(destination);
+    const promotion = combatName(destination);
     const copy = lifecycle === 'loading'
-      ? 'Fetching the latest information for this destination.'
+      ? combat ? `Checking the published ${promotion} schedule.` : 'Fetching the latest information for this destination.'
       : lifecycle === 'error'
-      ? 'The source did not answer. No last-known results are being presented as current.'
+      ? combat ? `The ${promotion} source did not answer. No last-known events are being presented as current.` : 'The source did not answer. No last-known results are being presented as current.'
       : lifecycle === 'stale'
-        ? 'The source has not refreshed. Last-known results are not being presented as current.'
+        ? combat ? `The ${promotion} source has not refreshed. Last-known events are not being presented as current.` : 'The source has not refreshed. Last-known results are not being presented as current.'
         : lifecycle === 'unavailable'
-          ? 'This destination is unavailable. Try again when its source is reachable.'
-          : 'New items will appear automatically when this destination has something relevant.';
-    const kicker = lifecycle === 'loading' ? 'LOADING' : lifecycle === 'error' ? 'SOURCE ERROR' : lifecycle === 'stale' ? 'STALE SOURCE' : lifecycle === 'unavailable' ? 'UNAVAILABLE' : 'MARQUEE';
-    return `<div class="kiosk-state" data-lifecycle="${esc(lifecycle)}"><div class="kiosk-state-mark" aria-hidden="true">·</div><div><p class="kiosk-kicker">${kicker}</p><h2>${esc(message)}</h2><p class="kiosk-empty">${copy}</p><div class="kiosk-now-playing-actions"><a class="kiosk-home-action" href="${esc(href(''))}" data-view="">${esc(action)}</a>${retry ? '<button type="button" class="kiosk-retry" data-kiosk-retry>Try again</button>' : ''}</div></div></div>`;
+          ? combat ? `The ${promotion} schedule is unavailable because its source cannot be reached.` : 'This destination is unavailable. Try again when its source is reachable.'
+          : combat ? `No upcoming ${promotion} events are in the current source window.` : 'New items will appear automatically when this destination has something relevant.';
+    const kicker = combat
+      ? ({loading: `${promotion} · LOADING`, error: `${promotion} · SOURCE ERROR`, stale: `${promotion} · STALE SOURCE`, unavailable: `${promotion} · UNAVAILABLE`, empty: `${promotion} · SCHEDULE`}[lifecycle] || promotion)
+      : (lifecycle === 'loading' ? 'LOADING' : lifecycle === 'error' ? 'SOURCE ERROR' : lifecycle === 'stale' ? 'STALE SOURCE' : lifecycle === 'unavailable' ? 'UNAVAILABLE' : 'MARQUEE');
+    const mark = lifecycle === 'empty' ? '' : `<div class="kiosk-state-mark is-${esc(lifecycle)}" role="img" aria-label="${esc(kicker)}"><span aria-hidden="true">${lifecycle === 'loading' ? '…' : lifecycle === 'stale' ? '↻' : lifecycle === 'error' || lifecycle === 'unavailable' ? '!' : '·'}</span></div>`;
+    return `<div class="kiosk-state${lifecycle === 'empty' ? ' is-resolved' : ''}" data-lifecycle="${esc(lifecycle)}">${mark}<div><p class="kiosk-kicker">${kicker}</p><h2>${esc(message)}</h2><p class="kiosk-empty">${copy}</p><div class="kiosk-now-playing-actions"><a class="kiosk-home-action" href="${esc(href(''))}" data-view="">${esc(action)}</a>${retry ? '<button type="button" class="kiosk-retry" data-kiosk-retry>Try again</button>' : ''}</div></div></div>`;
   }
   const nhlDate = c => { const date = dateOf(c); return date ? new Intl.DateTimeFormat(undefined, {weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true}).format(date) : ''; };
   const nhlSense = side => side.homeAway === 'home' ? 'Home' : side.homeAway === 'away' ? 'Away' : '';
@@ -263,7 +270,7 @@
     // the full broadcast surface. stateCopy(feature) remains the lifecycle
     // source for the eyebrow rather than a provider-specific status.
     const feature = ordered(list)[0];
-    if (!feature) return sharedState('No games or fights are on the board.', 'Return to Home', false, 'empty');
+    if (!feature) return sharedState(`No upcoming ${combatName(view)} events are scheduled.`, 'Return to Home', false, 'empty', view);
     const source = label(view).toUpperCase();
     return renderSportStage(feature, source, [feature.subtitle || '', feature.detail || '', ...safeRows(feature)].filter(Boolean));
   }
@@ -342,7 +349,7 @@
     const message = lifecycle.state === 'loading' ? `Loading ${label(view)}…` : lifecycle.state === 'error' ? `${label(view)} is unavailable` : lifecycle.state === 'stale' ? `${label(view)} is stale` : lifecycle.state === 'unavailable' ? `${label(view)} is unavailable` : '';
     const feature = view === 'nhl' && list.length ? ordered(list)[0] : null;
     const headingName = feature ? nhlMatchupName(feature.left || {}, feature.right || {}) : label(view);
-    const html = `<header class="kiosk-section-head"><p>${esc(categoryFor(view).toUpperCase())}</p><h1 id="kiosk-section-title"${feature ? ` aria-label="${esc(headingName)}"` : ''}>${esc(label(view))}</h1></header>` + (message ? sharedState(message, 'Return to Home', lifecycle.state === 'error' || lifecycle.state === 'stale' || lifecycle.state === 'unavailable', lifecycle.state) : renderDestination(view, list));
+    const html = `<header class="kiosk-section-head"><p>${esc(categoryFor(view).toUpperCase())}</p><h1 id="kiosk-section-title"${feature ? ` aria-label="${esc(headingName)}"` : ''}>${esc(label(view))}</h1></header>` + (message ? sharedState(message, 'Return to Home', lifecycle.state === 'error' || lifecycle.state === 'stale' || lifecycle.state === 'unavailable', lifecycle.state, view) : renderDestination(view, list));
     if (panel.innerHTML !== html) panel.innerHTML = html;
     focusInitialDestination();
     preserveDirectHeadingFocus(preserveHeadingFocus);

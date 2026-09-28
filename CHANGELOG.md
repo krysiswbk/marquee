@@ -1,3 +1,11 @@
+## 2.10.73
+
+- Give UFC and PFL direct kiosk destinations promotion-specific resolved empty,
+  loading, stale, source-error, and unavailable states without changing their
+  normalized ESPN payloads or shared populated sports stage.
+- Remove the unexplained resolved-empty mark and add deterministic UFC/PFL
+  lifecycle coverage across phone, tablet, short-wide, and desktop viewports.
+
 ## 2.10.72
 
 - Keep the Weather segment and Pause controls in a dedicated flow region on

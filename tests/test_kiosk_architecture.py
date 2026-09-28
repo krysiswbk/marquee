@@ -71,8 +71,11 @@ def test_overflow_trigger_and_escape_are_remote_visible_contracts():
 def test_healthy_empty_states_do_not_offer_failure_retry():
     assert "The sky is quiet for now.', 'Return to Home', false, 'empty'" in MENU
     assert "`${label(view)} is quiet right now.`, 'Return to Home', false, 'empty'" in MENU
-    assert "No games or fights are on the board.', 'Return to Home', false, 'empty'" in MENU
-    assert "lifecycle.state)" in MENU
+    assert "const combatView = key => key === 'ufc' || key === 'pfl';" in MENU
+    assert "Checking the published ${promotion} schedule." in MENU
+    assert "No upcoming ${combatName(view)} events are scheduled." in MENU
+    assert "kiosk-state.is-resolved" in SCREENS
+    assert "lifecycle.state, view)" in MENU
     assert "data-kiosk-retry" in MENU
 
 
@@ -272,8 +275,8 @@ def test_short_wide_sports_empty_state_keeps_action_reachable_with_readable_rhyt
         assert token in shallow
     assert ".kiosk-home-action,.kiosk-retry{display:inline-flex" in SCREENS
     assert "min-height:48px" in SCREENS
-    assert "No games or fights are on the board." in MENU
-    assert "New items will appear automatically when this destination has something relevant." in MENU
+    assert "No upcoming ${combatName(view)} events are scheduled." in MENU
+    assert "No games or fights are on the board." not in MENU
     assert "Return to Home" in MENU
     assert "(min-width: 1000px)" in MENU
 
