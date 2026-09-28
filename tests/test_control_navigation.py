@@ -115,6 +115,7 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("min-height:44px", (ROOT / "cast" / "settings-control.html").read_text())
 
     def test_shared_navigation_cache_identity_and_labeled_display_action(self):
+        version = (ROOT / "VERSION").read_text().strip()
         shell = (ROOT / "output/control-shell.js").read_text()
         css = (ROOT / "output/control-shell-narrow.css").read_text()
         self.assertIn('class="mq-view"', shell)
@@ -122,9 +123,9 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("grid-template-columns: repeat(2, minmax(0, 1fr))", css)
         for page in (PAGES["cast-layout"], PAGES["live-layout"], PAGES["attention"], PAGES["tests"]):
             source = page.read_text()
-            self.assertIn("control-shell.css?v=2.10.34", source)
-            self.assertIn("control-shell.js?v=2.10.34", source)
-            self.assertIn("control-shell-narrow.css?v=2.10.34", source)
+            self.assertIn(f"control-shell.css?v={version}", source)
+            self.assertIn(f"control-shell.js?v={version}", source)
+            self.assertIn(f"control-shell-narrow.css?v={version}", source)
 
     def test_layout_workspace_has_explicit_phone_composition_contract(self):
         source = PAGES["cast-layout"].read_text()

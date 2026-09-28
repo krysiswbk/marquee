@@ -1,3 +1,8 @@
+## 2.10.35
+
+- Align dedicated Attention Policy and Display Tests workspaces with the shared
+  44px administration touch-target contract while preserving desktop density.
+
 ## 2.10.34
 
 - Present provider diagnostics as concise, human-readable status with recency

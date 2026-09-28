@@ -30,6 +30,19 @@ def test_attention_savebar_has_tablet_focus_clearance() -> None:
     assert "scroll-margin-bottom:calc(112px + env(safe-area-inset-bottom))" in styles
 
 
+def test_dedicated_workspaces_use_the_shared_44px_touch_contract() -> None:
+    styles = (ROOT / "output" / "settings-admin.css").read_text()
+    for selector in (
+        ".secondary,.primary{min-height:44px",
+        ".search input{width:100%;min-height:44px",
+        ".field-grid input,.field-grid select,.field-grid textarea,.test-grid select{display:block;width:100%;min-height:44px",
+        ".diagnostics summary{display:flex;align-items:center;min-height:44px",
+        ".test-aside a{display:flex;align-items:center;min-height:44px",
+        ".settings-admin details>summary{min-height:44px",
+    ):
+        assert selector in styles
+
+
 def test_screen_samples_are_independent_of_cast_discovery() -> None:
     source = (ROOT / "output" / "display-tests.js").read_text()
     assert "screens = await request('/api/screen-test')" in source
