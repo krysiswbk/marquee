@@ -115,7 +115,9 @@
     const [feature, ...queue] = ordered(list);
     if (!feature) return sharedState(`${label(view)} is quiet right now.`, 'Return to Home', false, 'empty');
     const art = feature.artwork || feature.background || '';
-    return `<div class="kiosk-editorial"><article class="kiosk-editorial-feature${art ? ' has-art' : ''}"${art ? ` style="--kiosk-art:url('${esc(art)}')"` : ''}><div><p class="kiosk-kicker">${esc(stateCopy(feature))} · ${esc(label(view))}</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || feature.detail || '')}</p><p class="kiosk-meta">${esc(feature.detail || safeRows(feature, 1)[0] || '')}</p></div></article><aside class="kiosk-support"><p class="kiosk-kicker">UP NEXT</p>${queue.slice(0, 4).map(c => `<div class="kiosk-queue-row"><strong>${esc(c.title)}</strong><span>${esc(c.subtitle || stateCopy(c))}</span></div>`).join('') || '<p class="kiosk-empty">No supporting items.</p>'}</aside></div>`;
+    const queueRows = queue.slice(0, 4).map(c => `<div class="kiosk-queue-row"><strong>${esc(c.title)}</strong><span>${esc(c.subtitle || stateCopy(c))}</span></div>`).join('');
+    const queueMore = queue.length > 1 ? `<p class="kiosk-queue-more">+${queue.length - 1} more</p>` : '';
+    return `<div class="kiosk-editorial"><article class="kiosk-editorial-feature${art ? ' has-art' : ''}"${art ? ` style="--kiosk-art:url('${esc(art)}')"` : ''}><div><p class="kiosk-kicker">${esc(stateCopy(feature))} · ${esc(label(view))}</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || feature.detail || '')}</p><p class="kiosk-meta">${esc(feature.detail || safeRows(feature, 1)[0] || '')}</p></div></article><aside class="kiosk-support"><p class="kiosk-kicker">UP NEXT</p>${queueRows || '<p class="kiosk-empty">No supporting items.</p>'}${queueMore}</aside></div>`;
   }
   function renderAmbient(list) {
     const feature = ordered(list)[0];

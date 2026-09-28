@@ -1,3 +1,9 @@
+## 2.10.20
+
+- Correct the exposed kiosk Gaming, UFC, and TV editorial stages with
+  destination-scoped fixed-stage geometry, safe long-title wrapping, and a
+  truthful compact-phone Up Next summary.
+
 ## 2.10.19
 
 - Recompose Gaming, UFC, and TV kiosk stages to fit the fixed primary surface
