@@ -56,9 +56,10 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn("!kioskPlayback && shown.has('ratings')", INDEX)
         self.assertIn("!kioskPlayback && shown.has('stream')", INDEX)
         self.assertIn("body.kiosk-now-playing .stage", SCREENS)
+        self.assertIn("body.kiosk-now-playing .stage,body.kiosk-playback-active .stage", SCREENS)
         self.assertIn("grid-template-areas:\"category poster\"", SCREENS)
         self.assertIn("body.kiosk-now-playing .b-poster", SCREENS)
-        self.assertIn("body.kiosk-now-playing .b-streetframe,body.kiosk-now-playing .b-nowplaying{display:none!important;}", SCREENS)
+        self.assertIn("body.kiosk-now-playing .b-streetframe,body.kiosk-now-playing .b-nowplaying,body.kiosk-playback-active .b-streetframe,body.kiosk-playback-active .b-nowplaying{display:none!important;}", SCREENS)
         self.assertIn("height:auto;max-height:min(56vh,495px);aspect-ratio:2/3", SCREENS)
         self.assertIn("body.kiosk-playback-active .b-streetframe,body.kiosk-playback-active .b-nowplaying", SCREENS)
         self.assertIn("body.kiosk-playback-active .stage > .b-identity", SCREENS)
@@ -70,6 +71,10 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn("body.kiosk-now-playing .b-device,", SCREENS)
         self.assertIn("body.kiosk-playback-active .stage > .b-identity", SCREENS)
         self.assertIn("body.kiosk-playback-active .b-poster", SCREENS)
+        self.assertIn("body.kiosk-now-playing .b-poster,body.kiosk-playback-active .b-poster", SCREENS)
+        self.assertIn("body.kiosk-now-playing .b-progress,body.kiosk-playback-active .b-progress", SCREENS)
+        self.assertIn("body.kiosk-now-playing .b-device,body.kiosk-now-playing .b-viewer", SCREENS)
+        self.assertIn("body.kiosk-now-playing .b-device *,body.kiosk-playback-active .b-device *", SCREENS)
 
     def test_authoritative_apparent_temperature_accepts_numeric_strings_only(self):
         self.assertIn("lastWx?.apparent_temperature == null || lastWx.apparent_temperature === ''", INDEX)

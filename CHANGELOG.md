@@ -1,3 +1,10 @@
+## 2.11.0
+
+- Unify Home and Now Playing around the same active-playback composition at
+  every kiosk viewport, with bounded poster art, readable device identity,
+  progress, and hidden decorative/technical blocks.
+- Omit invalid Plex years such as `0`, `0000`, null, and non-finite values.
+
 ## 2.10.99
 
 - Restore an explicit in-flow phone playback composition for both Home and now-playing routes, with bounded supporting artwork, progress, and device context.

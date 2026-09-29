@@ -1,5 +1,6 @@
 """Media backends, artwork enrichment, session parsing, and Cast control."""
 import json
+import math
 import mimetypes
 import os
 import re
@@ -532,6 +533,17 @@ def int_value(value):
         return None
 
 
+def normalized_year(value):
+    """Return a real calendar year, omitting Plex placeholder payloads."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(number) or number <= 0 or not number.is_integer():
+        return None
+    return str(int(number))
+
+
 def bitrate_kbps(value, bits_per_second=False):
     """Normalise Plex kbps and Emby/Jellyfin bits-per-second values to kbps."""
     number = int_value(value)
@@ -851,8 +863,10 @@ def parse_session(video, extras=library_extras, position=None):
         "type": a("type"),
         "key": a("ratingKey"),
         "title": a("grandparentTitle") if is_episode else a("title"),
-        "year": a("year"),
     }
+    year = normalized_year(a("year"))
+    if year is not None:
+        info["year"] = year
     info["session"], info["stream"], info["tracks"] = \
         plex_session_payload(video, position)
     if is_episode and a("parentIndex") and a("index"):

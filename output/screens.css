@@ -202,17 +202,18 @@ body.browser-controls{overflow-x:hidden}.kiosk-section.now-playing-surface{displ
    remain for unrelated event summaries, but never hide a current media item. */
 .kiosk-support{align-self:stretch;display:flex;flex-direction:column;justify-content:center}
 .kiosk-rail{isolation:isolate;pointer-events:auto;touch-action:manipulation}
-body.kiosk-now-playing .stage{grid-template-columns:minmax(0,1fr) minmax(180px,22vw)!important;grid-template-rows:auto auto auto minmax(0,1fr) auto;grid-template-areas:"category poster" "identity poster" "meta poster" "plot poster" "progress poster";align-content:center;column-gap:clamp(28px,4vw,72px);padding:5vh 6vw 9vh;}
-body.kiosk-now-playing .b-streetframe,body.kiosk-now-playing .b-nowplaying{display:none!important;}
-body.kiosk-now-playing .b-poster{width:min(22vw,330px);height:auto;max-height:min(56vh,495px);aspect-ratio:2/3;align-self:center;justify-self:center;}
-body.kiosk-now-playing .poster{border-radius:14px;box-shadow:0 1.5vh 4vh #0009;}
-body.kiosk-now-playing .b-ratings,body.kiosk-now-playing .b-stream{display:none!important;}
-body.kiosk-now-playing .b-identity{--logo-box-height:16vh;--logo-box-width:54vw;}
-body.kiosk-now-playing .title{font-size:clamp(44px,5.8vw,88px);}
-body.kiosk-now-playing .plot{max-width:60ch;font-size:clamp(18px,1.7vw,26px);}
-body.kiosk-now-playing .b-progress{width:min(54vw,760px);}
-body.kiosk-now-playing .b-device,body.kiosk-now-playing .b-viewer,body.kiosk-now-playing .b-tracks,body.kiosk-now-playing .b-activity{position:absolute;left:6vw;bottom:calc(9vh + 72px);width:min(28vw,420px);height:8vh;}
-@media(max-width:700px){body.kiosk-now-playing .stage{grid-template-columns:minmax(0,1fr) minmax(92px,24vw)!important;column-gap:18px;padding:5vh 22px 9vh;}body.kiosk-now-playing .b-poster{height:auto;width:min(24vw,160px);max-height:34vh;}body.kiosk-now-playing .title{font-size:clamp(36px,10vw,62px);}body.kiosk-now-playing .plot{font-size:16px;line-height:1.3;}body.kiosk-now-playing .b-device,body.kiosk-now-playing .b-viewer,body.kiosk-now-playing .b-tracks,body.kiosk-now-playing .b-activity{left:22px;bottom:calc(9vh + 58px);width:calc(100vw - 44px);height:52px;}}
+body.kiosk-now-playing .stage,body.kiosk-playback-active .stage{grid-template-columns:minmax(0,1fr) minmax(180px,22vw)!important;grid-template-rows:auto auto auto minmax(0,1fr) auto;grid-template-areas:"category poster" "identity poster" "meta poster" "plot poster" "progress poster";align-content:center;column-gap:clamp(28px,4vw,72px);padding:5vh 6vw 9vh;}
+body.kiosk-now-playing .b-streetframe,body.kiosk-now-playing .b-nowplaying,body.kiosk-playback-active .b-streetframe,body.kiosk-playback-active .b-nowplaying{display:none!important;}
+body.kiosk-now-playing .b-poster,body.kiosk-playback-active .b-poster{width:min(22vw,330px);height:auto;max-height:min(56vh,495px);aspect-ratio:2/3;align-self:center;justify-self:center;}
+body.kiosk-now-playing .poster,body.kiosk-playback-active .poster{border-radius:14px;box-shadow:0 1.5vh 4vh #0009;}
+body.kiosk-now-playing .b-ratings,body.kiosk-now-playing .b-stream,body.kiosk-playback-active .b-ratings,body.kiosk-playback-active .b-stream{display:none!important;}
+body.kiosk-now-playing .b-identity,body.kiosk-playback-active .b-identity{--logo-box-height:16vh;--logo-box-width:54vw;}
+body.kiosk-now-playing .title,body.kiosk-playback-active .title{font-size:clamp(44px,5.8vw,88px);overflow-wrap:anywhere;}
+body.kiosk-now-playing .plot,body.kiosk-playback-active .plot{max-width:60ch;font-size:clamp(18px,1.7vw,26px);}
+body.kiosk-now-playing .b-progress,body.kiosk-playback-active .b-progress{width:min(54vw,760px);}
+body.kiosk-now-playing .b-device,body.kiosk-now-playing .b-viewer,body.kiosk-now-playing .b-tracks,body.kiosk-now-playing .b-activity,body.kiosk-playback-active .b-device,body.kiosk-playback-active .b-viewer,body.kiosk-playback-active .b-tracks,body.kiosk-playback-active .b-activity{position:absolute;left:6vw;bottom:calc(9vh + 72px);width:min(28vw,420px);height:8vh;min-width:0;overflow:hidden;}
+body.kiosk-now-playing .b-device *,body.kiosk-playback-active .b-device *{max-width:100%;overflow-wrap:anywhere;}
+@media(max-width:700px){body.kiosk-now-playing .stage,body.kiosk-playback-active .stage{grid-template-columns:minmax(0,1fr) minmax(92px,24vw)!important;column-gap:18px;padding:5vh 22px 9vh;}body.kiosk-now-playing .b-poster,body.kiosk-playback-active .b-poster{height:auto;width:min(24vw,160px);max-height:34vh;}body.kiosk-now-playing .title,body.kiosk-playback-active .title{font-size:clamp(36px,10vw,62px);}body.kiosk-now-playing .plot,body.kiosk-playback-active .plot{font-size:16px;line-height:1.3;}body.kiosk-now-playing .b-device,body.kiosk-now-playing .b-viewer,body.kiosk-now-playing .b-tracks,body.kiosk-now-playing .b-activity,body.kiosk-playback-active .b-device,body.kiosk-playback-active .b-viewer,body.kiosk-playback-active .b-tracks,body.kiosk-playback-active .b-activity{left:22px;bottom:calc(9vh + 58px);width:calc(100vw - 44px);height:52px;}}
 /* Phone playback is a compact in-flow summary. The explicit position reset is
    required because template-specific desktop rules position these blocks. */
 @media(max-width:480px){

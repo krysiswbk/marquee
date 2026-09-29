@@ -74,6 +74,23 @@ class PlexSessionLifecycleTests(unittest.TestCase):
             "backdrop": False, "logo": False})
         self.assertNotIn("progress", result)
 
+    def test_invalid_plex_year_is_omitted_but_valid_year_is_preserved(self):
+        item = video("playing")
+        for invalid in (None, "0", "0000", "nan", "inf"):
+            if invalid is None:
+                item.attrib.pop("year", None)
+            else:
+                item.set("year", invalid)
+            result = media.parse_session(item, extras=lambda *_: {
+                "genres": [], "imdb": None, "stinger": [], "poster": False,
+                "backdrop": False, "logo": False})
+            self.assertNotIn("year", result, invalid)
+        item.set("year", "2024")
+        result = media.parse_session(item, extras=lambda *_: {
+            "genres": [], "imdb": None, "stinger": [], "poster": False,
+            "backdrop": False, "logo": False})
+        self.assertEqual(result["year"], "2024")
+
     def test_vanished_session_is_cleaned_up(self):
         item = video()
         media.plex_live_sessions([item], now=0)
