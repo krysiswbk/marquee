@@ -32,6 +32,16 @@ def now_playing_payload(display):
     A provider failure clears CURRENT_PLEX.info in the runtime. Keep that
     distinction visible to the browser without ever returning the last title.
     """
+    # An explicit Now Playing destination is source-scoped. It must never let
+    # ambient arbitration manufacture a playing state when Plex is idle.
+    if display == "plex":
+        media = _active_media_payload(CURRENT_PLEX.get("info"))
+        if media:
+            return media
+        if CURRENT_PLEX.get("stale"):
+            return {"playing": False, "state": "stale", "availability": "stale"}
+        return {"playing": False, "state": "idle", "availability": "idle"}
+
     # Let the attention service observe media and perform its normal selection
     # first. Only a critical result may preempt active playback; ordinary
     # ambient/sports results cannot replace Plex identity, progress, or art.

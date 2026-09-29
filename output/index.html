@@ -701,9 +701,9 @@
   body.live-editing [data-layout] { outline:none; }
   body.live-editing .screen-controls, body.live-editing nav { display:none !important; }
 </style>
-<link rel="stylesheet" href="/brain.css?v=2.12.3">
-<link rel="stylesheet" href="/screens.css?v=2.12.3">
-<link rel="stylesheet" href="/weather-channel.css?v=2.12.3">
+<link rel="stylesheet" href="/brain.css?v=2.12.4">
+<link rel="stylesheet" href="/screens.css?v=2.12.4">
+<link rel="stylesheet" href="/weather-channel.css?v=2.12.4">
 <link rel="stylesheet" href="/scene-themes.css?v=2.9.7">
 <body data-template="spotlight">
 <img class="bg" id="bg" alt="">
@@ -804,12 +804,12 @@
 <time class="cast-clock-overlay" id="cast-clock-overlay"></time>
 <div class="idle-screen"><div class="idle-house"><div class="idle-kicker" id="idle-kicker">Home</div><div class="idle-greeting" id="idle-greeting"></div><div class="idle-state" id="idle-state" hidden></div><div class="idle-note" id="idle-note" hidden></div><time class="idle-clock" id="idle-clock"></time><div class="idle-date" id="idle-date"></div><div class="idle-weather" id="idle-weather" aria-label="Current weather"><div class="idle-weather-primary"><strong id="idle-weather-temp"></strong><span id="idle-weather-condition"></span></div><div class="idle-weather-secondary"><span id="idle-weather-feels"></span><span id="idle-weather-range"></span><span id="idle-weather-rain"></span></div><div class="idle-weather-status" id="idle-weather-status"></div></div></div></div>
 <div class="ambient-veil" aria-hidden="true"></div>
-<script src="/lifecycle.js?v=2.12.3"></script>
-<script src="/state-contract.js?v=2.12.3"></script>
-<script src="/weather-channel.js?v=2.12.3"></script>
-<script src="/weather-summary.js?v=2.12.3"></script>
-<script src="/now-playing-progress.js?v=2.12.3"></script>
-<script src="/brain.js?v=2.12.3"></script>
+<script src="/lifecycle.js?v=2.12.4"></script>
+<script src="/state-contract.js?v=2.12.4"></script>
+<script src="/weather-channel.js?v=2.12.4"></script>
+<script src="/weather-summary.js?v=2.12.4"></script>
+<script src="/now-playing-progress.js?v=2.12.4"></script>
+<script src="/brain.js?v=2.12.4"></script>
 <script>
 
   const $ = id => document.getElementById(id);
@@ -2714,7 +2714,8 @@ ${chase.join('')}
     try {
       if (!baseCfg) await settingsTick();
       if (!DEMO) {
-        const display = '&display=' + encodeURIComponent(ATTENTION_DISPLAY);
+        const directPlex = new URLSearchParams(location.search).get('view') === 'plex';
+        const display = '&display=' + encodeURIComponent(directPlex ? 'plex' : ATTENTION_DISPLAY);
         const response = await fetch('/now-playing.json?t=' + Date.now() + display, {signal: lifecycle.signal});
         if (!response.ok) return;
         d = await response.json();
@@ -2727,9 +2728,15 @@ ${chase.join('')}
     applyPayload(d);
   }
 
+  let liveEvents = null, liveEventScope = null;
   function startLiveEvents() {
     if (DEMO || !LIVE_SURFACE || !window.EventSource) return;
-    const events = new EventSource('/events?display=' + encodeURIComponent(ATTENTION_DISPLAY));
+    const directPlex = new URLSearchParams(location.search).get('view') === 'plex';
+    const scope = directPlex ? 'plex' : ATTENTION_DISPLAY;
+    if (liveEvents && liveEventScope === scope) return;
+    liveEvents?.close();
+    liveEventScope = scope;
+    const events = liveEvents = new EventSource('/events?display=' + encodeURIComponent(scope));
     events.addEventListener('context', event => {
       try {
         const d = JSON.parse(event.data);
@@ -2738,6 +2745,8 @@ ${chase.join('')}
       } catch (e) {}
     });
   }
+
+  window.addEventListener('marquee-navigation', startLiveEvents);
 
   // Ambient dimming updates in-place; changing lux never restarts the cast.
   async function ambientTick(lifecycle = {}) {
@@ -2779,4 +2788,4 @@ ${chase.join('')}
   window.MarqueeLifecycle.register('surface-animation', {interval: 1000, refresh: () => paint()});
 </script>
 
-<script src="/kiosk-menu.js?v=2.12.3"></script>
+<script src="/kiosk-menu.js?v=2.12.4"></script>

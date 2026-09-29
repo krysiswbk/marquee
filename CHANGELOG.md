@@ -1,3 +1,10 @@
+## 2.12.4
+
+- Scope explicit Now Playing to the Plex lifecycle so ambient sports cannot
+  appear while Plex is idle, paused, stopped, unavailable, or stale.
+- Canonicalize the Sky alias to the Astronomy destination and give large PFL
+  empty states an intentional kiosk canvas while preserving phone containment.
+
 ## 2.12.3
 
 - Direct kiosk navigation now keeps rail targets stable while polling,
