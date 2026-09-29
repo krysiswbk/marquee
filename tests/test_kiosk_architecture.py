@@ -193,7 +193,7 @@ def test_healthy_empty_states_do_not_offer_failure_retry():
     assert "Checking the published ${promotion} schedule." in MENU
     assert "No upcoming ${combatName(view)} events are scheduled." in MENU
     assert "kiosk-state.is-resolved" in SCREENS
-    assert "lifecycle.state, view)" in MENU
+    assert "lifecycle.state, view, lifecycle.reason)" in MENU
     assert "data-kiosk-retry" in MENU
 
 
@@ -360,7 +360,7 @@ def test_pending_fetch_is_loading_without_failure_copy_or_retry():
     assert "state: 'loading'" in MENU
     assert "Fetching the latest information for this destination." in MENU
     assert "lifecycle.state === 'loading' ? `Loading ${label(view)}…`" in MENU
-    assert "lifecycle.state === 'error' || lifecycle.state === 'stale' || lifecycle.state === 'unavailable'" in MENU
+    assert "['error', 'stale', 'unavailable', 'disconnected', 'partial'].includes(lifecycle.state)" in MENU
     assert "if (refreshInFlight) return;" in MENU
     assert "if (serial !== requestSerial) return;" in MENU
     assert "requestState = resourceHasSnapshot() ? 'ready' : 'failed'" in MENU

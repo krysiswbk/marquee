@@ -11,7 +11,7 @@
   card.classList.add('wx-broadcast');
   card.querySelector('.weather-source').innerHTML='<b>M/</b> MARQUEE <span>WEATHER</span>';
   const heading=document.createElement('header');heading.className='wx-heading';
-  heading.innerHTML='<div><p>YOUR LOCAL WEATHER</p><h1 id="wx-segment-title" tabindex="-1">Current conditions</h1></div><span id="wx-data-status"></span>';
+  heading.innerHTML='<div><p>YOUR LOCAL WEATHER</p><h1 id="wx-segment-title" tabindex="-1">Current conditions</h1><small id="wx-retained-context"></small></div><span id="wx-data-status"></span>';
   const main=document.createElement('div');main.className='wx-main';
   main.innerHTML=`<section id="weather-conditions" class="wx-panel channel-current" aria-label="Current conditions"><div class="wx-observation"><div id="channel-icon" class="channel-icon"></div><div id="channel-temp" class="channel-temp"></div><div id="channel-condition" class="channel-condition"></div><span id="wx-observation-source"></span></div><div class="wx-readings"><div class="channel-metrics" id="channel-metrics"></div><p id="channel-outlook" class="channel-outlook"></p></div></section>
   <section id="weather-hours" class="wx-panel channel-hours" aria-label="Hourly outlook" hidden><div id="channel-hours"></div></section>
@@ -57,13 +57,15 @@
     card.dataset.sky=kind.kind;
     const alert=['alert','extreme'].includes(ctx.subtype);card.dataset.alert=String(alert);warning.hidden=!alert;
     if(alert)warning.innerHTML=`<strong>${esc(ctx.title)}</strong><div>${esc(ctx.detail||ctx.subtitle)}</div>`;
-    const signature=JSON.stringify([data,ctx.title,ctx.detail,ctx.subtype,temp,freshObservation?observed:null,Math.floor(now/60000)]);
+    const signature=JSON.stringify([data,ctx.title,ctx.detail,ctx.subtype,temp,freshObservation?observed:null,weatherFetchState,Math.floor(now/60000)]);
     if(signature!==last){last=signature;
       $('channel-icon').innerHTML=icon(kind.kind);$('channel-temp').innerHTML=rounded(temp)+'<small>°C</small>';
       const description=freshObservation&&observed.condition?String(observed.condition).replace(/partlycloudy/g,'Partly cloudy').replace(/-/g,' ').replace(/^./,c=>c.toUpperCase()):kind.label;
       $('channel-condition').textContent=description;
       $('wx-observation-source').textContent=freshObservation?'Observed '+time(observed.observed_at||observed.updated*1000)+' · Environment Canada':modelFresh()?'Home Assistant · Environment Canada':'Current conditions unavailable';
-      $('wx-data-status').textContent=modelFresh()?'LOCAL FORECAST · °C / KM/H':'FORECAST UPDATE UNAVAILABLE';
+      const weatherState = window.MarqueeState?.resolve({stale: !modelFresh(), empty: !data.current, hasData: Boolean(data.current)}) || (modelFresh() ? 'ready' : 'stale');
+      card.dataset.state = weatherState;
+      $('wx-data-status').textContent=weatherState === 'stale' ? 'LAST KNOWN FORECAST · STALE' : weatherState === 'empty' ? 'FORECAST EMPTY' : 'LOCAL FORECAST · °C / KM/H';
       const wind=freshObservation?observed.wind:model.wind_speed_10m,humidity=freshObservation?observed.humidity:model.relative_humidity_2m;
       const metrics=[['Feels like',Number.isFinite(model.apparent_temperature)?rounded(model.apparent_temperature)+'°C':'—'],['Humidity',Number.isFinite(humidity)?rounded(humidity)+'%':'—'],['Wind',Number.isFinite(wind)?rounded(wind)+' km/h':'—'],['Pressure',freshObservation&&Number.isFinite(observed.pressure)?rounded(observed.pressure)+' hPa':'—']];
       const today=(data.days||[]).find(d=>d.date===new Intl.DateTimeFormat('en-CA',{timeZone:raw.timezone||'America/Toronto'}).format(new Date()));
@@ -86,6 +88,7 @@
   window.MarqueeWeather={render(context,visible={}){
     const newContext=ctx?.id!==context.id||ctx?.subtype!==context.subtype;
     ctx=context;visibility=visible;
+    $('wx-retained-context').textContent=context.title||'';
     if(newContext){segment=['rain','snow'].includes(ctx.subtype)?'radar':'conditions';started=Date.now();last='';}
     draw();return visibility.radar!==false&&radarFresh();
   },observation(value){observed=value;draw()}};

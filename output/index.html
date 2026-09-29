@@ -700,9 +700,9 @@
   body.live-editing [data-layout] { outline:none; }
   body.live-editing .screen-controls, body.live-editing nav { display:none !important; }
 </style>
-<link rel="stylesheet" href="/brain.css?v=2.10.93">
-<link rel="stylesheet" href="/screens.css?v=2.10.93">
-<link rel="stylesheet" href="/weather-channel.css?v=2.10.93">
+<link rel="stylesheet" href="/brain.css?v=2.10.94">
+<link rel="stylesheet" href="/screens.css?v=2.10.94">
+<link rel="stylesheet" href="/weather-channel.css?v=2.10.94">
 <link rel="stylesheet" href="/scene-themes.css?v=2.9.7">
 <body data-template="spotlight">
 <img class="bg" id="bg" alt="">
@@ -713,6 +713,7 @@
 <div class="stage hidden" id="stage" tabindex="-1">
   <section class="weather-card" id="weather-card">
     <header class="weather-head"><span class="weather-source">Marquee Weather / Local conditions</span><time class="weather-clock" id="weather-clock"></time></header>
+    <aside id="weather-lifecycle" hidden aria-live="polite"></aside>
     <img class="weather-radar" id="weather-radar" alt="Weather radar centered on home">
     <div class="weather-copy"><h1 class="weather-title" id="weather-title"></h1><div class="weather-subtitle" id="weather-subtitle"></div><div class="weather-body" id="weather-body"></div><div class="weather-stats" id="weather-stats"></div></div>
   </section>
@@ -802,10 +803,11 @@
 <time class="cast-clock-overlay" id="cast-clock-overlay"></time>
 <div class="idle-screen"><div class="idle-house"><div class="idle-kicker" id="idle-kicker">Home</div><div class="idle-greeting" id="idle-greeting"></div><div class="idle-state" id="idle-state" hidden></div><div class="idle-note" id="idle-note" hidden></div><time class="idle-clock" id="idle-clock"></time><div class="idle-date" id="idle-date"></div><div class="idle-weather" id="idle-weather" aria-label="Current weather"><div class="idle-weather-primary"><strong id="idle-weather-temp"></strong><span id="idle-weather-condition"></span></div><div class="idle-weather-secondary"><span id="idle-weather-feels"></span><span id="idle-weather-range"></span><span id="idle-weather-rain"></span></div><div class="idle-weather-status" id="idle-weather-status"></div></div></div></div>
 <div class="ambient-veil" aria-hidden="true"></div>
-<script src="/weather-channel.js?v=2.10.93"></script>
-<script src="/weather-summary.js?v=2.10.93"></script>
-<script src="/now-playing-progress.js?v=2.10.93"></script>
-<script src="/brain.js?v=2.10.93"></script>
+<script src="/state-contract.js?v=2.10.94"></script>
+<script src="/weather-channel.js?v=2.10.94"></script>
+<script src="/weather-summary.js?v=2.10.94"></script>
+<script src="/now-playing-progress.js?v=2.10.94"></script>
+<script src="/brain.js?v=2.10.94"></script>
 <script>
 
   const $ = id => document.getElementById(id);
@@ -2040,7 +2042,7 @@ ${chase.join('')}
   // rain/snow/fog/day-night on the Street scene. Either one on (or a ?wx=
   // / ?day= test override) triggers the fetch; neither is coupled to the
   // other, so you can have the chip without effects or vice-versa.
-  let lastWx = null;
+  let lastWx = null, weatherFetchState = 'loading';
   // let, not const: the settings editor can retune the force live via the
   // marquee-wx message — same semantics as ?wx=/?day=, preview-only.
   let WX_FORCE = new URLSearchParams(location.search).get('wx');
@@ -2263,7 +2265,7 @@ ${chase.join('')}
     const c = activeCfg();
     const observedAt = Date.parse(lastWx?.observed_at || '');
     const observationAge = Number.isFinite(observedAt) ? Math.max(0, Date.now() - observedAt) : null;
-    const currentStale = observationAge != null && observationAge >= 2 * 60 * 60 * 1000;
+    const currentStale = weatherFetchState === 'stale' || (observationAge != null && observationAge >= 2 * 60 * 60 * 1000);
     const forecastAt = Number(lastWx?.forecast_updated) * 1000;
     const forecastFresh = Number.isFinite(forecastAt) && forecastAt > 0
       && Date.now() - forecastAt >= 0 && Date.now() - forecastAt < 30 * 60 * 1000;
@@ -2300,7 +2302,8 @@ ${chase.join('')}
         Number.isFinite(today.templow) ? `Low ${Math.round(today.templow)}°` : '',
       ].filter(Boolean).join(' / ');
       $('idle-weather-rain').textContent = rain;
-      $('idle-weather-status').textContent = currentStale ? 'Last observation is stale'
+      $('idle-weather-status').textContent = weatherFetchState === 'error' ? 'Weather source unavailable · Try again'
+        : currentStale ? 'Last observation is stale'
         : observationAge == null ? 'Freshness unknown'
         : !forecastFresh ? 'Current conditions · forecast unavailable' : '';
       homeWeather.hidden = !showHomeWeather;
@@ -2312,7 +2315,7 @@ ${chase.join('')}
       $('idle-weather-feels').textContent = '';
       $('idle-weather-range').textContent = '';
       $('idle-weather-rain').textContent = '';
-      $('idle-weather-status').textContent = 'Weather unavailable';
+      $('idle-weather-status').textContent = weatherFetchState === 'error' ? 'Weather source unavailable · Try again' : 'Weather unavailable';
       homeWeather.hidden = !showHomeWeather;
     }
     applyStreetWeather();
@@ -2339,10 +2342,14 @@ ${chase.join('')}
       || (c.weatherFX !== false && tpl === 'street')
       || WX_FORCE || DAY_FORCE !== null;
     if (!wanted) { paintWx(); return; }
+    weatherFetchState = lastWx ? 'stale' : 'loading';
     try {
       const response = await fetch('/weather?t=' + Date.now());
-      lastWx = await response.json();
-    } catch (e) {}
+      if (!response.ok) throw new Error(`weather request failed (${response.status})`);
+      const payload = await response.json();
+      lastWx = payload;
+      weatherFetchState = payload && (payload.temp != null || payload.current) ? 'ready' : 'empty';
+    } catch (e) { weatherFetchState = lastWx ? 'stale' : 'error'; }
     paintWx();
     markWeatherFactSeparators();
   }
@@ -2748,4 +2755,4 @@ ${chase.join('')}
   setInterval(paint, 1000);
 </script>
 
-<script src="/kiosk-menu.js?v=2.10.93"></script>
+<script src="/kiosk-menu.js?v=2.10.94"></script>

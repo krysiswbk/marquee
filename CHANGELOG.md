@@ -1,3 +1,11 @@
+## 2.10.94
+
+- Establish a shared loading, empty, stale, partial, disconnected, and error
+  state contract across dashboard, weather, and provider-driven destinations.
+- Preserve clearly marked last-known weather and provider data through refresh
+  failures, distinguish partial schedules from empty schedules, and keep
+  retry/Home actions reachable.
+
 ## 2.10.93
 
 - Scope administrative settings controls to the active tab and appearance

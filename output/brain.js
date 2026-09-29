@@ -6,7 +6,7 @@
   document.body.classList.add('brain-live');
   const shell = document.createElement('section'); shell.className='brain-shell';shell.setAttribute('aria-label','Household desk');
   shell.innerHTML=`<header class="brain-mast"><div class="brain-brand"><em>M/</em> MARQUEE <a class="brain-customize" href="/settings/layout?profile=live" aria-label="Customize the household desk"><span class="brain-customize-icon" aria-hidden="true">↗</span><span class="brain-customize-label">Customize</span></a></div><div class="brain-edition">THE HOUSEHOLD EDITION</div><div class="brain-connection" id="brain-connection">CONNECTING</div></header>
-  <section class="brain-panel" id="brain-house"><div class="brain-eyebrow"><span>Right now</span><b id="brain-house-label">THE HOUSE</b></div><div class="brain-lead"><div><h1 class="brain-headline" id="brain-headline" data-history-focus-owner tabindex="-1">Listening to the house.</h1><div class="brain-summary" id="brain-summary">Waiting for a fresh household snapshot.</div></div><div class="brain-orbit" id="brain-symbol" aria-hidden="true">⌂</div></div><div class="brain-openings" id="brain-openings"></div><div id="brain-device-health" class="brain-summary" role="status" hidden></div><button class="brain-ack" id="brain-ack" hidden>Got it · keep monitoring</button></section>
+  <section class="brain-panel" id="brain-house"><div class="brain-eyebrow"><span>Right now</span><b id="brain-house-label">THE HOUSE</b></div><div class="brain-lead"><div><h1 class="brain-headline" id="brain-headline" data-history-focus-owner tabindex="-1">Listening to the house.</h1><div class="brain-summary" id="brain-summary">Waiting for a fresh household snapshot.</div></div><div class="brain-orbit" id="brain-symbol" aria-hidden="true">⌂</div></div><div class="brain-openings" id="brain-openings"></div><div id="brain-device-health" class="brain-summary" role="status" hidden></div><button class="brain-ack" id="brain-ack" hidden>Got it · keep monitoring</button><button type="button" class="brain-retry" id="brain-retry" hidden>Try again</button></section>
   <section class="brain-panel" id="brain-activity"><div class="brain-eyebrow"><span>Just happened</span><b>LAST 15 MIN</b></div><div id="brain-events"></div></section>
   <section class="brain-panel" id="brain-agenda"><div class="brain-birthday"><div class="brain-eyebrow"><span>People first</span><b>✳</b></div><div id="brain-birthdays"></div></div><div class="brain-upnext"><div class="brain-eyebrow"><span>On the horizon</span><b>↗</b></div><div id="brain-upnext"></div></div></section>
   <section class="brain-activity-view" id="brain-activity-view" role="dialog" aria-modal="true" aria-labelledby="brain-activity-title" hidden><div class="brain-activity-dialog"><header><div><p class="brain-eyebrow">Household record</p><h2 id="brain-activity-title" tabindex="-1">Recent activity</h2><p id="brain-activity-count"></p></div><button type="button" id="brain-activity-close" aria-label="Close recent activity">Close</button></header><div id="brain-activity-list" role="region" aria-label="Recent activity records; use arrow keys or scroll to review" tabindex="0"></div></div></section>`;
@@ -46,7 +46,7 @@
     copy.setAttribute('aria-label',fullText);
     copy.dataset.fullText=fullText;
   }
-  let state=null, wx=null, received=0, theme='studio', visibility={}, lastToast='', toastUntil=0, alertId='', hiddenByBlank=false;
+  let state=null, wx=null, received=0, theme='studio', visibility={}, lastToast='', toastUntil=0, alertId='', hiddenByBlank=false, feedDisconnected=false;
   let fitFrame=0;
   function elapsed(seconds){const n=Math.max(0,Math.floor(seconds));return n<60?'just now':n<3600?`${Math.floor(n/60)}m`: `${Math.floor(n/3600)}h ${Math.floor(n%3600/60)}m`}
   function set(id,text){$(id).textContent=text}
@@ -65,7 +65,10 @@
     set('brain-device-health',healthText);
     $('brain-device-health').style.color='var(--brain-amber, #ffd28a)';
     const event=events[0];
-    $('brain-connection').classList.toggle('stale',!fresh);set('brain-connection',demo?'DESIGN PREVIEW':fresh?'HOUSE CONNECTED':'HOUSE FEED OFFLINE');
+    const householdState = window.MarqueeState?.resolve({loading: !state, disconnected: feedDisconnected, stale: !fresh, hasData: Boolean(state)}) || (feedDisconnected ? 'disconnected' : fresh ? 'ready' : 'stale');
+    $('brain-house').dataset.state = householdState;
+    $('brain-connection').classList.toggle('stale',householdState === 'stale');set('brain-connection',demo?'DESIGN PREVIEW':fresh?'HOUSE CONNECTED':householdState === 'disconnected'?'HOUSE FEED OFFLINE':'HOUSE FEED STALE');
+    $('brain-retry').hidden = householdState !== 'disconnected';
     $('brain-house').dataset.tone=!fresh?'amber':primary||serious||deviceHealth.length?'amber':'mint';
     set('brain-house-label',!fresh?'SIGNAL LOST':serious||deviceHealth.length?'NEEDS ATTENTION':primary?'HOUSE IN MOTION':'LIVE AT HOME');
     set('brain-symbol',!fresh?'?':serious||deviceHealth.length?'!':primary?'↗':'⌂');
@@ -204,7 +207,8 @@
   });
   $('brain-ack').onclick=async()=>{const b=$('brain-ack');b.disabled=true;try{const r=await fetch('/api/attention/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:alertId,action:'acknowledge'})});if(!r.ok)throw Error();await poll()}catch(_){b.textContent='Could not acknowledge · try again'}finally{b.disabled=false}};
   function weather(){window.MarqueeWeather?.observation(wx)}
-  async function poll(){if(demo)return;try{const r=await fetch('/api/brain');if(!r.ok)throw Error();state=await r.json();received=Date.now()/1000;render();window.dispatchEvent(new Event('marquee-brain'))}catch(_){if(state){state.fresh=false;render()}}}
+  async function poll(){if(demo)return;try{const r=await fetch('/api/brain');if(!r.ok)throw Error();state=await r.json();feedDisconnected=false;received=Date.now()/1000;render();window.dispatchEvent(new Event('marquee-brain'))}catch(_){if(state){feedDisconnected=false;state.fresh=false;render()}else{feedDisconnected=true;state={fresh:false,openings:[],events:[],cards:[],alerts:[],people:[]};render()}}}
+  $('brain-retry').onclick=()=>{ $('brain-retry').disabled=true; poll().finally(()=>{$('brain-retry').disabled=false}); };
   async function pollWeather(){try{const r=await fetch('/ha-weather.json');if(r.ok){wx=await r.json();weather()}}catch(_){}}
   window.MarqueeBrain={weatherContext(){return state?.cards?.find(c=>c.type==='weather'&&(!c.expires||Date.parse(c.expires)>Date.now()))},configure(cfg,fallback){theme=['studio','afterhours','dispatch'].includes(cfg.liveTheme)?cfg.liveTheme:'studio';document.body.dataset.liveTheme=theme;visibility=cfg.liveVisibility?.home||{};hiddenByBlank=fallback?.screen==='blank';render()},weather};
   window.addEventListener('resize',fitHousePanel);

@@ -37,9 +37,10 @@
   };
   let requestState = 'loading', requestSerial = 0;
   const resourceHasSnapshot = () => Object.values(resources).some(resource => resource.snapshot !== null);
-  const resourceFailure = resource => resource.phase === 'stale' || resource.phase === 'unavailable';
+  const sharedResourceState = resource => window.MarqueeState?.resource(resource) || resource.phase;
+  const resourceFailure = resource => ['stale', 'partial', 'unavailable', 'disconnected', 'error'].includes(resource.phase);
   const refreshPhase = resource => resource.snapshot === null
-    ? (resource.error ? 'unavailable' : 'loading')
+    ? (resource.error ? 'disconnected' : 'loading')
     : (resource.error ? 'stale' : 'ready');
   let refreshInFlight = false;
   // The server payload is the only media truth. Navigation may choose which
@@ -96,6 +97,14 @@
     hidden: node.hidden,
   }));
   const stage = document.querySelector('.stage');
+  const weatherLifecycle = document.querySelector('#weather-lifecycle');
+  function drawWeatherLifecycle(lifecycle) {
+    const visible = view === 'weather' && selected && lifecycle?.state === 'partial';
+    if (!weatherLifecycle) return;
+    weatherLifecycle.hidden = !visible;
+    if (visible) weatherLifecycle.innerHTML = sharedState('Weather is partial', 'Return to Home', true, 'partial', view, lifecycle.reason);
+    else weatherLifecycle.replaceChildren();
+  }
   function setBackgroundActive(active, surface = active ? 'panel' : 'dashboard') {
     // The media shell may enter its real idle state independently of kiosk
     // navigation. A selected destination must therefore explicitly own the
@@ -237,18 +246,19 @@
   const combatName = key => key === 'pfl' ? 'PFL' : 'UFC';
   function destinationLifecycle(key, list) {
     if (!sections.includes(key)) {
-      return { state: resources.config.phase === 'unavailable' ? 'unavailable' : 'unavailable', reason: 'not-enabled' };
+      return { state: resources.config.phase === 'disconnected' ? 'disconnected' : 'unavailable', reason: 'not-enabled' };
     }
     if (resources.contexts.phase === 'loading') return { state: 'loading', reason: 'context request pending' };
-    if (resources.contexts.phase === 'unavailable') return { state: 'unavailable', reason: 'context source cannot be reached' };
+    if (resources.contexts.phase === 'disconnected') return { state: 'disconnected', reason: 'context source cannot be reached' };
     const provider = health[key] || {};
     if (resources.contexts.phase === 'stale') return { state: 'stale', reason: 'retained context snapshot' };
-    if (provider.stale || provider.state === 'degraded') return { state: 'stale', reason: provider.reason || 'provider data is delayed' };
+    if (provider.stale) return { state: 'stale', reason: provider.reason || 'provider data is delayed' };
+    if (provider.state === 'degraded') return { state: 'partial', reason: provider.reason || 'some provider data is delayed' };
     if (provider.state === 'error') return { state: 'error', reason: provider.error || provider.reason || 'provider fetch failed' };
-    if (provider.state === 'disabled') return { state: 'unavailable', reason: provider.reason || 'provider is disabled' };
+    if (provider.state === 'disabled') return { state: 'disconnected', reason: provider.reason || 'provider is disabled' };
     return { state: list.length ? 'populated' : 'empty', reason: provider.reason || '' };
   }
-  function sharedState(message, action = 'Return to Home', retry = false, lifecycle = 'empty', destination = view) {
+  function sharedState(message, action = 'Return to Home', retry = false, lifecycle = 'empty', destination = view, reason = '') {
     const combat = combatView(destination);
     const promotion = combatName(destination);
     const copy = lifecycle === 'loading'
@@ -257,12 +267,16 @@
       ? combat ? `The ${promotion} source did not answer. No last-known events are being presented as current.` : 'The source did not answer. No last-known results are being presented as current.'
       : lifecycle === 'stale'
         ? combat ? `The ${promotion} source has not refreshed. Last-known events are not being presented as current.` : 'The source has not refreshed. Last-known results are not being presented as current.'
-        : lifecycle === 'unavailable'
+      : lifecycle === 'partial'
+        ? reason || (combat ? `Only part of the ${promotion} schedule arrived. Showing the available events.` : 'Only part of this source arrived. Showing the available results.')
+      : lifecycle === 'disconnected'
+        ? reason || (combat ? `The ${promotion} source is disconnected. Try again or return Home.` : 'This source is disconnected. Try again or return Home.')
+      : lifecycle === 'unavailable'
           ? combat ? `The ${promotion} schedule is unavailable because its source cannot be reached.` : 'This destination is unavailable. Try again when its source is reachable.'
           : combat ? `No upcoming ${promotion} events are in the current source window.` : 'New items will appear automatically when this destination has something relevant.';
     const kicker = combat
-      ? ({loading: `${promotion} · LOADING`, error: `${promotion} · SOURCE ERROR`, stale: `${promotion} · STALE SOURCE`, unavailable: `${promotion} · UNAVAILABLE`, empty: `${promotion} · SCHEDULE`}[lifecycle] || promotion)
-      : (lifecycle === 'loading' ? 'LOADING' : lifecycle === 'error' ? 'SOURCE ERROR' : lifecycle === 'stale' ? 'STALE SOURCE' : lifecycle === 'unavailable' ? 'UNAVAILABLE' : 'MARQUEE');
+      ? ({loading: `${promotion} · LOADING`, error: `${promotion} · SOURCE ERROR`, stale: `${promotion} · STALE SOURCE`, partial: `${promotion} · PARTIAL`, unavailable: `${promotion} · UNAVAILABLE`, disconnected: `${promotion} · OFFLINE`, empty: `${promotion} · SCHEDULE`}[lifecycle] || promotion)
+      : (lifecycle === 'loading' ? 'LOADING' : lifecycle === 'error' ? 'SOURCE ERROR' : lifecycle === 'stale' ? 'STALE SOURCE' : lifecycle === 'partial' ? 'PARTIAL SOURCE' : lifecycle === 'unavailable' ? 'UNAVAILABLE' : lifecycle === 'disconnected' ? 'OFFLINE' : 'MARQUEE');
     const mark = lifecycle === 'empty' ? '' : `<div class="kiosk-state-mark is-${esc(lifecycle)}" role="img" aria-label="${esc(kicker)}"><span aria-hidden="true">${lifecycle === 'loading' ? '…' : lifecycle === 'stale' ? '↻' : lifecycle === 'error' || lifecycle === 'unavailable' ? '!' : '·'}</span></div>`;
     return `<div class="kiosk-state${lifecycle === 'empty' ? ' is-resolved' : ''}" data-lifecycle="${esc(lifecycle)}">${mark}<div><p class="kiosk-kicker">${kicker}</p><h2>${esc(message)}</h2><p class="kiosk-empty">${copy}</p><div class="kiosk-now-playing-actions"><a class="kiosk-home-action" href="${esc(href(''))}" data-view="">${esc(action)}</a>${retry ? '<button type="button" class="kiosk-retry" data-kiosk-retry>Try again</button>' : ''}</div></div></div>`;
   }
@@ -507,10 +521,10 @@
     panel.dataset.section = view;
     const failedResources = Object.values(resources).filter(resourceFailure).length;
     const resourceNotice = offline ? ' · Sources unavailable' : failedResources ? ` · ${failedResources} source${failedResources === 1 ? '' : 's'} delayed` : '';
-    status.textContent = interrupted ? 'Household attention' : view === 'household' ? 'Household' : (view ? label(view) : 'Marquee · Auto') + resourceNotice;
     const valid = sections.includes(view), list = valid ? items(view) : [];
-    if (selected && !list.some(c => c.id === selected)) selected = '';
-    if (view === 'weather' && !selected && list.length) selected = (list.find(c => ['alert','extreme'].includes(c.subtype)) || list.find(c => c.subtype === 'current') || list[0]).id;
+    const lifecyclePreview = valid ? destinationLifecycle(view, list) : null;
+    if (selected && (!list.some(c => c.id === selected) || lifecyclePreview?.state === 'disconnected')) selected = '';
+    if (view === 'weather' && !selected && list.length && lifecyclePreview?.state === 'populated') selected = (list.find(c => ['alert','extreme'].includes(c.subtype)) || list.find(c => c.subtype === 'current') || list[0]).id;
     // Plex has two legitimate owners. Active playback belongs to the real
     // media stage; every non-playing/manual lifecycle belongs to this panel.
     // Never let the stage and panel hide each other during the hand-off.
@@ -559,7 +573,9 @@
     const lifecycle = requestState === 'loading'
       ? { state: 'loading', reason: 'provider request pending' }
       : destinationLifecycle(view, list);
-    const message = lifecycle.state === 'loading' ? `Loading ${label(view)}…` : lifecycle.state === 'error' ? `${label(view)} is unavailable` : lifecycle.state === 'stale' ? `${label(view)} is stale` : lifecycle.state === 'unavailable' ? `${label(view)} is unavailable` : '';
+    drawWeatherLifecycle(lifecycle);
+    status.textContent = interrupted ? 'Household attention' : view === 'household' ? 'Household' : (view ? label(view) : 'Marquee · Auto') + (lifecycle.state === 'partial' ? ' · PARTIAL' : lifecycle.state === 'disconnected' ? ' · OFFLINE' : resourceNotice);
+    const message = lifecycle.state === 'loading' ? `Loading ${label(view)}…` : lifecycle.state === 'error' ? `${label(view)} is unavailable` : lifecycle.state === 'stale' ? `${label(view)} is stale` : lifecycle.state === 'unavailable' ? `${label(view)} is unavailable` : lifecycle.state === 'disconnected' ? `${label(view)} is disconnected` : '';
     const feature = view === 'nhl' && list.length ? ordered(list)[0] : null;
     const headingName = feature ? nhlMatchupName(feature.left || {}, feature.right || {}) : label(view);
     const detail = view === 'calendar' && calendarMode === 'all' && lifecycle.state === 'populated';
@@ -575,7 +591,7 @@
     }
     let html = detail
       ? `<header class="kiosk-section-head kiosk-section-head-detail"><p>CALENDAR</p><h1 id="kiosk-section-title">Calendar</h1></header>${calendarDetail(calendarEntries(ordered(list)))}`
-      : `<header class="kiosk-section-head"><p>${esc(categoryFor(view).toUpperCase())}</p><h1 id="kiosk-section-title"${feature ? ` aria-label="${esc(headingName)}"` : ''}>${esc(label(view))}</h1></header>` + (message ? sharedState(message, 'Return to Home', lifecycle.state === 'error' || lifecycle.state === 'stale' || lifecycle.state === 'unavailable', lifecycle.state, view) : renderDestination(view, list));
+      : `<header class="kiosk-section-head"><p>${esc(categoryFor(view).toUpperCase())}${lifecycle.state === 'partial' ? ' · PARTIAL' : lifecycle.state === 'disconnected' ? ' · OFFLINE' : ''}</p><h1 id="kiosk-section-title"${feature ? ` aria-label="${esc(headingName)}"` : ''}>${esc(label(view))}</h1></header>` + (message ? sharedState(message, 'Return to Home', ['error', 'stale', 'unavailable', 'disconnected', 'partial'].includes(lifecycle.state), lifecycle.state, view, lifecycle.reason) : lifecycle.state === 'partial' ? `<div class="kiosk-partial-surface" data-lifecycle="partial">${sharedState(`${label(view)} is partial`, 'Return to Home', true, 'partial', view, lifecycle.reason)}${renderDestination(view, list)}</div>` : renderDestination(view, list));
     const focusedCalendarControl = detail
       ? calendarFocusRestorePending || calendarFocusToken()
       : '';
@@ -681,6 +697,7 @@
   primary.addEventListener('click', handleLink); overflow.addEventListener('click', handleLink);
   menu.addEventListener('click', e => { if (e.target === menu) { const r = menu.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closeMenu(); } });
   panel.addEventListener('click', e => { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); return; } if (e.target.closest('[data-calendar-disclosure]')) { openCalendarAgenda(); return; } if (e.target.closest('[data-calendar-summary]')) { closeCalendarAgenda(); return; } if (e.target.closest('[data-sports-disclosure]')) { openSportsSchedule(); return; } if (e.target.closest('[data-sports-summary]')) { closeSportsSchedule(); return; } const sportsControl = e.target.closest('[data-sports-control]'); if (sportsControl && !sportsControl.disabled) { sportsFocusControlPending = sportsControl.dataset.sportsControl; setSportsPage(sportsPage + (sportsControl.dataset.sportsControl === 'next' ? 1 : -1)); return; } const page = e.target.closest('[data-calendar-page]'); if (page && !page.disabled) { setCalendarPage(Number(page.dataset.calendarPage)); return; } const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); return; } const b = e.target.closest('button[data-item]'); if (b) { selected = b.dataset.item; drawPanel(); primary.querySelector(`[data-view="${CSS.escape(view)}"]`)?.focus(); window.dispatchEvent(new Event('marquee-navigation')); } });
+  stage?.addEventListener('click', e => { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); return; } const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); } });
   document.addEventListener('keydown', e => { if (menu.open || !view) return; if (!calendarMode && !sportsMode && e.target.closest?.('[data-calendar-disclosure]') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openCalendarAgenda(); return; } if (!sportsMode && e.target.closest?.('[data-sports-disclosure]') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openSportsSchedule(); return; } if (calendarMode) { if (e.key === 'Escape' || e.key === 'BrowserBack') { e.preventDefault(); closeCalendarAgenda(); return; } if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); setCalendarPage(calendarPage - 1); return; } if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); setCalendarPage(calendarPage + 1); return; } } else if (sportsMode) { if (e.key === 'Escape' || e.key === 'BrowserBack') { e.preventDefault(); closeSportsSchedule(); return; } if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); setSportsPage(sportsPage - 1); return; } if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); setSportsPage(sportsPage + 1); return; } } else if (e.key === 'Escape') { e.preventDefault(); change(''); } });
   function restoreHistoryDestinationFocus() { if (historyFocusDestination === null || calendarMode || view === 'calendar') return; const destination = historyFocusDestination; historyFocusDestination = null; focusNavigation(destination); }
   window.addEventListener('marquee-history-focus-owned', () => { historyFocusOwned = true; historyFocusDestination = null; });
@@ -722,6 +739,7 @@
         const name = result.status === 'fulfilled' ? result.value[0] : result.reason.name;
         const resource = resources[name];
         resource.phase = refreshPhase(resource);
+        resource.state = sharedResourceState(resource);
       }
       if (resources.config.snapshot) {
         const config = resources.config.snapshot;
