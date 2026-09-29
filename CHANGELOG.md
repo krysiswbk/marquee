@@ -1,3 +1,8 @@
+## 2.12.6
+
+- Preserve unchanged kiosk panel action controls across ordinary data refreshes,
+  keeping Calendar, shared detail, retry, and Home actions normally clickable.
+
 ## 2.12.5
 
 - Make suppressed attention state and available time truthful, with no invalid

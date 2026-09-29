@@ -90,7 +90,7 @@
   menu.innerHTML = '<header><h2 id="kiosk-menu-title">More destinations</h2><button type="button" aria-label="Close menu">✕</button></header><nav aria-label="Additional Marquee destinations"></nav><details><summary>Settings</summary><nav aria-label="Marquee control pages"><a href="/live">Live display</a><a href="/settings">Settings</a><a href="/settings/layout?profile=live">Edit screen layout</a><a href="/settings/attention">Alert rules</a><a href="/settings/tests">Test screens</a></nav></details>';
   document.body.append(menu);
   const overflow = menu.querySelector('nav');
-  const panel = document.createElement('section'); panel.className = 'kiosk-section'; panel.hidden = true; panel.inert = true; panel.setAttribute('aria-hidden', 'true'); panel.setAttribute('aria-label', 'Selected kiosk section'); panel.setAttribute('aria-labelledby', 'kiosk-section-title'); document.body.append(panel);
+  const panel = document.createElement('section'); panel.id = 'kiosk-panel'; panel.className = 'kiosk-section'; panel.hidden = true; panel.inert = true; panel.setAttribute('aria-hidden', 'true'); panel.setAttribute('aria-label', 'Selected kiosk section'); panel.setAttribute('aria-labelledby', 'kiosk-section-title'); document.body.append(panel);
   // The destination is a sibling overlay, so explicitly own the accessibility
   // state of the dashboard it covers. Keep the original values so Home and
   // browser history can restore the dashboard without stale inert/hidden state.
@@ -453,7 +453,9 @@
   }
   function renderCalendarMeasurement(entries, pageNumber) {
     calendarPage = pageNumber;
+    const preservedControls = preservePanelControls();
     panel.innerHTML = `<header class="kiosk-section-head kiosk-section-head-detail"><p>CALENDAR</p><h1 id="kiosk-section-title">Calendar</h1></header>${calendarDetail(entries, {measuring: true, entries})}`;
+    reconcilePanelControls(preservedControls);
     return panel.querySelector('.kiosk-calendar-page');
   }
   function settleCalendarLayout() {
@@ -519,7 +521,44 @@
     return `<div class="kiosk-ambient-surface"><p class="kiosk-kicker">SKY · ${esc(stateCopy(feature))}</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || '')}</p><p class="kiosk-empty">${esc(feature.detail || '')}</p><div class="kiosk-ambient-rows">${safeRows(feature).map(row => `<span>${esc(row)}</span>`).join('')}</div></div>`;
   }
   function renderDestination(key, list) { const category = categoryFor(key); return key === 'nhl' ? renderNhl(list) : category === 'sports' ? renderSports(list) : category === 'agenda' ? renderAgenda(list) : category === 'media' ? renderMedia(list) : category === 'sky' ? renderAmbient(list) : list.length ? `<div class="kiosk-items">${list.slice(0, 8).map(button).join('')}</div>` : sharedState('Nothing to show here right now.', 'Return to Home', false, 'empty'); }
+  // Refreshes redraw panel markup, but an unchanged visible action must not be
+  // disconnected between pointerdown and click. Keep the action node and
+  // synchronize its rendered state after the new panel content is committed.
+  function panelControlKey(node) {
+    if (node.matches('a[data-view]')) return `view:${node.dataset.view}`;
+    if (node.matches('[data-calendar-control]')) return `calendar:${node.dataset.calendarControl}`;
+    if (node.matches('[data-calendar-summary]')) return 'calendar:summary';
+    if (node.matches('[data-sports-control]')) return `sports:${node.dataset.sportsControl}`;
+    if (node.matches('[data-sports-summary]')) return 'sports:summary';
+    if (node.matches('[data-calendar-disclosure]')) return 'calendar:disclosure';
+    if (node.matches('[data-sports-disclosure]')) return 'sports:disclosure';
+    if (node.matches('[data-kiosk-retry]')) return 'retry';
+    if (node.matches('button[data-item]')) return `item:${node.dataset.item}`;
+    return null;
+  }
+  function preservePanelControls() {
+    const existing = new Map();
+    panel.querySelectorAll('a[data-view],button').forEach(node => {
+      const key = panelControlKey(node);
+      if (key && !existing.has(key)) existing.set(key, node);
+    });
+    return existing;
+  }
+  function reconcilePanelControls(existing) {
+    if (!existing.size) return;
+    panel.querySelectorAll('a[data-view],button').forEach(next => {
+      const key = panelControlKey(next), current = key && existing.get(key);
+      if (!current || current === next) return;
+      [...current.attributes].forEach(attribute => {
+        if (!next.hasAttribute(attribute.name)) current.removeAttribute(attribute.name);
+      });
+      [...next.attributes].forEach(attribute => current.setAttribute(attribute.name, attribute.value));
+      current.replaceChildren(...[...next.childNodes].map(child => child.cloneNode(true)));
+      next.replaceWith(current);
+    });
+  }
   function drawPanel() {
+    const preservedControls = preservePanelControls();
     const preserveHeadingFocus = Boolean(view && document.activeElement?.id === 'kiosk-section-title');
     const focusedSportsControl = sportsFocusControlPending || (sportsMode && panel.contains(document.activeElement)
       ? document.activeElement.dataset.sportsControl || (document.activeElement.hasAttribute('data-sports-summary') ? 'summary'
@@ -581,6 +620,7 @@
       const unavailableMark = unavailable || stale ? `<div class="kiosk-state-mark is-${unavailable ? 'unavailable' : 'stale'}" aria-hidden="true"><span>${unavailable ? '!' : '↻'}</span></div>` : '';
       const retry = unavailable || stale ? '<button type="button" class="kiosk-retry" data-kiosk-retry>Check again</button>' : '';
       panel.innerHTML = `<header class="kiosk-now-playing-head"><p>NOW PLAYING</p><h1 id="kiosk-section-title">${esc(title)}</h1>${detail ? `<p class="kiosk-now-playing-detail">${esc(detail)}</p>` : ''}</header><div class="kiosk-now-playing-body">${unavailableMark}<div class="kiosk-now-playing-copy">${weatherMarkup}<div class="kiosk-now-playing-actions"><a class="kiosk-home-action" href="${esc(href(''))}" data-view="">Return to Home</a>${retry}</div></div></div>`;
+      reconcilePanelControls(preservedControls);
       focusInitialDestination();
       preserveDirectHeadingFocus(preserveHeadingFocus);
       return;
@@ -614,7 +654,10 @@
       && panel.contains(document.activeElement)
       && document.activeElement.matches?.('[data-calendar-disclosure]');
     if (preserveCalendarDisclosureFocus) calendarFocusDisclosurePending = true;
-    if (panel.innerHTML !== html) panel.innerHTML = html;
+    if (panel.innerHTML !== html) {
+      panel.innerHTML = html;
+      reconcilePanelControls(preservedControls);
+    }
     if (sportsDetail) {
       const canonical = new URL(location.href).searchParams.get('page');
       if (canonical !== String(sportsPage)) history.replaceState({marqueeDetail: true}, '', href(view, true, sportsPage));

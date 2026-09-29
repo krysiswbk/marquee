@@ -38,7 +38,7 @@ def run():
         )
         for width, height in VIEWPORTS:
             for promotion in ("ufc", "pfl"):
-                for lifecycle in ("empty", "stale", "unavailable", "populated"):
+                for lifecycle in ("empty", "stale", "disconnected", "populated"):
                     page = browser.new_page(viewport={"width": width, "height": height})
                     page.on("pageerror", lambda error: errors.append(str(error)))
                     page.on("console", lambda message: errors.append(message.text) if message.type == "error" else None)
@@ -52,12 +52,13 @@ def run():
                         if asset.is_file():
                             return route.fulfill(path=str(asset))
                         if path == "/api/config":
-                            return route.fulfill(json={"providers": {promotion: {"enabled": True, "targets": ["kiosk"]}}})
+                            providers = {promotion: {"enabled": True, "targets": ["kiosk"]}}
+                            return route.fulfill(json={"providers": providers})
                         if path == "/contexts":
                             values = [] if lifecycle != "populated" else [event(promotion), event(promotion, suffix="2")]
                             return route.fulfill(json={"contexts": values, "browse": {}})
                         if path == "/providers":
-                            health = {"state": "degraded", "stale": True, "reason": "schedule refresh delayed"} if lifecycle == "stale" else {"state": "disabled", "reason": "source disabled for fixture"} if lifecycle == "unavailable" else {"state": "ok"}
+                            health = {"state": "degraded", "stale": True, "reason": "schedule refresh delayed"} if lifecycle == "stale" else {"state": "disabled", "reason": "source is disconnected"} if lifecycle == "disconnected" else {"state": "ok"}
                             return route.fulfill(json={"providers": {promotion: health}})
                         if path in ("/settings.json", "/live-settings.json"):
                             return route.fulfill(json={"transitionMs": 0})
@@ -82,9 +83,9 @@ def run():
                     elif lifecycle == "stale":
                         assert page.locator('[data-lifecycle="stale"]').is_visible()
                         assert "not being presented as current" in page.locator(".kiosk-state").inner_text()
-                    elif lifecycle == "unavailable":
-                        assert page.locator('[data-lifecycle="unavailable"]').is_visible()
-                        assert "source cannot be reached" in page.locator(".kiosk-state").inner_text()
+                    elif lifecycle == "disconnected":
+                        assert page.locator('[data-lifecycle="disconnected"]').is_visible()
+                        assert "source is disconnected" in page.locator(".kiosk-state").inner_text()
                     else:
                         assert page.locator(".kiosk-broadcast-layout").is_visible()
                         assert page.locator(".kiosk-broadcast-matchup").is_visible()

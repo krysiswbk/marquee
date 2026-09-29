@@ -121,7 +121,7 @@ with sync_playwright() as playwright:
                     link.click()
                 page.wait_for_function(
                     "target => new URL(location.href).searchParams.get('view') === target",
-                    target or None,
+                    arg=target or None,
                 )
                 page.wait_for_selector(f'[aria-current="page"][data-view="{target}"]')
 
@@ -142,6 +142,7 @@ with sync_playwright() as playwright:
             home.focus()
             home.press("Enter")
             page.wait_for_function("new URL(location.href).searchParams.get('view') === null")
+            page.wait_for_function("document.activeElement?.dataset.view === ''")
             assert page.locator('.kiosk-primary [data-view=""][aria-current="page"]').count() == 1
             assert page.locator('[aria-current="page"]').count() == 1
             assert page.locator('.kiosk-more[aria-current]').count() == 0
