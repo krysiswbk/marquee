@@ -17,7 +17,7 @@
 .secondary,.primary{min-height:44px;padding:8px 13px;border-radius:8px;cursor:pointer}
 .secondary{background:var(--bg);color:var(--text);border:1px solid var(--line)}
 .primary{background:var(--accent);border:1px solid var(--accent);color:var(--bg);font-weight:800}
-.primary:disabled,.secondary:disabled{opacity:.5;cursor:default}
+.primary:disabled,.secondary:disabled{background:#272d35;color:#7f8995;border-color:#3b444f;opacity:1;filter:grayscale(.7);cursor:default}
 .compact-list,.editable-list{display:grid;gap:10px}
 .empty{color:var(--muted);padding:8px 0}
 .item-row,.editor-row{border-top:1px solid var(--line);padding:12px 0}
@@ -57,6 +57,7 @@
 .history-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:13px;color:var(--muted);font-size:12px}.history-count{color:var(--muted);font-size:12px}.diagnostic-state{padding:10px 0;overflow-wrap:anywhere}.diagnostic-state.error{color:#ef7777}
 .savebar{position:sticky;bottom:0;z-index:5;display:flex;align-items:center;gap:10px;padding:14px 0 calc(14px + env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--bg) 34%);scroll-margin-bottom:calc(112px + env(safe-area-inset-bottom))}
 .savebar span{margin-right:auto;color:var(--muted)}
+.savebar:has(button:disabled){padding-block:8px}.savebar:has(button:disabled) button:disabled{display:none}
 .test-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(260px,.75fr);gap:24px}
 .test-grid label{margin-top:14px}
 .test-aside{padding:18px;border:1px solid var(--line);border-radius:9px;background:var(--bg)}

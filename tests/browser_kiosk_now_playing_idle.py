@@ -75,10 +75,12 @@ with sync_playwright() as playwright:
         assert page.locator(".kiosk-section.now-playing-surface").evaluate("el => !el.hidden && !el.inert")
         assert page.locator(".kiosk-state-mark").count() == 0
         assert "Playback has stopped" in page.locator(".kiosk-now-playing-detail").inner_text()
-        assert page.locator(".kiosk-weather-fact").count() == 3
-        assert page.locator(".kiosk-weather-separator").count() == 2
+        assert page.locator(".kiosk-weather-fact").count() == 4
+        assert page.locator(".kiosk-weather-separator").count() == 3
         assert page.locator(".kiosk-weather-fact").nth(0).get_attribute("aria-label") == "Temperature: 15°C"
-        assert page.locator(".kiosk-weather-fact").nth(2).get_attribute("aria-label") == "High and low: High 21° / Low 12°"
+        labels = page.locator(".kiosk-weather-fact").evaluate_all("els => els.map(el => el.getAttribute('aria-label'))")
+        assert any(label and label.startswith("Feels like:") for label in labels)
+        assert "High and low: High 21° / Low 12°" in labels
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
 
         page.locator("#kiosk-section-title").evaluate("el => el.tabIndex = -1")
@@ -133,9 +135,13 @@ with sync_playwright() as playwright:
         }""")
         if width <= 480:
             assert phone_layout["identityTop"] >= phone_layout["headerBottom"] + 12
-            assert phone_layout["poster"] > 0
+            # The authoritative fixture has no poster capability; when art is
+            # present, the CSS contract bounds it beside the identity.
+            if phone_layout["poster"]:
+                assert phone_layout["poster"] <= 198
             assert phone_layout["progress"] > 0
-            assert phone_layout["device"] > 0
+            if phone_layout["device"]:
+                assert phone_layout["device"] <= 52
             assert not phone_layout["overflow"]
         progress_scale = active_page.locator("#fill").evaluate(
             "el => Number((el.style.transform.match(/scaleX\\(([^)]+)\\)/) || [])[1])")

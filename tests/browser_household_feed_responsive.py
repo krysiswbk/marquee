@@ -180,7 +180,10 @@ with sync_playwright() as playwright:
                 if width <= 480:
                     assert not agenda.is_visible()
 
-            if width <= 700:
+            if width <= 430:
+                assert copy.evaluate("el => getComputedStyle(el).whiteSpace === 'nowrap'")
+                assert copy.evaluate("el => getComputedStyle(el).textOverflow === 'ellipsis'")
+            elif width <= 700:
                 assert copy.evaluate("el => getComputedStyle(el).whiteSpace === 'normal'")
             if kind == "health" and width in (320, 700, 1500):
                 page.screenshot(path=f"/tmp/marquee-2.10.67-household-{width}x{height}.png")

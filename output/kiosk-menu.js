@@ -274,7 +274,7 @@
         ? reason || (combat ? `The ${promotion} source is disconnected. Try again or return Home.` : 'This source is disconnected. Try again or return Home.')
       : lifecycle === 'unavailable'
           ? combat ? `The ${promotion} schedule is unavailable because its source cannot be reached.` : 'This destination is unavailable. Try again when its source is reachable.'
-          : combat ? `No upcoming ${promotion} events are in the current source window.` : 'New items will appear automatically when this destination has something relevant.';
+          : combat ? 'Check back when the next event is published.' : 'New items will appear automatically when this destination has something relevant.';
     const kicker = combat
       ? ({loading: `${promotion} · LOADING`, error: `${promotion} · SOURCE ERROR`, stale: `${promotion} · STALE SOURCE`, partial: `${promotion} · PARTIAL`, unavailable: `${promotion} · UNAVAILABLE`, disconnected: `${promotion} · OFFLINE`, empty: `${promotion} · SCHEDULE`}[lifecycle] || promotion)
       : (lifecycle === 'loading' ? 'LOADING' : lifecycle === 'error' ? 'SOURCE ERROR' : lifecycle === 'stale' ? 'STALE SOURCE' : lifecycle === 'partial' ? 'PARTIAL SOURCE' : lifecycle === 'unavailable' ? 'UNAVAILABLE' : lifecycle === 'disconnected' ? 'OFFLINE' : 'MARQUEE');

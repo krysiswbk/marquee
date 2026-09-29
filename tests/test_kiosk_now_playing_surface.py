@@ -136,11 +136,18 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn("present && seen", INDEX)
         self.assertIn("if (present) seen = true", INDEX)
 
+    def test_phone_playback_attaches_bounded_art_to_editorial_content(self):
+        self.assertIn('grid-template-areas:"category poster" "identity poster" "meta poster" "progress poster" "device device"', SCREENS)
+        self.assertIn("justify-self:end", SCREENS)
+        self.assertIn("max-height:198px", SCREENS)
+        self.assertIn("Check back when the next event is published.", MENU)
+        self.assertNotIn("item.score", (ROOT / "output/attention-settings.js").read_text())
+
     def test_narrow_orbit_cannot_create_a_horizontal_scroller(self):
         self.assertIn("body.browser-controls{overflow-x:hidden}", SCREENS)
         self.assertIn("overflow-x:hidden;overflow-y:auto", SCREENS)
         self.assertIn("padding:clamp(88px,12vh,108px) 20px 88px", SCREENS)
-        self.assertIn("body.kiosk-playback-active .stage{display:flex!important", SCREENS)
+        self.assertIn("body.kiosk-playback-active .stage{display:grid!important", SCREENS)
         # The responsive orbit is a background layer, so it remains ambient
         # without becoming scrollable content at any narrow width.
         self.assertIn("background-size:72vw 72vw,auto,auto,auto", SCREENS)

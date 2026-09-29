@@ -1,3 +1,8 @@
+## 2.12.1
+
+- Refine narrow-phone playback, weather context, household feed truncation,
+  empty sports states, and administration action presentation.
+
 ## 2.12.0
 
 - Add shared Live/Kiosk lifecycle coordination for visibility suspension,

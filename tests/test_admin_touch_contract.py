@@ -96,3 +96,12 @@ def test_main_settings_model_ranges_are_explicit() -> None:
         assert match, field
         tag = match.group(0)
         assert f'min="{low}"' in tag and f'max="{high}"' in tag and f'step="{step}"' in tag
+
+
+def test_clean_save_actions_are_compact_and_disabled_actions_are_muted() -> None:
+    admin = (ROOT / "output/settings-admin.css").read_text()
+    inline = (ROOT / "cast/settings-control.html").read_text()
+    assert ":has(button:disabled)" in inline
+    assert ":has(button:disabled)" in admin
+    assert "background:#272d35" in admin
+    assert "filter:grayscale" in admin

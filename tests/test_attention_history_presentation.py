@@ -80,3 +80,10 @@ def test_history_layout_wraps_without_a_mobile_scrolling_table() -> None:
     assert "overflow-wrap:anywhere" in STYLES
     assert ".history-row{grid-template-columns:repeat(2,minmax(0,1fr))" in STYLES
     assert ".history-details{grid-column:1/-1}" in STYLES
+
+
+def test_active_attention_uses_human_facing_labels_without_scores() -> None:
+    assert "urgencyLabels" in SCRIPT
+    assert "Action needed" in SCRIPT
+    assert "item.score" not in SCRIPT
+    assert "CONTEXTUAL · -5" not in SCRIPT
