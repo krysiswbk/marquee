@@ -69,7 +69,7 @@ with sync_playwright() as playwright:
     # required secondary-device viewport, while the long item remains
     # isolated to a readable later page.
     viewport_evidence = []
-    expected_first_page_rows = {(393, 852): 3, (430, 852): 3, (700, 900): 3, (1024, 600): 2, (1500, 900): 3}
+    expected_first_page_rows = {(393, 852): 3, (430, 852): 3, (700, 900): 3, (1024, 600): 3, (1500, 900): 3}
     for width, height in expected_first_page_rows:
         page.set_viewport_size({"width": width, "height": height})
         page.goto("http://marquee.test/kiosk?view=calendar&mode=all", wait_until="domcontentloaded")

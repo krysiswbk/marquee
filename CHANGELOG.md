@@ -1,3 +1,11 @@
+## 2.12.7
+
+- Keep Calendar Previous and Next natively disabled, semantically disabled, and
+  out of sequential navigation until measured pagination settles.
+- Use a compact two-column full agenda on short-wide 1024×600 displays so
+  ordinary events remain ordered and reachable in materially fewer pages while
+  irreducibly tall entries retain their bounded reveal behavior.
+
 ## 2.12.6
 
 - Preserve unchanged kiosk panel action controls across ordinary data refreshes,
