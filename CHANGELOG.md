@@ -1,3 +1,8 @@
+## 2.10.99
+
+- Restore an explicit in-flow phone playback composition for both Home and now-playing routes, with bounded supporting artwork, progress, and device context.
+- Hide the phone household people strip while retaining ellipsized dock feed copy and navigation.
+
 ## 2.10.98
 
 - Source feels-like weather from `sensor.outside_feels_like_temperature` into the existing authoritative payload field, with truthful null handling.
