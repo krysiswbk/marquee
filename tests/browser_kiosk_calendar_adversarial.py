@@ -65,6 +65,48 @@ with sync_playwright() as playwright:
         page.evaluate("window.dispatchEvent(new Event('marquee-surface-rendered'))")
     assert len(seen) == len(set(seen)) == len(later_long)
     assert any("Later page long summary" in text for text in seen)
+    # The same ordinary fixture must use the available height on every
+    # required secondary-device viewport, while the long item remains
+    # isolated to a readable later page.
+    viewport_evidence = []
+    expected_first_page_rows = {(393, 852): 3, (430, 852): 3, (700, 900): 3, (1024, 600): 2, (1500, 900): 3}
+    for width, height in expected_first_page_rows:
+        page.set_viewport_size({"width": width, "height": height})
+        page.goto("http://marquee.test/kiosk?view=calendar&mode=all", wait_until="domcontentloaded")
+        page.wait_for_selector('.kiosk-calendar-detail[data-calendar-layout="settled"]')
+        rows = page.locator(".kiosk-calendar-page .kiosk-agenda-row").count()
+        assert rows == expected_first_page_rows[(width, height)], (width, height, rows)
+        if (width, height) == (700, 900):
+            assert page.locator(".kiosk-calendar-count").inner_text() == "Page 1 of 2"
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight")
+        viewport_evidence.append((width, height, rows, page.locator(".kiosk-calendar-count").inner_text()))
+    # Feed shrink/grow must recalculate page count and canonicalize the active
+    # page instead of leaving an empty page or stale URL behind.
+    later_long[:] = later_long[:2]
+    page.evaluate("MarqueeNavigation.refresh()")
+    page.wait_for_function("document.querySelector('.kiosk-calendar-count')?.innerText === 'Page 1 of 1'")
+    assert page.locator(".kiosk-calendar-count").inner_text() == "Page 1 of 1"
+    assert page.evaluate("document.activeElement !== document.body")
+    assert "page=1" in page.url
+    later_long.extend(event(index, f"Replacement event {index}") for index in range(6, 12))
+    page.evaluate("MarqueeNavigation.refresh()")
+    page.wait_for_function("document.querySelector('.kiosk-calendar-count')?.innerText !== 'Page 1 of 1' && document.querySelector('.kiosk-calendar-detail[data-calendar-layout=settled]')")
+    assert "mode=all" in page.url and "page=1" in page.url
+    assert page.evaluate("document.activeElement?.id === 'calendar-agenda-title'")
+    page.goto("http://marquee.test/kiosk?view=calendar&mode=all&page=4", wait_until="domcontentloaded")
+    page.wait_for_selector('.kiosk-calendar-detail[data-calendar-layout="settled"]')
+    assert page.evaluate("document.activeElement?.id === 'calendar-agenda-title'")
+    page.set_viewport_size({"width": 393, "height": 852})
+    page.wait_for_function("document.querySelector('.kiosk-calendar-detail[data-calendar-layout=settled]')?.getAttribute('data-page-size')")
+    assert page.evaluate("document.activeElement?.id === 'calendar-agenda-title'")
+    later_long[:] = later_long[:2]
+    page.evaluate("MarqueeNavigation.refresh()")
+    page.wait_for_function("document.querySelector('.kiosk-calendar-count')?.innerText === 'Page 1 of 1'")
+    assert page.evaluate("document.activeElement?.id === 'calendar-agenda-title' && document.activeElement !== document.body")
+    later_long.extend(event(index, f"Regrown event {index}") for index in range(6, 12))
+    page.evaluate("MarqueeNavigation.refresh()")
+    page.wait_for_function("document.querySelector('.kiosk-calendar-count')?.innerText !== 'Page 1 of 1' && document.querySelector('.kiosk-calendar-detail[data-calendar-layout=settled]')")
+    assert page.evaluate("document.activeElement?.id === 'calendar-agenda-title' && document.activeElement !== document.body")
     assert not errors, errors
     page.goto("http://marquee.test/kiosk?view=calendar", wait_until="domcontentloaded")
     page.wait_for_selector('[data-calendar-disclosure]')
@@ -98,4 +140,4 @@ with sync_playwright() as playwright:
     assert not page.locator('[data-calendar-control="next"]').is_enabled()
     page.close()
     browser.close()
-    print(f"PASS: direct-loaded Back to summary disclosure focus immediate={direct_return_immediate}, +200ms={direct_return_after_200ms}; later-page long summary and irreducibly tall capacity-one entry remain reachable without duplicates or horizontal overflow")
+    print(f"PASS: viewports={viewport_evidence}; direct-loaded Back to summary disclosure focus immediate={direct_return_immediate}, +200ms={direct_return_after_200ms}; shrink/grow canonicalization, later-page long summary, and irreducibly tall capacity-one entry remain reachable without duplicates or horizontal overflow")

@@ -26,9 +26,12 @@ def test_fit_loop_terminates_at_one_row_even_when_content_is_tall() -> None:
     assert "calendarPageSize === 1" in MENU
 
 
-def test_settlement_measures_every_page_before_controls_are_enabled() -> None:
+def test_settlement_measures_largest_fitting_prefix_before_controls_are_enabled() -> None:
     assert "settleCalendarLayout" in MENU
-    assert "for (let pageNumber = 1; pageNumber <= pages; pageNumber += 1)" in MENU
+    assert "let end = Math.min(list.length, start + initial)" in MENU
+    assert "end -= 1" in MENU
+    assert "calendarFocusRestorePending = calendarFocusToken()" in MENU
+    assert "calendarPages = fitted" in MENU
     assert "calendarLayoutKey(list)" in MENU
     assert "data-calendar-overflow" in MENU
 

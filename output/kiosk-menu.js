@@ -53,12 +53,14 @@
   let sportsPage = Math.max(1, Number.parseInt(params.get('page') || '1', 10) || 1);
   let calendarDisclosure = null;
   let calendarPageSize = 4;
+  let calendarPages = [];
   let calendarPageSizeViewport = '';
   let calendarLayoutSettled = false;
   let calendarLayoutSettlementScheduled = false;
   let calendarLayoutGeneration = 0;
   let calendarFocusHeadingPending = Boolean(calendarMode);
   let calendarFocusDisclosurePending = false;
+  let calendarFocusRestorePending = '';
   let sportsFocusHeadingPending = Boolean(sportsMode);
   let sportsFocusDisclosurePending = false;
   let sportsFocusControlPending = '';
@@ -367,6 +369,7 @@
   function invalidateCalendarLayout() {
     calendarLayoutSettled = false;
     calendarLayoutSettlementScheduled = false;
+    calendarPages = [];
     calendarLayoutGeneration += 1;
   }
   function scheduleCalendarLayoutSettlement() {
@@ -380,7 +383,7 @@
       settleCalendarLayout();
     });
   }
-  const calendarPageCount = list => Math.max(1, Math.ceil(list.length / calendarPageSize));
+  const calendarPageCount = list => calendarPages.length || Math.max(1, Math.ceil(list.length / calendarPageSize));
   function calendarRow(c) {
     const birthday = c.subtype === 'birthday_rollup';
     const birthdayRows = birthday ? (c.rows || []).filter(Boolean) : [];
@@ -394,9 +397,10 @@
     const measuring = Boolean(options.measuring);
     const ready = settled || measuring;
     const pages = ready ? calendarPageCount(list) : 1;
-    if (settled) calendarPage = Math.min(calendarPage, pages);
-    const start = (calendarPage - 1) * calendarPageSize;
-    const entries = ready ? list.slice(start, start + calendarPageSize) : [];
+    if (settled) calendarPage = Math.max(1, Math.min(calendarPage, pages));
+    const entries = options.entries || (ready
+      ? (calendarPages.length ? (calendarPages[calendarPage - 1] || []) : list.slice((calendarPage - 1) * calendarPageSize, calendarPage * calendarPageSize))
+      : []);
     const grouped = entries.reduce((map, c) => { const key = agendaGroup(dateOf(c)); (map[key] ||= []).push(c); return map; }, {});
     const liveId = 'calendar-page-announcement';
     const content = Object.entries(grouped).map(([group, values]) => `<section><h3>${esc(group)}</h3>${values.map(calendarRow).join('')}</section>`).join('') || (ready ? '<p class="kiosk-empty">No events are available.</p>' : '<p class="kiosk-empty">Preparing the full agenda…</p>');
@@ -411,29 +415,48 @@
     return page.scrollHeight <= page.clientHeight + 1
       || (calendarPageSize === 1 && page.querySelectorAll('.kiosk-agenda-row').length === 1);
   }
-  function renderCalendarMeasurement(list, pageNumber) {
+  function calendarFocusToken() {
+    const active = document.activeElement;
+    if (!panel.contains(active)) return '';
+    if (active.dataset.calendarControl) return active.dataset.calendarControl;
+    if (active.dataset.calendarPage) return `page:${active.dataset.calendarPage}`;
+    if (active.hasAttribute('data-calendar-summary')) return 'summary';
+    if (active.dataset.view === '') return 'home';
+    if (active.id === 'calendar-agenda-title') return 'heading';
+    return '';
+  }
+  function renderCalendarMeasurement(entries, pageNumber) {
     calendarPage = pageNumber;
-    panel.innerHTML = `<header class="kiosk-section-head kiosk-section-head-detail"><p>CALENDAR</p><h1 id="kiosk-section-title">Calendar</h1></header>${calendarDetail(list, {measuring: true})}`;
+    panel.innerHTML = `<header class="kiosk-section-head kiosk-section-head-detail"><p>CALENDAR</p><h1 id="kiosk-section-title">Calendar</h1></header>${calendarDetail(entries, {measuring: true, entries})}`;
     return panel.querySelector('.kiosk-calendar-page');
   }
   function settleCalendarLayout() {
     const list = calendarEntries(ordered(items('calendar')));
     const key = calendarLayoutKey(list);
     const requestedPage = calendarPage;
+    calendarFocusRestorePending = calendarFocusToken();
     const initial = measuredAgendaPageSize();
-    let selected = 1;
-    for (let candidate = initial; candidate >= 1; candidate -= 1) {
-      calendarPageSize = candidate;
-      const pages = calendarPageCount(list);
-      let fits = true;
-      for (let pageNumber = 1; pageNumber <= pages; pageNumber += 1) {
-        const page = renderCalendarMeasurement(list, pageNumber);
-        if (!calendarPageFits(page)) { fits = false; break; }
+    // Keep ordinary events grouped at the viewport's natural capacity. For
+    // each page, try the largest remaining prefix first; a long event then
+    // cannot make an earlier fitting prefix sparse.
+    calendarPageSize = list.length === 1 ? 1 : initial;
+    const fitted = [];
+    for (let start = 0; start < list.length;) {
+      let end = Math.min(list.length, start + initial);
+      while (end > start) {
+        const entries = list.slice(start, end);
+        const page = renderCalendarMeasurement(entries, fitted.length + 1);
+        if (calendarPageFits(page) || entries.length === 1) {
+          fitted.push(entries);
+          start = end;
+          break;
+        }
+        end -= 1;
       }
-      if (fits) { selected = candidate; break; }
     }
-    calendarPageSize = selected;
-    calendarPage = requestedPage;
+    if (!fitted.length) fitted.push([]);
+    calendarPages = fitted;
+    calendarPage = Math.max(1, Math.min(requestedPage, calendarPages.length));
     calendarPageSizeViewport = key;
     calendarLayoutSettled = true;
     drawPanel();
@@ -553,9 +576,8 @@
     let html = detail
       ? `<header class="kiosk-section-head kiosk-section-head-detail"><p>CALENDAR</p><h1 id="kiosk-section-title">Calendar</h1></header>${calendarDetail(calendarEntries(ordered(list)))}`
       : `<header class="kiosk-section-head"><p>${esc(categoryFor(view).toUpperCase())}</p><h1 id="kiosk-section-title"${feature ? ` aria-label="${esc(headingName)}"` : ''}>${esc(label(view))}</h1></header>` + (message ? sharedState(message, 'Return to Home', lifecycle.state === 'error' || lifecycle.state === 'stale' || lifecycle.state === 'unavailable', lifecycle.state, view) : renderDestination(view, list));
-    const focusedCalendarControl = detail && panel.contains(document.activeElement)
-      ? document.activeElement.dataset.calendarControl || (document.activeElement.hasAttribute('data-calendar-summary') ? 'summary'
-        : document.activeElement.dataset.view === '' ? 'home' : document.activeElement.id === 'calendar-agenda-title' ? 'heading' : '')
+    const focusedCalendarControl = detail
+      ? calendarFocusRestorePending || calendarFocusToken()
       : '';
     const preserveCalendarDisclosureFocus = !detail && view === 'calendar'
       && panel.contains(document.activeElement)
@@ -594,6 +616,7 @@
       else if (focusedCalendarControl === 'next') panel.querySelector('[data-calendar-control="previous"]')?.focus({preventScroll: true});
       else if (focusedCalendarControl === 'previous') panel.querySelector('[data-calendar-control="next"]')?.focus({preventScroll: true});
     }
+    if (detail) calendarFocusRestorePending = '';
     if (!sportsDetail && sportsFocusDisclosurePending) {
       panel.querySelector('[data-sports-disclosure]')?.focus({preventScroll: true});
       sportsFocusDisclosurePending = false;

@@ -1,3 +1,11 @@
+## 2.10.92
+
+- Make full Calendar agenda pagination adapt to the settled viewport, keeping
+  ordinary events grouped on tall narrow displays while splitting only pages
+  made too tall by long or unbroken content.
+- Preserve truthful page URLs, controls, focus, safe-area layout, and
+  readable single-event overflow for irreducibly tall entries.
+
 ## 2.10.91
 
 - Give manually selected Now Playing a truthful, visible lifecycle surface

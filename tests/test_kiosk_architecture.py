@@ -151,6 +151,8 @@ def test_calendar_fit_and_disclosure_contracts_use_real_geometry_and_touch_targe
     assert "measuredAgendaPageSize" not in MENU[detail_start:detail_end]
     assert "settleCalendarLayout" in MENU
     assert "calendarPageFits(page)" in MENU
+    assert "calendarFocusToken" in MENU
+    assert "calendarFocusRestorePending" in MENU
     assert "calendarPageSize === 1" in MENU
     assert "page.dataset.calendarOverflow = 'scroll'" in MENU
     assert "history.replaceState({marqueeCalendarAgenda: true}, '', href('calendar', true, calendarPage))" in MENU
