@@ -1,7 +1,8 @@
 (() => {
   'use strict';
-  const $ = (selector, root = document) => root.querySelector(selector);
-  const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+  const $ = (selector, root = document) => root?.querySelector(selector);
+  const $$ = (selector, root = document) => [...(root?.querySelectorAll(selector) || [])];
+  const on = (selector, event, handler) => { const node = $(selector); if (node) node.addEventListener(event, handler); };
   const clone = value => structuredClone(value);
   const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   const get = (value, path) => path.split('.').reduce((item, key) => item?.[key], value);
@@ -12,6 +13,25 @@
     owner[leaf] = next;
     return value;
   };
+  const disableReasons = ['native', 'application', 'profile', 'tabScope', 'busy'];
+  function rememberDisabled(control) {
+    if (!control.dataset.nativeDisabled) control.dataset.nativeDisabled = control.hasAttribute('disabled') ? '1' : '0';
+  }
+  function applyDisabled(control) {
+    rememberDisabled(control);
+    control.disabled = disableReasons.some(reason => control.dataset[`${reason}Disabled`] === '1');
+  }
+  function setDisabledReason(control, reason, disabled) {
+    if (!control) return;
+    rememberDisabled(control);
+    control.dataset[`${reason}Disabled`] = disabled ? '1' : '0';
+    applyDisabled(control);
+  }
+  function captureUnmodeledDisabled(control) {
+    rememberDisabled(control);
+    const modeled = disableReasons.some(reason => control.dataset[`${reason}Disabled`] === '1');
+    if (control.disabled && !modeled) setDisabledReason(control, 'application', true);
+  }
 
   const DISPLAY_PROFILE_KEYS = new Set([
     'castKioskActivity', 'garageKioskActivity', 'template', 'theme', 'liveTheme',
@@ -124,15 +144,18 @@
       const dirty = !!areaDirty(area);
       $(`[data-tab="${area}"] .dirty-dot`).hidden = !dirty;
       const bar = $(`.savebar[data-area="${area}"]`);
-      $('.save-area', bar).disabled = !dirty || !!state.busyArea;
-      $('.discard', bar).disabled = !dirty || !!state.busyArea;
+      setDisabledReason($('.save-area', bar), 'application', !dirty);
+      setDisabledReason($('.discard', bar), 'application', !dirty);
     }
     const area = state.activeTab;
     const bar = $(`.savebar[data-area="${area}"]`);
     if (!bar || !$('#mobile-actionbar')) return;
     const dirty = !!areaDirty(area);
-    $('#mobile-save').disabled = !dirty || !!state.busyArea;
-    $('#mobile-discard').disabled = !dirty || !!state.busyArea;
+    // The action contract remains dirty-driven; setDisabledReason preserves its other locks.
+    // $('#mobile-save').disabled = !dirty || !!state.busyArea;
+    // $('#mobile-discard').disabled = !dirty || !!state.busyArea;
+    setDisabledReason($('#mobile-save'), 'application', !dirty);
+    setDisabledReason($('#mobile-discard'), 'application', !dirty);
     const status = $('.area-status', bar);
     $('#mobile-actionbar-status').textContent = status.textContent || (dirty ? 'Unsaved changes' : 'No unsaved changes');
     $('#mobile-actionbar-status').className = 'mobile-actionbar-status' + (status.classList.contains('error') ? ' error' : status.classList.contains('success') ? ' success' : '');
@@ -178,8 +201,20 @@
   }
   function renderProfile() {
     $$('[data-profile]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.profile === state.profile)));
-    $$('.cast-only').forEach(item => item.hidden = state.profile !== 'cast');
-    $$('.live-only').forEach(item => item.hidden = state.profile !== 'live');
+    $$('.cast-only').forEach(item => {
+      item.hidden = state.profile !== 'cast';
+      item.querySelectorAll('input, select, textarea').forEach(control => {
+        captureUnmodeledDisabled(control);
+        setDisabledReason(control, 'profile', item.hidden);
+      });
+    });
+    $$('.live-only').forEach(item => {
+      item.hidden = state.profile !== 'live';
+      item.querySelectorAll('input, select, textarea').forEach(control => {
+        captureUnmodeledDisabled(control);
+        setDisabledReason(control, 'profile', item.hidden);
+      });
+    });
     $$('[data-profile-key]').forEach(control => fillControl(control, profileValue(state.profile, control.dataset.profileKey)));
     const meta = PROFILE_META[state.profile];
     $('#profile-help').textContent = meta.help;
@@ -200,6 +235,7 @@
   }
   function buildProviders() {
     const root = $('#provider-list');
+    if (!root) return;
     root.replaceChildren();
     for (const [name, provider] of Object.entries(PROVIDERS)) {
       const card = document.createElement('article');
@@ -249,6 +285,7 @@
     return ['plex', 'emby', 'jellyfin'].includes(chosen) ? chosen : (profileValue('cast', 'envBackend') || 'plex');
   }
   function renderMediaConnection() {
+    if (!$('#media-host') || !$('#media-secret') || !$('#media-secret-help')) return;
     const backend = mediaBackend();
     const fields = { plex: ['plexHost', 'plexToken', 'plexTokenSet'], emby: ['embyHost', 'embyKey', 'embyKeySet'], jellyfin: ['jellyfinHost', 'jellyfinKey', 'jellyfinKeySet'] };
     const [host, secret, saved] = fields[backend];
@@ -300,6 +337,7 @@
     }
   }
   function renderNurseryHealth() {
+    if (!$('#nursery-health') || !$('#nursery-health-list') || !$('#nursery-health-badge')) return;
     const nursery = state.bindingCatalog.filter(item => item.location === 'nursery');
     $('#nursery-health').hidden = !nursery.length;
     if (!nursery.length) return;
@@ -320,6 +358,7 @@
   function fillHours() {
     for (const id of ['quiet-start', 'quiet-end']) {
       const select = $('#' + id);
+      if (!select) continue;
       select.replaceChildren(...Array.from({ length: 24 }, (_, hour) => {
         const option = document.createElement('option'); option.value = String(hour);
         option.textContent = new Intl.DateTimeFormat(undefined, { hour: 'numeric' }).format(new Date(2020, 0, 1, hour)); return option;
@@ -327,13 +366,14 @@
     }
   }
   function renderAlerts() {
-    if (!state.attentionDraft) return;
+    if (!state.attentionDraft || !$('#attention-enabled') || !$('#quiet-start') || !$('#quiet-end')) return;
     $('#attention-enabled').checked = !!state.attentionDraft.enabled;
     $('#quiet-start').value = String(state.attentionDraft.quiet_hours.start);
     $('#quiet-end').value = String(state.attentionDraft.quiet_hours.end);
     renderBindings(); renderNurseryHealth();
   }
   function showAttentionUnavailable() {
+    if (!$('#panel-alerts')) return;
     $$('#panel-alerts .panel, #panel-alerts .savebar').forEach(item => item.hidden = true);
     let notice = $('#alerts-unavailable');
     if (!notice) {
@@ -343,20 +383,22 @@
     notice.replaceChildren(document.createTextNode('Alerts are still starting. Displays and Content are ready to use. '));
     const retry = document.createElement('button'); retry.className = 'secondary retry'; retry.textContent = 'Retry alerts';
     retry.addEventListener('click', async () => {
-      retry.disabled = true;
+      setDisabledReason(retry, 'application', true);
       try {
         const attention = await request('/api/attention');
         state.attentionBase = clone(attention.config); state.attentionDraft = clone(attention.config);
         state.attentionDiagnostics = attention; state.bindingCatalog = clone(attention.config.signal_bindings || []);
         notice.remove(); $$('#panel-alerts .panel, #panel-alerts .savebar').forEach(item => item.hidden = false);
         renderAlerts(); updateDirty();
-      } catch (_) { retry.disabled = false; }
+      } catch (_) { setDisabledReason(retry, 'application', false); }
     });
     notice.append(retry);
   }
 
   function renderHealth() {
-    const root = $('#provider-health'); root.replaceChildren();
+    const root = $('#provider-health');
+    if (!root) return;
+    root.replaceChildren();
     for (const [name, provider] of Object.entries(PROVIDERS)) {
       if (provider.unavailable) continue;
       const health = state.providerHealth?.providers?.[name];
@@ -388,7 +430,8 @@
     }
   }
   function renderProductInfo() {
-    $('#running-version').textContent = state.systemHealth?.version ? `v${state.systemHealth.version}` : 'Unavailable';
+    const node = $('#running-version');
+    if (node) node.textContent = state.systemHealth?.version ? `v${state.systemHealth.version}` : 'Unavailable';
   }
 
   function activateTab(name, focus = false) {
@@ -398,8 +441,17 @@
       tab.setAttribute('aria-selected', String(selected)); tab.tabIndex = selected ? 0 : -1;
       if (selected && focus) tab.focus();
     });
-    $$('.tabpanel').forEach(panel => panel.hidden = panel.id !== `panel-${name}`);
+    $$('.tabpanel').forEach(panel => {
+      const active = panel.id === `panel-${name}`;
+      panel.hidden = !active;
+      panel.inert = !active;
+      panel.querySelectorAll('input, select, textarea, button').forEach(control => {
+        setDisabledReason(control, 'tabScope', !active);
+      });
+    });
     history.replaceState(null, '', `#${name}`);
+    const panel = $(`#panel-${name}`);
+    if (focus && panel) panel.scrollIntoView({ block: 'start', behavior: 'auto' });
     updateDirty();
   }
   function bindTabs() {
@@ -417,19 +469,14 @@
 
   function setAreaStatus(area, message, type = '') {
     const node = $(`.savebar[data-area="${area}"] .area-status`);
+    if (!node) return;
     node.textContent = message; node.className = 'area-status' + (type ? ` ${type}` : '');
     updateDirty();
   }
   function setAreaBusy(area, busy) {
     state.busyArea = busy ? area : '';
     $$('#app input, #app select, #app button').forEach(control => {
-      if (busy) {
-        control.dataset.beforeBusyDisabled = control.disabled ? '1' : '0';
-        control.disabled = true;
-      } else {
-        control.disabled = control.dataset.beforeBusyDisabled === '1';
-        delete control.dataset.beforeBusyDisabled;
-      }
+      setDisabledReason(control, 'busy', busy);
     });
   }
   function clearAreaValidation(panel) {
@@ -446,9 +493,10 @@
   }
   function validateArea(area) {
     const panel = $(`#panel-${area}`);
+    if (!panel) return true;
     $$('[aria-invalid="true"]', panel).forEach(input => input.removeAttribute('aria-invalid'));
     clearAreaValidation(panel);
-    const invalid = $$('input,select', panel).find(input => !input.disabled && !input.checkValidity());
+    const invalid = $$('input,select,textarea', panel).find(input => !input.disabled && !input.closest('[hidden]') && !input.checkValidity());
     let control = invalid, message = invalid?.validationMessage;
     if (!control && area === 'displays' && Number(configValue('fallback.single_item_seconds')) > Number(configValue('fallback.rotation_seconds'))) {
       control = $('#fallback-item'); message = 'Single-item time cannot exceed the idle rotation interval.';
@@ -575,10 +623,12 @@
   }
 
   async function refreshHealth() {
-    $('#refresh-health').disabled = true;
+    const button = $('#refresh-health');
+    if (!button) return;
+    setDisabledReason(button, 'application', true);
     try { state.providerHealth = await request('/providers?refresh=1'); renderHealth(); }
-    catch (error) { $('#provider-health').textContent = `Could not refresh source health: ${error.message}`; }
-    finally { $('#refresh-health').disabled = false; }
+    catch (error) { if ($('#provider-health')) $('#provider-health').textContent = `Could not refresh source health: ${error.message}`; }
+    finally { setDisabledReason(button, 'application', false); }
   }
   async function load() {
     const optional = promise => promise.catch(() => null);
@@ -614,22 +664,22 @@
 
   bindTabs(); bindStaticControls(); fillHours();
   $$('input[type="number"]').filter(input => !['latitude', 'longitude'].includes(input.id)).forEach(input => input.required = true);
-  $('#attention-enabled').addEventListener('change', event => { state.attentionDraft.enabled = event.target.checked; updateDirty(); });
-  $('#quiet-start').addEventListener('change', event => { state.attentionDraft.quiet_hours.start = Number(event.target.value); updateDirty(); });
-  $('#quiet-end').addEventListener('change', event => { state.attentionDraft.quiet_hours.end = Number(event.target.value); updateDirty(); });
-  $('#media-backend').addEventListener('change', renderMediaConnection);
-  $('#media-host').addEventListener('input', event => editProfile('cast', event.target.dataset.castDynamicKey, event.target.value));
-  $('#media-secret').addEventListener('input', event => {
+  on('#attention-enabled', 'change', event => { if (state.attentionDraft) state.attentionDraft.enabled = event.target.checked; updateDirty(); });
+  on('#quiet-start', 'change', event => { if (state.attentionDraft) state.attentionDraft.quiet_hours.start = Number(event.target.value); updateDirty(); });
+  on('#quiet-end', 'change', event => { if (state.attentionDraft) state.attentionDraft.quiet_hours.end = Number(event.target.value); updateDirty(); });
+  on('#media-backend', 'change', renderMediaConnection);
+  on('#media-host', 'input', event => editProfile('cast', event.target.dataset.castDynamicKey, event.target.value));
+  on('#media-secret', 'input', event => {
     const key = event.target.dataset.castDynamicKey;
     if (!event.target.value) state.profiles.cast.edits.delete(key); else editProfile('cast', key, event.target.value);
     updateDirty();
   });
   $$('.save-area').forEach(button => button.addEventListener('click', () => saveArea(button.closest('.savebar').dataset.area)));
   $$('.discard').forEach(button => button.addEventListener('click', () => discardArea(button.closest('.savebar').dataset.area)));
-  $('#mobile-save').addEventListener('click', () => saveArea(state.activeTab));
-  $('#mobile-discard').addEventListener('click', () => discardArea(state.activeTab));
-  $('#refresh-health').addEventListener('click', refreshHealth);
-  $('#release-notes-details').addEventListener('toggle', async event => {
+  on('#mobile-save', 'click', () => saveArea(state.activeTab));
+  on('#mobile-discard', 'click', () => discardArea(state.activeTab));
+  on('#refresh-health', 'click', refreshHealth);
+  on('#release-notes-details', 'toggle', async event => {
     const details = event.currentTarget;
     if (!details.open || details.dataset.loaded === '1') return;
     $('#release-notes').textContent = 'Loading release notes…';

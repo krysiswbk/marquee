@@ -6,6 +6,7 @@ from pathlib import Path
 from cast.marquee.attention.schema import FORM_SCHEMA
 
 ROOT = Path(__file__).parents[1]
+VERSION = (ROOT / "VERSION").read_text().strip()
 SURFACES = {
     "/settings": ROOT / "cast/settings-control.html",
     "/settings/layout?profile=cast": ROOT / "cast/cast-layout.html",
@@ -24,12 +25,12 @@ def test_every_in_scope_surface_loads_the_shared_contract() -> None:
     assert "min-height:44px" in contract
     for route, path in SURFACES.items():
         source = path.read_text()
-        assert "/control-touch-contract.css?v=2.10.92" in source, route
+        assert f"/control-touch-contract.css?v={VERSION}" in source, route
         assert "min-height:44px" in contract
 
 
 def test_every_numeric_surface_loads_one_helper_before_its_consumers() -> None:
-    helper = "/numeric-controls.js?v=2.10.92"
+    helper = f"/numeric-controls.js?v={VERSION}"
     for route, path in SURFACES.items():
         source = path.read_text()
         assert source.count(helper) == 1, route

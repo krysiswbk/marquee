@@ -1,3 +1,10 @@
+## 2.10.93
+
+- Scope administrative settings controls to the active tab and appearance
+  profile so hidden fields cannot participate in validation or interaction.
+- Keep tab changes keyboard-safe with predictable panel scrolling, and make
+  optional diagnostics, alert, and provider panels tolerate missing elements.
+
 ## 2.10.92
 
 - Make full Calendar agenda pagination adapt to the settled viewport, keeping
