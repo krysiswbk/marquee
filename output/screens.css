@@ -59,7 +59,7 @@ body.cast-display[data-template=fanart] .clock{font-size:3.5vw;text-shadow:0 2px
 .weather-card[data-alert=true] .channel-current,.weather-card[data-alert=true] .channel-hours{top:30%;height:35%;overflow:hidden}.weather-card[data-alert=true] .channel-current .channel-location,.weather-card[data-alert=true] .channel-outlook{display:none}.weather-card[data-alert=true] .channel-now{height:12vh;margin-top:0}.weather-card[data-alert=true] .channel-temp{font-size:8vw}.weather-card[data-alert=true] .channel-icon{height:12vh;width:8vw}.weather-card[data-alert=true] .weather-radar{top:30%;height:30%}.weather-card[data-alert=true] .weather-copy{display:none!important}
 
 /* Live and kiosk controls have their own rail, outside scene and house feed. */
-body.browser-controls{--control-rail:calc(62px + env(safe-area-inset-bottom,0px))}
+body.browser-controls{--control-rail:calc(62px + env(safe-area-inset-bottom,0px));--kiosk-lower-safe-area:calc(8vh + var(--control-rail))}
 body.browser-controls .idle-weather-primary,body.browser-controls .idle-weather-secondary{display:flex;flex-wrap:wrap;align-items:baseline;gap:.35em .7em}
 body.browser-controls .idle-weather-primary>.weather-fact-separator,body.browser-controls .idle-weather-secondary>.weather-fact-separator{border-inline-start:.12em solid var(--accent);padding-inline-start:.7em}
 body.browser-controls .screen-controls{inset:auto 0 0;transform:none;max-width:none;height:var(--control-rail);padding:6px 88px calc(6px + env(safe-area-inset-bottom,0px)) 12px;border-radius:0;border-width:1px 0 0;justify-content:center;opacity:1;z-index:10001;background:#10141d}
@@ -203,6 +203,7 @@ body.browser-controls{overflow-x:hidden}.kiosk-section.now-playing-surface{displ
 .kiosk-support{align-self:stretch;display:flex;flex-direction:column;justify-content:center}
 .kiosk-rail{isolation:isolate;pointer-events:auto;touch-action:manipulation}
 body.kiosk-now-playing .stage,body.kiosk-playback-active .stage{grid-template-columns:minmax(0,1fr) minmax(180px,22vw)!important;grid-template-rows:auto auto auto minmax(0,1fr) auto;grid-template-areas:"category poster" "identity poster" "meta poster" "plot poster" "progress poster";align-content:center;column-gap:clamp(28px,4vw,72px);padding:5vh 6vw 9vh;}
+@media(min-width:481px){body.kiosk-now-playing .stage,body.kiosk-playback-active .stage{bottom:var(--kiosk-lower-safe-area)!important;}}
 body.kiosk-now-playing .b-streetframe,body.kiosk-now-playing .b-nowplaying,body.kiosk-playback-active .b-streetframe,body.kiosk-playback-active .b-nowplaying{display:none!important;}
 body.kiosk-now-playing .b-poster,body.kiosk-playback-active .b-poster{width:min(22vw,330px);height:auto;max-height:min(56vh,495px);aspect-ratio:2/3;align-self:center;justify-self:center;}
 body.kiosk-now-playing .poster,body.kiosk-playback-active .poster{border-radius:14px;box-shadow:0 1.5vh 4vh #0009;}
@@ -254,6 +255,7 @@ body.kiosk-now-playing .b-device *,body.kiosk-playback-active .b-device *{max-wi
  body.kiosk-now-playing .title,body.kiosk-playback-active .title{font-size:clamp(30px,9vw,48px);overflow-wrap:anywhere;}
  body.kiosk-now-playing .meta,body.kiosk-playback-active .meta{overflow-wrap:anywhere;}
 }
+@media(min-width:481px){body.kiosk-now-playing .kiosk-section.now-playing-surface{bottom:var(--kiosk-lower-safe-area);}}
 .kiosk-queue-label{margin:0;color:#b6f378;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
 .kiosk-queue-row strong,.kiosk-queue-row span{overflow-wrap:anywhere}
 @media(max-width:480px){.kiosk-menu{padding:16px}.kiosk-menu nav{grid-template-columns:1fr}.kiosk-items button{padding:20px}}

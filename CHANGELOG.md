@@ -1,3 +1,7 @@
+## 2.11.3
+
+- Reserve the shared household feed and kiosk navigation safe area above active playback progress on Home and Now Playing surfaces across non-phone kiosk sizes.
+
 ## 2.11.2
 
 - Clean invalid leading `0000 -` tokens from Plex episode titles without
