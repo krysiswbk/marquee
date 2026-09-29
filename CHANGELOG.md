@@ -1,4 +1,15 @@
-## 2.10.95
+## 2.10.96
+
+### Kiosk playback and navigation
+
+- Show Home Assistant's authoritative apparent temperature as a truthful
+  feels-like value in kiosk weather context.
+- Make destination activation stable across rail redraws, pointer input, idle
+  transitions, and browser history changes.
+- Give kiosk now-playing title, episode/context, progress, navigation, and
+  useful device context priority; remove stream technicals and ratings from
+  that composition and constrain poster art to supporting imagery.
+
 
 - Keep active and grace-period paused Plex playback authoritative on the
   now-playing endpoint while retaining ambient arbitration when media is idle.

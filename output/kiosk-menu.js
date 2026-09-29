@@ -78,6 +78,7 @@
   const items = key => (key === 'nhl' ? browseContexts : contexts).filter(c => (c.provider || c.source) === key && fresh(c));
   document.body.classList.add('browser-controls');
   const rail = document.createElement('div'); rail.className = 'screen-controls kiosk-rail';
+  rail.setAttribute('data-kiosk-navigation', 'true');
   rail.innerHTML = '<span class="kiosk-brand" role="status" aria-live="polite">Marquee</span><nav class="kiosk-primary" aria-label="Marquee destinations"></nav><button class="kiosk-more" type="button" aria-haspopup="dialog" aria-expanded="false"><span class="kiosk-icon" aria-hidden="true">' + moreIcon + '</span><span class="kiosk-label">More</span></button>';
   document.body.append(rail);
   const primary = rail.querySelector('.kiosk-primary'), more = rail.querySelector('.kiosk-more'), status = rail.querySelector('[role=status]');
@@ -529,6 +530,7 @@
     // media stage; every non-playing/manual lifecycle belongs to this panel.
     // Never let the stage and panel hide each other during the hand-off.
     const plexActive = view === 'plex' && nowPlaying?.playing === true;
+    document.body.classList.toggle('kiosk-now-playing', plexActive);
     panel.classList.toggle('now-playing-surface', view === 'plex');
     const active = Boolean(view) && !interrupted && view !== 'household';
     const surface = active && view === 'weather' && selected ? 'weather'
@@ -556,10 +558,10 @@
           ? 'The last media response has expired. No previous title or artwork is retained here.'
           : state === 'stopped' ? 'Playback has stopped. Start something in the media room to see it here.'
           : 'There is no active session in the media room.';
-      const weather = ['idle-weather-temp', 'idle-weather-condition', 'idle-weather-range']
+      const weather = ['idle-weather-temp', 'idle-weather-condition', 'idle-weather-feels', 'idle-weather-range']
         .map(id => document.querySelector(`#${id}`)?.textContent?.trim() || '')
         .filter(Boolean);
-      const weatherLabels = ['Temperature', 'Conditions', 'High and low'];
+      const weatherLabels = ['Temperature', 'Conditions', 'Feels like', 'High and low'];
       const weatherMarkup = weather.length
         ? `<div class="kiosk-weather-context" aria-label="Current weather">${weather.map((fact, index) => `${index ? '<span class="kiosk-weather-separator" aria-hidden="true">·</span>' : ''}<span class="kiosk-weather-fact" aria-label="${esc(`${weatherLabels[index]}: ${fact}`)}">${esc(fact)}</span>`).join('')}</div>`
         : '<div class="kiosk-weather-context" aria-label="Current weather">Home display ready</div>';
@@ -694,7 +696,25 @@
   menu.addEventListener('cancel', () => { more.setAttribute('aria-expanded', 'false'); });
   menu.querySelector('header button').onclick = () => closeMenu();
   function handleLink(e) { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); } }
-  primary.addEventListener('click', handleLink); overflow.addEventListener('click', handleLink);
+  let lastPointerNavigation = {anchor: null, at: 0};
+  function navigateFromAnchor(anchor, eventType) {
+    if (!anchor || anchor.matches('[aria-disabled="true"]')) return false;
+    const now = performance.now();
+    if (eventType === 'click' && lastPointerNavigation.anchor === anchor && now - lastPointerNavigation.at < 500) return true;
+    if (eventType === 'pointerup') lastPointerNavigation = {anchor, at: now};
+    change(anchor.dataset.view);
+    return true;
+  }
+  // Links are replaced during refreshes; delegate from the stable rail and
+  // handle pointer activation before a transient overlay can consume it.
+  rail.addEventListener('pointerup', e => {
+    const anchor = e.target.closest?.('a[data-view]');
+    if (anchor && rail.contains(anchor)) { e.preventDefault(); navigateFromAnchor(anchor, 'pointerup'); }
+  }, true);
+  rail.addEventListener('click', e => {
+    const anchor = e.target.closest?.('a[data-view]');
+    if (anchor && rail.contains(anchor)) { e.preventDefault(); navigateFromAnchor(anchor, 'click'); }
+  }, true);
   menu.addEventListener('click', e => { if (e.target === menu) { const r = menu.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closeMenu(); } });
   panel.addEventListener('click', e => { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); return; } if (e.target.closest('[data-calendar-disclosure]')) { openCalendarAgenda(); return; } if (e.target.closest('[data-calendar-summary]')) { closeCalendarAgenda(); return; } if (e.target.closest('[data-sports-disclosure]')) { openSportsSchedule(); return; } if (e.target.closest('[data-sports-summary]')) { closeSportsSchedule(); return; } const sportsControl = e.target.closest('[data-sports-control]'); if (sportsControl && !sportsControl.disabled) { sportsFocusControlPending = sportsControl.dataset.sportsControl; setSportsPage(sportsPage + (sportsControl.dataset.sportsControl === 'next' ? 1 : -1)); return; } const page = e.target.closest('[data-calendar-page]'); if (page && !page.disabled) { setCalendarPage(Number(page.dataset.calendarPage)); return; } const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); return; } const b = e.target.closest('button[data-item]'); if (b) { selected = b.dataset.item; drawPanel(); primary.querySelector(`[data-view="${CSS.escape(view)}"]`)?.focus(); window.dispatchEvent(new Event('marquee-navigation')); } });
   stage?.addEventListener('click', e => { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); return; } const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); } });

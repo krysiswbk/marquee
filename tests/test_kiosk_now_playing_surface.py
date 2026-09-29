@@ -37,7 +37,7 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
 
     def test_idle_composition_is_concise_and_weather_is_grouped(self):
         self.assertIn("const unavailableMark = unavailable || stale ?", MENU)
-        self.assertIn("const weatherLabels = ['Temperature', 'Conditions', 'High and low']", MENU)
+        self.assertIn("const weatherLabels = ['Temperature', 'Conditions', 'Feels like', 'High and low']", MENU)
         self.assertIn('class="kiosk-weather-separator" aria-hidden="true"', MENU)
         self.assertIn('class="kiosk-weather-fact" aria-label=', MENU)
         self.assertNotIn("Nothing needs your attention right now", MENU)
@@ -45,6 +45,17 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn("display:inline-block;width:fit-content;max-width:100%", SCREENS)
         self.assertIn(".now-playing-surface .kiosk-now-playing-head h1:focus-visible", SCREENS)
         self.assertIn("outline-offset:7px", SCREENS)
+        self.assertIn("idle-weather-feels", MENU)
+        self.assertIn("Feels like", MENU)
+
+    def test_kiosk_playback_removes_technical_primary_metadata_and_bounds_art(self):
+        self.assertIn("const kioskPlayback = LIVE_SURFACE && ATTENTION_DISPLAY === 'kiosk';", INDEX)
+        self.assertIn("!kioskPlayback && c.showMediaInfo !== false", INDEX)
+        self.assertIn("!kioskPlayback && shown.has('ratings')", INDEX)
+        self.assertIn("!kioskPlayback && shown.has('stream')", INDEX)
+        self.assertIn("body.kiosk-now-playing .stage", SCREENS)
+        self.assertIn("grid-template-areas:\"category poster\"", SCREENS)
+        self.assertIn("body.kiosk-now-playing .b-poster", SCREENS)
 
     def test_navigation_and_touch_contract(self):
         self.assertIn('class="kiosk-home-action"', MENU)

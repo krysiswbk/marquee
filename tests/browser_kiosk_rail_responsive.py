@@ -109,6 +109,22 @@ with sync_playwright() as playwright:
                 "el => getComputedStyle(el).stroke === 'currentColor' || getComputedStyle(el).stroke !== 'none'"
             )
 
+            # Exercise real rendered pointer activation repeatedly after the
+            # destination refreshes its panel and rail state. The delegated
+            # rail handler must survive each redraw without double navigation.
+            for target in ("weather", "calendar", "plex", destination):
+                link = page.locator(f'.kiosk-primary [data-view="{target}"]')
+                if not link.is_visible():
+                    page.locator(".kiosk-more").click()
+                    page.locator(f'.kiosk-menu [data-view="{target}"]').click()
+                else:
+                    link.click()
+                page.wait_for_function(
+                    "target => new URL(location.href).searchParams.get('view') === target",
+                    target or None,
+                )
+                page.wait_for_selector(f'[aria-current="page"][data-view="{target}"]')
+
             if width <= 430:
                 assert page.locator(".kiosk-more").evaluate(
                     "el => !el.hidden && el.getBoundingClientRect().width >= 44")

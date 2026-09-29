@@ -700,9 +700,9 @@
   body.live-editing [data-layout] { outline:none; }
   body.live-editing .screen-controls, body.live-editing nav { display:none !important; }
 </style>
-<link rel="stylesheet" href="/brain.css?v=2.10.95">
-<link rel="stylesheet" href="/screens.css?v=2.10.95">
-<link rel="stylesheet" href="/weather-channel.css?v=2.10.95">
+<link rel="stylesheet" href="/brain.css?v=2.10.96">
+<link rel="stylesheet" href="/screens.css?v=2.10.96">
+<link rel="stylesheet" href="/weather-channel.css?v=2.10.96">
 <link rel="stylesheet" href="/scene-themes.css?v=2.9.7">
 <body data-template="spotlight">
 <img class="bg" id="bg" alt="">
@@ -803,11 +803,11 @@
 <time class="cast-clock-overlay" id="cast-clock-overlay"></time>
 <div class="idle-screen"><div class="idle-house"><div class="idle-kicker" id="idle-kicker">Home</div><div class="idle-greeting" id="idle-greeting"></div><div class="idle-state" id="idle-state" hidden></div><div class="idle-note" id="idle-note" hidden></div><time class="idle-clock" id="idle-clock"></time><div class="idle-date" id="idle-date"></div><div class="idle-weather" id="idle-weather" aria-label="Current weather"><div class="idle-weather-primary"><strong id="idle-weather-temp"></strong><span id="idle-weather-condition"></span></div><div class="idle-weather-secondary"><span id="idle-weather-feels"></span><span id="idle-weather-range"></span><span id="idle-weather-rain"></span></div><div class="idle-weather-status" id="idle-weather-status"></div></div></div></div>
 <div class="ambient-veil" aria-hidden="true"></div>
-<script src="/state-contract.js?v=2.10.95"></script>
-<script src="/weather-channel.js?v=2.10.95"></script>
-<script src="/weather-summary.js?v=2.10.95"></script>
-<script src="/now-playing-progress.js?v=2.10.95"></script>
-<script src="/brain.js?v=2.10.95"></script>
+<script src="/state-contract.js?v=2.10.96"></script>
+<script src="/weather-channel.js?v=2.10.96"></script>
+<script src="/weather-summary.js?v=2.10.96"></script>
+<script src="/now-playing-progress.js?v=2.10.96"></script>
+<script src="/brain.js?v=2.10.96"></script>
 <script>
 
   const $ = id => document.getElementById(id);
@@ -1610,11 +1610,12 @@ ${chase.join('')}
     }
     $('bg').classList.toggle('on', useBg);
 
+    const kioskPlayback = LIVE_SURFACE && ATTENTION_DISPLAY === 'kiosk';
     const meta = [ d.year,
       c.showRuntime !== false ? d.runtime : null,
-      c.showMediaInfo !== false ? d.media : null ].filter(Boolean).join('   ·   ');
+      (!kioskPlayback && c.showMediaInfo !== false) ? d.media : null ].filter(Boolean).join('   ·   ');
     const metaHtml = (meta ? `<span>${esc(meta)}</span>` : '') +
-      (c.showContentRating !== false ? ratingBadge(d.contentRating) : '');
+      (kioskPlayback ? '' : (c.showContentRating !== false ? ratingBadge(d.contentRating) : ''));
     $('meta').innerHTML = metaHtml;
     const st = d.stinger
       ? (d.stinger.includes('after') ? 'After-credits scene' : 'During-credits scene')
@@ -1695,14 +1696,14 @@ ${chase.join('')}
     show('identity', shown.has('identity'));
     show('meta', shown.has('meta') && metaHtml !== '');
     show('plot', shown.has('plot') && c.showPlot !== false && !!d.summary);
-    show('ratings', shown.has('ratings') && parts.length > 0);
+    show('ratings', !kioskPlayback && shown.has('ratings') && parts.length > 0);
     show('progress', shown.has('progress') && !!d.progress && c.showProgress !== false);
     show('poster', shown.has('poster') && !!d.poster);
     show('streetframe', tpl === 'street' && shown.has('streetframe'));
     show('nowplaying', tpl === 'street' && shown.has('nowplaying'));
     show('viewer', shown.has('viewer') && !!viewer);
     show('device', shown.has('device') && !!(deviceName || clientName));
-    show('stream', shown.has('stream') && !!(decision || quality.length
+    show('stream', !kioskPlayback && shown.has('stream') && !!(decision || quality.length
       || streamDetails.length));
     show('activity', shown.has('activity') && activeStreams > 0);
     show('tracks', shown.has('tracks') && !!(audioText || subtitleText));
@@ -2280,7 +2281,9 @@ ${chase.join('')}
       box.append(main);
       if (lastWx.humidity != null || lastWx.wind != null) {
         const detail = document.createElement('div'); detail.className = 'wx-detail';
-        detail.textContent = `${lastWx.humidity != null ? `Humidity ${lastWx.humidity}%` : ''}`
+        detail.textContent = `${Number.isFinite(lastWx.apparent_temperature) ? `Feels like ${Math.round(lastWx.apparent_temperature)}°C` : ''}`
+          + `${Number.isFinite(lastWx.apparent_temperature) && lastWx.humidity != null ? ' · ' : ''}`
+          + `${lastWx.humidity != null ? `Humidity ${lastWx.humidity}%` : ''}`
           + `${lastWx.humidity != null && lastWx.wind != null ? ' · ' : ''}`
           + `${lastWx.wind != null ? `Wind ${lastWx.wind} ${lastWx.windUnit || 'km/h'}` : ''}`;
         box.append(detail);
@@ -2296,7 +2299,7 @@ ${chase.join('')}
       $('idle-weather-temp').textContent = `${Math.round(lastWx.temp)}°C`;
       $('idle-weather-condition').textContent = readableCondition(lastWx.condition, lastWx.code);
       $('idle-weather-feels').textContent = Number.isFinite(lastWx.apparent_temperature)
-        ? `Feels ${Math.round(lastWx.apparent_temperature)}°` : '';
+        ? `Feels ${Math.round(lastWx.apparent_temperature)}°` : 'Feels —';
       $('idle-weather-range').textContent = [
         Number.isFinite(today.temperature) ? `High ${Math.round(today.temperature)}°` : '',
         Number.isFinite(today.templow) ? `Low ${Math.round(today.templow)}°` : '',
@@ -2755,4 +2758,4 @@ ${chase.join('')}
   setInterval(paint, 1000);
 </script>
 
-<script src="/kiosk-menu.js?v=2.10.95"></script>
+<script src="/kiosk-menu.js?v=2.10.96"></script>
