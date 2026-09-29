@@ -87,3 +87,14 @@ def test_active_attention_uses_human_facing_labels_without_scores() -> None:
     assert "Action needed" in SCRIPT
     assert "item.score" not in SCRIPT
     assert "CONTEXTUAL · -5" not in SCRIPT
+
+
+def test_suppressed_attention_is_stateful_and_has_no_invalid_actions() -> None:
+    for token in (
+        "const suppressed = item.lifecycle === 'SUPPRESSED' || Boolean(item.suppression)",
+        "const stateLabel = suppressed ? 'Suppressed'",
+        "item.available_at",
+        "No action available while suppressed",
+        "if (!suppressed) ['acknowledge', 'suppress']",
+    ):
+        assert token in SCRIPT

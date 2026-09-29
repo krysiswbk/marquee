@@ -14,6 +14,12 @@ def test_forced_destinations_have_purposeful_category_renderers():
     assert "renderDestination(view, list)" in MENU
 
 
+def test_direct_load_mounts_known_navigation_topology_before_configuration():
+    assert "let sections = Object.keys(destinations)" in MENU
+    assert "const all = allDestinations()" in MENU
+    assert "requestState === 'loading'" in MENU
+
+
 def test_rail_uses_unique_product_owned_current_color_marks():
     for token in ("const homeIcon = '<svg", "const moreIcon = '<svg", "currentColor",
                   "aria-hidden=\"true\"", "plex: ['Now playing'", "nhl: ['NHL'",

@@ -1,3 +1,11 @@
+## 2.12.5
+
+- Make suppressed attention state and available time truthful, with no invalid
+  actions while cooldown or explicit suppression is active.
+- Mount the known kiosk destination rail during direct-load fetches to keep
+  navigation exits stable, and give Weather heading focus the shared kiosk
+  treatment.
+
 ## 2.12.4
 
 - Scope explicit Now Playing to the Plex lifecycle so ambient sports cannot

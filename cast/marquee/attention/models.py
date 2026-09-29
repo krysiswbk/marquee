@@ -67,6 +67,7 @@ class AttentionItem:
     score: float = 0
     components: list[dict[str, Any]] = field(default_factory=list)
     suppression: str = ""
+    available_at: float | None = None
     members: list[str] = field(default_factory=list)
 
     def snapshot(self) -> dict[str, Any]:

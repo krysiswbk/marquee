@@ -26,7 +26,10 @@
   const destinationPriority = { plex:100, weather:95, nhl:85, ufc:75, pfl:65,
     calendar:55, tv:50, astronomy:45, gaming:40, music:35, movies:30,
     trailers:25, major_events:20 };
-  let sections = [], contexts = [], browseContexts = [], health = {}, selected = '', offline = false;
+  // Mount the known product topology before remote configuration resolves.
+  // Provider configuration may later remove destinations, but a cold direct
+  // load must never collapse the rail to Home while that decision is pending.
+  let sections = Object.keys(destinations), contexts = [], browseContexts = [], health = {}, selected = '', offline = false;
   // These are independent authoritative resources. A failed refresh retains
   // the last committed snapshot and reports degradation for that resource;
   // it never invalidates a sibling resource.

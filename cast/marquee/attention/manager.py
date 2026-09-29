@@ -135,16 +135,21 @@ class AttentionManager:
                     control.update(shown_at=None, cooldown_until=now + item.cooldown)
                     self.history.save_control(key, now + max(item.cooldown, 1), control)
                 suppression = ""
+                available_at = None
                 if not critical:
                     if now - signal.active_since < rule["debounce"]:
                         suppression = "activation debounce"
+                        available_at = signal.active_since + rule["debounce"]
                     elif control.get("cooldown_until", 0) > now:
                         suppression = "cooldown"
+                        available_at = control["cooldown_until"]
                     elif control.get("suppressed_until", 0) > now:
                         suppression = "explicit suppression"
+                        available_at = control["suppressed_until"]
                     elif acknowledged and rule["acknowledgement"] == "suppress":
                         suppression = "acknowledged"
                 item.suppression = suppression
+                item.available_at = available_at
                 env["item"] = {
                     "acknowledged": acknowledged,
                     "recently_displayed": control.get("last_shown", -1e30) + item.cooldown > now,

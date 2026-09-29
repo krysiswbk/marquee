@@ -466,6 +466,18 @@ def test_explicit_suppression_resolves_and_does_not_apply_to_new_episode():
     assert h.step()
 
 
+def test_suppressed_attention_snapshot_exposes_authoritative_state_and_release_time():
+    h = House([immediate("door", cooldown=0)])
+    h.state()
+    item = h.step()
+    h.manager.action(item["id"], "suppress", h.now, 300)
+    h.step()
+    snapshot = next(value for value in h.manager.snapshot(h.now)["items"] if value["id"] == item["id"])
+    assert snapshot["lifecycle"] == "SUPPRESSED"
+    assert snapshot["suppression"] == "explicit suppression"
+    assert snapshot["available_at"] == h.now + 300
+
+
 def test_unavailable_sensor_health_is_aggregated_and_throttled(tmp_path):
     now = [NOW]
     service = AttentionService(
