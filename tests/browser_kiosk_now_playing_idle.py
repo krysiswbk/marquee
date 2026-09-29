@@ -116,6 +116,27 @@ with sync_playwright() as playwright:
         assert active_payload["progress"] == {"offsetMs": 1200, "durationMs": 6000}
         active_page.wait_for_function("document.querySelector('#title')?.textContent === '2024 Recap'")
         assert active_page.locator("#title").inner_text() == "2024 Recap"
+        phone_layout = active_page.evaluate("""() => {
+            const rect = selector => document.querySelector(selector)?.getBoundingClientRect();
+            const identity = rect('.b-identity');
+            const header = [rect('#clock'), rect('#wx')].filter(Boolean)
+                .filter(box => box.width > 0 && box.height > 0)
+                .reduce((bottom, box) => Math.max(bottom, box.bottom), 0);
+            return {
+                identityTop: identity?.top || 0,
+                headerBottom: header,
+                poster: rect('.b-poster')?.height || 0,
+                progress: rect('.b-progress')?.height || 0,
+                device: rect('.b-device')?.height || 0,
+                overflow: document.documentElement.scrollWidth > window.innerWidth + 1,
+            };
+        }""")
+        if width <= 480:
+            assert phone_layout["identityTop"] >= phone_layout["headerBottom"] + 12
+            assert phone_layout["poster"] > 0
+            assert phone_layout["progress"] > 0
+            assert phone_layout["device"] > 0
+            assert not phone_layout["overflow"]
         progress_scale = active_page.locator("#fill").evaluate(
             "el => Number((el.style.transform.match(/scaleX\\(([^)]+)\\)/) || [])[1])")
         # The playing renderer advances from the 20% fixture offset while the

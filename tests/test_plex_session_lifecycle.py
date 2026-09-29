@@ -76,7 +76,7 @@ class PlexSessionLifecycleTests(unittest.TestCase):
 
     def test_invalid_plex_year_is_omitted_but_valid_year_is_preserved(self):
         item = video("playing")
-        item.set("title", "The Most THRILLING Moments From March Monster Jam")
+        item.set("title", "0000 - The Most THRILLING Moments From March Monster Jam")
         for invalid in (None, "0", "0000", "nan", "inf"):
             if invalid is None:
                 item.attrib.pop("year", None)
@@ -90,6 +90,20 @@ class PlexSessionLifecycleTests(unittest.TestCase):
                 result["subtitle"],
                 "S2 · E3 · The Most THRILLING Moments From March Monster Jam",
             )
+        item.set("title", "Episode 2: 0000 - The Most THRILLING Moments")
+        result = media.parse_session(item, extras=lambda *_: {
+            "genres": [], "imdb": None, "stinger": [], "poster": False,
+            "backdrop": False, "logo": False})
+        self.assertEqual(
+            result["subtitle"],
+            "S2 · E3 · Episode 2: 0000 - The Most THRILLING Moments",
+        )
+        item.set("title", "2024 - A Legitimate Leading Year")
+        result = media.parse_session(item, extras=lambda *_: {
+            "genres": [], "imdb": None, "stinger": [], "poster": False,
+            "backdrop": False, "logo": False})
+        self.assertEqual(result["subtitle"], "S2 · E3 · 2024 - A Legitimate Leading Year")
+        item.set("title", "The Most THRILLING Moments From March Monster Jam")
         item.set("year", "2024")
         result = media.parse_session(item, extras=lambda *_: {
             "genres": [], "imdb": None, "stinger": [], "poster": False,

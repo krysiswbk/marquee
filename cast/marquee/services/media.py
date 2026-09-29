@@ -870,7 +870,10 @@ def parse_session(video, extras=library_extras, position=None):
     info["session"], info["stream"], info["tracks"] = \
         plex_session_payload(video, position)
     if is_episode and a("parentIndex") and a("index"):
-        episode_title = a("title") or ""
+        # Some Plex libraries fold an invalid four-zero year into the title
+        # itself instead of exposing it through the year attribute.  Strip
+        # only that leading placeholder; numbers elsewhere remain title data.
+        episode_title = re.sub(r"^\s*0000\s*-\s*", "", a("title") or "")
         episode_label = " - ".join(part for part in (year, episode_title) if part)
         info["subtitle"] = " · ".join(
             part for part in (f"S{a('parentIndex')}", f"E{a('index')}",

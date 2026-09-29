@@ -127,6 +127,8 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
     def test_narrow_orbit_cannot_create_a_horizontal_scroller(self):
         self.assertIn("body.browser-controls{overflow-x:hidden}", SCREENS)
         self.assertIn("overflow-x:hidden;overflow-y:auto", SCREENS)
+        self.assertIn("padding:clamp(88px,12vh,108px) 20px 88px", SCREENS)
+        self.assertIn("body.kiosk-playback-active .stage{display:flex!important", SCREENS)
         # The responsive orbit is a background layer, so it remains ambient
         # without becoming scrollable content at any narrow width.
         self.assertIn("background-size:72vw 72vw,auto,auto,auto", SCREENS)

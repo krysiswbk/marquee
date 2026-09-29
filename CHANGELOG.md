@@ -1,3 +1,10 @@
+## 2.11.2
+
+- Clean invalid leading `0000 -` tokens from Plex episode titles without
+  changing legitimate years or numbers elsewhere in the title.
+- Separate active phone playback content from the clock/weather header while
+  preserving the shared Home and Now Playing composition.
+
 ## 2.11.1
 
 - Omit invalid Plex years from rendered episode subtitles while preserving
