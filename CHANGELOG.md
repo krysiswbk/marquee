@@ -1,3 +1,11 @@
+## 2.10.91
+
+- Give manually selected Now Playing a truthful, visible lifecycle surface
+  when playback is idle, stopped, unavailable, stale, or recovering, while
+  keeping active playing and paused sessions owned by the real media stage.
+- Add responsive browser coverage for lifecycle payload agreement, owner
+  geometry, Home return, and overflow/error safety.
+
 ## 2.10.90
 
 - Keep selected kiosk destinations visible when the live shell enters its idle

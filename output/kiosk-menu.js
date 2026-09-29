@@ -101,7 +101,8 @@
     document.body.classList.toggle('kiosk-destination-active', active);
     const weatherActive = active && surface === 'weather';
     backgroundState.forEach(({node, inert, ariaHidden, hidden}) => {
-      const covered = active && !(weatherActive && node === stage);
+      const stageOwns = (weatherActive || surface === 'stage') && node === stage;
+      const covered = active && !stageOwns;
       if (covered) {
         node.inert = true;
         node.setAttribute('aria-hidden', 'true');
@@ -112,8 +113,8 @@
         else node.setAttribute('aria-hidden', ariaHidden);
       }
     });
-    if (stage) stage.classList.toggle('kiosk-covered', active && !weatherActive);
-    const panelActive = active && !weatherActive;
+    if (stage) stage.classList.toggle('kiosk-covered', active && !weatherActive && surface !== 'stage');
+    const panelActive = active && !weatherActive && surface !== 'stage';
     panel.hidden = !panelActive;
     panel.inert = !panelActive;
     if (panelActive) panel.removeAttribute('aria-hidden');
@@ -487,12 +488,16 @@
     const valid = sections.includes(view), list = valid ? items(view) : [];
     if (selected && !list.some(c => c.id === selected)) selected = '';
     if (view === 'weather' && !selected && list.length) selected = (list.find(c => ['alert','extreme'].includes(c.subtype)) || list.find(c => c.subtype === 'current') || list[0]).id;
+    // Plex has two legitimate owners. Active playback belongs to the real
+    // media stage; every non-playing/manual lifecycle belongs to this panel.
+    // Never let the stage and panel hide each other during the hand-off.
     const plexActive = view === 'plex' && nowPlaying?.playing === true;
     panel.classList.toggle('now-playing-surface', view === 'plex');
     const active = Boolean(view) && !interrupted && view !== 'household';
-    const surface = active && view === 'weather' && selected ? 'weather' : active ? 'panel' : 'dashboard';
+    const surface = active && view === 'weather' && selected ? 'weather'
+      : active && plexActive ? 'stage' : active ? 'panel' : 'dashboard';
     setBackgroundActive(active, surface);
-    panel.hidden = !active || plexActive || Boolean(selected); panel.inert = !active || panel.hidden;
+    panel.hidden = !active || surface !== 'panel' || Boolean(selected); panel.inert = !active || panel.hidden;
     if (panel.hidden && !selected) {
       if (panel.contains(document.activeElement)) {
         focusNavigation(view);
@@ -501,11 +506,19 @@
       return;
     }
     if (view === 'plex') {
-      const unavailable = nowPlaying?.state === 'unavailable' || nowPlaying?.availability === 'unavailable';
+      const state = String(nowPlaying?.state || '').toLowerCase();
+      const availability = String(nowPlaying?.availability || '').toLowerCase();
+      const unavailable = state === 'unavailable' || availability === 'unavailable';
+      const stale = state === 'stale' || availability === 'stale' || nowPlaying?.stale === true;
       const loading = !nowPlaying;
-      const title = loading ? 'Checking the media room' : unavailable ? 'Media service unavailable' : 'Nothing is playing';
+      const stopped = state === 'stopped' || state === 'idle' || !state;
+      const title = loading ? 'Checking the media room' : unavailable ? 'Media service unavailable'
+        : stale ? 'Media status is stale' : stopped ? 'Nothing is playing' : 'Nothing is playing';
       const detail = loading ? 'Reading the current playback state.' : unavailable
-        ? 'No previous title or artwork is retained here.' : '';
+        ? 'The media service cannot confirm a current session.' : stale
+          ? 'The last media response has expired. No previous title or artwork is retained here.'
+          : state === 'stopped' ? 'Playback has stopped. Start something in the media room to see it here.'
+          : 'There is no active session in the media room.';
       const weather = ['idle-weather-temp', 'idle-weather-condition', 'idle-weather-range']
         .map(id => document.querySelector(`#${id}`)?.textContent?.trim() || '')
         .filter(Boolean);
@@ -513,8 +526,8 @@
       const weatherMarkup = weather.length
         ? `<div class="kiosk-weather-context" aria-label="Current weather">${weather.map((fact, index) => `${index ? '<span class="kiosk-weather-separator" aria-hidden="true">·</span>' : ''}<span class="kiosk-weather-fact" aria-label="${esc(`${weatherLabels[index]}: ${fact}`)}">${esc(fact)}</span>`).join('')}</div>`
         : '<div class="kiosk-weather-context" aria-label="Current weather">Home display ready</div>';
-      const unavailableMark = unavailable ? '<div class="kiosk-state-mark is-unavailable" aria-hidden="true"><span>↻</span></div>' : '';
-      const retry = unavailable ? '<button type="button" class="kiosk-retry" data-kiosk-retry>Check again</button>' : '';
+      const unavailableMark = unavailable || stale ? `<div class="kiosk-state-mark is-${unavailable ? 'unavailable' : 'stale'}" aria-hidden="true"><span>${unavailable ? '!' : '↻'}</span></div>` : '';
+      const retry = unavailable || stale ? '<button type="button" class="kiosk-retry" data-kiosk-retry>Check again</button>' : '';
       panel.innerHTML = `<header class="kiosk-now-playing-head"><p>NOW PLAYING</p><h1 id="kiosk-section-title">${esc(title)}</h1>${detail ? `<p class="kiosk-now-playing-detail">${esc(detail)}</p>` : ''}</header><div class="kiosk-now-playing-body">${unavailableMark}<div class="kiosk-now-playing-copy">${weatherMarkup}<div class="kiosk-now-playing-actions"><a class="kiosk-home-action" href="${esc(href(''))}" data-view="">Return to Home</a>${retry}</div></div></div>`;
       focusInitialDestination();
       preserveDirectHeadingFocus(preserveHeadingFocus);

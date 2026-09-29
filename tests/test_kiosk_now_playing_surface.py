@@ -13,7 +13,10 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn("nowPlaying = payload", MENU)
         self.assertIn("view === 'plex'", MENU)
         self.assertIn("nowPlaying?.playing === true", MENU)
-        self.assertIn("nowPlaying?.state === 'unavailable'", MENU)
+        self.assertIn("const state = String(nowPlaying?.state || '').toLowerCase()", MENU)
+        self.assertIn("const availability = String(nowPlaying?.availability || '').toLowerCase()", MENU)
+        self.assertIn("state === 'stale'", MENU)
+        self.assertIn("state === 'stopped'", MENU)
         self.assertIn("Nothing is playing", MENU)
         self.assertIn("Media service unavailable", MENU)
         self.assertIn("state:'idle'", MENU)
@@ -27,7 +30,7 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn("data-kiosk-retry", MENU)
 
     def test_idle_composition_is_concise_and_weather_is_grouped(self):
-        self.assertIn("const unavailableMark = unavailable ?", MENU)
+        self.assertIn("const unavailableMark = unavailable || stale ?", MENU)
         self.assertIn("const weatherLabels = ['Temperature', 'Conditions', 'High and low']", MENU)
         self.assertIn('class="kiosk-weather-separator" aria-hidden="true"', MENU)
         self.assertIn('class="kiosk-weather-fact" aria-label=', MENU)

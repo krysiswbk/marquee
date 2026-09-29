@@ -306,7 +306,7 @@ def test_weather_stage_is_the_authoritative_kiosk_surface_when_selected():
         "surface = active && view === 'weather' && selected ? 'weather'",
         "const weatherActive = active && surface === 'weather';",
         "node === stage",
-        "stage.classList.toggle('kiosk-covered', active && !weatherActive)",
+        "stage.classList.toggle('kiosk-covered', active && !weatherActive && surface !== 'stage')",
         "stage.querySelector('#wx-segment-title')",
         "marquee-surface-rendered",
     ):
