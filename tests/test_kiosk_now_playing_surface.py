@@ -23,6 +23,12 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         # No selected browse item may replace an authoritative Plex response.
         self.assertIn("if (interrupted || !view || view === 'plex') return payload", MENU)
 
+    def test_explicit_plex_destination_renders_identity_and_progress_from_payload(self):
+        self.assertIn("const plexActive = view === 'plex' && nowPlaying?.playing === true", MENU)
+        self.assertIn("if (interrupted || !view || view === 'plex') return payload", MENU)
+        self.assertIn("progressState = window.MarqueeNowPlayingProgress.reconcile(d, progressState", INDEX)
+        self.assertIn("render(d);", INDEX)
+
     def test_idle_unavailable_surface_does_not_reuse_media_identity(self):
         self.assertIn("No previous title or artwork is retained here", MENU)
         self.assertNotIn("nowPlaying.title", MENU)

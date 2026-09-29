@@ -4,13 +4,43 @@ from .attention import route as attention_route
 from .bridge import authorize
 
 
+def _active_media_payload(info):
+    """Return only a live media session as the now-playing authority.
+
+    Plex's session lifecycle already bounds paused playback through
+    ``plex_live_sessions``. Keep both playing and grace-period paused
+    sessions authoritative here, while allowing stopped/ended payloads (or a
+    cleared provider result) to fall through to ambient arbitration/identity
+    clearing.
+    """
+    if not isinstance(info, dict) or info.get("playing") is not True:
+        return None
+    if str(info.get("state", "")).lower() in ("stopped", "ended"):
+        return None
+    return info
+
+
+def _critical_attention_payload(info):
+    """Identify the only attention result allowed to preempt active media."""
+    return (isinstance(info, dict) and
+            str(info.get("attention", {}).get("urgency", "")).upper() == "CRITICAL")
+
+
 def now_playing_payload(display):
     """Serialize the one authoritative display state.
 
     A provider failure clears CURRENT_PLEX.info in the runtime. Keep that
     distinction visible to the browser without ever returning the last title.
     """
-    info = best_context(CURRENT_PLEX["info"], display)
+    # Let the attention service observe media and perform its normal selection
+    # first. Only a critical result may preempt active playback; ordinary
+    # ambient/sports results cannot replace Plex identity, progress, or art.
+    media = _active_media_payload(CURRENT_PLEX.get("info"))
+    info = best_context(CURRENT_PLEX.get("info"), display)
+    if _critical_attention_payload(info):
+        return info
+    if media:
+        return media
     if info:
         return info
     if CURRENT_PLEX.get("stale"):

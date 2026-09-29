@@ -1,3 +1,8 @@
+## 2.10.95
+
+- Keep active and grace-period paused Plex playback authoritative on the
+  now-playing endpoint while retaining ambient arbitration when media is idle.
+
 ## 2.10.94
 
 - Establish a shared loading, empty, stale, partial, disconnected, and error
