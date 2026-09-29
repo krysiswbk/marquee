@@ -1,4 +1,12 @@
-## 2.10.96
+## 2.10.97
+
+### Kiosk now-playing follow-up
+
+- Remove the decorative Street frame and sign during active kiosk playback.
+- Keep poster artwork in a bounded 2:3 supporting column at kiosk sizes.
+- Normalize numeric-string apparent temperatures while preserving truthful
+  unavailable output when the authoritative field is null or empty.
+
 
 ### Kiosk playback and navigation
 

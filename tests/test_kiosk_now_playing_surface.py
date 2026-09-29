@@ -56,6 +56,16 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn("body.kiosk-now-playing .stage", SCREENS)
         self.assertIn("grid-template-areas:\"category poster\"", SCREENS)
         self.assertIn("body.kiosk-now-playing .b-poster", SCREENS)
+        self.assertIn("body.kiosk-now-playing .b-streetframe,body.kiosk-now-playing .b-nowplaying{display:none!important;}", SCREENS)
+        self.assertIn("height:auto;max-height:min(56vh,495px);aspect-ratio:2/3", SCREENS)
+
+    def test_authoritative_apparent_temperature_accepts_numeric_strings_only(self):
+        self.assertIn("lastWx?.apparent_temperature == null || lastWx.apparent_temperature === ''", INDEX)
+        self.assertIn("? null : Number(lastWx.apparent_temperature)", INDEX)
+        self.assertIn("Number.isFinite(apparentTemperature)", INDEX)
+        weather_channel = (ROOT / "output/weather-channel.js").read_text()
+        self.assertIn("Number(model.apparent_temperature)", weather_channel)
+        self.assertIn("Number.isFinite(apparentTemperature)", weather_channel)
 
     def test_navigation_and_touch_contract(self):
         self.assertIn('class="kiosk-home-action"', MENU)

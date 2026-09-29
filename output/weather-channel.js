@@ -67,7 +67,8 @@
       card.dataset.state = weatherState;
       $('wx-data-status').textContent=weatherState === 'stale' ? 'LAST KNOWN FORECAST · STALE' : weatherState === 'empty' ? 'FORECAST EMPTY' : 'LOCAL FORECAST · °C / KM/H';
       const wind=freshObservation?observed.wind:model.wind_speed_10m,humidity=freshObservation?observed.humidity:model.relative_humidity_2m;
-      const metrics=[['Feels like',Number.isFinite(model.apparent_temperature)?rounded(model.apparent_temperature)+'°C':'—'],['Humidity',Number.isFinite(humidity)?rounded(humidity)+'%':'—'],['Wind',Number.isFinite(wind)?rounded(wind)+' km/h':'—'],['Pressure',freshObservation&&Number.isFinite(observed.pressure)?rounded(observed.pressure)+' hPa':'—']];
+      const apparentTemperature=model.apparent_temperature == null || model.apparent_temperature === '' ? null : Number(model.apparent_temperature);
+      const metrics=[['Feels like',Number.isFinite(apparentTemperature)?rounded(apparentTemperature)+'°C':'—'],['Humidity',Number.isFinite(humidity)?rounded(humidity)+'%':'—'],['Wind',Number.isFinite(wind)?rounded(wind)+' km/h':'—'],['Pressure',freshObservation&&Number.isFinite(observed.pressure)?rounded(observed.pressure)+' hPa':'—']];
       const today=(data.days||[]).find(d=>d.date===new Intl.DateTimeFormat('en-CA',{timeZone:raw.timezone||'America/Toronto'}).format(new Date()));
       if(Number.isFinite(today?.uv))metrics.push(['UV high today',String(rounded(today.uv))]);
       if(today?.sunset)metrics.push(['Sunset',time(today.sunset)]);

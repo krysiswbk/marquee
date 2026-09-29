@@ -700,9 +700,9 @@
   body.live-editing [data-layout] { outline:none; }
   body.live-editing .screen-controls, body.live-editing nav { display:none !important; }
 </style>
-<link rel="stylesheet" href="/brain.css?v=2.10.96">
-<link rel="stylesheet" href="/screens.css?v=2.10.96">
-<link rel="stylesheet" href="/weather-channel.css?v=2.10.96">
+<link rel="stylesheet" href="/brain.css?v=2.10.97">
+<link rel="stylesheet" href="/screens.css?v=2.10.97">
+<link rel="stylesheet" href="/weather-channel.css?v=2.10.97">
 <link rel="stylesheet" href="/scene-themes.css?v=2.9.7">
 <body data-template="spotlight">
 <img class="bg" id="bg" alt="">
@@ -803,11 +803,11 @@
 <time class="cast-clock-overlay" id="cast-clock-overlay"></time>
 <div class="idle-screen"><div class="idle-house"><div class="idle-kicker" id="idle-kicker">Home</div><div class="idle-greeting" id="idle-greeting"></div><div class="idle-state" id="idle-state" hidden></div><div class="idle-note" id="idle-note" hidden></div><time class="idle-clock" id="idle-clock"></time><div class="idle-date" id="idle-date"></div><div class="idle-weather" id="idle-weather" aria-label="Current weather"><div class="idle-weather-primary"><strong id="idle-weather-temp"></strong><span id="idle-weather-condition"></span></div><div class="idle-weather-secondary"><span id="idle-weather-feels"></span><span id="idle-weather-range"></span><span id="idle-weather-rain"></span></div><div class="idle-weather-status" id="idle-weather-status"></div></div></div></div>
 <div class="ambient-veil" aria-hidden="true"></div>
-<script src="/state-contract.js?v=2.10.96"></script>
-<script src="/weather-channel.js?v=2.10.96"></script>
-<script src="/weather-summary.js?v=2.10.96"></script>
-<script src="/now-playing-progress.js?v=2.10.96"></script>
-<script src="/brain.js?v=2.10.96"></script>
+<script src="/state-contract.js?v=2.10.97"></script>
+<script src="/weather-channel.js?v=2.10.97"></script>
+<script src="/weather-summary.js?v=2.10.97"></script>
+<script src="/now-playing-progress.js?v=2.10.97"></script>
+<script src="/brain.js?v=2.10.97"></script>
 <script>
 
   const $ = id => document.getElementById(id);
@@ -2279,10 +2279,13 @@ ${chase.join('')}
       const temp = document.createElement('strong'); temp.textContent = `${Math.round(lastWx.temp)}°C`;
       main.append(temp, document.createTextNode(` · ${readableCondition(lastWx.condition, lastWx.code)}`));
       box.append(main);
-      if (lastWx.humidity != null || lastWx.wind != null) {
+      const apparentTemperature = lastWx?.apparent_temperature == null || lastWx.apparent_temperature === ''
+        ? null : Number(lastWx.apparent_temperature);
+      const hasApparentTemperature = Number.isFinite(apparentTemperature);
+      if (hasApparentTemperature || lastWx.humidity != null || lastWx.wind != null) {
         const detail = document.createElement('div'); detail.className = 'wx-detail';
-        detail.textContent = `${Number.isFinite(lastWx.apparent_temperature) ? `Feels like ${Math.round(lastWx.apparent_temperature)}°C` : ''}`
-          + `${Number.isFinite(lastWx.apparent_temperature) && lastWx.humidity != null ? ' · ' : ''}`
+        detail.textContent = `${hasApparentTemperature ? `Feels like ${Math.round(apparentTemperature)}°C` : ''}`
+          + `${hasApparentTemperature && lastWx.humidity != null ? ' · ' : ''}`
           + `${lastWx.humidity != null ? `Humidity ${lastWx.humidity}%` : ''}`
           + `${lastWx.humidity != null && lastWx.wind != null ? ' · ' : ''}`
           + `${lastWx.wind != null ? `Wind ${lastWx.wind} ${lastWx.windUnit || 'km/h'}` : ''}`;
@@ -2298,8 +2301,8 @@ ${chase.join('')}
         || (nextRain ? `Rain ${Math.round(nextRain.precipitation_probability)}%` : '');
       $('idle-weather-temp').textContent = `${Math.round(lastWx.temp)}°C`;
       $('idle-weather-condition').textContent = readableCondition(lastWx.condition, lastWx.code);
-      $('idle-weather-feels').textContent = Number.isFinite(lastWx.apparent_temperature)
-        ? `Feels ${Math.round(lastWx.apparent_temperature)}°` : 'Feels —';
+      $('idle-weather-feels').textContent = hasApparentTemperature
+        ? `Feels ${Math.round(apparentTemperature)}°` : 'Feels —';
       $('idle-weather-range').textContent = [
         Number.isFinite(today.temperature) ? `High ${Math.round(today.temperature)}°` : '',
         Number.isFinite(today.templow) ? `Low ${Math.round(today.templow)}°` : '',
@@ -2758,4 +2761,4 @@ ${chase.join('')}
   setInterval(paint, 1000);
 </script>
 
-<script src="/kiosk-menu.js?v=2.10.96"></script>
+<script src="/kiosk-menu.js?v=2.10.97"></script>
