@@ -84,6 +84,13 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn("Number(model.apparent_temperature)", weather_channel)
         self.assertIn("Number.isFinite(apparentTemperature)", weather_channel)
 
+    def test_compact_sports_and_context_weather_include_authoritative_feels_like(self):
+        self.assertIn("const compactWeatherLine = weather =>", INDEX)
+        self.assertIn("Number.isFinite(apparent) ? ` · Feels ${Math.round(apparent)}°` : ''", INDEX)
+        self.assertIn("sportsWeather.textContent = compactWeatherLine(lastWx)", INDEX)
+        self.assertIn("$('context-weather').textContent = compactWeatherLine(lastWx)", INDEX)
+        self.assertIn("white-space:normal;overflow-wrap:anywhere", SCREENS)
+
     def test_phone_dock_truncates_long_household_copy(self):
         brain = (ROOT / "output/brain.css").read_text()
         self.assertIn(".brain-dock-copy{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}", brain)

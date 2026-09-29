@@ -701,9 +701,9 @@
   body.live-editing [data-layout] { outline:none; }
   body.live-editing .screen-controls, body.live-editing nav { display:none !important; }
 </style>
-<link rel="stylesheet" href="/brain.css?v=2.12.1">
-<link rel="stylesheet" href="/screens.css?v=2.12.1">
-<link rel="stylesheet" href="/weather-channel.css?v=2.12.1">
+<link rel="stylesheet" href="/brain.css?v=2.12.2">
+<link rel="stylesheet" href="/screens.css?v=2.12.2">
+<link rel="stylesheet" href="/weather-channel.css?v=2.12.2">
 <link rel="stylesheet" href="/scene-themes.css?v=2.9.7">
 <body data-template="spotlight">
 <img class="bg" id="bg" alt="">
@@ -804,12 +804,12 @@
 <time class="cast-clock-overlay" id="cast-clock-overlay"></time>
 <div class="idle-screen"><div class="idle-house"><div class="idle-kicker" id="idle-kicker">Home</div><div class="idle-greeting" id="idle-greeting"></div><div class="idle-state" id="idle-state" hidden></div><div class="idle-note" id="idle-note" hidden></div><time class="idle-clock" id="idle-clock"></time><div class="idle-date" id="idle-date"></div><div class="idle-weather" id="idle-weather" aria-label="Current weather"><div class="idle-weather-primary"><strong id="idle-weather-temp"></strong><span id="idle-weather-condition"></span></div><div class="idle-weather-secondary"><span id="idle-weather-feels"></span><span id="idle-weather-range"></span><span id="idle-weather-rain"></span></div><div class="idle-weather-status" id="idle-weather-status"></div></div></div></div>
 <div class="ambient-veil" aria-hidden="true"></div>
-<script src="/lifecycle.js?v=2.12.1"></script>
-<script src="/state-contract.js?v=2.12.1"></script>
-<script src="/weather-channel.js?v=2.12.1"></script>
-<script src="/weather-summary.js?v=2.12.1"></script>
-<script src="/now-playing-progress.js?v=2.12.1"></script>
-<script src="/brain.js?v=2.12.1"></script>
+<script src="/lifecycle.js?v=2.12.2"></script>
+<script src="/state-contract.js?v=2.12.2"></script>
+<script src="/weather-channel.js?v=2.12.2"></script>
+<script src="/weather-summary.js?v=2.12.2"></script>
+<script src="/now-playing-progress.js?v=2.12.2"></script>
+<script src="/brain.js?v=2.12.2"></script>
 <script>
 
   const $ = id => document.getElementById(id);
@@ -2065,6 +2065,14 @@ ${chase.join('')}
     const words = raw.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ');
     return words.replace(/^./, c => c.toUpperCase());
   };
+  const parseApparentTemperature = weather => weather?.apparent_temperature == null
+    || weather.apparent_temperature === '' ? null : Number(weather.apparent_temperature);
+  const compactWeatherLine = weather => {
+    if (!weather || weather.temp == null) return '';
+    const apparent = parseApparentTemperature(weather);
+    return `${Math.round(weather.temp)}°C · ${readableCondition(weather.condition, weather.code)}`
+      + `${Number.isFinite(apparent) ? ` · Feels ${Math.round(apparent)}°` : ''}`;
+  };
   const wxClass = code =>
     code == null ? '' :
     code >= 95 ? 'wx-storm' :
@@ -2294,7 +2302,7 @@ ${chase.join('')}
         box.append(detail);
       }
       const sportsWeather = $('sport-weather');
-      if (sportsWeather) sportsWeather.textContent = `${Math.round(lastWx.temp)}°C · ${readableCondition(lastWx.condition, lastWx.code)}`;
+      if (sportsWeather) sportsWeather.textContent = compactWeatherLine(lastWx);
       const forecast = forecastFresh && Array.isArray(lastWx.hourly) ? lastWx.hourly : [];
       const days = forecastFresh && Array.isArray(lastWx.daily) ? lastWx.daily : [];
       const today = days[0] || {};
@@ -2551,8 +2559,7 @@ ${chase.join('')}
     $('weather-clock').textContent = document.body.classList.contains('idle')
       ? '' : new Date().toLocaleTimeString([], opts);
     $('context-clock').textContent = new Date().toLocaleTimeString([], opts);
-    $('context-weather').textContent = lastWx && lastWx.temp != null
-      ? `${Math.round(lastWx.temp)}°C · ${readableCondition(lastWx.condition, lastWx.code)}` : '';
+    $('context-weather').textContent = compactWeatherLine(lastWx);
     window.MarqueeBrain?.configure(c, fallbackCfg);
     applyLiveLayout();
     fitSceneClocks();
@@ -2772,4 +2779,4 @@ ${chase.join('')}
   window.MarqueeLifecycle.register('surface-animation', {interval: 1000, refresh: () => paint()});
 </script>
 
-<script src="/kiosk-menu.js?v=2.12.1"></script>
+<script src="/kiosk-menu.js?v=2.12.2"></script>

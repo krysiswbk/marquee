@@ -1,3 +1,8 @@
+## 2.12.2
+
+- Add authoritative feels-like temperature to compact sports and generic media
+  context weather lines, with deliberate narrow-phone wrapping.
+
 ## 2.12.1
 
 - Refine narrow-phone playback, weather context, household feed truncation,
