@@ -1,3 +1,8 @@
+## 2.11.4
+
+- Anchor active Home and Now Playing progress directly above the shared kiosk
+  dock safe area on non-phone displays while preserving phone in-flow layout.
+
 ## 2.11.3
 
 - Reserve the shared household feed and kiosk navigation safe area above active playback progress on Home and Now Playing surfaces across non-phone kiosk sizes.

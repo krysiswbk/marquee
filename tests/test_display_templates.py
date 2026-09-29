@@ -99,7 +99,9 @@ class DisplayTemplateTests(unittest.TestCase):
     def test_active_playback_shares_the_lower_kiosk_safe_area(self):
         screens = (Path(__file__).parents[1] / "output" / "screens.css").read_text()
         self.assertIn("--kiosk-lower-safe-area:calc(8vh + var(--control-rail))", screens)
-        self.assertIn("body.kiosk-playback-active .stage{bottom:var(--kiosk-lower-safe-area)", screens)
+        self.assertIn("body.kiosk-now-playing .b-progress,body.kiosk-playback-active .b-progress{position:fixed!important", screens)
+        self.assertIn("inset:auto auto calc(var(--kiosk-lower-safe-area) + 8px) 6vw!important", screens)
+        self.assertNotIn("body.kiosk-playback-active .stage{bottom:var(--kiosk-lower-safe-area)", screens)
         self.assertIn("body.kiosk-now-playing .kiosk-section.now-playing-surface{bottom:var(--kiosk-lower-safe-area)", screens)
         self.assertIn("@media(min-width:481px)", screens)
 

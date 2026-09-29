@@ -103,6 +103,18 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         version = (ROOT / "VERSION").read_text().strip()
         self.assertIn(f"kiosk-menu.js?v={version}", INDEX)
 
+    def test_non_phone_progress_is_directly_anchored_above_the_kiosk_dock(self):
+        self.assertIn(
+            "body.kiosk-now-playing .b-progress,body.kiosk-playback-active .b-progress{position:fixed!important",
+            SCREENS,
+        )
+        self.assertIn(
+            "inset:auto auto calc(var(--kiosk-lower-safe-area) + 8px) 6vw!important",
+            SCREENS,
+        )
+        self.assertIn("z-index:9001", SCREENS)
+        self.assertNotIn("body.kiosk-now-playing .stage,body.kiosk-playback-active .stage{bottom:", SCREENS)
+
     def test_progress_uses_reconciled_display_state_and_resets_outside_playback(self):
         source = (ROOT / "output/index.html").read_text()
         helper = (ROOT / "output/now-playing-progress.js").read_text()
