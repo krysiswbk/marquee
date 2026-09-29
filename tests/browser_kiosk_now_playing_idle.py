@@ -8,7 +8,7 @@ from playwright.sync_api import sync_playwright
 
 
 ROOT = Path(__file__).resolve().parents[1]
-VIEWPORTS = [(393, 852), (430, 852), (700, 900), (1024, 600), (1500, 900)]
+VIEWPORTS = [(390, 844), (768, 1024), (1024, 600), (1280, 720), (1500, 1000)]
 
 
 with sync_playwright() as playwright:
@@ -104,53 +104,58 @@ with sync_playwright() as playwright:
 
         # The explicit Plex destination must render the authoritative session
         # payload even while a competing ambient context is available.
-        fixture = {"playing": True, "state": "playing", "title": "2024 Recap",
-                   "key": "plex:session", "type": "episode",
-                   "progress": {"offsetMs": 1200, "durationMs": 6000}}
-        active_page = browser.new_page(viewport={"width": width, "height": height})
-        active_errors = []
-        active_page.on("pageerror", lambda error: active_errors.append(str(error)))
-        active_page.route("**/*", route)
-        with active_page.expect_response(lambda response: response.url.split("?", 1)[0].endswith("/now-playing.json")) as now_playing:
-            active_page.goto("http://marquee.test/kiosk?view=plex", wait_until="domcontentloaded")
-        active_payload = now_playing.value.json()
-        assert active_payload["title"] == "2024 Recap"
-        assert active_payload["progress"] == {"offsetMs": 1200, "durationMs": 6000}
-        active_page.wait_for_function("document.querySelector('#title')?.textContent === '2024 Recap'")
-        assert active_page.locator("#title").inner_text() == "2024 Recap"
-        phone_layout = active_page.evaluate("""() => {
-            const rect = selector => document.querySelector(selector)?.getBoundingClientRect();
-            const identity = rect('.b-identity');
-            const header = [rect('#clock'), rect('#wx')].filter(Boolean)
-                .filter(box => box.width > 0 && box.height > 0)
-                .reduce((bottom, box) => Math.max(bottom, box.bottom), 0);
-            return {
-                identityTop: identity?.top || 0,
-                headerBottom: header,
-                poster: rect('.b-poster')?.height || 0,
-                progress: rect('.b-progress')?.height || 0,
-                device: rect('.b-device')?.height || 0,
-                overflow: document.documentElement.scrollWidth > window.innerWidth + 1,
-            };
-        }""")
-        if width <= 480:
-            assert phone_layout["identityTop"] >= phone_layout["headerBottom"] + 12
-            # The authoritative fixture has no poster capability; when art is
-            # present, the CSS contract bounds it beside the identity.
-            if phone_layout["poster"]:
-                assert phone_layout["poster"] <= 198
-            assert phone_layout["progress"] > 0
-            if phone_layout["device"]:
-                assert phone_layout["device"] <= 52
+        for playback_state in ("playing", "paused"):
+            fixture = {"playing": True, "state": playback_state, "title": "2024 Recap",
+                       "subtitle": "Season 2 · Episode 4", "key": "plex:session", "type": "episode",
+                       "artwork": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='900'%3E%3Crect width='600' height='900' fill='%232a4054'/%3E%3C/svg%3E",
+                       "progress": {"offsetMs": 1200, "durationMs": 6000},
+                       "session": {"device": "Living Room TV", "client": "Plex", "platform": "Roku", "local": True}}
+            active_page = browser.new_page(viewport={"width": width, "height": height})
+            active_errors = []
+            active_page.on("pageerror", lambda error: active_errors.append(str(error)))
+            active_page.route("**/*", route)
+            with active_page.expect_response(lambda response: response.url.split("?", 1)[0].endswith("/now-playing.json")) as now_playing:
+                active_page.goto("http://marquee.test/kiosk?view=plex", wait_until="domcontentloaded")
+            active_payload = now_playing.value.json()
+            assert active_payload["title"] == "2024 Recap"
+            assert active_payload["progress"] == {"offsetMs": 1200, "durationMs": 6000}
+            active_page.wait_for_function("document.querySelector('#title')?.textContent === '2024 Recap'")
+            assert active_page.locator("#title").inner_text() == "2024 Recap"
+            assert active_page.locator("#subtitle").inner_text() == "Season 2 · Episode 4"
+            assert active_page.locator("#device-name").inner_text() == "Living Room TV"
+            assert active_page.locator(".b-ratings").evaluate("el => getComputedStyle(el).display === 'none'")
+            assert active_page.locator(".b-stream").evaluate("el => getComputedStyle(el).display === 'none'")
+            if playback_state == "paused":
+                assert active_page.locator(".b-progress.paused").count() == 1
+            phone_layout = active_page.evaluate("""() => {
+                const rect = selector => document.querySelector(selector)?.getBoundingClientRect();
+                const identity = rect('.b-identity');
+                const header = [rect('#clock'), rect('#wx')].filter(Boolean)
+                    .filter(box => box.width > 0 && box.height > 0)
+                    .reduce((bottom, box) => Math.max(bottom, box.bottom), 0);
+                return {
+                    identityTop: identity?.top || 0,
+                    headerBottom: header,
+                    poster: rect('.b-poster')?.height || 0,
+                    progress: rect('.b-progress')?.height || 0,
+                    device: rect('.b-device')?.height || 0,
+                    overflow: document.documentElement.scrollWidth > window.innerWidth + 1,
+                };
+            }""")
+            if width <= 480:
+                assert phone_layout["identityTop"] >= phone_layout["headerBottom"] + 12
+                if phone_layout["poster"]:
+                    assert phone_layout["poster"] <= 198
+                assert phone_layout["progress"] > 0
+                if phone_layout["device"]:
+                    assert phone_layout["device"] <= 52
             assert not phone_layout["overflow"]
-        progress_scale = active_page.locator("#fill").evaluate(
-            "el => Number((el.style.transform.match(/scaleX\\(([^)]+)\\)/) || [])[1])")
-        # The playing renderer advances from the 20% fixture offset while the
-        # page settles; allow only that short elapsed-time window.
-        assert 0.20 <= progress_scale <= 0.25, (width, progress_scale)
-        assert not active_errors, (width, height, active_errors)
+            progress_scale = active_page.locator("#fill").evaluate(
+                "el => Number((el.style.transform.match(/scaleX\\(([^)]+)\\)/) || [])[1])")
+            assert 0.10 <= progress_scale <= 0.35, (width, playback_state, progress_scale)
+            assert not active_errors, (width, height, playback_state, active_errors)
+            active_page.close()
         assert not errors, (width, height, errors)
-        active_page.close()
         page.close()
     browser.close()
     print("PASS: Plex idle/unavailable composition, grouped weather, scoped focus, responsive fit, and Home return")

@@ -178,6 +178,15 @@ def test_overflow_trigger_and_escape_are_remote_visible_contracts():
     assert "const active = direct && !direct.hidden ? direct : overflow.querySelector(`[data-view=\"${CSS.escape(currentView)}\"]`);" in MENU
     assert "more.removeAttribute('aria-current')" in MENU
     assert '<a href="/live">Live display</a>' in MENU
+
+
+def test_navigation_targets_survive_selection_and_resource_renders():
+    # Rebuilding anchors on every selected-view change races native touch
+    # activation and detached-target click synthesis.
+    assert "const primarySignature = all.map(([key]) => key).join('|');" in MENU
+    assert "const overflowSignature = hidden.map(([key]) => key).join('|');" in MENU
+    assert "${key}:${key === view}" not in MENU
+    assert "${offline ? 'offline' : items(key).length}" not in MENU
     assert "overflow.innerHTML = allDestinations().filter" in MENU
     assert "join(''); updateCurrentDestination();" in MENU
     assert 'aria-current="false"' not in MENU

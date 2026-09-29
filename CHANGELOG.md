@@ -1,3 +1,12 @@
+## 2.12.3
+
+- Direct kiosk navigation now keeps rail targets stable while polling,
+  rendering, and focus transitions settle, preventing touch/remote activation
+  from being overridden by a concurrent refresh.
+- Kiosk Plex playback now has deterministic playing/paused responsive coverage;
+  its composition keeps title, episode context, progress, and playback device
+  primary while omitting ratings and stream diagnostics.
+
 ## 2.12.2
 
 - Add authoritative feels-like temperature to compact sports and generic media

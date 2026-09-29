@@ -186,7 +186,12 @@
   function drawNavigation(preserveFocus = true) {
     const focusedView = document.activeElement?.closest?.('a[data-view]')?.dataset.view;
     const all = allDestinations();
-    const primarySignature = all.map(([key]) => `${key}:${key === view}`).join('|');
+    // Selection is state, not navigation topology. Replacing every anchor when
+    // `view` changes races the native pointerup/click sequence: a touch can
+    // finish against a detached anchor, and the focus repair can land on the
+    // old destination after the new one has rendered. Keep the delegated
+    // targets stable; update aria-current/visibility below instead.
+    const primarySignature = all.map(([key]) => key).join('|');
     if (primary.dataset.signature !== primarySignature) {
       primary.innerHTML = all.map(d => link(d)).join('');
       primary.dataset.signature = primarySignature;
@@ -207,7 +212,9 @@
       candidate.hidden = true;
     }
     const hidden = all.filter(([key]) => primary.querySelector(`[data-view="${CSS.escape(key)}"]`)?.hidden);
-    const overflowSignature = hidden.map(([key]) => `${key}:${offline ? 'offline' : items(key).length}`).join('|');
+    // Counts and health text are presentation details. They must not replace
+    // overflow controls while a remote is activating one of them.
+    const overflowSignature = hidden.map(([key]) => key).join('|');
     if (overflow.dataset.signature !== overflowSignature) {
       overflow.innerHTML = hidden.map(d => link(d, offline ? 'Connection unavailable' : `${items(d[0]).length} current item${items(d[0]).length === 1 ? '' : 's'}`)).join('');
       overflow.dataset.signature = overflowSignature;

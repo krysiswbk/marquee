@@ -60,7 +60,7 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn("grid-template-areas:\"category poster\"", SCREENS)
         self.assertIn("body.kiosk-now-playing .b-poster", SCREENS)
         self.assertIn("body.kiosk-now-playing .b-streetframe,body.kiosk-now-playing .b-nowplaying,body.kiosk-playback-active .b-streetframe,body.kiosk-playback-active .b-nowplaying{display:none!important;}", SCREENS)
-        self.assertIn("height:auto;max-height:min(56vh,495px);aspect-ratio:2/3", SCREENS)
+        self.assertIn("width:min(18vw,260px);height:auto;max-height:min(44vh,390px);aspect-ratio:2/3", SCREENS)
         self.assertIn("body.kiosk-playback-active .b-streetframe,body.kiosk-playback-active .b-nowplaying", SCREENS)
         self.assertIn("body.kiosk-playback-active .stage > .b-identity", SCREENS)
         self.assertIn("body.kiosk-playback-active .b-progress", SCREENS)
