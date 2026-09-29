@@ -701,9 +701,9 @@
   body.live-editing [data-layout] { outline:none; }
   body.live-editing .screen-controls, body.live-editing nav { display:none !important; }
 </style>
-<link rel="stylesheet" href="/brain.css?v=2.12.7">
-<link rel="stylesheet" href="/screens.css?v=2.12.7">
-<link rel="stylesheet" href="/weather-channel.css?v=2.12.7">
+<link rel="stylesheet" href="/brain.css?v=2.12.8">
+<link rel="stylesheet" href="/screens.css?v=2.12.8">
+<link rel="stylesheet" href="/weather-channel.css?v=2.12.8">
 <link rel="stylesheet" href="/scene-themes.css?v=2.9.7">
 <body data-template="spotlight">
 <img class="bg" id="bg" alt="">
@@ -804,12 +804,12 @@
 <time class="cast-clock-overlay" id="cast-clock-overlay"></time>
 <div class="idle-screen"><div class="idle-house"><div class="idle-kicker" id="idle-kicker">Home</div><div class="idle-greeting" id="idle-greeting"></div><div class="idle-state" id="idle-state" hidden></div><div class="idle-note" id="idle-note" hidden></div><time class="idle-clock" id="idle-clock"></time><div class="idle-date" id="idle-date"></div><div class="idle-weather" id="idle-weather" aria-label="Current weather"><div class="idle-weather-primary"><strong id="idle-weather-temp"></strong><span id="idle-weather-condition"></span></div><div class="idle-weather-secondary"><span id="idle-weather-feels"></span><span id="idle-weather-range"></span><span id="idle-weather-rain"></span></div><div class="idle-weather-status" id="idle-weather-status"></div></div></div></div>
 <div class="ambient-veil" aria-hidden="true"></div>
-<script src="/lifecycle.js?v=2.12.7"></script>
-<script src="/state-contract.js?v=2.12.7"></script>
-<script src="/weather-channel.js?v=2.12.7"></script>
-<script src="/weather-summary.js?v=2.12.7"></script>
-<script src="/now-playing-progress.js?v=2.12.7"></script>
-<script src="/brain.js?v=2.12.7"></script>
+<script src="/lifecycle.js?v=2.12.8"></script>
+<script src="/state-contract.js?v=2.12.8"></script>
+<script src="/weather-channel.js?v=2.12.8"></script>
+<script src="/weather-summary.js?v=2.12.8"></script>
+<script src="/now-playing-progress.js?v=2.12.8"></script>
+<script src="/brain.js?v=2.12.8"></script>
 <script>
 
   const $ = id => document.getElementById(id);
@@ -2663,17 +2663,18 @@ ${chase.join('')}
       const transitionMs = matchMedia('(prefers-reduced-motion: reduce)').matches
         ? 0 : Math.max(0, Math.min(5000, Number(c.transitionMs ?? 500)));
       document.documentElement.style.setProperty('--context-transition', `${transitionMs}ms`);
-      stage.classList.add('fade');
-      transitionTimer = setTimeout(() => {
-        render(d);
-        refreshPoster(d);
-        // The old ordering painted before a newly selected context had added
-        // the sports class, leaving its dedicated clock blank until a later
-        // poll (or indefinitely on a suspended Cast receiver).
-        paint();
-        stage.classList.remove('fade');
-        transitionTimer = null;
-      }, transitionMs);
+      // Commit the replacement before animating it.  Fading the only stage
+      // and waiting for a timer made rapid SSE/poll transitions able to
+      // cancel the timer while the stage was still transparent, producing an
+      // empty kiosk and intercepting touch with an invisible surface.
+      render(d);
+      refreshPoster(d);
+      // The old ordering painted before a newly selected context had added
+      // the sports class, leaving its dedicated clock blank until a later
+      // poll (or indefinitely on a suspended Cast receiver).
+      paint();
+      stage.classList.remove('fade');
+      transitionTimer = null;
       shownKey = key;
     } else {
       render(d);
@@ -2788,4 +2789,4 @@ ${chase.join('')}
   window.MarqueeLifecycle.register('surface-animation', {interval: 1000, refresh: () => paint()});
 </script>
 
-<script src="/kiosk-menu.js?v=2.12.7"></script>
+<script src="/kiosk-menu.js?v=2.12.8"></script>

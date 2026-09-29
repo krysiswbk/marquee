@@ -175,11 +175,10 @@ class MarqueeAmbient(hass.Hass):
                 initial_style="marquee-fullscreen", style_sequence=["marquee-fullscreen"],
                 popup_styles=[{
                     "style": "marquee-fullscreen", "include_styles": ["fullscreen"],
-                    "styles": """ha-dialog { --ha-dialog-surface-background:#000; --ha-dialog-border-radius:0!important; --dialog-content-padding:0; --padding-x:0; --padding-y:0; } .container,.content,.content .container { margin:0!important; padding:0!important; } .header,ha-dialog-header { position:absolute!important; top:10px; right:10px; z-index:30; width:44px!important; min-height:44px!important; padding:0!important; border-radius:50%; background:rgba(0,0,0,.55)!important; } .title { display:none!important; }"""
+                    "styles": """ha-dialog { --ha-dialog-surface-background:#000; --ha-dialog-border-radius:0!important; --dialog-content-padding:0; --padding-x:0; --padding-y:0; } .container,.content,.content .container { margin:0!important; padding:0!important; height:100%!important; min-height:0!important; } .header,ha-dialog-header { position:absolute!important; inset:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) auto auto!important; z-index:30; width:56px!important; height:56px!important; min-height:56px!important; padding:0!important; border-radius:50%; background:rgba(0,0,0,.68)!important; pointer-events:auto!important; } .header button,ha-dialog-header button { width:56px!important; height:56px!important; min-width:56px!important; min-height:56px!important; } .title { display:none!important; }"""
                 }],
                 content={"type": "iframe",
                          "url": "http://10.10.9.37:8084/kiosk?v=20260908-clock5",
-                         "aspect_ratio": "57.27%",
                          "card_mod": {"style": "ha-card { border:0; box-shadow:none; }"}})
             self.log("Marquee sports popup sent to main-hall kiosk")
         except Exception as error:

@@ -1,3 +1,11 @@
+## 2.12.8
+
+- Commit kiosk context replacements before transition animation so rapid
+  refreshes cannot leave the only content stage transparent or detach touch
+  controls; keep the last trustworthy frame visible while data is in flight.
+- Remove the Browser Mod iframe aspect-ratio row reservation and position its
+  dismiss control as a safe-area-aware 56px overlay without a blank top row.
+
 ## 2.12.7
 
 - Keep Calendar Previous and Next natively disabled, semantically disabled, and
