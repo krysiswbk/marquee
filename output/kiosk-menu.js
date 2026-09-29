@@ -729,15 +729,15 @@
   window.addEventListener('resize', () => { if (calendarMode && view === 'calendar') { invalidateCalendarLayout(); drawPanel(); } });
   window.addEventListener('marquee-surface-rendered', drawPanel);
   window.MarqueeNavigation = { resolve(payload) { nowPlaying = payload || {playing:false, state:'idle', availability:'idle'}; const wasInterrupted = interrupted; interrupted = Boolean(payload?.attention || payload?.householdFocus); if (interrupted && !wasInterrupted && menu.open) closeMenu(false); drawPanel(); if (interrupted || !view || view === 'plex') return payload; const c = !offline && sections.includes(view) && items(view).find(item => item.id === selected); return c ? c.payload || {playing:true,type:'media_context',key:'browse:'+c.id,context:c} : {playing:false}; }, refresh };
-  async function refresh() {
+  async function refresh(lifecycle = {}) {
     if (refreshInFlight) return;
     refreshInFlight = true;
     const serial = ++requestSerial;
     const clean = values => { const seen = new Set(); return (values || []).filter(c => { if (!c.id || c.id.startsWith('screen-test:') || (c.targets && !c.targets.includes('kiosk')) || !fresh(c)) return false; const key=(c.provider||c.source)+'|'+c.title+'|'+(c.starts||''); if (seen.has(key)) return false; seen.add(key); return true; }); };
     const requests = {
-      config: fetch('/api/config'),
-      contexts: fetch('/contexts'),
-      providers: fetch('/providers'),
+      config: fetch('/api/config', {signal: lifecycle.signal}),
+      contexts: fetch('/contexts', {signal: lifecycle.signal}),
+      providers: fetch('/providers', {signal: lifecycle.signal}),
     };
     try {
       const settled = await Promise.allSettled(Object.entries(requests).map(async ([name, request]) => {
@@ -750,6 +750,7 @@
         }
       }));
       if (serial !== requestSerial) return;
+      if (lifecycle.isCurrent && !lifecycle.isCurrent()) return;
       for (const result of settled) {
         if (result.status === 'fulfilled') {
           const [name, value] = result.value;
@@ -762,6 +763,7 @@
         const resource = resources[name];
         resource.phase = refreshPhase(resource);
         resource.state = sharedResourceState(resource);
+        if (name === 'config' && resource.error) window.MarqueeLifecycle.status('Configuration refresh failed. Showing the last saved settings; retrying.', 'error');
       }
       if (resources.config.snapshot) {
         const config = resources.config.snapshot;
@@ -783,5 +785,6 @@
     }
   }
   const resize = new ResizeObserver(() => { if (!menu.open) { drawNavigation(); drawMenu(); } }); resize.observe(rail);
-  drawNavigation(); drawMenu(); drawPanel(); refresh(); setInterval(refresh, 15000);
+  drawNavigation(); drawMenu(); drawPanel();
+  window.MarqueeLifecycle.register('kiosk-resources', {interval: 15000, refresh});
 })();

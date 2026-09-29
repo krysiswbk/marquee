@@ -1,3 +1,9 @@
+## 2.12.0
+
+- Add shared Live/Kiosk lifecycle coordination for visibility suspension,
+  coalesced polling, late-response protection, cleanup, and accessible
+  configuration-refresh failure status.
+
 ## 2.11.4
 
 - Anchor active Home and Now Playing progress directly above the shared kiosk

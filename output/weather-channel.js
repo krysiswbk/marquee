@@ -93,11 +93,11 @@
     if(newContext){segment=['rain','snow'].includes(ctx.subtype)?'radar':'conditions';started=Date.now();last='';}
     draw();return visibility.radar!==false&&radarFresh();
   },observation(value){observed=value;draw()}};
-  setInterval(()=>{
+  window.MarqueeLifecycle.register('weather-animation',{interval:1000,refresh:()=>{
     const active=card.closest('.stage')?.classList.contains('weather-context')&&!document.body.classList.contains('idle')&&!document.hidden;
     if(!active){lastActive=false;return;}
     if(!lastActive){started=Date.now();lastActive=true;}
     if(!paused&&!['alert','extreme'].includes(ctx?.subtype)&&Date.now()-started>=15000){const options=available();choose(options[(options.indexOf(segment)+1)%options.length]);}
     draw();
-  },1000);
+  }});
 })();

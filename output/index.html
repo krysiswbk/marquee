@@ -687,6 +687,7 @@
   .screen-controls button:focus-visible { outline:3px solid #ffd785; outline-offset:2px; }
   .screen-controls button:disabled { opacity:.4; cursor:default; }
   .screen-controls [role="status"] { font-size:12px; max-width:150px; }
+  #marquee-lifecycle-status { position:fixed; z-index:10002; left:50%; bottom:max(76px,calc(env(safe-area-inset-bottom) + 76px)); transform:translateX(-50%); max-width:min(90vw,600px); padding:10px 14px; border:1px solid #f4b4b4; border-radius:10px; background:#351b24f2; color:#fff; font:600 14px system-ui; }
 
   .context-card[data-kind="birthday_rollup"] .context-status { color:#f7b2d9; letter-spacing:.18em; }
   .context-card[data-kind="birthday_rollup"] .context-title { font-size:clamp(2rem,6vw,6rem); }
@@ -700,9 +701,9 @@
   body.live-editing [data-layout] { outline:none; }
   body.live-editing .screen-controls, body.live-editing nav { display:none !important; }
 </style>
-<link rel="stylesheet" href="/brain.css?v=2.11.4">
-<link rel="stylesheet" href="/screens.css?v=2.11.4">
-<link rel="stylesheet" href="/weather-channel.css?v=2.11.4">
+<link rel="stylesheet" href="/brain.css?v=2.12.0">
+<link rel="stylesheet" href="/screens.css?v=2.12.0">
+<link rel="stylesheet" href="/weather-channel.css?v=2.12.0">
 <link rel="stylesheet" href="/scene-themes.css?v=2.9.7">
 <body data-template="spotlight">
 <img class="bg" id="bg" alt="">
@@ -803,11 +804,12 @@
 <time class="cast-clock-overlay" id="cast-clock-overlay"></time>
 <div class="idle-screen"><div class="idle-house"><div class="idle-kicker" id="idle-kicker">Home</div><div class="idle-greeting" id="idle-greeting"></div><div class="idle-state" id="idle-state" hidden></div><div class="idle-note" id="idle-note" hidden></div><time class="idle-clock" id="idle-clock"></time><div class="idle-date" id="idle-date"></div><div class="idle-weather" id="idle-weather" aria-label="Current weather"><div class="idle-weather-primary"><strong id="idle-weather-temp"></strong><span id="idle-weather-condition"></span></div><div class="idle-weather-secondary"><span id="idle-weather-feels"></span><span id="idle-weather-range"></span><span id="idle-weather-rain"></span></div><div class="idle-weather-status" id="idle-weather-status"></div></div></div></div>
 <div class="ambient-veil" aria-hidden="true"></div>
-<script src="/state-contract.js?v=2.11.4"></script>
-<script src="/weather-channel.js?v=2.11.4"></script>
-<script src="/weather-summary.js?v=2.11.4"></script>
-<script src="/now-playing-progress.js?v=2.11.4"></script>
-<script src="/brain.js?v=2.11.4"></script>
+<script src="/lifecycle.js?v=2.12.0"></script>
+<script src="/state-contract.js?v=2.12.0"></script>
+<script src="/weather-channel.js?v=2.12.0"></script>
+<script src="/weather-summary.js?v=2.12.0"></script>
+<script src="/now-playing-progress.js?v=2.12.0"></script>
+<script src="/brain.js?v=2.12.0"></script>
 <script>
 
   const $ = id => document.getElementById(id);
@@ -1570,7 +1572,7 @@ ${chase.join('')}
     }
     // Landing on Street before the 10-minute weather poll has ever run
     // would otherwise leave the scene undimmed/dry until the next tick.
-    if (tpl === 'street' && !lastWx) wxTick();
+    if (tpl === 'street' && !lastWx) window.MarqueeLifecycle.request('weather-data');
 
     const shown = visibleBlockSet(tpl, c.blockVisibility);
     $('eyebrow').textContent = c.showGenres !== false ? (d.genres || []).join('  ·  ') : '';
@@ -2350,16 +2352,17 @@ ${chase.join('')}
     if (!wanted) { paintWx(); return; }
     weatherFetchState = lastWx ? 'stale' : 'loading';
     try {
-      const response = await fetch('/weather?t=' + Date.now());
+      const response = await fetch('/weather?t=' + Date.now(), {signal: arguments[0]?.signal});
       if (!response.ok) throw new Error(`weather request failed (${response.status})`);
       const payload = await response.json();
+      if (arguments[0]?.isCurrent && !arguments[0].isCurrent()) return;
       lastWx = payload;
       weatherFetchState = payload && (payload.temp != null || payload.current) ? 'ready' : 'empty';
-    } catch (e) { weatherFetchState = lastWx ? 'stale' : 'error'; }
+    } catch (e) { if (e?.name === 'AbortError') return; weatherFetchState = lastWx ? 'stale' : 'error'; }
     paintWx();
     markWeatherFactSeparators();
   }
-  wxTick(); setInterval(wxTick, 60000);
+  window.MarqueeLifecycle.register('weather-data', {interval: 60000, refresh: wxTick});
 
   window.addEventListener('message', event => {
     if (!EDIT || event.origin !== location.origin) return;
@@ -2371,13 +2374,13 @@ ${chase.join('')}
       if (fontChanged || logoChanged) peekTitle();
       if (lastD) render(lastD);
       paint();
-      wxTick();
+      window.MarqueeLifecycle.request('weather-data');
     } else if (msg.type === 'marquee-wx') {
       // Condition preview from the editor: force a weather look without
       // touching any saved setting. null/undefined = back to live weather.
       WX_FORCE = msg.wx || null;
       DAY_FORCE = msg.day != null ? String(msg.day) : null;
-      wxTick();
+      window.MarqueeLifecycle.request('weather-data');
     // Demo-only preview hooks must never replace an authoritative editor payload.
     } else if (DEMO && msg.type === 'marquee-demo-context-reset') {
       const d = {playing:true,type:'media_context',key:'calendar-preview',context:{source:'calendar',type:'calendar_event',id:'calendar-preview',title:'Household calendar',subtitle:'Today',detail:'A stable non-gaming context.'}};
@@ -2588,21 +2591,27 @@ ${chase.join('')}
   let lastCfgText = '';
   const settingsUrl = LIVE_SURFACE
     ? '/live-settings.json' : '/settings.json';
-  async function settingsTick() {
+  async function settingsTick(lifecycle = {}) {
     try {
       if (LIVE_SURFACE) {
-        const appCfg = await (await fetch('/api/config?t=' + Date.now())).json();
+        const appResponse = await fetch('/api/config?t=' + Date.now(), {signal: lifecycle.signal});
+        if (!appResponse.ok) throw new Error(`configuration request failed (${appResponse.status})`);
+        const appCfg = await appResponse.json();
+        if (lifecycle.isCurrent && !lifecycle.isCurrent()) return;
         fallbackCfg = appCfg.fallback || fallbackCfg;
       }
-      const text = await (await fetch(settingsUrl + '?t=' + Date.now())).text();
+      const settingsResponse = await fetch(settingsUrl + '?t=' + Date.now(), {signal: lifecycle.signal});
+      if (!settingsResponse.ok) throw new Error(`settings request failed (${settingsResponse.status})`);
+      const text = await settingsResponse.text();
+      if (lifecycle.isCurrent && !lifecycle.isCurrent()) return;
       if (text !== lastCfgText) {
         lastCfgText = text;
         baseCfg = JSON.parse(text);
         window.MarqueeBrain?.configure(activeCfg(), fallbackCfg);
-        wxTick();
+        window.MarqueeLifecycle.request('weather-data');
         if (lastD) { render(lastD); paint(); }
       }
-    } catch (e) {}
+    } catch (e) { if (e?.name !== 'AbortError') window.MarqueeLifecycle.status('Configuration refresh failed. Showing the last saved settings; retrying.', 'error'); }
   }
 
   let latestPayload = null, payloadRevision = 0, pollSequence = 0, appliedPollSequence = 0;
@@ -2667,7 +2676,7 @@ ${chase.join('')}
     window.dispatchEvent(new Event('marquee-surface-rendered'));
   }
 
-  async function tick() {
+  async function tick(lifecycle = {}) {
     const sequence = ++pollSequence, revision = payloadRevision;
     let d = demoM().data;
     if (SPORTS_DEMO) d = {
@@ -2699,11 +2708,12 @@ ${chase.join('')}
       if (!baseCfg) await settingsTick();
       if (!DEMO) {
         const display = '&display=' + encodeURIComponent(ATTENTION_DISPLAY);
-        const response = await fetch('/now-playing.json?t=' + Date.now() + display);
+        const response = await fetch('/now-playing.json?t=' + Date.now() + display, {signal: lifecycle.signal});
         if (!response.ok) return;
         d = await response.json();
       }
-    } catch (e) { if (!DEMO) return; }
+    } catch (e) { if (!DEMO && e?.name !== 'AbortError') return; }
+    if (lifecycle.isCurrent && !lifecycle.isCurrent()) return;
     // An older poll must not undo a newer poll or an SSE transition to idle.
     if (sequence <= appliedPollSequence || revision !== payloadRevision) return;
     appliedPollSequence = sequence;
@@ -2723,9 +2733,12 @@ ${chase.join('')}
   }
 
   // Ambient dimming updates in-place; changing lux never restarts the cast.
-  async function ambientTick() {
+  async function ambientTick(lifecycle = {}) {
     try {
-      const d = await (await fetch('/ambient.json?t=' + Date.now())).json();
+      const response = await fetch('/ambient.json?t=' + Date.now(), {signal: lifecycle.signal});
+      if (!response.ok) return;
+      const d = await response.json();
+      if (lifecycle.isCurrent && !lifecycle.isCurrent()) return;
       if (Number.isFinite(d.opacity)) {
         document.documentElement.style.setProperty('--ambient-dim', d.opacity);
         // Ambient control is deliberately simple: dim luminous interface
@@ -2750,15 +2763,13 @@ ${chase.join('')}
   });
   enableEditor();
   enableLiveEditor();
-  tick();
   startLiveEvents();
-  ambientTick();
   // SSE is primary on /live; a slow fallback poll recovers from proxies or
   // browsers that suspend long-lived connections in the background.
-  setInterval(tick, LIVE_SURFACE ? 30000 : 5000);
-  setInterval(settingsTick, 2000);
-  setInterval(ambientTick, 15000);
-  setInterval(paint, 1000);
+  window.MarqueeLifecycle.register('now-playing', {interval: LIVE_SURFACE ? 30000 : 5000, refresh: tick});
+  window.MarqueeLifecycle.register('configuration', {interval: 2000, refresh: settingsTick});
+  window.MarqueeLifecycle.register('ambient', {interval: 15000, refresh: ambientTick});
+  window.MarqueeLifecycle.register('surface-animation', {interval: 1000, refresh: () => paint()});
 </script>
 
-<script src="/kiosk-menu.js?v=2.11.4"></script>
+<script src="/kiosk-menu.js?v=2.12.0"></script>
