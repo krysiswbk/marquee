@@ -1,3 +1,8 @@
+## 2.11.1
+
+- Omit invalid Plex years from rendered episode subtitles while preserving
+  valid episode years.
+
 ## 2.11.0
 
 - Unify Home and Now Playing around the same active-playback composition at

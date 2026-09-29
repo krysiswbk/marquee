@@ -870,7 +870,11 @@ def parse_session(video, extras=library_extras, position=None):
     info["session"], info["stream"], info["tracks"] = \
         plex_session_payload(video, position)
     if is_episode and a("parentIndex") and a("index"):
-        info["subtitle"] = f"S{a('parentIndex')} · E{a('index')} · {a('title')}"
+        episode_title = a("title") or ""
+        episode_label = " - ".join(part for part in (year, episode_title) if part)
+        info["subtitle"] = " · ".join(
+            part for part in (f"S{a('parentIndex')}", f"E{a('index')}",
+                              episode_label) if part)
 
     x = (extras(a("ratingKey"), a("type") == "movie") if a("ratingKey")
          else {"genres": [], "imdb": None, "stinger": [],
