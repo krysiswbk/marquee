@@ -12,6 +12,14 @@ from cast.marquee.providers.weather import WeatherProvider
 from cast.marquee.api.bridge import authorize
 
 
+def test_publisher_sources_apparent_temperature_from_authoritative_ha_entity():
+    source = (Path(__file__).parents[1] / 'integrations/homeassistant/marquee_ambient.py').read_text()
+    assert 'FEELS_LIKE = "sensor.outside_feels_like_temperature"' in source
+    assert 'self.get_state(self.FEELS_LIKE)' in source
+    assert '"apparent_temperature": apparent_temperature' in source
+    assert 'attrs.get("apparent_temperature")' not in source
+
+
 def observation(**overrides):
     return {'entity_id': 'weather.home', 'temp': 23.7, 'condition': 'partlycloudy',
             'humidity': 61, 'wind': 10, 'forecast_updated': time.time(),

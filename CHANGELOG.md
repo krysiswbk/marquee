@@ -1,3 +1,8 @@
+## 2.10.98
+
+- Source feels-like weather from `sensor.outside_feels_like_temperature` into the existing authoritative payload field, with truthful null handling.
+- Give active phone playback a compact, uncropped summary and constrain poster art to a real 2:3 supporting column; make phone dock copy truncate safely.
+
 ## 2.10.97
 
 ### Kiosk now-playing follow-up

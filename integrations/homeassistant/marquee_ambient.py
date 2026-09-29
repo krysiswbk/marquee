@@ -1,4 +1,5 @@
 import requests
+import math
 from marquee_bridge import BridgeSession
 from marquee_kiosk import kiosk_awake
 from datetime import datetime, timedelta, timezone
@@ -10,6 +11,7 @@ class MarqueeAmbient(hass.Hass):
     SENSOR = "sensor.living_room_motion_sensor_illuminance"
     URL = "http://10.10.9.37:8084/ambient"
     WEATHER = "weather.environment_canada_forecast"
+    FEELS_LIKE = "sensor.outside_feels_like_temperature"
     WEATHER_URL = "http://10.10.9.37:8084/ha-weather"
     GARAGE_OCCUPANCY = "input_boolean.garage_os"
     GARAGE_URL = "http://10.10.9.37:8084/garage-occupancy"
@@ -27,6 +29,7 @@ class MarqueeAmbient(hass.Hass):
         self.kiosk_context = None
         self.listen_state(self.lux_changed, self.SENSOR)
         self.listen_state(self.weather_changed, self.WEATHER, attribute="all")
+        self.listen_state(self.weather_changed, self.FEELS_LIKE)
         self.listen_state(self.garage_changed, self.GARAGE_OCCUPANCY)
         for entity in self.SPORTS:
             self.listen_state(self.sport_changed, entity, attribute="all")
@@ -235,6 +238,16 @@ class MarqueeAmbient(hass.Hass):
         import time
         state = self.get_state(self.WEATHER, attribute="all") or {}
         attrs = state.get("attributes", {})
+        # The weather entity does not reliably expose apparent_temperature.
+        # Keep the established payload field, sourced only from the dedicated
+        # HA feels-like entity; unavailable/non-numeric state remains null.
+        feels_like = self.get_state(self.FEELS_LIKE)
+        try:
+            apparent_temperature = float(feels_like)
+            if not math.isfinite(apparent_temperature):
+                apparent_temperature = None
+        except (TypeError, ValueError):
+            apparent_temperature = None
         if time.time() - self.weather_forecast_at >= 600:
             try:
                 forecasts = {}
@@ -260,7 +273,7 @@ class MarqueeAmbient(hass.Hass):
             "humidity": attrs.get("humidity"), "wind": attrs.get("wind_speed"),
             "windUnit": attrs.get("wind_speed_unit", "km/h"), "wind_gust": attrs.get("wind_gust_speed"),
             "pressure": attrs.get("pressure"), "pressure_unit": attrs.get("pressure_unit", "hPa"),
-            "apparent_temperature": attrs.get("apparent_temperature"),
+            "apparent_temperature": apparent_temperature,
             "observed_at": state.get("last_updated"),
             "forecast_updated": self.weather_forecast_at, **self.weather_forecasts,
         }

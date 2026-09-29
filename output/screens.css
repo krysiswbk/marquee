@@ -214,6 +214,33 @@ body.kiosk-now-playing .b-progress{width:min(54vw,760px);}
 body.kiosk-now-playing .b-device,body.kiosk-now-playing .b-viewer,body.kiosk-now-playing .b-tracks,body.kiosk-now-playing .b-activity{position:absolute;left:6vw;bottom:calc(9vh + 72px);width:min(28vw,420px);height:8vh;}
 @media(max-width:700px){body.kiosk-now-playing .stage{grid-template-columns:minmax(0,1fr) minmax(92px,24vw)!important;column-gap:18px;padding:5vh 22px 9vh;}body.kiosk-now-playing .b-poster{height:auto;width:min(24vw,160px);max-height:34vh;}body.kiosk-now-playing .title{font-size:clamp(36px,10vw,62px);}body.kiosk-now-playing .plot{font-size:16px;line-height:1.3;}body.kiosk-now-playing .b-device,body.kiosk-now-playing .b-viewer,body.kiosk-now-playing .b-tracks,body.kiosk-now-playing .b-activity{left:22px;bottom:calc(9vh + 58px);width:calc(100vw - 44px);height:52px;}}
 @media(max-width:480px){body.kiosk-now-playing .stage{display:flex!important;flex-direction:column;align-items:stretch;justify-content:flex-start;overflow:auto;padding:34px 20px 88px;}body.kiosk-now-playing .b-poster{order:2;height:220px;width:147px;margin:18px auto 4px;}body.kiosk-now-playing .b-category{order:0;}body.kiosk-now-playing .b-identity{order:1;}body.kiosk-now-playing .b-meta,body.kiosk-now-playing .b-plot,body.kiosk-now-playing .b-progress{order:3;}body.kiosk-now-playing .b-device,body.kiosk-now-playing .b-viewer,body.kiosk-now-playing .b-tracks,body.kiosk-now-playing .b-activity{position:static;order:4;width:auto;height:52px;margin-top:12px;}}
+/* Phone playback is a summary, not a scaled desktop billboard. Keep the
+   identity readable, make the poster a real 2:3 supporting object, and put
+   useful device/progress context after it. */
+@media(max-width:480px){
+ body.kiosk-now-playing .stage{gap:0;overflow-x:hidden;overflow-y:auto;padding:24px 20px 88px;}
+ body.kiosk-now-playing .b-category{order:0;}
+ body.kiosk-now-playing .b-identity{order:1;min-width:0;}
+ body.kiosk-now-playing .b-meta{order:2;}
+ body.kiosk-now-playing .b-poster{order:3;width:min(30vw,132px);height:auto;max-height:198px;aspect-ratio:2/3;margin:12px auto 4px;}
+ body.kiosk-now-playing .b-plot{order:4;}
+ body.kiosk-now-playing .b-progress{order:5;width:100%;}
+ body.kiosk-now-playing .b-device{order:6;}
+ body.kiosk-now-playing .b-viewer,body.kiosk-now-playing .b-tracks,body.kiosk-now-playing .b-activity{display:none!important;}
+}
+/* Home remains a real dashboard while playback is active, but its phone
+   summary must not inherit the decorative street frame or crop its poster. */
+@media(max-width:480px){
+ body.kiosk-playback-active .stage{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(96px,30vw)!important;grid-template-rows:auto auto auto auto;grid-template-areas:"category poster" "identity poster" "meta poster" "progress progress";align-content:start;align-items:start;column-gap:16px;row-gap:8px;overflow:hidden;padding:24px 20px 88px;}
+ body.kiosk-playback-active .b-streetframe,body.kiosk-playback-active .b-nowplaying,body.kiosk-playback-active .b-plot,body.kiosk-playback-active .b-ratings,body.kiosk-playback-active .b-stream,body.kiosk-playback-active .b-viewer,body.kiosk-playback-active .b-tracks,body.kiosk-playback-active .b-activity{display:none!important;}
+ body.kiosk-playback-active .b-category{grid-area:category;}
+ body.kiosk-playback-active .b-identity{grid-area:identity;min-width:0;}
+ body.kiosk-playback-active .b-meta{grid-area:meta;min-width:0;}
+ body.kiosk-playback-active .b-poster{grid-area:poster;width:min(30vw,132px);height:auto;max-height:198px;aspect-ratio:2/3;align-self:start;justify-self:end;}
+ body.kiosk-playback-active .b-progress{grid-area:progress;width:100%;margin-top:8px;}
+ body.kiosk-playback-active .b-device{position:static;grid-column:1/-1;width:auto;height:52px;margin-top:4px;}
+ body.kiosk-playback-active .title{font-size:clamp(30px,9vw,48px);}
+}
 .kiosk-queue-label{margin:0;color:#b6f378;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
 .kiosk-queue-row strong,.kiosk-queue-row span{overflow-wrap:anywhere}
 @media(max-width:480px){.kiosk-menu{padding:16px}.kiosk-menu nav{grid-template-columns:1fr}.kiosk-items button{padding:20px}}

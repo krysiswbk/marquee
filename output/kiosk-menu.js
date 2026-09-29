@@ -530,7 +530,9 @@
     // media stage; every non-playing/manual lifecycle belongs to this panel.
     // Never let the stage and panel hide each other during the hand-off.
     const plexActive = view === 'plex' && nowPlaying?.playing === true;
+    const kioskPlaybackActive = LIVE_SURFACE && ATTENTION_DISPLAY === 'kiosk' && nowPlaying?.playing === true;
     document.body.classList.toggle('kiosk-now-playing', plexActive);
+    document.body.classList.toggle('kiosk-playback-active', kioskPlaybackActive);
     panel.classList.toggle('now-playing-surface', view === 'plex');
     const active = Boolean(view) && !interrupted && view !== 'household';
     const surface = active && view === 'weather' && selected ? 'weather'

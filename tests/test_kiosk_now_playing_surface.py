@@ -28,6 +28,8 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn("if (interrupted || !view || view === 'plex') return payload", MENU)
         self.assertIn("progressState = window.MarqueeNowPlayingProgress.reconcile(d, progressState", INDEX)
         self.assertIn("render(d);", INDEX)
+        self.assertIn("const kioskPlaybackActive = LIVE_SURFACE && ATTENTION_DISPLAY === 'kiosk'", MENU)
+        self.assertIn("document.body.classList.toggle('kiosk-playback-active', kioskPlaybackActive)", MENU)
 
     def test_idle_unavailable_surface_does_not_reuse_media_identity(self):
         self.assertIn("No previous title or artwork is retained here", MENU)
@@ -58,6 +60,10 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn("body.kiosk-now-playing .b-poster", SCREENS)
         self.assertIn("body.kiosk-now-playing .b-streetframe,body.kiosk-now-playing .b-nowplaying{display:none!important;}", SCREENS)
         self.assertIn("height:auto;max-height:min(56vh,495px);aspect-ratio:2/3", SCREENS)
+        self.assertIn("body.kiosk-playback-active .b-streetframe,body.kiosk-playback-active .b-nowplaying", SCREENS)
+        self.assertIn("grid-template-areas:\"category poster\" \"identity poster\" \"meta poster\" \"progress progress\"", SCREENS)
+        self.assertIn("body.kiosk-now-playing .b-meta{order:2;}", SCREENS)
+        self.assertIn("body.kiosk-now-playing .b-device{order:6;}", SCREENS)
 
     def test_authoritative_apparent_temperature_accepts_numeric_strings_only(self):
         self.assertIn("lastWx?.apparent_temperature == null || lastWx.apparent_temperature === ''", INDEX)
@@ -66,6 +72,10 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         weather_channel = (ROOT / "output/weather-channel.js").read_text()
         self.assertIn("Number(model.apparent_temperature)", weather_channel)
         self.assertIn("Number.isFinite(apparentTemperature)", weather_channel)
+
+    def test_phone_dock_truncates_long_household_copy(self):
+        brain = (ROOT / "output/brain.css").read_text()
+        self.assertIn(".brain-dock-copy{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}", brain)
 
     def test_navigation_and_touch_contract(self):
         self.assertIn('class="kiosk-home-action"', MENU)
