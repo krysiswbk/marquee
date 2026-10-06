@@ -1,3 +1,9 @@
+# 2.12.17
+
+- Fix the Cast calendar composition at Nest Hub scale: ordinary single-event
+  cards now use the same swapped clock/agenda regions as the multi-event
+  ambient agenda, with the clock retaining primary visual hierarchy.
+
 ## 2.12.16
 
 - Clear the shared Live/Kiosk configuration-refresh warning after the config

@@ -1,4 +1,4 @@
-"""Regression coverage for the Cast ambient calendar region swap."""
+"""Rendered Nest Hub regression coverage for the Cast calendar composition."""
 import os
 from pathlib import Path
 
@@ -8,7 +8,7 @@ from playwright.sync_api import sync_playwright
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_cast_ambient_swap_preserves_parent_sizing_and_computed_regions():
+def test_cast_calendar_swap_preserves_scale_and_uses_both_glance_regions():
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(
             executable_path=os.environ.get("MARQUEE_CHROMIUM"), args=["--no-sandbox"]
@@ -32,11 +32,19 @@ def test_cast_ambient_swap_preserves_parent_sizing_and_computed_regions():
                 () => {
                   const stage = document.querySelector('#stage');
                   const card = document.querySelector('#context-card');
+                  document.body.classList.remove('idle');
                   stage.classList.remove('hidden');
+                  stage.classList.remove('fade');
+                  document.querySelector('.idle-screen').style.display = 'none';
                   stage.classList.add('contextual');
-                  card.dataset.kind = 'ambient_agenda';
-                  card.classList.remove('no-art');
+                  card.dataset.kind = 'calendar_event';
+                  card.classList.add('no-art');
+                  card.hidden = false;
                   card.style.display = 'grid';
+                  document.querySelector('#context-clock').textContent = '11:04 am';
+                  document.querySelector('#context-title').textContent = 'Thanksgiving Day';
+                  document.querySelector('#context-subtitle').textContent = 'Monday, Oct 12';
+                  document.querySelector('#context-source').textContent = 'CALENDAR';
                   document.body.classList.add('cast-display');
                   const rows = document.querySelector('#context-rows');
                   rows.hidden = false;
@@ -62,9 +70,7 @@ def test_cast_ambient_swap_preserves_parent_sizing_and_computed_regions():
                 }
                 """
             )
-            # render() supplies the established 5.2vw context clock token;
-            # the regression's 11vw Cast override must not return.
-            expected_clock = width * 0.052
+            expected_clock = max(5 * 16, min(width * 0.09, 10 * 16))
             expected_agenda = min(max(0.85 * 16, width * 0.0135), 1.4 * 16)
             assert abs(float(result["clockSize"].replace("px", "")) - expected_clock) < 0.1
             assert abs(float(result["agendaSize"].replace("px", "")) - expected_agenda) < 0.1
@@ -72,8 +78,10 @@ def test_cast_ambient_swap_preserves_parent_sizing_and_computed_regions():
             assert result["agendaGap"] == f"{width * 0.02:g}px"
             assert result["source"] == {"column": "1", "row": "1"}
             assert result["agenda"] == {"column": "2", "row": "1"}
-            assert result["time"] == {"column": "1", "row": "4"}
+            assert result["time"] == {"column": "1", "row": "3"}
             assert result["agendaBox"]["left"] > result["cardBox"]["left"]
             assert result["clockBox"]["top"] > result["agendaBox"]["top"]
+            assert result["clockBox"]["width"] > width * 0.25
+            assert result["agendaBox"]["width"] > width * 0.25
             page.close()
         browser.close()
