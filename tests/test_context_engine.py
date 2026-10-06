@@ -157,6 +157,31 @@ class ProviderTests(unittest.TestCase):
         _, contexts = self.weather(alerts=[alert])
         self.assertEqual(contexts[0].priority, 92)
 
+    def test_weather_alert_count_only_snapshot_value_is_ignored(self):
+        p = WeatherProvider({"enabled": True, "latitude": 43.5, "longitude": -79.9,
+                             "timezone": "America/Toronto", "radar": False}, self.tmp.name)
+        with open(os.path.join(self.tmp.name, "ha-weather.json"), "w") as handle:
+            json.dump({"entity_id": "weather.home", "temp": 20, "condition": "sunny",
+                       "code": 0, "isDay": True, "humidity": 50, "wind": 5,
+                       "wind_gust": 10, "updated": time.time()}, handle)
+        with open(os.path.join(self.tmp.name, "ha-weather-context.json"), "w") as handle:
+            json.dump({"updated": time.time(), "advisories": 1}, handle)
+        self.assertEqual(p.fetch()["alerts"]["features"], [])
+
+    def test_weather_alert_real_snapshot_text_is_preserved(self):
+        p = WeatherProvider({"enabled": True, "latitude": 43.5, "longitude": -79.9,
+                             "timezone": "America/Toronto", "radar": False}, self.tmp.name)
+        with open(os.path.join(self.tmp.name, "ha-weather.json"), "w") as handle:
+            json.dump({"entity_id": "weather.home", "temp": 20, "condition": "sunny",
+                       "code": 0, "isDay": True, "humidity": 50, "wind": 5,
+                       "wind_gust": 10, "updated": time.time()}, handle)
+        with open(os.path.join(self.tmp.name, "ha-weather-context.json"), "w") as handle:
+            json.dump({"updated": time.time(), "advisories": "Heat warning in effect"}, handle)
+        self.assertEqual(
+            p.fetch()["alerts"]["features"][0]["properties"]["event"],
+            "Heat warning in effect",
+        )
+
     def sonarr(self, tracked=None):
         config = {"enabled": True, "url": "http://sonarr", "api_key": "x",
                   "timezone": "America/Toronto", "tracked_shows": tracked or [], "_now": NOW}

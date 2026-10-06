@@ -10,7 +10,7 @@ from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 VIEWPORTS = [(320, 720), (360, 720), (393, 852), (430, 852),
-             (700, 900), (1024, 600), (1500, 900)]
+             (700, 900), (1024, 600), (1500, 900), (3000, 2000)]
 HEALTH_NAMES = ["Nursery Motion & Lux Motion — Upstairs Hallway",
                 "Nursery Window Contact — South-facing Window"]
 
@@ -227,17 +227,41 @@ with sync_playwright() as playwright:
         assert not errors, (width, height, errors)
         page.close()
 
-        if width == 320:
-            alert = browser.new_page(viewport={"width": width, "height": height})
-            alert.route("**/*", route_for)
-            alert.goto("http://marquee.test/kiosk?view=weather&weather-alert=1", wait_until="domcontentloaded")
-            alert.wait_for_selector(".stage.weather-context .wx-broadcast")
-            alert.wait_for_function("document.querySelector('.channel-warning:not([hidden])') !== null")
-            assert alert.locator(".channel-warning").is_visible()
-            assert alert.locator(".wx-broadcast").get_attribute("data-alert") == "true"
-            assert alert.locator(".channel-warning").inner_text().strip()
+        alert = browser.new_page(viewport={"width": width, "height": height})
+        alert.route("**/*", route_for)
+        alert.goto("http://marquee.test/kiosk?view=weather&weather-alert=1", wait_until="domcontentloaded")
+        alert.wait_for_selector(".stage.weather-context .wx-broadcast")
+        alert.wait_for_function("document.querySelector('.channel-warning:not([hidden])') !== null")
+        assert alert.locator(".channel-warning").is_visible()
+        assert alert.locator(".wx-broadcast").get_attribute("data-alert") == "true"
+        assert alert.locator(".channel-warning").inner_text().strip()
+        if width <= 700:
             assert alert.locator(".wx-footer").evaluate("el => getComputedStyle(el).display === 'none'")
-            alert.close()
+        containment = alert.evaluate("""
+            () => {
+                const card = document.querySelector('.wx-broadcast');
+                const warning = document.querySelector('.channel-warning');
+                const current = document.querySelector('.channel-current');
+                const icon = document.querySelector('.channel-icon');
+                const temp = document.querySelector('.channel-temp');
+                const controls = document.querySelector('.wx-segments');
+                const rect = el => el.getBoundingClientRect();
+                const inside = (child, parent) => {
+                    const c = rect(child), p = rect(parent);
+                    return c.left >= p.left - 1 && c.right <= p.right + 1 &&
+                        c.top >= p.top - 1 && c.bottom <= p.bottom + 1;
+                };
+                return {iconInCurrent: inside(icon, current), tempInCurrent: inside(temp, current),
+                        warningInCard: inside(warning, card), controlsInViewport: rect(controls).bottom <= innerHeight + 1,
+                        viewportContained: rect(card).left >= -1 && rect(card).right <= innerWidth + 1 &&
+                            rect(card).top >= -1 && rect(card).bottom <= innerHeight + 1,
+                        horizontalOverflow: document.documentElement.scrollWidth > innerWidth};
+            }
+        """)
+        assert containment["iconInCurrent"] and containment["tempInCurrent"], (width, height, containment)
+        assert containment["warningInCard"] and containment["controlsInViewport"], (width, height, containment)
+        assert containment["viewportContained"] and not containment["horizontalOverflow"], (width, height, containment)
+        alert.close()
     browser.close()
 
 print("PASS: weather hierarchy has no clipping/overlap, horizontal overflow, or undersized controls across target viewports")

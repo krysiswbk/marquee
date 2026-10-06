@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import urllib.parse
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -12,6 +13,11 @@ class WeatherProvider(Provider):
     name = "weather"
     refresh_seconds = 60
     stale_seconds = 1800
+    _COUNT_ONLY_ALERT = re.compile(
+        r"^\s*(?:\d+(?:\.\d+)?|\d+(?:\.\d+)?\s*"
+        r"(?:alert|alerts|warning|warnings|watch|watches|advisory|advisories|statement|statements))\s*$",
+        re.IGNORECASE,
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -38,8 +44,10 @@ class WeatherProvider(Provider):
         if datetime.now().timestamp() - float(snapshot.get("updated", 0)) < 1800:
             for key in ("warnings", "watches", "advisories", "statements"):
                 value = snapshot.get(key)
-                if value and str(value).lower() not in ("0", "none", "unknown", "unavailable", "no alerts", "no warnings", "no watches", "no advisories", "no statements"):
-                    features.append({"id": key, "properties": {"event": str(value), "severity": key}})
+                text = str(value).strip() if value is not None else ""
+                if (text and text.lower() not in ("0", "none", "unknown", "unavailable", "no alerts", "no warnings", "no watches", "no advisories", "no statements")
+                        and not self._COUNT_ONLY_ALERT.fullmatch(text)):
+                    features.append({"id": key, "properties": {"event": text, "severity": key}})
         result["alerts"] = {"features": features}
         return result
 

@@ -1,3 +1,10 @@
+## 2.12.9
+
+- Ignore numeric/count-only Home Assistant warning, watch, advisory, and
+  statement values so they cannot become false weather alert titles.
+- Keep legitimate textual weather alerts visible while containing their warning
+  band, current conditions, controls, and viewport at kiosk sizes.
+
 ## 2.12.8
 
 - Commit kiosk context replacements before transition animation so rapid
