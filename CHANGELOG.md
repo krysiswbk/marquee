@@ -1,3 +1,8 @@
+## 2.12.10
+
+- Clear the Cast configuration-refresh error after a successful `/settings.json`
+  retry so a transient request failure cannot remain permanently visible.
+
 ## 2.12.9
 
 - Ignore numeric/count-only Home Assistant warning, watch, advisory, and
