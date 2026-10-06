@@ -1,3 +1,9 @@
+## 2.12.16
+
+- Clear the shared Live/Kiosk configuration-refresh warning after the config
+  resource recovers successfully, preserving the last saved settings during
+  transient failures.
+
 ## 2.12.15
 
 - Keep the established Cast ambient clock and agenda sizing while swapping

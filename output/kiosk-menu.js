@@ -821,7 +821,10 @@
         const resource = resources[name];
         resource.phase = refreshPhase(resource);
         resource.state = sharedResourceState(resource);
-        if (name === 'config' && resource.error) window.MarqueeLifecycle.status('Configuration refresh failed. Showing the last saved settings; retrying.', 'error');
+        if (name === 'config') {
+          if (resource.error) window.MarqueeLifecycle.status('Configuration refresh failed. Showing the last saved settings; retrying.', 'error');
+          else window.MarqueeLifecycle.status('');
+        }
       }
       if (resources.config.snapshot) {
         const config = resources.config.snapshot;

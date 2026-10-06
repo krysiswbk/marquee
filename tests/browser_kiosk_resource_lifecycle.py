@@ -64,6 +64,12 @@ with sync_playwright() as playwright:
     assert page.get_by_role("button", name="Try again").is_visible()
     assert page.get_by_role("link", name="Return to Home", exact=True).is_visible()
 
+    # A recovered config snapshot must clear a warning left by an earlier
+    # failed config refresh, even when sibling resources were already healthy.
+    page.evaluate("window.MarqueeLifecycle.status('Configuration refresh failed. Showing the last saved settings; retrying.', 'error')")
+    page.evaluate("window.MarqueeNavigation.refresh()")
+    page.wait_for_function("!document.querySelector('#marquee-lifecycle-status')?.textContent")
+
     failures["contexts"] = False
     page.evaluate("window.MarqueeNavigation.refresh()")
     page.wait_for_selector('.stage.weather-context #wx-retained-context')

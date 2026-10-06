@@ -20,6 +20,14 @@ def test_direct_load_mounts_known_navigation_topology_before_configuration():
     assert "requestState === 'loading'" in MENU
 
 
+def test_configuration_refresh_warning_clears_after_kiosk_config_recovers():
+    failure = "window.MarqueeLifecycle.status('Configuration refresh failed. Showing the last saved settings; retrying.', 'error');"
+    recovery = "else window.MarqueeLifecycle.status('');"
+    assert failure in MENU
+    assert recovery in MENU
+    assert MENU.index(recovery) > MENU.index(failure)
+
+
 def test_rail_uses_unique_product_owned_current_color_marks():
     for token in ("const homeIcon = '<svg", "const moreIcon = '<svg", "currentColor",
                   "aria-hidden=\"true\"", "plex: ['Now playing'", "nhl: ['NHL'",
