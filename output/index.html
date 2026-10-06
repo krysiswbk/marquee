@@ -161,6 +161,22 @@
   .context-card[data-kind="gaming"], .context-card[data-kind="game_release"] { background:radial-gradient(circle at 78% 45%,rgba(126,87,194,.3),transparent 40%),linear-gradient(145deg,#080a0e,#171326 68%,#08090c) }
   .context-card[data-kind="tv_release"] { background:radial-gradient(circle at 78% 45%,rgba(66,165,245,.24),transparent 40%),linear-gradient(145deg,#080a0e,#101c28 68%,#08090c) }
   .context-card[data-kind="calendar_event"] { background:radial-gradient(circle at 78% 45%,rgba(20,184,166,.24),transparent 40%),linear-gradient(145deg,#080a0e,#0d211f 68%,#08090c) }
+  /* Cast ambient context is a clock first. Provider detail remains useful,
+     but it must read as a subordinate glanceable strip rather than a kiosk
+     takeover. */
+  body.cast-display .stage.contextual .context-clock { font-size:clamp(5rem,11vw,12rem); letter-spacing:-.06em; }
+  body.cast-display .stage.contextual .context-copy { align-self:start; padding-top:1vh; }
+  body.cast-display .stage.contextual .context-title { font-size:clamp(1.8rem,3vw,3.6rem); }
+  body.cast-display .stage.contextual .context-subtitle { font-size:clamp(1rem,1.5vw,1.6rem); }
+  body.cast-display .stage.contextual .context-detail { font-size:clamp(.9rem,1.2vw,1.3rem); }
+  body.cast-display .context-card[data-kind="ambient_agenda"] .context-rows {
+    display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.7vh 2vw;
+    max-height:28vh; padding-top:1vh; font-size:clamp(.85rem,1.35vw,1.4rem);
+  }
+  body.cast-display .context-card[data-kind="ambient_agenda"] .context-rows span {
+    padding:.7vh .8vw; border-radius:.45rem; border-left:3px solid var(--accent);
+    background:rgba(255,255,255,.055); white-space:normal;
+  }
   .context-card[data-state="starting_soon"] .context-status { color:#fbbf24; }
   .context-card [hidden], .sports-card [hidden], .weather-card [hidden] {display:none!important}
   .stage.sports .sports-card { display: grid; grid-template-rows: auto minmax(0,1fr) auto auto;
@@ -701,9 +717,9 @@
   body.live-editing [data-layout] { outline:none; }
   body.live-editing .screen-controls, body.live-editing nav { display:none !important; }
 </style>
-<link rel="stylesheet" href="/brain.css?v=2.12.12">
-<link rel="stylesheet" href="/screens.css?v=2.12.12">
-<link rel="stylesheet" href="/weather-channel.css?v=2.12.12">
+<link rel="stylesheet" href="/brain.css?v=2.12.13">
+<link rel="stylesheet" href="/screens.css?v=2.12.13">
+<link rel="stylesheet" href="/weather-channel.css?v=2.12.13">
 <link rel="stylesheet" href="/scene-themes.css?v=2.9.7">
 <body data-template="spotlight">
 <img class="bg" id="bg" alt="">
@@ -804,12 +820,12 @@
 <time class="cast-clock-overlay" id="cast-clock-overlay"></time>
 <div class="idle-screen"><div class="idle-house"><div class="idle-kicker" id="idle-kicker">Home</div><div class="idle-greeting" id="idle-greeting"></div><div class="idle-state" id="idle-state" hidden></div><div class="idle-note" id="idle-note" hidden></div><time class="idle-clock" id="idle-clock"></time><div class="idle-date" id="idle-date"></div><div class="idle-weather" id="idle-weather" aria-label="Current weather"><div class="idle-weather-primary"><strong id="idle-weather-temp"></strong><span id="idle-weather-condition"></span></div><div class="idle-weather-secondary"><span id="idle-weather-feels"></span><span id="idle-weather-range"></span><span id="idle-weather-rain"></span></div><div class="idle-weather-status" id="idle-weather-status"></div></div></div></div>
 <div class="ambient-veil" aria-hidden="true"></div>
-<script src="/lifecycle.js?v=2.12.12"></script>
-<script src="/state-contract.js?v=2.12.12"></script>
-<script src="/weather-channel.js?v=2.12.12"></script>
-<script src="/weather-summary.js?v=2.12.12"></script>
-<script src="/now-playing-progress.js?v=2.12.12"></script>
-<script src="/brain.js?v=2.12.12"></script>
+<script src="/lifecycle.js?v=2.12.13"></script>
+<script src="/state-contract.js?v=2.12.13"></script>
+<script src="/weather-channel.js?v=2.12.13"></script>
+<script src="/weather-summary.js?v=2.12.13"></script>
+<script src="/now-playing-progress.js?v=2.12.13"></script>
+<script src="/brain.js?v=2.12.13"></script>
 <script>
 
   const $ = id => document.getElementById(id);
@@ -2792,4 +2808,4 @@ ${chase.join('')}
   window.MarqueeLifecycle.register('surface-animation', {interval: 1000, refresh: () => paint()});
 </script>
 
-<script src="/kiosk-menu.js?v=2.12.12"></script>
+<script src="/kiosk-menu.js?v=2.12.13"></script>

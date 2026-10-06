@@ -52,6 +52,7 @@ from marquee.providers import ContextEngine
 from marquee.providers.registry import create_providers, load_provider_config
 from marquee.config import ConfigRepository
 from marquee.core.arbitration import ContextArbiter
+from marquee.core.cast_ambient import calendar_agenda
 from marquee.core.events import EventBus
 from marquee.services.screen_testing import SAMPLES, forced_context, sample_catalog
 
@@ -307,6 +308,9 @@ def best_context(plex_info=None, display="hubs"):
     scene_saved = [c for c in saved if not supporting(c)] if family == "kiosk" else saved
     scene_modular = [c for c in modular if not supporting(c)] if family == "kiosk" else modular
     if family == "hubs" and not kiosk_receiver:
+        agenda = calendar_agenda(scene_saved + scene_modular)
+        if agenda:
+            scene_modular = scene_modular + [agenda]
         try:
             winner = ARBITER.select(scene_saved, scene_modular, plex_info, family,
                                     ambient=True)

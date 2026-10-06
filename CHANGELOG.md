@@ -1,3 +1,10 @@
+## 2.12.13
+
+- Keep Cast ambient provider views clock-first, with a compact multi-event
+  calendar agenda subordinate to the clock.
+- Preserve the existing ambient cadence, active-media priority, and urgent
+  takeover behavior.
+
 ## 2.12.12
 
 - Restore the established Street theater-screening composition on the kiosk
