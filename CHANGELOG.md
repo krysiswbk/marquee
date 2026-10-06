@@ -1,3 +1,8 @@
+# 2.12.34
+
+- Render the Home Assistant sky sensor feed on the kiosk Sky destination, including cloud cover, visibility with its source unit, sun/moon observations, and nearby aircraft; keep rare aurora alerts as additional context.
+- Fix the browser fixture to hide demo artwork when testing an artwork-free Cast calendar.
+
 # 2.12.33
 
 - Keep daytime ambient skies light blue behind dark-grey Cast weather details, with light clouds and a shadowed white ambient clock; preserve genuinely black night skies and existing sun-sensor day/night behavior.

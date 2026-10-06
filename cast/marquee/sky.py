@@ -28,6 +28,9 @@ def clean_sky(value):
     visibility = finite(value.get("visibility"), 0, 100000)
     if visibility is not None:
         result["visibility"] = visibility
+        unit = str(value.get("visibility_unit", "")).strip()[:12]
+        if unit:
+            result["visibility_unit"] = unit
     sun = value.get("sun")
     if isinstance(sun, dict):
         clean = {}

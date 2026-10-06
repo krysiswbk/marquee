@@ -30,6 +30,7 @@ def _exercise(page, kind, row_count, weather_text=""):
           stage.classList.add('contextual');
           card.dataset.kind = kind;
           card.classList.add('no-art');
+          document.querySelector('#context-art').hidden = true;
           card.hidden = false;
           card.style.display = 'grid';
           document.querySelector('#context-clock').textContent = '11:04 am';

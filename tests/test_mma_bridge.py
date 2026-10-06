@@ -73,7 +73,7 @@ class MMABridgeTests(unittest.TestCase):
             "sensor.marquee_weather_summary": {"state": "ok", "attributes": {
                 "cloud_cover": 38, "visibility": 18000, "moon_phase": "first_quarter"}},
             "sensor.open_meteo_cloud_cover": {"state": "91", "attributes": {}},
-            "sensor.open_meteo_visibility": {"state": "5000", "attributes": {}},
+            "sensor.open_meteo_visibility": {"state": "5000", "attributes": {"unit_of_measurement": "m"}},
             "sensor.moon_phase": {"state": "waxing_gibbous", "attributes": {}},
             "sun.sun": {"state": "above_horizon", "attributes": {"elevation": 27, "azimuth": 191}},
         }
@@ -81,6 +81,7 @@ class MMABridgeTests(unittest.TestCase):
         sky = app.sky_contract()
         self.assertEqual(sky["cloud_cover"], 38)
         self.assertEqual(sky["visibility"], 18000)
+        self.assertEqual(sky["visibility_unit"], "m")
         self.assertEqual(sky["moon"]["phase"], "first_quarter")
         self.assertNotIn("illumination", sky["moon"])
         self.assertNotIn("elevation", sky["moon"])
@@ -94,14 +95,15 @@ class MMABridgeTests(unittest.TestCase):
         states = {
             "sensor.marquee_weather_summary": {"state": "ok", "attributes": {}},
             "sensor.open_meteo_cloud_cover": {"state": "44", "attributes": {}},
-            "sensor.open_meteo_visibility": {"state": "12000", "attributes": {}},
+            "sensor.open_meteo_visibility": {"state": "12", "attributes": {"unit_of_measurement": "km"}},
             "sensor.moon_phase": {"state": "full_moon", "attributes": {}},
             "sun.sun": {"state": "below_horizon", "attributes": {"elevation": -12, "azimuth": 280}},
         }
         app.get_state = lambda entity, **kwargs: states.get(entity, {})
         sky = app.sky_contract()
         self.assertEqual(sky["cloud_cover"], 44)
-        self.assertEqual(sky["visibility"], 12000)
+        self.assertEqual(sky["visibility"], 12)
+        self.assertEqual(sky["visibility_unit"], "km")
         self.assertFalse(sky["sun"]["is_day"])
         self.assertEqual(sky["moon"]["phase"], "full_moon")
 

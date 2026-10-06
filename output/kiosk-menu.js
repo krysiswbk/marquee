@@ -37,6 +37,7 @@
     config: {phase: 'loading', snapshot: null, error: null},
     contexts: {phase: 'loading', snapshot: null, error: null},
     providers: {phase: 'loading', snapshot: null, error: null},
+    sky: {phase: 'loading', snapshot: null, error: null},
   };
   let requestState = 'loading', requestSerial = 0;
   const resourceHasSnapshot = () => Object.values(resources).some(resource => resource.snapshot !== null);
@@ -519,8 +520,32 @@
   }
   function renderAmbient(list) {
     const feature = ordered(list)[0];
-    if (!feature) return sharedState('The sky is quiet for now.', 'Return to Home', false, 'empty');
-    return `<div class="kiosk-ambient-surface"><p class="kiosk-kicker">SKY · ${esc(stateCopy(feature))}</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || '')}</p><p class="kiosk-empty">${esc(feature.detail || '')}</p><div class="kiosk-ambient-rows">${safeRows(feature).map(row => `<span>${esc(row)}</span>`).join('')}</div></div>`;
+    const sky = resources.sky.snapshot?.sky || {};
+    const sun = sky.sun || {}, moon = sky.moon || {};
+    const facts = [];
+    const hasNumber = value => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
+    if (sky.condition) {
+      const condition = String(sky.condition).toLowerCase().replaceAll('_', '-');
+      const known = {partlycloudy: 'Partly cloudy', 'partly-cloudy': 'Partly cloudy', clear: 'Clear',
+        'clear-night': 'Clear night', cloudy: 'Cloudy', rainy: 'Rainy', pouring: 'Pouring', fog: 'Foggy'};
+      facts.push(known[condition] || condition.replaceAll('-', ' ').replace(/^./, letter => letter.toUpperCase()));
+    }
+    if (hasNumber(sky.cloud_cover)) facts.push(`Cloud cover · ${Math.round(Number(sky.cloud_cover))}%`);
+    if (hasNumber(sky.visibility)) facts.push(`Visibility · ${Number(sky.visibility).toLocaleString()} ${sky.visibility_unit || 'm'}`);
+    if (hasNumber(sun.elevation)) facts.push(`Sun elevation · ${Number(sun.elevation).toFixed(1)}°`);
+    if (hasNumber(sun.azimuth)) facts.push(`Sun bearing · ${Math.round(Number(sun.azimuth))}°`);
+    if (moon.phase) facts.push(`Moon · ${String(moon.phase).replaceAll('_', ' ')}`);
+    if (hasNumber(moon.illumination)) facts.push(`Illumination · ${Math.round(Number(moon.illumination) * 100)}%`);
+    if (hasNumber(moon.elevation)) facts.push(`Moon elevation · ${Number(moon.elevation).toFixed(1)}°`);
+    if (hasNumber(moon.azimuth)) facts.push(`Moon bearing · ${Math.round(Number(moon.azimuth))}°`);
+    const aircraft = Array.isArray(sky.aircraft) ? sky.aircraft : [];
+    if (aircraft.length) facts.push(`${aircraft.length} aircraft nearby${aircraft[0].callsign ? ` · ${aircraft[0].callsign}` : ''}`);
+    const rows = [...facts, ...(feature ? safeRows(feature) : [])];
+    if (!feature && !rows.length) return sharedState('The sky is quiet for now.', 'Return to Home', false, 'empty');
+    const title = feature?.title || 'The sky above home';
+    const subtitle = feature?.subtitle || (sun.is_day === true ? 'Daylight observations' : sun.is_day === false ? 'Night-sky observations' : 'Live observations');
+    const detail = feature?.detail || (feature ? feature.body : 'Home Assistant sky sensors');
+    return `<div class="kiosk-ambient-surface"><p class="kiosk-kicker">SKY · ${feature ? esc(stateCopy(feature)) : 'LIVE DATA'}</p><h2>${esc(title)}</h2><p class="kiosk-lede">${esc(subtitle)}</p>${detail ? `<p class="kiosk-empty">${esc(detail)}</p>` : ''}<div class="kiosk-ambient-rows">${rows.map(row => `<span>${esc(row)}</span>`).join('')}</div></div>`;
   }
   function renderDestination(key, list) { const category = categoryFor(key); return key === 'nhl' ? renderNhl(list) : category === 'sports' ? renderSports(list) : category === 'agenda' ? renderAgenda(list) : category === 'media' ? renderMedia(list) : category === 'sky' ? renderAmbient(list) : list.length ? `<div class="kiosk-items">${list.slice(0, 8).map(button).join('')}</div>` : sharedState('Nothing to show here right now.', 'Return to Home', false, 'empty'); }
   // Refreshes redraw panel markup, but an unchanged visible action must not be
@@ -796,6 +821,7 @@
       config: fetch('/api/config', {signal: lifecycle.signal}),
       contexts: fetch('/contexts', {signal: lifecycle.signal}),
       providers: fetch('/providers', {signal: lifecycle.signal}),
+      sky: fetch('/ha-weather.json', {signal: lifecycle.signal}),
     };
     try {
       const settled = await Promise.allSettled(Object.entries(requests).map(async ([name, request]) => {

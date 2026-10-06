@@ -417,8 +417,11 @@ class MarqueeAmbient(hass.Hass):
         if cloud is None:
             cloud = numeric(direct_value(self.CLOUD_COVER, "state"), 0, 100)
         visibility = numeric(aggregate_value("visibility", "visibility_m", "visibility_km"), 0, 100000)
+        visibility_unit = aggregate_value("visibility_unit")
+        visibility_state = direct_state(self.VISIBILITY)
+        visibility_unit = visibility_unit or visibility_state.get("attributes", {}).get("unit_of_measurement")
         if visibility is None:
-            visibility = numeric(direct_value(self.VISIBILITY, "state"), 0, 100000)
+            visibility = numeric(visibility_state.get("state"), 0, 100000)
         phase = aggregate_value("moon_phase", "phase")
         if phase is None:
             phase = direct_value(self.MOON_PHASE, "state")
@@ -477,6 +480,8 @@ class MarqueeAmbient(hass.Hass):
             sky["cloud_cover"] = cloud
         if visibility is not None:
             sky["visibility"] = visibility
+            if visibility_unit:
+                sky["visibility_unit"] = str(visibility_unit)[:12]
         if moon:
             sky["moon"] = moon
         if aircraft:
