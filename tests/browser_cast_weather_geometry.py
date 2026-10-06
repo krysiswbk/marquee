@@ -52,15 +52,25 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
         page.route("**/*", route)
         page.goto("http://marquee.test/image", wait_until="domcontentloaded")
         page.wait_for_selector("#idle-weather-icon svg")
-        result = page.evaluate(
+        page.evaluate(
             """
             () => {
               document.body.classList.add('cast-display');
               document.body.classList.add('idle');
               document.documentElement.style.setProperty('--ambient-ui-dim', '.25');
+            }
+            """
+        )
+        page.wait_for_function("""() => getComputedStyle(document.querySelector('#sky-layer')).opacity === '0.92'""")
+        result = page.evaluate(
+            """
+            () => {
               const box = selector => document.querySelector(selector).getBoundingClientRect().toJSON();
               const clock = box('#idle-clock'), house = box('.idle-house'), weather = box('#idle-weather');
               const secondary = box('.idle-weather-secondary');
+              const layer = document.querySelector('#sky-layer');
+              const stops = [...layer.querySelectorAll('stop')].map(stop => getComputedStyle(stop).stopColor);
+              const clouds = layer.querySelector('.sky-clouds');
               const weatherClockStyle = getComputedStyle(document.querySelector('.weather-clock'));
               const idleClockStyle = getComputedStyle(document.querySelector('.idle-clock'));
               const secondaryStyle = getComputedStyle(document.querySelector('.idle-weather-secondary'));
@@ -79,6 +89,9 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
                 statusColor: statusStyle.color,
                 skyMode: document.querySelector('#sky-layer')?.dataset.mode,
                 skyDay: document.body.classList.contains('sky-day'),
+                skyOpacity: getComputedStyle(layer).opacity,
+                skyGradient: stops,
+                skyCloudColor: getComputedStyle(clouds).fill,
                 viewport: {width: innerWidth, height: innerHeight},
                 icon: document.querySelector('#idle-weather-icon svg')?.dataset.kind,
                 temp: document.querySelector('#idle-weather-temp').textContent,
@@ -103,6 +116,9 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
         assert result["idleWeatherFilter"] == "none"
         assert result["skyMode"] == "day"
         assert result["skyDay"] is True
+        assert result["skyOpacity"] == "0.92"
+        assert result["skyGradient"] == ["rgb(184, 223, 239)", "rgb(111, 157, 183)"]
+        assert result["skyCloudColor"] == "rgb(234, 244, 250)"
         assert result["secondaryColor"] == "rgb(40, 52, 61)"
         assert result["secondaryColor"] == result["statusColor"]
         assert "Feels 16°" in result["secondary"]

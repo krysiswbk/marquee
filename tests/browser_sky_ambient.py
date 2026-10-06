@@ -66,6 +66,9 @@ def test_sky_layer_uses_supplied_night_moon_and_only_real_aircraft():
         day = page.evaluate("""() => {
           document.body.classList.add('idle');
           window.MarqueeSky.render({isDay: true, condition: 'cloudy', sky: {cloud_cover: 42}});
+        }""")
+        page.wait_for_function("""() => getComputedStyle(document.querySelector('#sky-layer')).opacity === '0.92'""")
+        day = page.evaluate("""() => {
           const layer = document.querySelector('#sky-layer');
           const stops = [...layer.querySelectorAll('stop')].map(stop => getComputedStyle(stop).stopColor);
           const clouds = layer.querySelector('.sky-clouds');
