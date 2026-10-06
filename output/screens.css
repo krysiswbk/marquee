@@ -69,6 +69,8 @@ body.cast-display .idle-weather-primary>*,body.cast-display .idle-weather-second
    condition forming one secondary focal group. */
 body.cast-display .idle-house{width:min(92vw,900px);gap:1.9vh}
 body.cast-display .idle-clock{font-size:clamp(5rem,19vw,12rem);line-height:.84;letter-spacing:-.065em;text-align:center}
+/* Cast clocks stay white and undimmed while ambient dimming applies elsewhere. */
+body.cast-display .weather-clock,body.cast-display .idle-clock{filter:none;color:#fff}
 body.cast-display .idle-weather{display:grid;justify-items:center;gap:1.15vh;width:100%;margin-top:1vh;color:var(--text-soft);font-size:clamp(1.3rem,2.65vw,2.4rem);font-weight:650}
 body.cast-display .idle-weather-primary{display:flex;align-items:center;justify-content:center;gap:clamp(.55rem,1.2vw,1rem);line-height:1}
 body.cast-display .idle-weather-primary strong{font-size:clamp(2.8rem,7.2vw,6rem);font-weight:750;letter-spacing:-.06em;color:var(--text)}

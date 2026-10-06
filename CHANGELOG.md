@@ -1,3 +1,7 @@
+# 2.12.30
+
+- Keep Cast weather and idle clocks white and undimmed while preserving ambient dimming elsewhere.
+
 # 2.12.29
 
 - Supporting weather facts now share the status-line dark gray on Cast.

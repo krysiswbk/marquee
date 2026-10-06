@@ -57,14 +57,21 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
             () => {
               document.body.classList.add('cast-display');
               document.body.classList.add('idle');
+              document.documentElement.style.setProperty('--ambient-ui-dim', '.25');
               const box = selector => document.querySelector(selector).getBoundingClientRect().toJSON();
               const clock = box('#idle-clock'), house = box('.idle-house'), weather = box('#idle-weather');
               const secondary = box('.idle-weather-secondary');
+              const weatherClockStyle = getComputedStyle(document.querySelector('.weather-clock'));
+              const idleClockStyle = getComputedStyle(document.querySelector('.idle-clock'));
               const secondaryStyle = getComputedStyle(document.querySelector('.idle-weather-secondary'));
               const statusStyle = getComputedStyle(document.querySelector('.idle-weather-status'));
               return {
                 clock, house, weather,
                 secondaryBox: secondary,
+                weatherClockColor: weatherClockStyle.color,
+                weatherClockFilter: weatherClockStyle.filter,
+                idleClockColor: idleClockStyle.color,
+                idleClockFilter: idleClockStyle.filter,
                 secondaryColor: secondaryStyle.color,
                 statusColor: statusStyle.color,
                 viewport: {width: innerWidth, height: innerHeight},
@@ -83,6 +90,10 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
         assert result["icon"] == "partly"
         assert result["temp"] == "17°C"
         assert result["condition"] == "Partly cloudy"
+        assert result["weatherClockColor"] == "rgb(255, 255, 255)"
+        assert result["weatherClockFilter"] == "none"
+        assert result["idleClockColor"] == "rgb(255, 255, 255)"
+        assert result["idleClockFilter"] == "none"
         assert result["secondaryColor"] == result["statusColor"]
         assert "Feels 16°" in result["secondary"]
         assert "High 22° / Low 11°" in result["secondary"]
