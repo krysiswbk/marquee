@@ -1,3 +1,14 @@
+# 2.12.25
+
+- Make every Cast page URL unique with a timestamped nonce so repeated explicit
+  casts cannot reuse a receiver's old document. Explicit `/api/cast` recasts
+  stop an active DashCast session before launching the fresh URL, while normal
+  reconciliation avoids unnecessary reloads.
+- Keep dynamic HTML/API responses uncached and allow only query-versioned local
+  CSS/JavaScript/font/SVG assets to use immutable browser caching.
+- Do not infer precipitation amounts when the live weather source omits them;
+  `null` remains an honest source-data result.
+
 # 2.12.24
 
 - Cast ambient weather now shows authoritative rain/snow accumulation when

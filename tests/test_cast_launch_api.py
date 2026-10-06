@@ -19,7 +19,7 @@ def test_discovered_receiver_launch_uses_discovery_devices():
     with patch.multiple(http, create=True, json=json, threading=Threads,
                         scan_devices=lambda refresh: {"devices": [{"ip": "192.0.2.10", "name": "Test Hub", "model": "Nest Hub"}], "current": "192.0.2.10"},
                         hold_manual_cast=lambda target: True,
-                        cast_card=lambda target: launched.append(target)):
+                        cast_card=lambda target, fresh=False: launched.append((target, fresh))):
         handler = object.__new__(http.WebHandler)
         handler.path = '/api/cast'
         body = json.dumps({"target": "192.0.2.10"}).encode()
@@ -28,4 +28,4 @@ def test_discovered_receiver_launch_uses_discovery_devices():
         replies = []
         handler._send = lambda body, ctype, code=200: replies.append((json.loads(body), code))
         handler.do_POST()
-        assert replies[-1][1] == 202 and launched == ["192.0.2.10"]
+        assert replies[-1][1] == 202 and launched == [("192.0.2.10", True)]

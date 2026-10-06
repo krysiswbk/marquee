@@ -266,6 +266,13 @@ Marquee checks that DashCast is active, casts the `/image` URL when playback sta
 4. Stop playback and confirm the Hub returns to ambient mode.
 5. Review `docker logs marquee`; there should be no `catt ... failed` message.
 
+For deployment verification, check `/healthz` for the deployed version, then
+stop the target DashCast session and issue one explicit `POST /api/cast`. The
+cast log must show a fresh `/image?...cb=<new-token>` URL, and `/healthz` should
+show `cardAlive: true` after the Hub fetches `/now-playing.json`. This verifies
+the actual receiver session and document, not just that the container is
+healthy. Repeating the explicit cast must produce a different `cb` token.
+
 ## Credits
 
 Marquee stands on generous shoulders:

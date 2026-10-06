@@ -13,6 +13,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
+import uuid
 from datetime import datetime, timedelta, timezone
 
 POLL = int(os.environ.get("POLL_SECONDS", "5"))
@@ -1058,6 +1059,17 @@ CARD_GRACE = {"until": 0.0}
 CARD_TIMEOUT = max(45, POLL * 6)
 GARAGE_STATE = {"occupied": False, "updated": 0.0}
 PRESENCE_STATE = {"rooms": {}, "updated": 0.0}
+_CAST_NONCE_LOCK = threading.Lock()
+_CAST_NONCE = 0
+
+
+def cast_cache_token():
+    """Return a unique receiver-document identity, even for same-second casts."""
+    global _CAST_NONCE
+    with _CAST_NONCE_LOCK:
+        _CAST_NONCE += 1
+        sequence = _CAST_NONCE
+    return f"{time.time_ns()}-{sequence}-{uuid.uuid4().hex[:8]}"
 
 
 def card_alive(now, last_poll, timeout=CARD_TIMEOUT):
@@ -1077,8 +1089,13 @@ def main_card_poll():
     return LAST_CARD_POLL["clients"].get(hub_ip(), 0.0)
 
 
-def cast_card(target=None):
-    """Load the card on the Hub, and let it be silent for one timeout window."""
+def cast_card(target=None, fresh=False):
+    """Load the card on the Hub, optionally replacing the receiver document.
+
+    ``fresh`` is reserved for an explicit user/deployment recast. Ordinary
+    reconciliation keeps its existing DashCast document and only casts when
+    state actually requires it.
+    """
     target = target or hub_ip()
     display = "garage" if target == GARAGE_HUB_IP else "hubs"
     url = urllib.parse.urlsplit(PAGE_URL)
@@ -1088,9 +1105,14 @@ def cast_card(target=None):
         path = "/kiosk"
         query["receiver"] = ["1"]
     query["display"] = [display]
-    query["cb"] = [str(int(time.time()))]
+    query["cb"] = [cast_cache_token()]
     page_url = urllib.parse.urlunsplit((url.scheme, url.netloc, path,
                                       urllib.parse.urlencode(query, doseq=True), url.fragment))
+    if fresh and dashcast_active_for(target):
+        # DashCast can retain the old document even when cast_site receives a
+        # URL that differs only by a query string. Stop the existing app first
+        # so the receiver must create a new browsing session.
+        catt_for(target, "stop")
     quiet_cast_site(target, page_url)
     if target == hub_ip():
         CARD_GRACE["until"] = time.time() + CARD_TIMEOUT

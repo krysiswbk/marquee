@@ -62,6 +62,29 @@ def test_cast_url_tracks_destination_mode_and_reverts(monkeypatch):
         assert parse_qs(main.query)['tpl']==['street']
 
 
+def test_successive_casts_have_unique_receiver_cache_tokens(monkeypatch):
+    urls = []
+    monkeypatch.setattr(media, 'PAGE_URL', 'http://marquee:8084/image')
+    monkeypatch.setattr(media, 'hub_ip', lambda: 'main')
+    monkeypatch.setattr(media, 'quiet_cast_site', lambda target, url: urls.append(url))
+    media.cast_card('main')
+    media.cast_card('main')
+    assert [parse_qs(urlsplit(url).query)['cb'][0] for url in urls][0] != \
+           parse_qs(urlsplit(urls[1]).query)['cb'][0]
+
+
+def test_fresh_cast_stops_existing_dashcast_before_launch(monkeypatch):
+    calls = []
+    monkeypatch.setattr(media, 'PAGE_URL', 'http://marquee:8084/image')
+    monkeypatch.setattr(media, 'hub_ip', lambda: 'main')
+    monkeypatch.setattr(media, 'dashcast_active_for', lambda target: True)
+    monkeypatch.setattr(media, 'catt_for', lambda target, *args: calls.append((target, *args)))
+    monkeypatch.setattr(media, 'quiet_cast_site', lambda target, url: calls.append((target, 'cast_site', url)))
+    media.cast_card('main', fresh=True)
+    assert calls[0] == ('main', 'stop')
+    assert calls[1][0:2] == ('main', 'cast_site')
+
+
 def test_runtime_keeps_opted_in_receiver_alive_and_reconciles_mode_changes():
     modes=[(False,False),(True,False),(True,True),(False,False)]
     class Steps:

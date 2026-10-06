@@ -62,12 +62,13 @@ class WebHandler(BaseHTTPRequestHandler):
     def log_message(self, *_):
         pass
 
-    def _send(self, body, ctype="text/html; charset=utf-8", code=200):
+    def _send(self, body, ctype="text/html; charset=utf-8", code=200,
+              cache_control="no-store"):
         data = body if isinstance(body, bytes) else body.encode()
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(data)))
-        self.send_header("Cache-Control", "no-store")
+        self.send_header("Cache-Control", cache_control)
         self.end_headers()
         self.wfile.write(data)
 
@@ -75,7 +76,12 @@ class WebHandler(BaseHTTPRequestHandler):
         try:
             with open(path, "rb") as f:
                 ctype = mimetypes.guess_type(path)[0] or "application/octet-stream"
-                self._send(f.read(), ctype, code)
+                query = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+                versioned = bool(query.get("v", [""])[0]) and path.lower().endswith(
+                    (".css", ".js", ".svg", ".woff", ".woff2"))
+                cache = ("public, max-age=31536000, immutable" if versioned
+                         else "no-store")
+                self._send(f.read(), ctype, code, cache)
         except Exception:
             self._send("not found", "text/plain", 404)
 
@@ -415,7 +421,7 @@ class WebHandler(BaseHTTPRequestHandler):
                                       "application/json", 409)
                 # Casting waits through mute -> launch -> restore. Keep that
                 # work away from the HTTP request thread used by HA buttons.
-                threading.Thread(target=cast_card, args=(target,), daemon=True,
+                threading.Thread(target=cast_card, args=(target, True), daemon=True,
                                  name="cast-" + target.replace(".", "-")).start()
                 return self._send(json.dumps({"ok": True, "target": target,
                                               "name": displays[target]["name"]}),
