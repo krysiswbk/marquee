@@ -1,5 +1,6 @@
-# 2.12.28
+# 2.12.29
 
+- Supporting weather facts now share the status-line dark gray on Cast.
 - Center the clock for single-event calendar displays and brighten Cast
   secondary weather facts for across-room readability.
 

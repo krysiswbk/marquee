@@ -61,16 +61,12 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
               const clock = box('#idle-clock'), house = box('.idle-house'), weather = box('#idle-weather');
               const secondary = box('.idle-weather-secondary');
               const secondaryStyle = getComputedStyle(document.querySelector('.idle-weather-secondary'));
-              const textSoftProbe = document.createElement('span');
-              textSoftProbe.style.color = 'var(--text-soft)';
-              document.body.appendChild(textSoftProbe);
-              const textSoftColor = getComputedStyle(textSoftProbe).color;
-              textSoftProbe.remove();
+              const statusStyle = getComputedStyle(document.querySelector('.idle-weather-status'));
               return {
                 clock, house, weather,
                 secondaryBox: secondary,
                 secondaryColor: secondaryStyle.color,
-                textSoftColor,
+                statusColor: statusStyle.color,
                 viewport: {width: innerWidth, height: innerHeight},
                 icon: document.querySelector('#idle-weather-icon svg')?.dataset.kind,
                 temp: document.querySelector('#idle-weather-temp').textContent,
@@ -87,7 +83,7 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
         assert result["icon"] == "partly"
         assert result["temp"] == "17°C"
         assert result["condition"] == "Partly cloudy"
-        assert result["secondaryColor"] == result["textSoftColor"]
+        assert result["secondaryColor"] == result["statusColor"]
         assert "Feels 16°" in result["secondary"]
         assert "High 22° / Low 11°" in result["secondary"]
         assert "Rain 65%" in result["secondary"]
