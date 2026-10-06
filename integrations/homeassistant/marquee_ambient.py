@@ -3,6 +3,8 @@ import math
 from marquee_bridge import BridgeSession
 from marquee_kiosk import kiosk_awake
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
+from marquee_presence import bedroom_eligible
 
 import appdaemon.plugins.hass.hassapi as hass
 
@@ -15,6 +17,7 @@ class MarqueeAmbient(hass.Hass):
     WEATHER_URL = "http://10.10.9.37:8084/ha-weather"
     GARAGE_OCCUPANCY = "input_boolean.garage_os"
     GARAGE_URL = "http://10.10.9.37:8084/garage-occupancy"
+    PRESENCE_URL = "http://10.10.9.37:8084/presence"
     CONTEXT_URL = "http://10.10.9.37:8084/contexts"
     SPORTS = ("sensor.leafs_tracker", "sensor.ufc_tracker", "sensor.pfl_tracker")
     KIOSK_BROWSER = "a38e5c41-b99f0451"
@@ -31,6 +34,10 @@ class MarqueeAmbient(hass.Hass):
         self.listen_state(self.weather_changed, self.WEATHER, attribute="all")
         self.listen_state(self.weather_changed, self.FEELS_LIKE)
         self.listen_state(self.garage_changed, self.GARAGE_OCCUPANCY)
+        for entity in ("binary_sensor.bedroom_occupancy", "binary_sensor.living_room_occupancy",
+                       "binary_sensor.garage_occupancy", "input_boolean.kris_is_asleep",
+                       "input_boolean.magda_is_asleep"):
+            self.listen_state(self.presence_changed, entity)
         for entity in self.SPORTS:
             self.listen_state(self.sport_changed, entity, attribute="all")
         self.run_in(self.evaluate, 2)
@@ -39,6 +46,8 @@ class MarqueeAmbient(hass.Hass):
         self.weather_forecasts = {}
         self.weather_forecast_at = 0
         self.run_in(self.publish_garage, 4)
+        self.run_in(self.publish_presence, 4)
+        self.run_every(self.publish_presence, "now+30", 30)
         self.run_in(self.publish_sports, 5)
         self.run_every(self.publish_sports, "now+30", 30)
 
@@ -186,6 +195,31 @@ class MarqueeAmbient(hass.Hass):
 
     def garage_changed(self, entity, attribute, old, new, kwargs):
         self.publish_garage({})
+
+    def presence_changed(self, entity, attribute, old, new, kwargs):
+        self.publish_presence({})
+
+    def publish_presence(self, kwargs):
+        """Publish the authoritative room-to-receiver mapping; labels are ignored."""
+        now = datetime.now(ZoneInfo("America/Toronto"))
+        kris = self.get_state("input_boolean.kris_is_asleep") == "on"
+        magda = self.get_state("input_boolean.magda_is_asleep") == "on"
+        bedroom = self.get_state("binary_sensor.bedroom_occupancy") == "on"
+        living = self.get_state("binary_sensor.living_room_occupancy") == "on"
+        garage = self.get_state("binary_sensor.garage_occupancy") == "on"
+        payload = {"rooms": {
+            "10.10.3.81": {"occupied": bedroom,
+                "eligible": bedroom_eligible(bedroom, kris, magda, now.hour, now.minute),
+                "absoluteVeto": kris or magda or (now.hour, now.minute) >= (22, 0)},
+            "10.10.3.73": {"occupied": living, "eligible": living, "absoluteVeto": False},
+            "10.10.3.74": {"occupied": garage, "eligible": garage, "absoluteVeto": False},
+        }}
+        try:
+            response = self.bridge.post(self.PRESENCE_URL, json=payload, timeout=5)
+            response.raise_for_status()
+            self.log("Marquee Cast presence routing refreshed")
+        except Exception as error:
+            self.log(f"Marquee Cast presence bridge failed: {error}", level="WARNING")
 
     def publish_garage(self, kwargs):
         occupied = self.get_state(self.GARAGE_OCCUPANCY) == "on"

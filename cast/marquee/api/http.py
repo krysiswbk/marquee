@@ -247,6 +247,7 @@ class WebHandler(BaseHTTPRequestHandler):
                 "cardGrace": now < CARD_GRACE["until"],
                 "garageOccupied": GARAGE_STATE["occupied"],
                 "garageHubConfigured": bool(GARAGE_HUB_IP),
+                "presence": PRESENCE_STATE,
                 "kioskInteractionActive": kiosk_interacting(now),
                 "kioskActivityAgo": (round(now - KIOSK_ACTIVITY["last"], 1)
                                       if KIOSK_ACTIVITY["last"] else None),
@@ -516,6 +517,30 @@ class WebHandler(BaseHTTPRequestHandler):
                     raise ValueError("occupied must be true or false")
                 GARAGE_STATE.update(occupied=occupied, updated=time.time())
                 return self._send(json.dumps({"ok": True, "occupied": occupied}),
+                                  "application/json")
+            except Exception as e:
+                return self._send(json.dumps({"ok": False, "error": str(e)}),
+                                  "application/json", 400)
+        if path == "/presence":
+            try:
+                body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+                rooms = body.get("rooms")
+                if not isinstance(rooms, dict):
+                    raise ValueError("rooms must be an object")
+                clean = {}
+                for ip, value in rooms.items():
+                    if ip not in PRESENCE_TARGETS or not isinstance(value, dict):
+                        raise ValueError("presence contains an unknown display")
+                    if not isinstance(value.get("eligible"), bool):
+                        raise ValueError("presence eligibility must be boolean")
+                    clean[ip] = {"room": PRESENCE_TARGETS[ip],
+                                 "occupied": bool(value.get("occupied", False)),
+                                 "eligible": value["eligible"],
+                                 "absoluteVeto": bool(value.get("absoluteVeto", False))}
+                PRESENCE_STATE.update(rooms=clean, updated=time.time())
+                GARAGE_STATE.update(occupied=clean.get("10.10.3.74", {}).get("occupied", False),
+                                    updated=PRESENCE_STATE["updated"])
+                return self._send(json.dumps({"ok": True, "rooms": clean}),
                                   "application/json")
             except Exception as e:
                 return self._send(json.dumps({"ok": False, "error": str(e)}),

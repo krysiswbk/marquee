@@ -3,6 +3,7 @@ import json
 import os
 import threading
 import time
+from marquee.core.presence import PresenceGate
 
 
 def secondary_screen_wanted(configured, playing, occupied):
@@ -20,6 +21,8 @@ class Runtime:
         self._stop = threading.Event()
         self._errors = {}
         self._last_media_success = None
+        self._presence_gates = {ip: PresenceGate()
+                                for ip in getattr(self.s, "PRESENCE_TARGETS", {})}
 
     def initialize(self):
         s = self.s
@@ -157,10 +160,29 @@ class Runtime:
                       flush=True)
                 s.catt_for(s.GARAGE_HUB_IP, "stop")
 
+    def _reconcile_presence_targets(self, info, playing, now, last_wanted):
+        s = self.s
+        wanted = {}
+        targets = getattr(s, "PRESENCE_TARGETS", {})
+        state = getattr(s, "PRESENCE_STATE", {"rooms": {}})
+        for ip in targets:
+            observation = state.get("rooms", {}).get(ip)
+            gate = self._presence_gates[ip]
+            wanted[ip] = gate.update(
+                bool(observation and observation.get("eligible")), now,
+                bool(observation and observation.get("absoluteVeto")))
+            protected = bool(playing or (info and
+                info.get("attention", {}).get("urgency") == "CRITICAL"))
+            if wanted[ip] and not last_wanted.get(ip, False):
+                s.cast_card(ip)
+            elif not wanted[ip] and last_wanted.get(ip, False) and not protected:
+                s.catt_for(ip, "stop")
+        return wanted
     def run(self):
         s = self.s
         self.initialize()
         last_playing, last_garage, tick = None, None, 0
+        last_presence = {ip: False for ip in getattr(s, "PRESENCE_TARGETS", {})}
         last_modes = [False, False]
         while not self._stop.is_set():
             try:
@@ -175,11 +197,14 @@ class Runtime:
                                   .get("secondary_screen_mode", "off"))
                 garage_info = s.best_context(plex_info, "garage")
                 garage_attention = bool(garage_info and garage_info.get("attention"))
-                garage_wanted = bool(s.GARAGE_HUB_IP and (garage_attention or
-                    (modes[1] and s.GARAGE_STATE["occupied"]) or secondary_screen_wanted(
-                        secondary_mode, bool(info), s.GARAGE_STATE["occupied"])))
+                presence_configured = bool(getattr(s, "PRESENCE_STATE", {}).get("rooms"))
+                garage_wanted = bool(not presence_configured and s.GARAGE_HUB_IP and
+                    (garage_attention or (modes[1] and s.GARAGE_STATE["occupied"]) or
+                     secondary_screen_wanted(secondary_mode, bool(info),
+                                             s.GARAGE_STATE["occupied"])))
                 try:
-                    self._reconcile_main(info, playing, modes, last_playing, last_modes, tick)
+                    if not presence_configured or playing:
+                        self._reconcile_main(info, playing, modes, last_playing, last_modes, tick)
                 except Exception as error:
                     self._failed("main Cast reconciliation", error)
                 else:
@@ -193,6 +218,13 @@ class Runtime:
                 else:
                     last_garage, last_modes[1] = garage_wanted, modes[1]
                     self._recovered("garage Cast reconciliation")
+                try:
+                    last_presence = self._reconcile_presence_targets(
+                        info, playing, time.time(), last_presence)
+                except Exception as error:
+                    self._failed("presence Cast reconciliation", error)
+                else:
+                    self._recovered("presence Cast reconciliation")
                 self._recovered("scheduler")
             except Exception as error:
                 self._failed("scheduler", error)

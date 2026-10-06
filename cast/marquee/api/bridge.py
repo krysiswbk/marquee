@@ -6,7 +6,7 @@ from pathlib import Path
 from http.server import ThreadingHTTPServer
 
 WRITES = frozenset(('/ha-weather', '/weather-context', '/weather-radar', '/ambient',
-    '/garage-occupancy', '/calendar-events', '/gaming-releases', '/contexts',
+    '/garage-occupancy', '/presence', '/calendar-events', '/gaming-releases', '/contexts',
     '/kiosk-activity', '/api/attention/signals'))
 READS = frozenset(('/api/attention/bindings', '/now-playing.json', '/healthz'))
 

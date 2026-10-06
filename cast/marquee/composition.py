@@ -61,6 +61,12 @@ from marquee import __version__
 VERSION = __version__
 HUB_IP = os.environ.get("HUB_IP", "")
 GARAGE_HUB_IP = os.environ.get("GARAGE_HUB_IP", "")
+BEDROOM_HUB_IP = os.environ.get("BEDROOM_HUB_IP", "10.10.3.81")
+PRESENCE_TARGETS = {
+    "10.10.3.73": "living_room",
+    "10.10.3.74": "garage",
+    "10.10.3.81": "bedroom",
+}
 PAGE_URL = os.environ.get("PAGE_URL", "")
 PLEX = os.environ.get("PLEX_HOST", "").rstrip("/")
 TOKEN = os.environ.get("PLEX_TOKEN", "")

@@ -1048,6 +1048,7 @@ LAST_CARD_POLL = {"at": 0.0, "clients": {}}
 CARD_GRACE = {"until": 0.0}
 CARD_TIMEOUT = max(45, POLL * 6)
 GARAGE_STATE = {"occupied": False, "updated": 0.0}
+PRESENCE_STATE = {"rooms": {}, "updated": 0.0}
 
 
 def card_alive(now, last_poll, timeout=CARD_TIMEOUT):
