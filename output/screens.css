@@ -283,7 +283,7 @@ body.kiosk-now-playing .b-device *,body.kiosk-playback-active .b-device *{max-wi
  body.kiosk-now-playing[data-template=street] .title{font-size:4.6vw;}
  body.kiosk-now-playing[data-template=street] .plot{max-width:none;font-size:1.55vw;}
  body.kiosk-now-playing[data-template=street] .b-device{left:5.5vw;top:52.5vh;bottom:auto;width:20vw;height:9vh;}
- body.kiosk-now-playing[data-template=street] .b-progress{left:5.5vw;top:86vh;bottom:auto;width:46vw;position:absolute!important;inset:auto!important;z-index:initial;}
+ body.kiosk-now-playing[data-template=street] .b-progress{left:5.5vw;top:86vh;bottom:auto;width:46vw;position:absolute!important;inset:auto!important;inset-inline-start:5.5vw!important;inset-block-start:86vh!important;z-index:initial;}
 }
 .kiosk-queue-label{margin:0;color:#b6f378;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
 .kiosk-queue-row strong,.kiosk-queue-row span{overflow-wrap:anywhere}
