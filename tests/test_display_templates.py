@@ -49,6 +49,13 @@ class DisplayTemplateTests(unittest.TestCase):
         self.assertIn("body.cast-display .idle-greeting", DISPLAY)
         self.assertIn("body.cast-display .idle-date", DISPLAY)
 
+    def test_cast_ambient_calendar_swaps_clock_and_agenda_regions(self):
+        self.assertIn('data-kind="ambient_agenda"', DISPLAY)
+        self.assertIn('.context-card[data-kind="ambient_agenda"] .context-head { display:contents; }', DISPLAY)
+        self.assertIn('.context-card[data-kind="ambient_agenda"] .context-time { grid-column:1/-1; grid-row:4;', DISPLAY)
+        self.assertIn('.context-card[data-kind="ambient_agenda"] .context-rows {\n    grid-column:2; grid-row:1;', DISPLAY)
+        self.assertIn('items = items[:max(2, int(limit))]', (Path(__file__).parents[1] / "cast" / "marquee" / "core" / "cast_ambient.py").read_text())
+
     def test_idle_body_state_cannot_hide_the_entire_document(self):
         self.assertNotIn("\n  .idle { display: none", DISPLAY)
         self.assertIn(".idle-screen { display: none", DISPLAY)

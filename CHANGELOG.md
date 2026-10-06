@@ -1,5 +1,11 @@
 ## 2.12.13
 
+- Swap the Cast ambient calendar regions: the large clock now occupies the
+  former agenda/footer region, while the compact chronological agenda remains
+  subordinate in the former clock/header region. Preserve up to five events.
+
+## 2.12.14
+
 - Keep Cast ambient provider views clock-first, with a compact multi-event
   calendar agenda subordinate to the clock.
 - Preserve the existing ambient cadence, active-media priority, and urgent
