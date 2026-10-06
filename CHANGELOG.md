@@ -1,3 +1,7 @@
+# 2.12.32
+
+- Cache-bust the Cast and output static assets for the follow-up geometry fixes: source labels are max-content at 5vh/5vw, the clock remains exactly viewport-centered, and populated context weather sits below the clock while empty weather stays hidden.
+
 # 2.12.31
 
 - Rework Cast calendar/agenda geometry for a centered dominant clock and readable upper-band event rows; keep day weather readable and night sky near-black.

@@ -27,11 +27,12 @@ body .context-art{max-height:100%}.context-rows{flex-wrap:wrap}
    strand the clock in leftover agenda space. */
 body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]){grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) minmax(0,1fr)!important;grid-template-areas:none!important;display:grid!important}
 body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-head{display:contents}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-source{position:absolute;inset:5vh 5vw auto;z-index:1}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-source{position:absolute;top:5vh;left:5vw;right:auto;width:max-content;z-index:1}
 body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-copy{position:absolute;left:5vw;right:auto;top:10vh;width:40vw;max-width:none;height:auto;align-self:auto;overflow:hidden;text-align:left;z-index:1}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-time{position:absolute;left:50%;top:50%;width:min(90vw,1200px);min-height:0;transform:translate(-50%,-50%);text-align:center;z-index:0}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-time{display:contents}
 body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-weather:empty{display:none}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-clock{display:block;font-size:clamp(5.5rem,12vw,12rem);line-height:.9;letter-spacing:-.06em}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-clock{position:absolute;left:50%;top:50%;display:block;transform:translate(-50%,-50%);font-size:clamp(5.5rem,12vw,12rem);line-height:.9;letter-spacing:-.06em;z-index:0}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-weather{position:absolute;left:50%;top:calc(50% + clamp(2.75rem,5.4vw,5.4rem) + 2vh);width:min(90vw,1200px);transform:translateX(-50%);margin:0;text-align:center;z-index:0}
 body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-rows{position:absolute;left:52vw;right:5vw;top:4vh;width:auto;max-height:36vh;display:grid;grid-template-columns:minmax(0,1fr);gap:.7vh;padding-top:1vh;font-size:clamp(1rem,1.6vw,1.5rem);z-index:1}
 body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-rows span{min-width:0;padding:.7vh .8vw;border-radius:.45rem;border-left:3px solid var(--accent);background:rgba(255,255,255,.055);white-space:normal}
 /* Broadcast weather: observations + hourly desk + extended forecast, radar only when relevant. */

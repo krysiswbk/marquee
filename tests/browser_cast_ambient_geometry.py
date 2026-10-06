@@ -48,7 +48,7 @@ def _exercise(page, kind, row_count, weather_text=""):
           agenda.hidden = rowCount === 0;
           const box = selector => document.querySelector(selector).getBoundingClientRect().toJSON();
           const clock = box('#context-clock');
-          const parts = [box('#context-source'), box('.context-copy'), box('#context-rows'), box('#context-time')];
+          const parts = [box('#context-source'), box('.context-copy'), box('#context-rows'), box('#context-weather')];
           return {
             kind: card.dataset.kind,
             rowsHidden: agenda.hidden,
@@ -59,6 +59,7 @@ def _exercise(page, kind, row_count, weather_text=""):
             clockCenter: [clock.left + clock.width / 2, clock.top + clock.height / 2],
             weatherText: document.querySelector('#context-weather').textContent,
             weatherDisplay: getComputedStyle(document.querySelector('#context-weather')).display,
+            weatherBox: box('#context-weather'),
             agendaBox: box('#context-rows'),
             chipBoxes: [...agenda.querySelectorAll('span')].map(chip => chip.getBoundingClientRect().toJSON()),
             cardBox: box('#context-card'),
@@ -121,6 +122,9 @@ def test_cast_single_calendar_event_and_ambient_agenda_center_clock_when_rows_ar
             populated = _exercise(page, kind, 0, "17°C · Clear")
             assert populated["weatherText"] == "17°C · Clear"
             assert populated["weatherDisplay"] != "none"
+            assert populated["weatherBox"]["top"] - populated["clockBox"]["bottom"] >= 1
+            assert not populated["overlaps"]
+            assert abs(populated["clockCenter"][0] - 640) < 1
             assert abs(populated["clockCenter"][1] - 400) < 1
             page.close()
         browser.close()
