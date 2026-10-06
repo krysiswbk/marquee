@@ -1,3 +1,7 @@
+# 2.12.22
+
+- Enlarge the Cast ambient weather icon, current conditions, and especially the secondary forecast for across-room Nest Hub Max readability while keeping the clock centered and the composition overflow-safe.
+
 # 2.12.21
 
 - Redesign Cast ambient weather around the geometrically centered primary clock, with condition-aware inline SVG icons, a coherent temperature/condition group, and a restrained forecast line for Nest Hub Max.

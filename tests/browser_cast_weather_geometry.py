@@ -66,7 +66,9 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
             }
             """
         )
-        page.screenshot(path=str(tmp_path / "cast-weather-hub-max.png"), full_page=True)
+        page.screenshot(path=str(os.environ.get(
+            "MARQUEE_QA_SCREENSHOT", tmp_path / "cast-weather-hub-max.png"
+        )), full_page=True)
         assert result["icon"] == "partly"
         assert result["temp"] == "17°C"
         assert result["condition"] == "Partly cloudy"
@@ -74,8 +76,17 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
         assert "High 22° / Low 11°" in result["secondary"]
         assert "Rain 65%" in result["secondary"]
         assert result["clock"]["width"] > 0
+        assert result["clock"]["height"] >= 150
         assert abs((result["clock"]["left"] + result["clock"]["width"] / 2) - 512) < 1
         assert abs((result["weather"]["left"] + result["weather"]["width"] / 2) - 512) < 1
+        assert result["weather"]["width"] >= 500
+        assert result["weather"]["height"] >= 180
+        assert page.locator("#idle-weather-icon").bounding_box()["width"] >= 90
+        assert page.locator("#idle-weather-temp").bounding_box()["height"] >= 55
+        assert page.locator("#idle-weather-condition").bounding_box()["height"] >= 25
+        assert page.locator(".idle-weather-secondary").bounding_box()["height"] >= 22
+        assert result["house"]["height"] >= 350
+        assert result["house"]["height"] <= 560
         assert result["house"]["left"] >= 0 and result["house"]["right"] <= 1024
         assert not result["overflow"]
         page.close()
