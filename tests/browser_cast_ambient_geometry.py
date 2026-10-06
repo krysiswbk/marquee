@@ -85,3 +85,60 @@ def test_cast_calendar_swap_preserves_scale_and_uses_both_glance_regions():
             assert result["agendaBox"]["width"] > width * 0.25
             page.close()
         browser.close()
+
+
+def test_cast_single_calendar_event_centers_clock_when_agenda_rows_are_empty():
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            executable_path=os.environ.get("MARQUEE_CHROMIUM"), args=["--no-sandbox"]
+        )
+        page = browser.new_page(viewport={"width": 1280, "height": 800})
+        page.route(
+            "**/*",
+            lambda route: route.fulfill(path=str(ROOT / "output" / "index.html"))
+            if route.request.url.split("?", 1)[0].endswith("/image")
+            else route.fulfill(json={}),
+        )
+        page.goto("http://marquee.test/image?context-demo=media", wait_until="domcontentloaded")
+        result = page.evaluate(
+            """
+            () => {
+              const stage = document.querySelector('#stage');
+              const card = document.querySelector('#context-card');
+              document.body.classList.remove('idle');
+              stage.classList.remove('hidden', 'fade');
+              document.querySelector('.idle-screen').style.display = 'none';
+              stage.classList.add('contextual');
+              card.dataset.kind = 'calendar_event';
+              card.classList.add('no-art');
+              card.hidden = false;
+              card.style.display = 'grid';
+              document.querySelector('#context-source').textContent = 'CALENDAR';
+              document.querySelector('#context-title').textContent = 'School pickup';
+              document.querySelector('#context-subtitle').textContent = 'Today · 4:00 PM';
+              document.querySelector('#context-clock').textContent = '11:04 am';
+              document.body.classList.add('cast-display');
+              const rows = document.querySelector('#context-rows');
+              rows.replaceChildren();
+              rows.hidden = true;
+              const box = selector => document.querySelector(selector).getBoundingClientRect().toJSON();
+              return {
+                clock: box('#context-clock'),
+                copy: box('.context-copy'),
+                card: box('#context-card'),
+                rowsHidden: rows.hidden,
+                rowsHeight: box('#context-rows').height,
+              };
+            }
+            """
+        )
+        assert result["rowsHidden"] is True
+        assert result["rowsHeight"] == 0
+        card = result["card"]
+        clock = result["clock"]
+        copy = result["copy"]
+        assert abs((clock["left"] + clock["width"] / 2) - (card["left"] + card["width"] / 2)) < 1
+        assert copy["top"] < clock["top"]
+        assert clock["width"] > 1280 * 0.25
+        page.close()
+        browser.close()

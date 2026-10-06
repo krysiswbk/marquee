@@ -1,3 +1,8 @@
+# 2.12.28
+
+- Center the clock for single-event calendar displays and brighten Cast
+  secondary weather facts for across-room readability.
+
 # 2.12.27
 
 - Add anonymous Home Assistant OpenSky entry/exit events to the ambient sky
