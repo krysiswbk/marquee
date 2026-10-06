@@ -23,22 +23,23 @@ def test_each_receiver_requires_explicit_opt_in(monkeypatch):
     assert not composition.cast_kiosk_enabled('hubs')
 
 
-def test_opt_in_uses_kiosk_selection_without_kiosk_touch_suppression(monkeypatch):
+def test_cast_ambient_selection_is_independent_of_kiosk_activity_opt_in(monkeypatch):
     settings = {}
     monkeypatch.setattr(composition, 'load_settings', lambda: settings)
     monkeypatch.setattr(composition, 'ATTENTION', {'value': None})
     monkeypatch.setattr(composition, 'PROVIDER_ENGINE', {'value': None})
     monkeypatch.setattr(composition, 'kiosk_interacting', lambda: True)
-    monkeypatch.setattr(composition, 'ARBITER', ContextArbiter())
+    monkeypatch.setattr(composition, 'ARBITER', ContextArbiter(
+        cast_ambient_interval_seconds=600, cast_ambient_duration_seconds=600))
     monkeypatch.setattr(composition, 'saved_contexts', lambda: [
         {'id':'ufc:upcoming','type':'ufc_pre','source':'ufc','title':'Upcoming fight',
          'priority':80,'targets':['kiosk'],'eventState':'UPCOMING'}])
-    assert composition.best_context(None, 'hubs') is None
+    assert composition.best_context(None, 'hubs')['key'] == 'ufc:upcoming'
     settings['castKioskActivity'] = True
     assert composition.best_context(None, 'hubs')['key'] == 'ufc:upcoming'
     assert composition.best_context(None, 'garage') is None
     settings['castKioskActivity'] = False
-    assert composition.best_context(None, 'hubs') is None
+    assert composition.best_context(None, 'hubs')['key'] == 'ufc:upcoming'
 
 
 def test_cast_url_tracks_destination_mode_and_reverts(monkeypatch):

@@ -24,7 +24,9 @@ class ContextArbiter:
                  post_event_plex_grace_seconds=0, post_event_max_seconds=1800,
                  rotation_seconds=30, fallback_every=2,
                  rotate_relevant=True, single_item_seconds=12,
-                 minimum_context_seconds=12):
+                 minimum_context_seconds=12,
+                 cast_ambient_interval_seconds=600,
+                 cast_ambient_duration_seconds=90):
         self.event_bus = event_bus
         self.minimum_relevance = minimum_relevance
         self.takeovers_enabled = takeovers_enabled
@@ -35,6 +37,9 @@ class ContextArbiter:
         self.rotate_relevant = bool(rotate_relevant)
         self.single_item_seconds = max(5, int(single_item_seconds))
         self.minimum_context_seconds = max(0, int(minimum_context_seconds))
+        self.cast_ambient_interval_seconds = max(60, int(cast_ambient_interval_seconds))
+        self.cast_ambient_duration_seconds = max(
+            15, min(self.cast_ambient_interval_seconds, int(cast_ambient_duration_seconds)))
         self._selected = {}
         self._selected_at = {}
         self._first_seen = {}
@@ -98,11 +103,11 @@ class ContextArbiter:
                     candidate[field] = source[field]
         return explicit
 
-    def select(self, explicit, generated, plex=None, display=None, now=None):
+    def select(self, explicit, generated, plex=None, display=None, now=None, ambient=False):
         with self._lock:
-            return self._select(explicit, generated, plex, display, now)
+            return self._select(explicit, generated, plex, display, now, ambient)
 
-    def _select(self, explicit, generated, plex=None, display=None, now=None):
+    def _select(self, explicit, generated, plex=None, display=None, now=None, ambient=False):
         now = now or datetime.now(timezone.utc)
         if plex and not self.takeovers_enabled and display != "kiosk":
             return {"id": "plex:now", "priority": 70, "payload": plex}
@@ -129,7 +134,8 @@ class ContextArbiter:
             except (TypeError, ValueError):
                 first_seen = self._first_seen.setdefault(seen_key, now)
             self._first_seen[seen_key] = first_seen
-            if display and display not in item.get("targets", ("kiosk", "hubs")):
+            if display and display not in item.get("targets", ("kiosk", "hubs")) and not (
+                    ambient and display == "hubs" and "kiosk" in item.get("targets", ())):
                 continue
             if (str(item.get("eventState", "")).upper() == "POST_EVENT" or
                     str(item.get("event_state", "")).upper() == "POST_EVENT" or
@@ -182,11 +188,11 @@ class ContextArbiter:
         if any(league(item) == "ufc" and active_mma(item) for item, _ in eligible):
             eligible = [(item, order) for item, order in eligible if league(item) != "pfl"]
 
-        # Cast receivers are intentionally calm. Playback belongs there; an
-        # ambient release, deal, forecast or routine final score does not.
-        # Providers can opt into a brief Cast interruption explicitly, while
-        # priority 95+ remains the emergency/immediate-takeover tier.
-        if display == "hubs":
+        # Cast receivers are intentionally calm. Playback belongs there, and
+        # the normal path admits only explicit takeovers or the emergency
+        # tier. The separate ambient lane below is a timed presentation window
+        # for ordinary existing provider content; it never runs over Plex.
+        if display == "hubs" and (not ambient or plex):
             eligible = [(item, order) for item, order in eligible
                         if item.get("castTakeover") is True or
                         int(item.get("priority", 0)) >= 95]
@@ -222,21 +228,40 @@ class ContextArbiter:
                 winner = max(pinned, key=lambda pair:
                              (int(pair[0].get("priority", 0)), 1 if str(pair[0].get("source", "")).lower() == "ufc" else 0, -pair[1]))[0]
             else:
-                ambient = sorted(eligible, key=lambda pair:
+                ambient_items = sorted(eligible, key=lambda pair:
                                  (-int(pair[0].get("priority", 0)),
                                   str(pair[0].get("id", "")), pair[1]))
                 if not self.rotate_relevant:
-                    winner = ambient[0][0]
-                    ambient = []
-                if len(ambient) == 1:
+                    winner = ambient_items[0][0]
+                    ambient_items = []
+                if len(ambient_items) == 1:
                     # One worthwhile item remains worthwhile. In particular,
                     # active Plex playback must never blink to a clock merely
                     # because there is nothing else to rotate with.
-                    winner = ambient[0][0]
-                    ambient = []
+                    winner = ambient_items[0][0]
+                    ambient_items = []
                 slot = int(now.timestamp() // self.rotation_seconds)
-                if ambient:
-                    winner = ambient[slot % len(ambient)][0]
+                if ambient_items:
+                    winner = ambient_items[slot % len(ambient_items)][0]
+        elif display == "hubs" and ambient:
+            urgent = [(item, order) for item, order in eligible
+                      if item.get("castTakeover") is True or
+                      int(item.get("priority", 0)) >= 95]
+            if urgent:
+                winner = max(urgent, key=lambda pair:
+                             (int(pair[0].get("priority", 0)), -pair[1]))[0]
+            else:
+                elapsed = int(now.timestamp()) % self.cast_ambient_interval_seconds
+                if elapsed >= self.cast_ambient_duration_seconds:
+                    eligible = []
+                    winner = None
+                else:
+                    ambient_items = sorted(eligible, key=lambda pair:
+                                           (-int(pair[0].get("priority", 0)),
+                                            str(pair[0].get("id", "")), pair[1]))
+                    slot = int(now.timestamp() // self.rotation_seconds)
+                    winner = ambient_items[slot % len(ambient_items)][0] \
+                        if ambient_items else None
         else:
             winner = max(eligible,
                          key=lambda pair: (int(pair[0].get("priority", 0)), -pair[1]),

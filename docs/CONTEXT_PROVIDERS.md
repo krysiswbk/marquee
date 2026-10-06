@@ -188,9 +188,12 @@ optional location. Metadata is deduplicated and capped at four items. Cards
 without usable artwork collapse to a text layout instead of reserving an empty
 image column; failed images fall back the same way.
 
-These rich calendar/discovery cards remain kiosk-only through the arbiter.
-Cast stays media-first and receives a context only through the existing
-emergency/explicit `castTakeover` path or a deliberate admin screen test.
+These rich calendar/discovery cards remain kiosk-first through the arbiter.
+Cast stays media-first: active media and emergency/explicit `castTakeover`
+contexts retain priority, while the ordinary `/image` receiver may sample an
+eligible existing provider context during the deterministic ambient window
+(`fallback.cast_ambient_interval_seconds` / `fallback.cast_ambient_duration_seconds`).
+Outside that window the established clock/weather idle surface remains visible.
 
 When the kiosk rotation reaches its home slot, the browser composes a quiet
 home-state screen from local time and the existing Home Assistant weather

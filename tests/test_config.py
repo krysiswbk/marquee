@@ -62,6 +62,15 @@ class ConfigTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "fallback.screen"):
             validate_config({"fallback": {"screen": "post_event"}})
 
+    def test_cast_ambient_cadence_is_bounded_and_typed(self):
+        value = validate_config({"fallback": {"cast_ambient_interval_seconds": "600",
+                                                "cast_ambient_duration_seconds": "90"}})
+        self.assertEqual(value["fallback"]["cast_ambient_interval_seconds"], 600)
+        self.assertEqual(value["fallback"]["cast_ambient_duration_seconds"], 90)
+        with self.assertRaisesRegex(ValueError, "cast_ambient_duration_seconds"):
+            validate_config({"fallback": {"cast_ambient_interval_seconds": 60,
+                                            "cast_ambient_duration_seconds": 61}})
+
 
 if __name__ == "__main__":
     unittest.main()

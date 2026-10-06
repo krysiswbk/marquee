@@ -306,7 +306,18 @@ def best_context(plex_info=None, display="hubs"):
         modular = [c.display_dict() for c in engine.all_contexts()]
     scene_saved = [c for c in saved if not supporting(c)] if family == "kiosk" else saved
     scene_modular = [c for c in modular if not supporting(c)] if family == "kiosk" else modular
-    winner = ARBITER.select(scene_saved, scene_modular, plex_info, family)
+    if family == "hubs" and not kiosk_receiver:
+        try:
+            winner = ARBITER.select(scene_saved, scene_modular, plex_info, family,
+                                    ambient=True)
+        except TypeError as error:
+            # Keep the small arbitration seam compatible with test/extension
+            # implementations that predate the optional ambient lane.
+            if "ambient" not in str(error):
+                raise
+            winner = ARBITER.select(scene_saved, scene_modular, plex_info, family)
+    else:
+        winner = ARBITER.select(scene_saved, scene_modular, plex_info, family)
     if attention:
         attention.sync_contexts(saved + modular, plex_info)
         important = attention.choose(display, winner, interacting)
@@ -327,7 +338,8 @@ def best_context(plex_info=None, display="hubs"):
         return None
     if winner.get("payload"):
         return winner["payload"]
-    return {"playing": True, "key": winner["id"], "type": "media_context",
+    return {"playing": True, "ambient": family == "hubs" and not kiosk_receiver,
+            "key": winner["id"], "type": "media_context",
             "context": winner, "title": winner.get("title", ""),
             "subtitle": winner.get("subtitle", ""), "summary": winner.get("detail", ""),
             "genres": [winner.get("source", "").upper()], "state": "playing",

@@ -199,6 +199,32 @@ class ArbitrationTests(unittest.TestCase):
                                     now=NOW + timedelta(seconds=seconds))
             self.assertEqual(winner["payload"], plex)
 
+    def test_cast_ambient_lane_is_clock_most_of_the_time_and_rotates_deterministically(self):
+        weather = {"id": "weather:current", "source": "weather", "type": "weather",
+                   "priority": 30, "targets": ["kiosk"], "title": "Weather at home"}
+        game = {"id": "gaming:1", "source": "gaming", "type": "gaming",
+                "priority": 45, "targets": ["kiosk"], "title": "A game"}
+        arbiter = ContextArbiter(rotation_seconds=20, minimum_context_seconds=0,
+                                 cast_ambient_interval_seconds=600,
+                                 cast_ambient_duration_seconds=90)
+        epoch = datetime.fromtimestamp(0, timezone.utc)
+        self.assertIsNone(arbiter.select([], [weather, game], display="hubs",
+                                         now=epoch + timedelta(seconds=120), ambient=True))
+        first = arbiter.select([], [weather, game], display="hubs",
+                               now=epoch + timedelta(seconds=600), ambient=True)
+        second = arbiter.select([], [weather, game], display="hubs",
+                                now=epoch + timedelta(seconds=620), ambient=True)
+        self.assertEqual(first["id"], "gaming:1")
+        self.assertEqual(second["id"], "weather:current")
+
+    def test_cast_ambient_lane_never_replaces_active_media(self):
+        ordinary = {"id": "calendar:event", "priority": 60, "targets": ["kiosk"]}
+        plex = {"title": "Movie", "playing": True}
+        winner = ContextArbiter(cast_ambient_interval_seconds=600,
+                                cast_ambient_duration_seconds=90).select(
+            [ordinary], [], plex=plex, display="hubs", now=NOW, ambient=True)
+        self.assertEqual(winner["payload"], plex)
+
     def test_manual_screen_test_pins_kiosk(self):
         forced = {"id": "screen-test:live", "priority": 100,
                   "targets": ["kiosk"]}

@@ -50,6 +50,10 @@ class Runtime:
         s.ARBITER.fallback_every = config["display"]["live_fallback_every"]
         s.ARBITER.rotate_relevant = config["fallback"]["rotate_relevant"]
         s.ARBITER.single_item_seconds = config["fallback"]["single_item_seconds"]
+        s.ARBITER.cast_ambient_interval_seconds = config["fallback"][
+            "cast_ambient_interval_seconds"]
+        s.ARBITER.cast_ambient_duration_seconds = config["fallback"][
+            "cast_ambient_duration_seconds"]
         s.ARBITER.minimum_context_seconds = config["display"]["minimum_context_seconds"]
         s.EVENT_BUS.subscribe("context.selected", lambda event, data:
             print(json.dumps({"event": event, **data}, separators=(",", ":")), flush=True))
@@ -165,7 +169,8 @@ class Runtime:
                 info = s.best_context(plex_info)
                 s.atomic_write(s.JSON_PATH, json.dumps(info or {"playing": False}))
                 modes = (s.cast_kiosk_enabled("hubs"), s.cast_kiosk_enabled("garage"))
-                playing = bool(info) or modes[0]
+                playing = bool(info and info.get("playing") is True
+                               and not info.get("ambient")) or modes[0]
                 secondary_mode = (s.CONFIG_REPOSITORY.effective().get("display", {})
                                   .get("secondary_screen_mode", "off"))
                 garage_info = s.best_context(plex_info, "garage")

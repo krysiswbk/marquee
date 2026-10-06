@@ -26,6 +26,11 @@ DEFAULT_CONFIG = {
     "fallback": {
         "screen": "clock_weather", "rotate_relevant": True,
         "rotation_seconds": 20, "single_item_seconds": 12,
+        # Cast remains on the quiet clock most of the time.  During this
+        # deterministic window, ordinary eligible provider content may take
+        # the already-mounted card without becoming a takeover.
+        "cast_ambient_interval_seconds": 600,
+        "cast_ambient_duration_seconds": 90,
         "show_clock": True, "show_weather": True, "show_details": True,
         "show_artwork": True,
     },
@@ -155,6 +160,13 @@ def validate_config(value):
         fallback["rotation_seconds"], 5, 3600, "fallback.rotation_seconds", True)
     fallback["single_item_seconds"] = _number(
         fallback["single_item_seconds"], 5, 600, "fallback.single_item_seconds", True)
+    fallback["cast_ambient_interval_seconds"] = _number(
+        fallback.get("cast_ambient_interval_seconds", 600), 60, 86400,
+        "fallback.cast_ambient_interval_seconds", True)
+    fallback["cast_ambient_duration_seconds"] = _number(
+        fallback.get("cast_ambient_duration_seconds", 90), 15,
+        fallback["cast_ambient_interval_seconds"],
+        "fallback.cast_ambient_duration_seconds", True)
     if fallback["single_item_seconds"] > fallback["rotation_seconds"]:
         raise ValueError("fallback.single_item_seconds cannot exceed fallback.rotation_seconds")
     for key in ("rotate_relevant", "show_clock", "show_weather", "show_details",

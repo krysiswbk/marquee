@@ -744,6 +744,10 @@ class WebHandler(BaseHTTPRequestHandler):
             ARBITER.minimum_context_seconds = config["display"]["minimum_context_seconds"]
             ARBITER.rotate_relevant = config["fallback"]["rotate_relevant"]
             ARBITER.single_item_seconds = config["fallback"]["single_item_seconds"]
+            ARBITER.cast_ambient_interval_seconds = config["fallback"][
+                "cast_ambient_interval_seconds"]
+            ARBITER.cast_ambient_duration_seconds = config["fallback"][
+                "cast_ambient_duration_seconds"]
             old = PROVIDER_ENGINE.get("value")
             PROVIDER_ENGINE["value"] = ContextEngine(
                 create_providers(config, DATA_DIR), event_bus=EVENT_BUS)

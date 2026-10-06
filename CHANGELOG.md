@@ -1,7 +1,9 @@
-## 2.12.11
+## 2.12.12
 
 - Restore the established Street theater-screening composition on the kiosk
   Now Playing destination.
+- Keep Cast on its calm clock by default, with a deterministic periodic window
+  for existing provider content when the receiver is idle.
 
 ## 2.12.10
 
