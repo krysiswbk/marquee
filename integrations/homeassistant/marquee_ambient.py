@@ -307,6 +307,8 @@ class MarqueeAmbient(hass.Hass):
             "windUnit": attrs.get("wind_speed_unit", "km/h"), "wind_gust": attrs.get("wind_gust_speed"),
             "pressure": attrs.get("pressure"), "pressure_unit": attrs.get("pressure_unit", "hPa"),
             "apparent_temperature": apparent_temperature,
+            "precipitation_unit": attrs.get("precipitation_unit", "mm"),
+            "snowfall_unit": attrs.get("snowfall_unit", "cm"),
             "observed_at": state.get("last_updated"),
             "forecast_updated": self.weather_forecast_at, **self.weather_forecasts,
         }

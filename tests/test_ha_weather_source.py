@@ -20,6 +20,12 @@ def test_publisher_sources_apparent_temperature_from_authoritative_ha_entity():
     assert 'attrs.get("apparent_temperature")' not in source
 
 
+def test_publisher_preserves_authoritative_precipitation_units():
+    source = (Path(__file__).parents[1] / 'integrations/homeassistant/marquee_ambient.py').read_text()
+    assert '"precipitation_unit": attrs.get("precipitation_unit", "mm")' in source
+    assert '"snowfall_unit": attrs.get("snowfall_unit", "cm")' in source
+
+
 def observation(**overrides):
     return {'entity_id': 'weather.home', 'temp': 23.7, 'condition': 'partlycloudy',
             'humidity': 61, 'wind': 10, 'forecast_updated': time.time(),
