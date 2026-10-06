@@ -64,6 +64,27 @@ body.browser-controls .idle-weather-primary,body.browser-controls .idle-weather-
 body.browser-controls .idle-weather-primary>.weather-fact-separator,body.browser-controls .idle-weather-secondary>.weather-fact-separator{border-inline-start:.12em solid var(--accent);padding-inline-start:.7em}
 body.cast-display .idle-weather-primary,body.cast-display .idle-weather-secondary{display:flex;flex-wrap:wrap;align-items:baseline;gap:.35em .7em}
 body.cast-display .idle-weather-primary>*,body.cast-display .idle-weather-secondary>*{white-space:nowrap}
+/* Cast ambient weather is a quiet companion to the centered clock. Keep the
+   whole weather group on one readable rail at Hub scale, with the icon and
+   condition forming one secondary focal group. */
+body.cast-display .idle-house{width:min(88vw,720px);gap:1.35vh}
+body.cast-display .idle-clock{font-size:clamp(5rem,14vw,10rem);line-height:.86;letter-spacing:-.065em;text-align:center}
+body.cast-display .idle-weather{display:grid;justify-items:center;gap:.75vh;width:100%;margin-top:.8vh;color:var(--text-soft);font-size:clamp(1.15rem,2.15vw,2rem);font-weight:650}
+body.cast-display .idle-weather-primary{display:flex;align-items:center;justify-content:center;gap:clamp(.55rem,1.2vw,1rem);line-height:1}
+body.cast-display .idle-weather-primary strong{font-size:clamp(2rem,4.1vw,4rem);font-weight:750;letter-spacing:-.06em;color:var(--text)}
+body.cast-display .idle-weather-primary>span:not(.idle-weather-icon){font-size:clamp(1.1rem,2vw,1.8rem);font-weight:600;color:var(--text-soft)}
+body.cast-display .idle-weather-icon{display:grid;place-items:center;width:clamp(3rem,5vw,4.8rem);height:clamp(3rem,5vw,4.8rem);color:var(--accent);filter:drop-shadow(0 0 1.2rem var(--accent-glow))}
+body.cast-display .idle-wx-svg{width:100%;height:100%;overflow:visible}
+body.cast-display .idle-wx-svg .wx-sun{fill:#ffd86b;stroke:#ffd86b;stroke-width:3;stroke-linecap:round}
+body.cast-display .idle-wx-svg .wx-cloud{fill:#dcecff;stroke:#b9d5ed;stroke-width:1.5}
+body.cast-display .idle-wx-svg .wx-moon{fill:#dfe8ff}
+body.cast-display .idle-wx-svg .wx-rain{fill:none;stroke:#7bd7ff;stroke-width:3;stroke-linecap:round}
+body.cast-display .idle-wx-svg .wx-snow{fill:#eff8ff}
+body.cast-display .idle-wx-svg .wx-bolt{fill:#ffe26e}
+body.cast-display .idle-wx-svg .wx-fog{fill:none;stroke:#b9c9da;stroke-width:3;stroke-linecap:round}
+body.cast-display .idle-weather-secondary{justify-content:center;gap:.25em .8em;max-width:100%;font-size:clamp(.82rem,1.3vw,1.15rem);line-height:1.15;color:var(--muted);letter-spacing:.01em}
+body.cast-display .idle-weather-secondary>span:not(:empty)+span:not(:empty)::before{content:'·';margin-inline-end:.8em;color:var(--accent)}
+body.cast-display .idle-weather-status{font-size:clamp(.62rem,.8vw,.8rem);min-height:1em;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
 body.browser-controls .screen-controls{inset:auto 0 0;transform:none;max-width:none;height:var(--control-rail);padding:6px 88px calc(6px + env(safe-area-inset-bottom,0px)) 12px;border-radius:0;border-width:1px 0 0;justify-content:center;opacity:1;z-index:10001;background:#10141d}
 body.browser-controls .screen-controls [role=status]{white-space:nowrap;flex-shrink:0}
 body.browser-controls nav.display-menu{position:fixed;inset:auto 12px env(safe-area-inset-bottom,0px) auto!important;height:62px;display:flex;align-items:center;opacity:1;z-index:10002;font:14px system-ui;color:#eef2ff}

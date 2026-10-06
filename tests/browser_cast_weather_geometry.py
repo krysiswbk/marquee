@@ -1,0 +1,82 @@
+"""Nest Hub Max geometry and visual contract for the Cast ambient weather rail."""
+import json
+import os
+import time
+from pathlib import Path
+
+from playwright.sync_api import sync_playwright
+
+
+ROOT = Path(__file__).resolve().parents[1]
+WEATHER = {
+    "temp": 17.4,
+    "condition": "partlycloudy",
+    "code": 2,
+    "isDay": True,
+    "apparent_temperature": 16.1,
+    "forecast_updated": int(time.time()),
+    "daily": [{"temperature": 22, "templow": 11}],
+    "hourly": [{"precipitation_probability": 65}],
+}
+
+
+def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            executable_path=os.environ.get("MARQUEE_CHROMIUM"), args=["--no-sandbox"]
+        )
+        page = browser.new_page(viewport={"width": 1024, "height": 600}, device_scale_factor=1)
+
+        def route(route):
+            path = route.request.url.split("?", 1)[0].split("marquee.test", 1)[-1]
+            if path in ("/image", "/api/config", "/contexts", "/providers"):
+                if path == "/image":
+                    return route.fulfill(path=str(ROOT / "output/index.html"), content_type="text/html")
+                return route.fulfill(json={"providers": {}, "contexts": []})
+            if path == "/weather":
+                return route.fulfill(json=WEATHER)
+            if path in ("/settings.json", "/live-settings.json"):
+                return route.fulfill(json={"transitionMs": 0})
+            if path == "/ambient.json":
+                return route.fulfill(json={"opacity": 0})
+            asset = ROOT / "output" / path.lstrip("/")
+            if asset.is_file():
+                return route.fulfill(path=str(asset))
+            return route.fulfill(json={})
+
+        page.route("**/*", route)
+        page.goto("http://marquee.test/image", wait_until="domcontentloaded")
+        page.wait_for_selector("#idle-weather-icon svg")
+        result = page.evaluate(
+            """
+            () => {
+              document.body.classList.add('cast-display');
+              document.body.classList.add('idle');
+              const box = selector => document.querySelector(selector).getBoundingClientRect().toJSON();
+              const clock = box('#idle-clock'), house = box('.idle-house'), weather = box('#idle-weather');
+              return {
+                clock, house, weather,
+                viewport: {width: innerWidth, height: innerHeight},
+                icon: document.querySelector('#idle-weather-icon svg')?.dataset.kind,
+                temp: document.querySelector('#idle-weather-temp').textContent,
+                condition: document.querySelector('#idle-weather-condition').textContent,
+                secondary: document.querySelector('.idle-weather-secondary').innerText,
+                overflow: document.documentElement.scrollWidth > innerWidth + 1,
+              };
+            }
+            """
+        )
+        page.screenshot(path=str(tmp_path / "cast-weather-hub-max.png"), full_page=True)
+        assert result["icon"] == "partly"
+        assert result["temp"] == "17°C"
+        assert result["condition"] == "Partly cloudy"
+        assert "Feels 16°" in result["secondary"]
+        assert "High 22° / Low 11°" in result["secondary"]
+        assert "Rain 65%" in result["secondary"]
+        assert result["clock"]["width"] > 0
+        assert abs((result["clock"]["left"] + result["clock"]["width"] / 2) - 512) < 1
+        assert abs((result["weather"]["left"] + result["weather"]["width"] / 2) - 512) < 1
+        assert result["house"]["left"] >= 0 and result["house"]["right"] <= 1024
+        assert not result["overflow"]
+        page.close()
+        browser.close()

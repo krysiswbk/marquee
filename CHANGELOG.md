@@ -1,4 +1,8 @@
-# 2.12.20
+# 2.12.21
+
+- Redesign Cast ambient weather around the geometrically centered primary clock, with condition-aware inline SVG icons, a coherent temperature/condition group, and a restrained forecast line for Nest Hub Max.
+
+## 2.12.20
 
 - Replace Cast ambient weather divider pipes with whitespace while keeping each
   weather fact intact during flex wrapping; preserve browser-controls dividers.
