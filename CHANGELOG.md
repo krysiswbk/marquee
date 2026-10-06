@@ -1,3 +1,9 @@
+# 2.12.27
+
+- Add anonymous Home Assistant OpenSky entry/exit events to the ambient sky
+  contract with bounded stale expiry, truthful entry-time geometry, and no
+  fabricated heading, speed, or continuous track.
+
 # 2.12.26
 
 - Add source-grounded ambient sky and phase-only moon fallback.

@@ -25,12 +25,16 @@ class MarqueeAmbient(hass.Hass):
     PRESENCE_URL = "http://10.10.9.37:8084/presence"
     CONTEXT_URL = "http://10.10.9.37:8084/contexts"
     SPORTS = ("sensor.leafs_tracker", "sensor.ufc_tracker", "sensor.pfl_tracker")
+    OPENSKY_SENSOR = "opensky"
+    OPENSKY_EVENT_TTL = timedelta(minutes=30)
+    OPENSKY_CACHE_LIMIT = 32
     KIOSK_BROWSER = "a38e5c41-b99f0451"
     BANDS = ((2, 1), (10, 6), (40, 25), (150, 90),
              (500, 300), (1500, 900), (float("inf"), 2000))
 
     def initialize(self):
         self.bridge = BridgeSession()
+        self.opensky_aircraft = {}
         self.sent_band = None
         self.pending_band = None
         self.pending_handle = None
@@ -48,6 +52,8 @@ class MarqueeAmbient(hass.Hass):
             self.listen_state(self.presence_changed, entity)
         for entity in self.SPORTS:
             self.listen_state(self.sport_changed, entity, attribute="all")
+        self.listen_event(self.opensky_entry, "opensky_entry")
+        self.listen_event(self.opensky_exit, "opensky_exit")
         self.run_in(self.evaluate, 2)
         self.run_in(self.publish_weather, 3)
         self.run_every(self.publish_weather, "now+60", 60)
@@ -61,6 +67,101 @@ class MarqueeAmbient(hass.Hass):
 
     def sport_changed(self, entity, attribute, old, new, kwargs):
         self.publish_sports({})
+
+    @staticmethod
+    def _finite(value, low=None, high=None):
+        try:
+            value = float(value)
+        except (TypeError, ValueError):
+            return None
+        if not math.isfinite(value) or (low is not None and value < low) or (high is not None and value > high):
+            return None
+        return value
+
+    def _opensky_is_ours(self, data):
+        sensor = str((data or {}).get("sensor", "")).strip().lower()
+        return sensor in (self.OPENSKY_SENSOR, "sensor." + self.OPENSKY_SENSOR)
+
+    def _home_coordinates(self):
+        state = self.get_state("zone.home", attribute="all") or {}
+        attrs = state.get("attributes", {}) if isinstance(state, dict) else {}
+        return (self._finite(attrs.get("latitude"), -90, 90),
+                self._finite(attrs.get("longitude"), -180, 180))
+
+    @classmethod
+    def _aircraft_geometry(cls, home_lat, home_lon, latitude, longitude, altitude):
+        """Return entry-time geometry from only HA/OpenSky-supplied facts."""
+        home_lat = cls._finite(home_lat, -90, 90)
+        home_lon = cls._finite(home_lon, -180, 180)
+        latitude = cls._finite(latitude, -90, 90)
+        longitude = cls._finite(longitude, -180, 180)
+        altitude = cls._finite(altitude, 0, 30000)
+        if None in (home_lat, home_lon, latitude, longitude, altitude):
+            return None
+        earth_radius = 6371000.0
+        lat1, lat2 = math.radians(home_lat), math.radians(latitude)
+        dlat = lat2 - lat1
+        dlon = math.radians(longitude - home_lon)
+        a = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+        horizontal = earth_radius * 2 * math.atan2(math.sqrt(a), math.sqrt(max(0, 1 - a)))
+        bearing = (math.degrees(math.atan2(
+            math.sin(dlon) * math.cos(lat2),
+            math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(dlon))) + 360) % 360
+        # OpenSky supplies altitude and entry coordinates, but not a track or
+        # home elevation. This is the defensible entry-time line-of-sight
+        # approximation from those supplied values; it is not a live track.
+        elevation = math.degrees(math.atan2(altitude, max(horizontal, 1.0)))
+        return {"bearing": bearing, "elevation": elevation, "altitude": altitude}
+
+    def _expire_opensky(self, now):
+        for key, item in list(getattr(self, "opensky_aircraft", {}).items()):
+            if now - item["seen_at"] >= self.OPENSKY_EVENT_TTL.total_seconds():
+                self.opensky_aircraft.pop(key, None)
+
+    def _publish_opensky(self):
+        try:
+            self.publish_weather({})
+        except Exception as error:
+            self.log(f"Marquee OpenSky event publish failed: {error}", level="WARNING")
+
+    def opensky_entry(self, event_name, data, kwargs):
+        if not self._opensky_is_ours(data):
+            return
+        now = datetime.now(timezone.utc).timestamp()
+        self._expire_opensky(now)
+        data = data or {}
+        icao24 = str(data.get("icao24", "")).strip().lower()
+        callsign = str(data.get("callsign") or "").strip()
+        key = icao24 or callsign.casefold()
+        home_lat, home_lon = self._home_coordinates()
+        geometry = self._aircraft_geometry(home_lat, home_lon, data.get("latitude"),
+                                           data.get("longitude"), data.get("altitude"))
+        if not key or not geometry:
+            self.log("Marquee ignored OpenSky entry without usable supplied position", level="WARNING")
+            return
+        aircraft = {"id": icao24 or callsign[:64], "seen_at": now, **geometry}
+        if callsign:
+            aircraft["callsign"] = callsign[:32]
+        self.opensky_aircraft[key] = aircraft
+        while len(self.opensky_aircraft) > self.OPENSKY_CACHE_LIMIT:
+            oldest = min(self.opensky_aircraft, key=lambda item: self.opensky_aircraft[item]["seen_at"])
+            self.opensky_aircraft.pop(oldest, None)
+        self._publish_opensky()
+
+    def opensky_exit(self, event_name, data, kwargs):
+        if not self._opensky_is_ours(data):
+            return
+        data = data or {}
+        icao24 = str(data.get("icao24", "")).strip().lower()
+        callsign = str(data.get("callsign") or "").strip()
+        keys = [icao24, callsign.casefold()]
+        if callsign:
+            keys.extend(key for key, item in self.opensky_aircraft.items()
+                        if str(item.get("callsign", "")).casefold() == callsign.casefold())
+        for key in keys:
+            if key:
+                self.opensky_aircraft.pop(key, None)
+        self._publish_opensky()
 
     @staticmethod
     def event_time(value):
@@ -356,6 +457,15 @@ class MarqueeAmbient(hass.Hass):
             if value is not None:
                 moon[key] = value
 
+        now = datetime.now(timezone.utc).timestamp()
+        self._expire_opensky(now)
+        aircraft = []
+        for item in sorted(getattr(self, "opensky_aircraft", {}).values(),
+                           key=lambda value: value["seen_at"], reverse=True):
+            aircraft.append({key: item[key] for key in
+                             ("id", "callsign", "bearing", "elevation", "altitude")
+                             if key in item})
+
         sky = {"sun": {}}
         if sun_state is not None:
             sky["sun"]["is_day"] = sun_state
@@ -369,6 +479,8 @@ class MarqueeAmbient(hass.Hass):
             sky["visibility"] = visibility
         if moon:
             sky["moon"] = moon
+        if aircraft:
+            sky["aircraft"] = aircraft[:12]
         return sky
 
     def publish_weather(self, kwargs):

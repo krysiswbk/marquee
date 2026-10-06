@@ -58,6 +58,9 @@ def clean_sky(value):
             if not isinstance(item, dict) or not str(item.get("id", "")).strip():
                 continue
             track = {"id": str(item["id"]).strip()[:64]}
+            callsign = str(item.get("callsign") or "").strip()
+            if callsign:
+                track["callsign"] = callsign[:32]
             for key, bounds in (("bearing", (0, 360)), ("elevation", (-90, 90)), ("altitude", (-2000, 30000)), ("speed", (0, 2000)), ("heading", (0, 360))):
                 number = finite(item.get(key), *bounds)
                 if number is not None:

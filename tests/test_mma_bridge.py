@@ -104,3 +104,41 @@ class MMABridgeTests(unittest.TestCase):
         self.assertEqual(sky["visibility"], 12000)
         self.assertFalse(sky["sun"]["is_day"])
         self.assertEqual(sky["moon"]["phase"], "full_moon")
+
+    def test_opensky_entry_derives_only_entry_geometry_and_exit_clears(self):
+        app = self.module.MarqueeAmbient()
+        app.opensky_aircraft = {}
+        app.publish_weather = Mock()
+        app.get_state = lambda entity, **kwargs: {
+            "zone.home": {"attributes": {"latitude": 43.5, "longitude": -79.9}}
+        }.get(entity, {})
+        app.opensky_entry("opensky_entry", {
+            "sensor": "opensky", "icao24": "ABC123", "callsign": "TEST123 ",
+            "altitude": 10000, "latitude": 43.5, "longitude": -79.7,
+        }, {})
+        track = app.opensky_aircraft["abc123"]
+        self.assertAlmostEqual(track["bearing"], 90, delta=1)
+        self.assertGreater(track["elevation"], 0)
+        self.assertEqual(track["altitude"], 10000)
+        self.assertNotIn("heading", track)
+        self.assertNotIn("speed", track)
+        app.opensky_exit("opensky_exit", {"sensor": "opensky", "callsign": "TEST123"}, {})
+        self.assertEqual(app.opensky_aircraft, {})
+        self.assertEqual(app.publish_weather.call_count, 2)
+
+    def test_opensky_ignores_other_sensor_and_expires_stale_entry(self):
+        app = self.module.MarqueeAmbient()
+        app.opensky_aircraft = {}
+        app.publish_weather = Mock()
+        app.get_state = lambda entity, **kwargs: {
+            "zone.home": {"attributes": {"latitude": 43.5, "longitude": -79.9}}
+        }.get(entity, {})
+        payload = {"sensor": "another_opensky", "icao24": "ABC123", "callsign": "TEST123",
+                   "altitude": 10000, "latitude": 43.5, "longitude": -79.7}
+        app.opensky_entry("opensky_entry", payload, {})
+        self.assertEqual(app.opensky_aircraft, {})
+        payload["sensor"] = "opensky"
+        app.opensky_entry("opensky_entry", payload, {})
+        app.opensky_aircraft["abc123"]["seen_at"] -= 31 * 60
+        self.assertNotIn("aircraft", app.sky_contract())
+        self.assertEqual(app.opensky_aircraft, {})
