@@ -1,3 +1,7 @@
+# 2.12.23
+
+- Enlarge only the Cast ambient weather detail line for across-room readability, give it tasteful lower spacing, and keep the one-line 1024×600 composition overflow-safe.
+
 # 2.12.22
 
 - Enlarge the Cast ambient weather icon, current conditions, and especially the secondary forecast for across-room Nest Hub Max readability while keeping the clock centered and the composition overflow-safe.

@@ -54,8 +54,10 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
               document.body.classList.add('idle');
               const box = selector => document.querySelector(selector).getBoundingClientRect().toJSON();
               const clock = box('#idle-clock'), house = box('.idle-house'), weather = box('#idle-weather');
+              const secondary = box('.idle-weather-secondary');
               return {
                 clock, house, weather,
+                secondaryBox: secondary,
                 viewport: {width: innerWidth, height: innerHeight},
                 icon: document.querySelector('#idle-weather-icon svg')?.dataset.kind,
                 temp: document.querySelector('#idle-weather-temp').textContent,
@@ -84,7 +86,11 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
         assert page.locator("#idle-weather-icon").bounding_box()["width"] >= 90
         assert page.locator("#idle-weather-temp").bounding_box()["height"] >= 55
         assert page.locator("#idle-weather-condition").bounding_box()["height"] >= 25
-        assert page.locator(".idle-weather-secondary").bounding_box()["height"] >= 22
+        assert result["secondaryBox"]["height"] >= 32
+        primary_box = page.locator(".idle-weather-primary").bounding_box()
+        assert result["secondaryBox"]["y"] > primary_box["y"] + primary_box["height"] + 10
+        assert result["secondaryBox"]["bottom"] <= result["viewport"]["height"] - 100
+        assert result["secondaryBox"]["height"] < result["weather"]["height"] / 2
         assert result["house"]["height"] >= 350
         assert result["house"]["height"] <= 560
         assert result["house"]["left"] >= 0 and result["house"]["right"] <= 1024

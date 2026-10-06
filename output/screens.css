@@ -82,7 +82,7 @@ body.cast-display .idle-wx-svg .wx-rain{fill:none;stroke:#7bd7ff;stroke-width:3;
 body.cast-display .idle-wx-svg .wx-snow{fill:#eff8ff}
 body.cast-display .idle-wx-svg .wx-bolt{fill:#ffe26e}
 body.cast-display .idle-wx-svg .wx-fog{fill:none;stroke:#b9c9da;stroke-width:3;stroke-linecap:round}
-body.cast-display .idle-weather-secondary{justify-content:center;gap:.25em .9em;max-width:100%;font-size:clamp(1.15rem,2.7vw,2.15rem);line-height:1.15;color:var(--muted);letter-spacing:.01em;white-space:nowrap}
+body.cast-display .idle-weather-secondary{justify-content:center;gap:.25em .9em;max-width:100%;margin-top:1.4vh;font-size:clamp(1.35rem,3.1vw,2.45rem);line-height:1.15;color:var(--muted);letter-spacing:.01em;white-space:nowrap}
 body.cast-display .idle-weather-secondary>*{white-space:nowrap}
 body.cast-display .idle-weather-secondary>span:not(:empty)+span:not(:empty)::before{content:'·';margin-inline-end:.8em;color:var(--accent)}
 body.cast-display .idle-weather-status{font-size:clamp(.8rem,1.25vw,1.15rem);min-height:1em;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
