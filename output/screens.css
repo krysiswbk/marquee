@@ -21,6 +21,19 @@ body .context-time .context-weather{font-size:clamp(14px,1.4vw,28px);white-space
 body .context-card{overflow:hidden;grid-template-rows:auto minmax(0,1fr) auto!important}
 body .context-copy{max-height:100%;overflow:auto}.context-card .context-title{font-size:min(var(--context-title-size,5vw),7vh)}
 body .context-art{max-height:100%}.context-rows{flex-wrap:wrap}
+/* Cast calendar geometry is intentionally here, after the base row rule
+   above. Keep the row contract explicit even though the glance elements are
+   positioned in bands, so the later !important base declaration cannot
+   strand the clock in leftover agenda space. */
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]){grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) minmax(0,1fr)!important;grid-template-areas:none!important;display:grid!important}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-head{display:contents}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-source{position:absolute;inset:5vh 5vw auto;z-index:1}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-copy{position:absolute;left:5vw;right:auto;top:10vh;width:40vw;max-width:none;height:auto;align-self:auto;overflow:hidden;text-align:left;z-index:1}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-time{position:absolute;left:50%;top:50%;width:min(90vw,1200px);min-height:0;transform:translate(-50%,-50%);text-align:center;z-index:0}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-weather:empty{display:none}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-clock{display:block;font-size:clamp(5.5rem,12vw,12rem);line-height:.9;letter-spacing:-.06em}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-rows{position:absolute;left:52vw;right:5vw;top:4vh;width:auto;max-height:36vh;display:grid;grid-template-columns:minmax(0,1fr);gap:.7vh;padding-top:1vh;font-size:clamp(1rem,1.6vw,1.5rem);z-index:1}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-rows span{min-width:0;padding:.7vh .8vw;border-radius:.45rem;border-left:3px solid var(--accent);background:rgba(255,255,255,.055);white-space:normal}
 /* Broadcast weather: observations + hourly desk + extended forecast, radar only when relevant. */
 body .stage.weather-context .weather-card{inset:0;bottom:0;padding:0;display:block;background:linear-gradient(130deg,#075798,#0b315e 65%,#061b38);color:#fff;overflow:hidden;font-family:'Space Grotesk',system-ui,sans-serif}
 body.brain-live .stage.weather-context .weather-card{bottom:8vh}
@@ -88,6 +101,11 @@ body.cast-display .idle-weather-secondary{justify-content:center;gap:.25em .9em;
 body.cast-display .idle-weather-secondary>*{white-space:nowrap}
 body.cast-display .idle-weather-secondary>span:not(:empty)+span:not(:empty)::before{content:'·';margin-inline-end:.8em;color:var(--accent)}
 body.cast-display .idle-weather-status{font-size:clamp(.8rem,1.25vw,1.15rem);min-height:1em;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+body.cast-display.sky-day .idle-weather,
+body.cast-display.sky-day .idle-weather-primary strong,
+body.cast-display.sky-day .idle-weather-primary>span:not(.idle-weather-icon),
+body.cast-display.sky-day .idle-weather-secondary,
+body.cast-display.sky-day .idle-weather-status { color:#28343d; }
 body.browser-controls .screen-controls{inset:auto 0 0;transform:none;max-width:none;height:var(--control-rail);padding:6px 88px calc(6px + env(safe-area-inset-bottom,0px)) 12px;border-radius:0;border-width:1px 0 0;justify-content:center;opacity:1;z-index:10001;background:#10141d}
 body.browser-controls .screen-controls [role=status]{white-space:nowrap;flex-shrink:0}
 body.browser-controls nav.display-menu{position:fixed;inset:auto 12px env(safe-area-inset-bottom,0px) auto!important;height:62px;display:flex;align-items:center;opacity:1;z-index:10002;font:14px system-ui;color:#eef2ff}

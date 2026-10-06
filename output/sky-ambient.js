@@ -21,6 +21,8 @@
   function render(weather) {
     const sky = weather?.sky || {}, sun = sky.sun || {}, day = typeof sun.is_day === 'boolean' ? sun.is_day : weather?.isDay;
     const isNight = day === false || (day == null && String(weather?.condition || '').toLowerCase() === 'clear-night');
+    document.body.classList.toggle('sky-night', isNight);
+    document.body.classList.toggle('sky-day', !isNight);
     const cloud = n(sky.cloud_cover, 0, 100), condition = String(sky.condition || weather?.condition || '').toLowerCase();
     const cloudy = cloud != null ? cloud : /cloud|overcast|fog/.test(condition) ? 70 : /rain|snow|storm/.test(condition) ? 85 : 0;
     root.dataset.mode = isNight ? 'night' : 'day'; root.style.setProperty('--sky-cloud', `${Math.min(1, cloudy / 100)}`);

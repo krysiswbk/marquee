@@ -1,3 +1,7 @@
+# 2.12.31
+
+- Rework Cast calendar/agenda geometry for a centered dominant clock and readable upper-band event rows; keep day weather readable and night sky near-black.
+
 # 2.12.30
 
 - Keep Cast weather and idle clocks white and undimmed while preserving ambient dimming elsewhere.

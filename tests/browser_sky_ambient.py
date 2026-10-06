@@ -41,12 +41,18 @@ def test_sky_layer_uses_supplied_night_moon_and_only_real_aircraft():
           moon: document.querySelectorAll('.sky-moon').length,
           aircraft: document.querySelectorAll('.sky-aircraft').length,
           stars: document.querySelectorAll('.sky-star').length,
+          night: document.body.classList.contains('sky-night'),
+          day: document.body.classList.contains('sky-day'),
+          fill: getComputedStyle(document.querySelector('.sky-fill')).fill,
           box: document.querySelector('#sky-layer').getBoundingClientRect().toJSON(),
           overflow: document.documentElement.scrollWidth > innerWidth || document.documentElement.scrollHeight > innerHeight
         })""")
         assert result["moon"] == 1
         assert result["aircraft"] == 1
         assert result["stars"] > 0
+        assert result["night"] is True
+        assert result["day"] is False
+        assert result["fill"] == "rgb(0, 0, 0)"
         assert result["box"] == {"x": 0, "y": 0, "width": 1024, "height": 600, "top": 0, "right": 1024, "bottom": 600, "left": 0}
         assert not result["overflow"]
         fallback = page.evaluate("""() => {
@@ -57,4 +63,11 @@ def test_sky_layer_uses_supplied_night_moon_and_only_real_aircraft():
         }""")
         assert fallback == {"position": "ambient", "illumination": None,
                             "phase": "waning_crescent", "aircraft": 0}
+        day = page.evaluate("""() => {
+          window.MarqueeSky.render({isDay: true, condition: 'sunny'});
+          return {mode: document.querySelector('#sky-layer').dataset.mode,
+                  day: document.body.classList.contains('sky-day'),
+                  night: document.body.classList.contains('sky-night')};
+        }""")
+        assert day == {"mode": "day", "day": True, "night": False}
         browser.close()

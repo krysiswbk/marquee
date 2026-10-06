@@ -65,6 +65,7 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
               const idleClockStyle = getComputedStyle(document.querySelector('.idle-clock'));
               const secondaryStyle = getComputedStyle(document.querySelector('.idle-weather-secondary'));
               const statusStyle = getComputedStyle(document.querySelector('.idle-weather-status'));
+              const idleWeatherStyle = getComputedStyle(document.querySelector('#idle-weather'));
               return {
                 clock, house, weather,
                 secondaryBox: secondary,
@@ -72,8 +73,11 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
                 weatherClockFilter: weatherClockStyle.filter,
                 idleClockColor: idleClockStyle.color,
                 idleClockFilter: idleClockStyle.filter,
+                idleWeatherFilter: idleWeatherStyle.filter,
                 secondaryColor: secondaryStyle.color,
                 statusColor: statusStyle.color,
+                skyMode: document.querySelector('#sky-layer')?.dataset.mode,
+                skyDay: document.body.classList.contains('sky-day'),
                 viewport: {width: innerWidth, height: innerHeight},
                 icon: document.querySelector('#idle-weather-icon svg')?.dataset.kind,
                 temp: document.querySelector('#idle-weather-temp').textContent,
@@ -94,6 +98,10 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
         assert result["weatherClockFilter"] == "none"
         assert result["idleClockColor"] == "rgb(255, 255, 255)"
         assert result["idleClockFilter"] == "none"
+        assert result["idleWeatherFilter"] == "none"
+        assert result["skyMode"] == "day"
+        assert result["skyDay"] is True
+        assert result["secondaryColor"] == "rgb(40, 52, 61)"
         assert result["secondaryColor"] == result["statusColor"]
         assert "Feels 16°" in result["secondary"]
         assert "High 22° / Low 11°" in result["secondary"]

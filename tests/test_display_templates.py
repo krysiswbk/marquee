@@ -51,14 +51,16 @@ class DisplayTemplateTests(unittest.TestCase):
 
     def test_cast_ambient_calendar_swaps_clock_and_agenda_regions(self):
         self.assertIn('data-kind="ambient_agenda"', DISPLAY)
-        self.assertIn('body.cast-display .context-card[data-kind="calendar_event"] .context-head { display:contents; }', DISPLAY)
-        self.assertIn('grid-column:1/-1; grid-row:3; align-self:end; text-align:left;', DISPLAY)
-        self.assertIn('body.cast-display .context-card[data-kind="calendar_event"] .context-rows {', DISPLAY)
+        self.assertIn('body.cast-display .context-card.no-art:is([data-kind="ambient_agenda"],[data-kind="calendar_event"]) .context-head', DISPLAY)
+        self.assertIn('grid-template-areas:"source" "copy" "rows" "time";', DISPLAY)
+        self.assertIn('body.cast-display .context-card.no-art:is([data-kind="ambient_agenda"],[data-kind="calendar_event"]) .context-rows', DISPLAY)
         self.assertIn('.context-time { text-align:right }.context-clock {font-size:var(--context-clock-size,6.8vw);', DISPLAY)
-        self.assertIn('body.cast-display .context-card[data-kind="calendar_event"] .context-clock {', DISPLAY)
-        self.assertIn('font-size:clamp(5rem,9vw,10rem); letter-spacing:-.06em;', DISPLAY)
-        self.assertIn('max-height:28vh; padding-top:1vh; font-size:clamp(.85rem,1.35vw,1.4rem);', DISPLAY)
-        self.assertNotIn('max-height:16vh; padding-top:0;', DISPLAY)
+        self.assertIn('body.cast-display .context-card.no-art:is([data-kind="ambient_agenda"],[data-kind="calendar_event"]) .context-clock', DISPLAY)
+        self.assertIn('font-size:clamp(5.5rem,12vw,12rem); line-height:.9; letter-spacing:-.06em;', DISPLAY)
+        self.assertIn('max-height:36vh; align-self:start; display:grid;', DISPLAY)
+        self.assertIn('grid-template-columns:minmax(0,1fr); gap:.7vh; padding-top:1vh;', DISPLAY)
+        self.assertIn('font-size:clamp(1rem,1.6vw,1.5rem);', DISPLAY)
+        self.assertNotIn('max-height:28vh; padding-top:1vh; font-size:clamp(.85rem,1.35vw,1.4rem);', DISPLAY)
         self.assertIn('items = items[:max(2, int(limit))]', (Path(__file__).parents[1] / "cast" / "marquee" / "core" / "cast_ambient.py").read_text())
 
     def test_idle_body_state_cannot_hide_the_entire_document(self):
