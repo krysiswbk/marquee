@@ -175,7 +175,9 @@ class Runtime:
                 info.get("attention", {}).get("urgency") == "CRITICAL"))
             if wanted[ip] and not last_wanted.get(ip, False):
                 s.cast_card(ip)
-            elif not wanted[ip] and last_wanted.get(ip, False) and not protected:
+            elif (not wanted[ip] and not protected and
+                  (last_wanted.get(ip, False) or
+                   getattr(s, "dashcast_active_for", lambda _target: False)(ip))):
                 s.catt_for(ip, "stop")
         return wanted
     def run(self):

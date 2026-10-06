@@ -221,6 +221,15 @@ def garage_dashcast_active():
         return False
 
 
+def dashcast_active_for(target):
+    """Return whether a specific receiver is currently running DashCast."""
+    try:
+        return bool(target and "DashCast" in catt_for(target, "info").stdout)
+    except Exception as e:
+        log_warn(f"Cast display status unavailable for {target}: {e}")
+        return False
+
+
 _wx_cache = {"at": 0.0, "zip": None, "loc": "", "data": {}}
 
 
