@@ -18,6 +18,7 @@ def test_discovered_receiver_launch_uses_discovery_devices():
     Threads.Thread = Thread
     with patch.multiple(http, create=True, json=json, threading=Threads,
                         scan_devices=lambda refresh: {"devices": [{"ip": "192.0.2.10", "name": "Test Hub", "model": "Nest Hub"}], "current": "192.0.2.10"},
+                        hold_manual_cast=lambda target: True,
                         cast_card=lambda target: launched.append(target)):
         handler = object.__new__(http.WebHandler)
         handler.path = '/api/cast'

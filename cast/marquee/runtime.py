@@ -3,7 +3,10 @@ import json
 import os
 import threading
 import time
-from marquee.core.presence import PresenceGate
+try:  # The container imports this package as ``marquee``; tests use ``cast.marquee``.
+    from marquee.core.presence import PresenceGate
+except ModuleNotFoundError:
+    from .core.presence import PresenceGate
 
 
 def secondary_screen_wanted(configured, playing, occupied):
@@ -171,11 +174,15 @@ class Runtime:
             wanted[ip] = gate.update(
                 bool(observation and observation.get("eligible")), now,
                 bool(observation and observation.get("absoluteVeto")))
+            absolute_veto = bool(observation and observation.get("absoluteVeto"))
+            held = bool(getattr(s, "manual_cast_hold_active",
+                                lambda _target, _now=None: False)(ip, now)
+                        and not absolute_veto)
             protected = bool(playing or (info and
                 info.get("attention", {}).get("urgency") == "CRITICAL"))
             if wanted[ip] and not last_wanted.get(ip, False):
                 s.cast_card(ip)
-            elif (not wanted[ip] and not protected and
+            elif (not wanted[ip] and not held and not protected and
                   (last_wanted.get(ip, False) or
                    getattr(s, "dashcast_active_for", lambda _target: False)(ip))):
                 s.catt_for(ip, "stop")

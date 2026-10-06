@@ -67,6 +67,38 @@ PRESENCE_TARGETS = {
     "10.10.3.74": "garage",
     "10.10.3.81": "bedroom",
 }
+MANUAL_CAST_HOLD_SECONDS = 5 * 60
+_MANUAL_CAST_HOLDS = {}
+_MANUAL_CAST_HOLDS_LOCK = threading.Lock()
+
+
+def hold_manual_cast(target, now=None):
+    """Hold a manually requested target above ordinary presence release.
+
+    An absolute veto is intentionally checked at the point of request and by
+    reconciliation on every tick; a manual request can never defeat bedroom
+    sleep or the 22:00 safety cutoff.
+    """
+    observation = PRESENCE_STATE.get("rooms", {}).get(target)
+    if observation and observation.get("absoluteVeto"):
+        return False
+    expiry = (time.time() if now is None else now) + MANUAL_CAST_HOLD_SECONDS
+    with _MANUAL_CAST_HOLDS_LOCK:
+        _MANUAL_CAST_HOLDS[target] = expiry
+    return True
+
+
+def manual_cast_hold_active(target, now=None):
+    """Return whether an explicit cast is still protected from release."""
+    current = time.time() if now is None else now
+    with _MANUAL_CAST_HOLDS_LOCK:
+        expiry = _MANUAL_CAST_HOLDS.get(target, 0.0)
+        if expiry <= current:
+            _MANUAL_CAST_HOLDS.pop(target, None)
+            return False
+        return True
+
+
 PAGE_URL = os.environ.get("PAGE_URL", "")
 PLEX = os.environ.get("PLEX_HOST", "").rstrip("/")
 TOKEN = os.environ.get("PLEX_TOKEN", "")

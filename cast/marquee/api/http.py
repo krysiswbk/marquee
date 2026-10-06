@@ -409,6 +409,10 @@ class WebHandler(BaseHTTPRequestHandler):
                             if "audio" not in str(item.get("model", "")).lower()}
                 if target not in displays:
                     raise ValueError("target is not a discovered Cast display")
+                if not hold_manual_cast(target):
+                    return self._send(json.dumps({"ok": False,
+                                                  "error": "target is blocked by an absolute presence veto"}),
+                                      "application/json", 409)
                 # Casting waits through mute -> launch -> restore. Keep that
                 # work away from the HTTP request thread used by HA buttons.
                 threading.Thread(target=cast_card, args=(target,), daemon=True,

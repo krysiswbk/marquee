@@ -1,4 +1,10 @@
-# 2.12.17
+# 2.12.18
+
+- Keep explicit `/api/cast` requests visible for five minutes when room
+  presence is false, then return control to normal presence reconciliation.
+- Preserve the bedroom sleep and 22:00 absolute veto even during a manual hold.
+
+## 2.12.17
 
 - Fix the Cast calendar composition at Nest Hub scale: ordinary single-event
   cards now use the same swapped clock/agenda regions as the multi-event
