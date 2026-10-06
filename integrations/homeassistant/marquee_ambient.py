@@ -14,6 +14,11 @@ class MarqueeAmbient(hass.Hass):
     URL = "http://10.10.9.37:8084/ambient"
     WEATHER = "weather.environment_canada_forecast"
     FEELS_LIKE = "sensor.outside_feels_like_temperature"
+    WEATHER_SUMMARY = "sensor.marquee_weather_summary"
+    CLOUD_COVER = "sensor.open_meteo_cloud_cover"
+    VISIBILITY = "sensor.open_meteo_visibility"
+    MOON_PHASE = "sensor.moon_phase"
+    SUN = "sun.sun"
     WEATHER_URL = "http://10.10.9.37:8084/ha-weather"
     GARAGE_OCCUPANCY = "input_boolean.garage_os"
     GARAGE_URL = "http://10.10.9.37:8084/garage-occupancy"
@@ -33,6 +38,9 @@ class MarqueeAmbient(hass.Hass):
         self.listen_state(self.lux_changed, self.SENSOR)
         self.listen_state(self.weather_changed, self.WEATHER, attribute="all")
         self.listen_state(self.weather_changed, self.FEELS_LIKE)
+        for entity in (self.WEATHER_SUMMARY, self.CLOUD_COVER, self.VISIBILITY,
+                       self.MOON_PHASE, self.SUN):
+            self.listen_state(self.weather_changed, entity, attribute="all")
         self.listen_state(self.garage_changed, self.GARAGE_OCCUPANCY)
         for entity in ("binary_sensor.bedroom_occupancy", "binary_sensor.living_room_occupancy",
                        "binary_sensor.garage_occupancy", "input_boolean.kris_is_asleep",
@@ -266,6 +274,103 @@ class MarqueeAmbient(hass.Hass):
     def weather_changed(self, entity, attribute, old, new, kwargs):
         self.publish_weather({})
 
+    def sky_contract(self):
+        """Build optional sky data from the aggregate sensor, then HA fallbacks.
+
+        No astronomy is calculated here. In particular, moon phase never gets
+        converted into illumination or a position when those facts are absent.
+        """
+        aggregate = self.get_state(self.WEATHER_SUMMARY, attribute="all") or {}
+        aggregate_attrs = aggregate.get("attributes", {}) if isinstance(aggregate, dict) else {}
+
+        def aggregate_value(*names):
+            for name in names:
+                value = aggregate_attrs.get(name)
+                if value not in (None, "", "unknown", "unavailable"):
+                    return value
+            return None
+
+        def numeric(value, low=None, high=None):
+            try:
+                value = float(value)
+                if not math.isfinite(value) or (low is not None and value < low) or (high is not None and value > high):
+                    return None
+                return value
+            except (TypeError, ValueError):
+                return None
+
+        def direct_state(entity):
+            state = self.get_state(entity, attribute="all") or {}
+            return state if isinstance(state, dict) else {"state": state, "attributes": {}}
+
+        def direct_value(entity, *names):
+            state = direct_state(entity)
+            attrs = state.get("attributes", {})
+            for name in names:
+                value = attrs.get(name) if name in attrs else state.get("state") if name == "state" else None
+                if value not in (None, "", "unknown", "unavailable"):
+                    return value
+            return None
+
+        cloud = numeric(aggregate_value("cloud_cover", "clouds", "cloudiness"), 0, 100)
+        if cloud is None:
+            cloud = numeric(direct_value(self.CLOUD_COVER, "state"), 0, 100)
+        visibility = numeric(aggregate_value("visibility", "visibility_m", "visibility_km"), 0, 100000)
+        if visibility is None:
+            visibility = numeric(direct_value(self.VISIBILITY, "state"), 0, 100000)
+        phase = aggregate_value("moon_phase", "phase")
+        if phase is None:
+            phase = direct_value(self.MOON_PHASE, "state")
+        sun = direct_state(self.SUN)
+        sun_attrs = sun.get("attributes", {})
+        sun_elevation = numeric(aggregate_value("sun_elevation", "solar_elevation"), -90, 90)
+        if sun_elevation is None:
+            sun_elevation = numeric(sun_attrs.get("elevation"), -90, 90)
+        sun_azimuth = numeric(aggregate_value("sun_azimuth", "solar_azimuth"), 0, 360)
+        if sun_azimuth is None:
+            sun_azimuth = numeric(sun_attrs.get("azimuth"), 0, 360)
+        sun_state = aggregate_value("sun_is_day", "is_day")
+        if isinstance(sun_state, str):
+            normalized = sun_state.lower()
+            sun_state = (normalized in ("true", "on", "day", "above_horizon")
+                          if normalized in ("true", "false", "on", "off", "day", "night",
+                                             "above_horizon", "below_horizon") else None)
+        if not isinstance(sun_state, bool):
+            if sun.get("state") == "above_horizon":
+                sun_state = True
+            elif sun.get("state") == "below_horizon":
+                sun_state = False
+            else:
+                sun_state = None
+
+        moon = {}
+        if phase is not None:
+            moon["phase"] = str(phase)[:32]
+        # These are intentionally aggregate-only: no supplied HA entity exists
+        # for moon geometry/illumination, and phase is not a safe substitute.
+        for key, names, bounds in (
+                ("illumination", ("moon_illumination", "illumination"), (0, 1)),
+                ("elevation", ("moon_elevation",), (-90, 90)),
+                ("azimuth", ("moon_azimuth",), (0, 360))):
+            value = numeric(aggregate_value(*names), *bounds)
+            if value is not None:
+                moon[key] = value
+
+        sky = {"sun": {}}
+        if sun_state is not None:
+            sky["sun"]["is_day"] = sun_state
+        if sun_elevation is not None:
+            sky["sun"]["elevation"] = sun_elevation
+        if sun_azimuth is not None:
+            sky["sun"]["azimuth"] = sun_azimuth
+        if cloud is not None:
+            sky["cloud_cover"] = cloud
+        if visibility is not None:
+            sky["visibility"] = visibility
+        if moon:
+            sky["moon"] = moon
+        return sky
+
     def publish_weather(self, kwargs):
         import os
         import time
@@ -307,6 +412,7 @@ class MarqueeAmbient(hass.Hass):
             "windUnit": attrs.get("wind_speed_unit", "km/h"), "wind_gust": attrs.get("wind_gust_speed"),
             "pressure": attrs.get("pressure"), "pressure_unit": attrs.get("pressure_unit", "hPa"),
             "apparent_temperature": apparent_temperature,
+            "sky": self.sky_contract(),
             "precipitation_unit": attrs.get("precipitation_unit", "mm"),
             "snowfall_unit": attrs.get("snowfall_unit", "cm"),
             "observed_at": state.get("last_updated"),

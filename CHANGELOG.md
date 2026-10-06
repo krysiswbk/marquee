@@ -1,3 +1,7 @@
+# 2.12.26
+
+- Add source-grounded ambient sky and phase-only moon fallback.
+
 # 2.12.25
 
 - Make every Cast page URL unique with a timestamped nonce so repeated explicit

@@ -66,3 +66,41 @@ class MMABridgeTests(unittest.TestCase):
         self.assertTrue(payload['left']['logo'].endswith('/100.png'))
         self.assertEqual(payload['rows'],[])
         self.assertEqual(app.set_state.call_args.kwargs['state'],'pfl')
+
+    def test_sky_prefers_aggregate_and_omits_unavailable_moon_facts(self):
+        app = self.module.MarqueeAmbient()
+        states = {
+            "sensor.marquee_weather_summary": {"state": "ok", "attributes": {
+                "cloud_cover": 38, "visibility": 18000, "moon_phase": "first_quarter"}},
+            "sensor.open_meteo_cloud_cover": {"state": "91", "attributes": {}},
+            "sensor.open_meteo_visibility": {"state": "5000", "attributes": {}},
+            "sensor.moon_phase": {"state": "waxing_gibbous", "attributes": {}},
+            "sun.sun": {"state": "above_horizon", "attributes": {"elevation": 27, "azimuth": 191}},
+        }
+        app.get_state = lambda entity, **kwargs: states.get(entity, {})
+        sky = app.sky_contract()
+        self.assertEqual(sky["cloud_cover"], 38)
+        self.assertEqual(sky["visibility"], 18000)
+        self.assertEqual(sky["moon"]["phase"], "first_quarter")
+        self.assertNotIn("illumination", sky["moon"])
+        self.assertNotIn("elevation", sky["moon"])
+        self.assertNotIn("azimuth", sky["moon"])
+        self.assertEqual(sky["sun"]["elevation"], 27)
+        self.assertEqual(sky["sun"]["azimuth"], 191)
+        self.assertNotIn("aircraft", sky)
+
+    def test_sky_direct_entity_fallbacks_are_used(self):
+        app = self.module.MarqueeAmbient()
+        states = {
+            "sensor.marquee_weather_summary": {"state": "ok", "attributes": {}},
+            "sensor.open_meteo_cloud_cover": {"state": "44", "attributes": {}},
+            "sensor.open_meteo_visibility": {"state": "12000", "attributes": {}},
+            "sensor.moon_phase": {"state": "full_moon", "attributes": {}},
+            "sun.sun": {"state": "below_horizon", "attributes": {"elevation": -12, "azimuth": 280}},
+        }
+        app.get_state = lambda entity, **kwargs: states.get(entity, {})
+        sky = app.sky_contract()
+        self.assertEqual(sky["cloud_cover"], 44)
+        self.assertEqual(sky["visibility"], 12000)
+        self.assertFalse(sky["sun"]["is_day"])
+        self.assertEqual(sky["moon"]["phase"], "full_moon")

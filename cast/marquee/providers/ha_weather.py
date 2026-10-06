@@ -72,6 +72,10 @@ def clean_observation(body):
         'wind_gust': scaled(body.get('wind_gust'), factor), 'updated': time.time(),
         'observed_at': str(body.get('observed_at', ''))[:64],
         'forecast_updated': number(body.get('forecast_updated'))}
+    from ..sky import clean_sky
+    sky = clean_sky(body.get('sky'))
+    if sky:
+        clean['sky'] = sky
     if condition in ('unknown', 'unavailable'): clean['temp'] = None
     for typ in ('hourly', 'daily'):
         rows=body.get(typ, [])
