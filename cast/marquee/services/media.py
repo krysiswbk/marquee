@@ -1113,6 +1113,7 @@ def cast_card(target=None, fresh=False):
         # URL that differs only by a query string. Stop the existing app first
         # so the receiver must create a new browsing session.
         catt_for(target, "stop")
+    print(f"casting {target} -> {page_url}", flush=True)
     quiet_cast_site(target, page_url)
     if target == hub_ip():
         CARD_GRACE["until"] = time.time() + CARD_TIMEOUT
