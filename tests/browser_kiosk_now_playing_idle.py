@@ -60,8 +60,14 @@ with sync_playwright() as playwright:
           document.querySelector('#idle-weather-temp').textContent = '15°C';
           document.querySelector('#idle-weather-condition').textContent = 'Partly cloudy';
           document.querySelector('#idle-weather-range').textContent = 'High 21° / Low 12°';
+          document.body.classList.add('cast-display');
+          document.querySelector('#idle-weather-condition').classList.add('weather-fact-separator');
+          document.querySelector('#idle-weather-range').classList.add('weather-fact-separator');
           window.MarqueeNavigation.resolve({playing:false, state:'idle', availability:'idle'});
         }""")
+        assert page.evaluate("getComputedStyle(document.querySelector('.idle-weather-primary')).display") == "flex"
+        assert page.evaluate("getComputedStyle(document.querySelector('#idle-weather-condition')).borderInlineStartStyle") == "solid"
+        assert page.evaluate("getComputedStyle(document.querySelector('#idle-weather-range')).paddingInlineStart") != "0px"
         assert page.locator("#kiosk-section-title").inner_text() == "Nothing is playing"
         assert page.locator(".kiosk-section.now-playing-surface").evaluate("el => !el.hidden && el.getBoundingClientRect().width > 0 && el.getBoundingClientRect().height > 0")
         assert page.locator(".kiosk-home-action").inner_text() == "Return to Home"

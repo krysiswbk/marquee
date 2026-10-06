@@ -152,6 +152,16 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn("present && seen", INDEX)
         self.assertIn("if (present) seen = true", INDEX)
 
+    def test_cast_ambient_weather_facts_keep_visible_separators(self):
+        self.assertIn(
+            "body.cast-display .idle-weather-primary,body.cast-display .idle-weather-secondary",
+            SCREENS,
+        )
+        self.assertIn(
+            "body.cast-display .idle-weather-primary>.weather-fact-separator",
+            SCREENS,
+        )
+
     def test_phone_playback_attaches_bounded_art_to_editorial_content(self):
         self.assertIn('grid-template-areas:"category poster" "identity poster" "meta poster" "progress poster" "device device"', SCREENS)
         self.assertIn("justify-self:end", SCREENS)

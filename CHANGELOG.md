@@ -1,4 +1,10 @@
-# 2.12.18
+# 2.12.19
+
+- Restore visible separators between Cast ambient weather facts so current
+  conditions, feels-like, high/low, and precipitation remain legible on Hub
+  displays without changing the established composition.
+
+## 2.12.18
 
 - Keep explicit `/api/cast` requests visible for five minutes when room
   presence is false, then return control to normal presence reconciliation.
