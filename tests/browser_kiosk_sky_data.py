@@ -10,8 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SKY = {
     "condition": "partlycloudy",
     "cloud_cover": 38,
-    "visibility": 18000,
-    "visibility_unit": "m",
+    "visibility": 24.4,
+    "visibility_unit": "km",
     "sun": {"is_day": False, "elevation": -8.4, "azimuth": 278},
     "moon": {"phase": "waxing_gibbous", "illumination": 0.73},
     "aircraft": [{"id": "abc123", "callsign": "TEST123", "bearing": 90, "elevation": 21}],
@@ -57,7 +57,7 @@ def test_kiosk_sky_page_shows_available_sensor_facts_without_aurora_alert():
         assert "The sky above home" in text
         assert "Partly cloudy" in text
         assert "Cloud cover · 38%" in text
-        assert "Visibility · 18,000 m" in text
+        assert "Visibility · 24.4 km" in text
         assert "Sun elevation · -8.4°" in text
         assert "Moon · waxing gibbous" in text
         assert "Illumination · 73%" in text

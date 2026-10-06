@@ -28,9 +28,11 @@ def clean_sky(value):
     visibility = finite(value.get("visibility"), 0, 100000)
     if visibility is not None:
         result["visibility"] = visibility
-        unit = str(value.get("visibility_unit", "")).strip()[:12]
-        if unit:
-            result["visibility_unit"] = unit
+        # The live HA bridge's visibility source is its normalized
+        # sensor.open_meteo_visibility sensor, whose configured unit is km.
+        # Older bridge payloads omit the unit; keep those readings truthful.
+        unit = str(value.get("visibility_unit", "km")).strip()[:12]
+        result["visibility_unit"] = unit or "km"
     sun = value.get("sun")
     if isinstance(sun, dict):
         clean = {}

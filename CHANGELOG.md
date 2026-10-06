@@ -1,3 +1,7 @@
+# 2.12.35
+
+- Keep legacy Home Assistant Open-Meteo visibility readings in their configured km unit when older bridge payloads omit the unit.
+
 # 2.12.34
 
 - Render the Home Assistant sky sensor feed on the kiosk Sky destination, including cloud cover, visibility with its source unit, sun/moon observations, and nearby aircraft; keep rare aurora alerts as additional context.

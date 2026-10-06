@@ -27,3 +27,7 @@ class SkyContractTests(unittest.TestCase):
     def test_phase_only_moon_remains_phase_only(self):
         result = clean_sky({"moon": {"phase": "waning_crescent"}})
         self.assertEqual(result, {"moon": {"phase": "waning_crescent"}})
+
+    def test_legacy_open_meteo_visibility_defaults_to_its_configured_km_unit(self):
+        self.assertEqual(clean_sky({"visibility": 24.4}),
+                         {"visibility": 24.4, "visibility_unit": "km"})

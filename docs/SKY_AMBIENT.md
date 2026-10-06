@@ -11,8 +11,9 @@ presence, manual-hold, and kiosk behavior unchanged.
 "moon":{"phase":"waxing_gibbous","illumination":0.73,"elevation":18.1,"azimuth":92.0}}}
 ```
 
-`cloud_cover` is 0–100 and `visibility` is in the source's distance unit
-(the current bridge passes the HA sensor value through). Moon `illumination` is 0–1; phase is a supplied
+`cloud_cover` is 0–100. `visibility_unit` accompanies `visibility`; the
+current Open-Meteo HA sensor is normalized to km, and older bridge payloads
+without an explicit unit default to km. Moon `illumination` is 0–1; phase is a supplied
 label, not a value Marquee calculates. When only `sensor.moon_phase` exists,
 Marquee uses a stable ambient placement and a coarse enum-shaped visual phase;
 it does not claim exact position or illumination.
