@@ -269,6 +269,22 @@ body.kiosk-now-playing .b-device *,body.kiosk-playback-active .b-device *{max-wi
    the stage inset cannot affect its containing block. */
 @media(min-width:481px){body.kiosk-now-playing .b-progress,body.kiosk-playback-active .b-progress{position:fixed!important;inset:auto auto calc(var(--kiosk-lower-safe-area) + 8px) 6vw!important;grid-area:auto!important;transform:none!important;z-index:9001;width:min(54vw,760px)!important;margin:0!important;}}
 @media(min-width:481px){body.kiosk-now-playing .kiosk-section.now-playing-surface{bottom:var(--kiosk-lower-safe-area);}}
+/* The Street template is the established theater-screening composition. The
+   generic kiosk playback grid must not flatten its marquee frame and sign into
+   a metadata wall when Now Playing is selected. Keep this scoped to the
+   explicit Now Playing destination; Home playback and other destinations keep
+   their existing kiosk composition. */
+@media(min-width:481px){
+ body.kiosk-now-playing[data-template=street] .stage{display:block;padding:0;}
+ body.kiosk-now-playing[data-template=street] .b-streetframe{display:block!important;left:var(--street-frame-left,63.59375vw);top:var(--street-frame-top,14.25vh);width:var(--street-frame-width,30.625vw);height:auto;aspect-ratio:392/552;z-index:1;}
+ body.kiosk-now-playing[data-template=street] .b-nowplaying{display:block!important;left:var(--street-sign-left,62.2vw);top:var(--street-sign-top,5.2vh);width:var(--street-sign-width,33.2vw);height:auto;aspect-ratio:396/60;z-index:2;}
+ body.kiosk-now-playing[data-template=street] .b-poster{left:66.4vw;top:18.75vh;width:25vw;height:60vh;max-height:none;aspect-ratio:auto;z-index:2;}
+ body.kiosk-now-playing[data-template=street] .b-identity{--logo-box-height:30vh;--logo-box-width:40vw;}
+ body.kiosk-now-playing[data-template=street] .title{font-size:4.6vw;}
+ body.kiosk-now-playing[data-template=street] .plot{max-width:none;font-size:1.55vw;}
+ body.kiosk-now-playing[data-template=street] .b-device{left:5.5vw;top:52.5vh;bottom:auto;width:20vw;height:9vh;}
+ body.kiosk-now-playing[data-template=street] .b-progress{left:5.5vw;top:86vh;bottom:auto;width:46vw;position:absolute!important;inset:auto!important;z-index:initial;}
+}
 .kiosk-queue-label{margin:0;color:#b6f378;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
 .kiosk-queue-row strong,.kiosk-queue-row span{overflow-wrap:anywhere}
 @media(max-width:480px){.kiosk-menu{padding:16px}.kiosk-menu nav{grid-template-columns:1fr}.kiosk-items button{padding:20px}}

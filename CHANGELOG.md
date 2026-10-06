@@ -1,3 +1,8 @@
+## 2.12.11
+
+- Restore the established Street theater-screening composition on the kiosk
+  Now Playing destination.
+
 ## 2.12.10
 
 - Clear the Cast configuration-refresh error after a successful `/settings.json`

@@ -76,6 +76,15 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn("body.kiosk-now-playing .b-device,body.kiosk-now-playing .b-viewer", SCREENS)
         self.assertIn("body.kiosk-now-playing .b-device *,body.kiosk-playback-active .b-device *", SCREENS)
 
+    def test_street_now_playing_restores_the_established_screening_composition(self):
+        self.assertIn("body.kiosk-now-playing[data-template=street] .stage{display:block;padding:0;}", SCREENS)
+        self.assertIn("body.kiosk-now-playing[data-template=street] .b-streetframe{display:block!important", SCREENS)
+        self.assertIn("body.kiosk-now-playing[data-template=street] .b-nowplaying{display:block!important", SCREENS)
+        self.assertIn("left:var(--street-frame-left,63.59375vw)", SCREENS)
+        self.assertIn("left:var(--street-sign-left,62.2vw)", SCREENS)
+        self.assertIn("body.kiosk-now-playing[data-template=street] .b-poster{left:66.4vw;top:18.75vh;width:25vw;height:60vh", SCREENS)
+        self.assertIn("body.kiosk-now-playing[data-template=street] .b-progress{left:5.5vw;top:86vh", SCREENS)
+
     def test_authoritative_apparent_temperature_accepts_numeric_strings_only(self):
         self.assertIn("lastWx?.apparent_temperature == null || lastWx.apparent_temperature === ''", INDEX)
         self.assertIn("? null : Number(lastWx.apparent_temperature)", INDEX)
