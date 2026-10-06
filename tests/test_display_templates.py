@@ -54,6 +54,10 @@ class DisplayTemplateTests(unittest.TestCase):
         self.assertIn('.context-card[data-kind="ambient_agenda"] .context-head { display:contents; }', DISPLAY)
         self.assertIn('.context-card[data-kind="ambient_agenda"] .context-time { grid-column:1/-1; grid-row:4;', DISPLAY)
         self.assertIn('.context-card[data-kind="ambient_agenda"] .context-rows {\n    grid-column:2; grid-row:1;', DISPLAY)
+        self.assertIn('.context-time { text-align:right }.context-clock {font-size:var(--context-clock-size,6.8vw);', DISPLAY)
+        self.assertNotIn('.context-card[data-kind="ambient_agenda"] .context-clock { font-size:', DISPLAY)
+        self.assertIn('max-height:28vh; padding-top:1vh; font-size:clamp(.85rem,1.35vw,1.4rem);', DISPLAY)
+        self.assertNotIn('max-height:16vh; padding-top:0;', DISPLAY)
         self.assertIn('items = items[:max(2, int(limit))]', (Path(__file__).parents[1] / "cast" / "marquee" / "core" / "cast_ambient.py").read_text())
 
     def test_idle_body_state_cannot_hide_the_entire_document(self):

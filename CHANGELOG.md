@@ -1,3 +1,9 @@
+## 2.12.15
+
+- Keep the established Cast ambient clock and agenda sizing while swapping
+  only their display regions; preserve the chronological agenda's five-event
+  limit.
+
 ## 2.12.14
 
 - Swap the Cast ambient calendar regions: the large clock now occupies the
