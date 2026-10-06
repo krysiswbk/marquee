@@ -1,3 +1,8 @@
+# 2.12.24
+
+- Cast ambient weather now shows authoritative rain/snow accumulation when
+  available, with normalized units and truthful omission for unknown amounts.
+
 # 2.12.23
 
 - Enlarge only the Cast ambient weather detail line for across-room readability, give it tasteful lower spacing, and keep the one-line 1024×600 composition overflow-safe.

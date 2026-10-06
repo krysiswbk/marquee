@@ -17,6 +17,32 @@ def number(value):
         raise ValueError('weather value must be finite')
     return value
 
+
+def precipitation(value, unit, target):
+    """Normalize an accumulation to the display unit, or leave it unknown."""
+    amount = number(value)
+    if amount is None:
+        return None
+    units = str(unit or '').strip().lower().replace('μ', 'u').replace(' ', '')
+    if target == 'mm':
+        factor = {'mm': 1, 'millimeter': 1, 'millimeters': 1,
+                  'cm': 10, 'centimeter': 10, 'centimeters': 10,
+                  'in': 25.4, 'inch': 25.4, 'inches': 25.4}.get(units)
+    else:
+        factor = {'cm': 1, 'centimeter': 1, 'centimeters': 1,
+                  'mm': .1, 'millimeter': .1, 'millimeters': .1,
+                  'in': 2.54, 'inch': 2.54, 'inches': 2.54}.get(units)
+    if factor is None:
+        raise ValueError('unsupported precipitation unit')
+    return amount * factor
+
+
+def first_value(row, *names):
+    for name in names:
+        if name in row:
+            return row.get(name)
+    return None
+
 def clean_observation(body):
     if not isinstance(body, dict):
         raise ValueError('expected weather object')
@@ -54,9 +80,18 @@ def clean_observation(body):
         for row in rows:
             stamp=datetime.fromisoformat(row['datetime'])
             if stamp.tzinfo is None: raise ValueError('forecast time needs timezone')
+            rain_unit = first_value(row, 'precipitation_unit', 'precipitationUnit') or body.get('precipitation_unit', 'mm')
+            snow_unit = first_value(row, 'snowfall_unit', 'snowfallUnit') or body.get('snowfall_unit', 'cm')
+            rain = first_value(row, 'precipitation', 'precipitation_amount', 'precipitation_mm')
+            snow = first_value(row, 'snowfall', 'snowfall_amount', 'snowfall_cm',
+                               'snow_accumulation')
             clean[typ].append({'datetime': stamp.isoformat(), 'condition': str(row.get('condition', ''))[:64],
                 'temperature': temp(row.get('temperature')), 'templow': temp(row.get('templow')),
-                'precipitation_probability': number(row.get('precipitation_probability'))})
+                'precipitation_probability': number(row.get('precipitation_probability')),
+                'precipitation': precipitation(rain, rain_unit, 'mm'),
+                'precipitation_unit': 'mm',
+                'snowfall': precipitation(snow, snow_unit, 'cm'),
+                'snowfall_unit': 'cm'})
     return clean
 
 def forecast_payload(obs, timezone_name):
@@ -74,9 +109,13 @@ def forecast_payload(obs, timezone_name):
         'hourly': {'time': [r['datetime'] for r in hourly],
             'temperature_2m': [r.get('temperature') for r in hourly],
             'weather_code': [CODES.get(r.get('condition')) for r in hourly],
-            'precipitation_probability': [r.get('precipitation_probability') for r in hourly]},
+            'precipitation_probability': [r.get('precipitation_probability') for r in hourly],
+            'precipitation': [r.get('precipitation') for r in hourly],
+            'snowfall': [r.get('snowfall') for r in hourly]},
         'daily': {'time': [datetime.fromisoformat(r['datetime']).astimezone(zone).date().isoformat() for r in daily],
             'temperature_2m_max': [r.get('temperature') for r in daily],
             'temperature_2m_min': [r.get('templow') for r in daily],
             'weather_code': [CODES.get(r.get('condition')) for r in daily],
-            'precipitation_probability_max': [r.get('precipitation_probability') for r in daily]}}}
+            'precipitation_probability_max': [r.get('precipitation_probability') for r in daily],
+            'precipitation': [r.get('precipitation') for r in daily],
+            'snowfall': [r.get('snowfall') for r in daily]}}}

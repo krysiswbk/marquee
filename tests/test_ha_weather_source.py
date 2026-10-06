@@ -55,6 +55,27 @@ def test_units_are_normalized_once():
     assert value['hourly'][0]['temperature'] == pytest.approx(-5.5555555)
 
 
+def test_forecast_accumulation_variants_are_normalized_to_display_units():
+    clean = clean_observation(observation(
+        precipitation_unit='in',
+        snowfall_unit='mm',
+        hourly=[{'datetime': '2026-09-13T00:00:00+00:00', 'condition': 'snowy',
+                 'temperature': 1, 'precipitation_probability': 60,
+                 'precipitation': 0.25, 'snowfall': 30}],
+    ))
+    row = clean['hourly'][0]
+    assert row['precipitation'] == pytest.approx(6.35)
+    assert row['precipitation_unit'] == 'mm'
+    assert row['snowfall'] == pytest.approx(3)
+    assert row['snowfall_unit'] == 'cm'
+
+
+def test_forecast_accumulation_is_unknown_when_source_omits_it():
+    row = clean_observation(observation())['hourly'][0]
+    assert row['precipitation'] is None
+    assert row['snowfall'] is None
+
+
 def test_stale_forecast_does_not_hide_current_conditions():
     clean=clean_observation(observation(forecast_updated=time.time()-2000))
     value=forecast_payload(clean, 'America/Toronto')['forecast']

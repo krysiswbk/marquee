@@ -197,7 +197,9 @@ class WeatherProvider(Provider):
                               "temp": at(hourly.get("temperature_2m"), index),
                               "code": at(hourly.get("weather_code"), index),
                               "is_day": at(hourly.get("is_day"), index),
-                              "rain": at(hourly.get("precipitation_probability"), index)})
+                              "rain": at(hourly.get("precipitation_probability"), index),
+                              "precipitation": at(hourly.get("precipitation"), index),
+                              "snowfall": at(hourly.get("snowfall"), index)})
         daily = forecast.get("daily", {})
         days = []
         for index, value in enumerate(daily.get("time", [])):
@@ -207,6 +209,8 @@ class WeatherProvider(Provider):
                              "low": at(daily.get("temperature_2m_min"), index),
                              "code": at(daily.get("weather_code"), index),
                              "rain": at(daily.get("precipitation_probability_max"), index),
+                             "precipitation": at(daily.get("precipitation"), index),
+                             "snowfall": at(daily.get("snowfall"), index),
                              "sunrise": (stamp(at(daily.get("sunrise"), index)).isoformat()
                                          if stamp(at(daily.get("sunrise"), index)) else None),
                              "sunset": (stamp(at(daily.get("sunset"), index)).isoformat()

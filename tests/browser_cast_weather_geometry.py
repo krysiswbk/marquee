@@ -16,7 +16,7 @@ WEATHER = {
     "apparent_temperature": 16.1,
     "forecast_updated": int(time.time()),
     "daily": [{"temperature": 22, "templow": 11}],
-    "hourly": [{"precipitation_probability": 65}],
+    "hourly": [{"precipitation_probability": 65, "precipitation": 8}],
 }
 
 
@@ -28,13 +28,18 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
         page = browser.new_page(viewport={"width": 1024, "height": 600}, device_scale_factor=1)
 
         def route(route):
-            path = route.request.url.split("?", 1)[0].split("marquee.test", 1)[-1]
+            url = route.request.url
+            path = url.split("?", 1)[0].split("marquee.test", 1)[-1]
             if path in ("/image", "/api/config", "/contexts", "/providers"):
                 if path == "/image":
                     return route.fulfill(path=str(ROOT / "output/index.html"), content_type="text/html")
                 return route.fulfill(json={"providers": {}, "contexts": []})
             if path == "/weather":
-                return route.fulfill(json=WEATHER)
+                weather = json.loads(json.dumps(WEATHER))
+                referer = route.request.headers.get("referer", "")
+                if "no-amount" in url or "no-amount" in referer:
+                    weather["hourly"][0].pop("precipitation", None)
+                return route.fulfill(json=weather)
             if path in ("/settings.json", "/live-settings.json"):
                 return route.fulfill(json={"transitionMs": 0})
             if path == "/ambient.json":
@@ -77,6 +82,7 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
         assert "Feels 16°" in result["secondary"]
         assert "High 22° / Low 11°" in result["secondary"]
         assert "Rain 65%" in result["secondary"]
+        assert "8 mm expected" in result["secondary"]
         assert result["clock"]["width"] > 0
         assert result["clock"]["height"] >= 150
         assert abs((result["clock"]["left"] + result["clock"]["width"] / 2) - 512) < 1
@@ -96,4 +102,14 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
         assert result["house"]["left"] >= 0 and result["house"]["right"] <= 1024
         assert not result["overflow"]
         page.close()
+
+        absent = browser.new_page(viewport={"width": 1024, "height": 600}, device_scale_factor=1)
+        absent.route("**/*", route)
+        absent.goto("http://marquee.test/image?no-amount=1", wait_until="domcontentloaded")
+        absent.wait_for_selector("#idle-weather-icon svg")
+        absent_content = absent.locator(".idle-weather-secondary").inner_text()
+        assert "Rain 65%" in absent_content
+        assert "expected" not in absent_content
+        assert "mm" not in absent_content
+        absent.close()
         browser.close()
