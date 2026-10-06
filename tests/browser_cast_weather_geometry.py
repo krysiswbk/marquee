@@ -73,6 +73,7 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
                 weatherClockFilter: weatherClockStyle.filter,
                 idleClockColor: idleClockStyle.color,
                 idleClockFilter: idleClockStyle.filter,
+                idleClockShadow: idleClockStyle.textShadow,
                 idleWeatherFilter: idleWeatherStyle.filter,
                 secondaryColor: secondaryStyle.color,
                 statusColor: statusStyle.color,
@@ -98,6 +99,7 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
         assert result["weatherClockFilter"] == "none"
         assert result["idleClockColor"] == "rgb(255, 255, 255)"
         assert result["idleClockFilter"] == "none"
+        assert result["idleClockShadow"] == "rgba(0, 0, 0, 0.55) 0px 1px 3px"
         assert result["idleWeatherFilter"] == "none"
         assert result["skyMode"] == "day"
         assert result["skyDay"] is True

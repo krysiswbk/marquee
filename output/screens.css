@@ -82,7 +82,7 @@ body.cast-display .idle-weather-primary>*,body.cast-display .idle-weather-second
    whole weather group on one readable rail at Hub scale, with the icon and
    condition forming one secondary focal group. */
 body.cast-display .idle-house{width:min(92vw,900px);gap:1.9vh}
-body.cast-display .idle-clock{font-size:clamp(5rem,19vw,12rem);line-height:.84;letter-spacing:-.065em;text-align:center}
+body.cast-display .idle-clock{font-size:clamp(5rem,19vw,12rem);line-height:.84;letter-spacing:-.065em;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,.55)}
 /* Cast clocks stay white and undimmed while ambient dimming applies elsewhere. */
 body.cast-display .weather-clock,body.cast-display .idle-clock{filter:none;color:#fff}
 body.cast-display .idle-weather{display:grid;justify-items:center;gap:1.15vh;width:100%;margin-top:1vh;color:var(--text-soft);font-size:clamp(1.3rem,2.65vw,2.4rem);font-weight:650}

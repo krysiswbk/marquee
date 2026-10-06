@@ -1,3 +1,7 @@
+# 2.12.33
+
+- Keep daytime ambient skies light blue behind dark-grey Cast weather details, with light clouds and a shadowed white ambient clock; preserve genuinely black night skies and existing sun-sensor day/night behavior.
+
 # 2.12.32
 
 - Cache-bust the Cast and output static assets for the follow-up geometry fixes: source labels are max-content at 5vh/5vw, the clock remains exactly viewport-centered, and populated context weather sits below the clock while empty weather stays hidden.

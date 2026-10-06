@@ -64,10 +64,19 @@ def test_sky_layer_uses_supplied_night_moon_and_only_real_aircraft():
         assert fallback == {"position": "ambient", "illumination": None,
                             "phase": "waning_crescent", "aircraft": 0}
         day = page.evaluate("""() => {
-          window.MarqueeSky.render({isDay: true, condition: 'sunny'});
+          document.body.classList.add('idle');
+          window.MarqueeSky.render({isDay: true, condition: 'cloudy', sky: {cloud_cover: 42}});
+          const layer = document.querySelector('#sky-layer');
+          const stops = [...layer.querySelectorAll('stop')].map(stop => getComputedStyle(stop).stopColor);
+          const clouds = layer.querySelector('.sky-clouds');
           return {mode: document.querySelector('#sky-layer').dataset.mode,
                   day: document.body.classList.contains('sky-day'),
-                  night: document.body.classList.contains('sky-night')};
+                  night: document.body.classList.contains('sky-night'),
+                  stops,
+                  cloud: getComputedStyle(clouds).fill,
+                  opacity: getComputedStyle(layer).opacity};
         }""")
-        assert day == {"mode": "day", "day": True, "night": False}
+        assert day == {"mode": "day", "day": True, "night": False,
+                       "stops": ["rgb(184, 223, 239)", "rgb(111, 157, 183)"],
+                       "cloud": "rgb(234, 244, 250)", "opacity": "0.92"}
         browser.close()
