@@ -3,6 +3,11 @@
 __pycache__
 *.py[cod]
 data
+rollback
+backups
+REPORTS
+TASKS
+qa
 output/*.jpg
 output/*.png
 output/now-playing.json
