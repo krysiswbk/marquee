@@ -139,7 +139,7 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn("SOURCE_JITTER_TOLERANCE_MS = 2000", helper)
         self.assertIn("progressState = window.MarqueeNowPlayingProgress.reconcile(d, progressState", source)
 
-    def test_compact_weather_facts_have_nonempty_fact_separators(self):
+    def test_browser_weather_facts_have_nonempty_fact_separators(self):
         self.assertIn("weather-fact-separator", SCREENS)
         self.assertIn("border-inline-start", SCREENS)
         self.assertIn("padding-inline-start", SCREENS)
@@ -152,12 +152,16 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn("present && seen", INDEX)
         self.assertIn("if (present) seen = true", INDEX)
 
-    def test_cast_ambient_weather_facts_keep_visible_separators(self):
+    def test_cast_ambient_weather_facts_wrap_only_between_whole_facts(self):
         self.assertIn(
             "body.cast-display .idle-weather-primary,body.cast-display .idle-weather-secondary",
             SCREENS,
         )
         self.assertIn(
+            "body.cast-display .idle-weather-primary>*,body.cast-display .idle-weather-secondary>*{white-space:nowrap}",
+            SCREENS,
+        )
+        self.assertNotIn(
             "body.cast-display .idle-weather-primary>.weather-fact-separator",
             SCREENS,
         )

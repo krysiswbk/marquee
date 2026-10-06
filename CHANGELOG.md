@@ -1,4 +1,9 @@
-# 2.12.19
+# 2.12.20
+
+- Replace Cast ambient weather divider pipes with whitespace while keeping each
+  weather fact intact during flex wrapping; preserve browser-controls dividers.
+
+## 2.12.19
 
 - Restore visible separators between Cast ambient weather facts so current
   conditions, feels-like, high/low, and precipitation remain legible on Hub
