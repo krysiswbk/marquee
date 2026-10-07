@@ -1,3 +1,7 @@
+# 2.12.39
+
+- Place the kiosk Settings disclosure before the long destination list so its links are visible when opened on mobile.
+
 # 2.12.38
 
 - Restyle the Plex no-playback kiosk screen in the shared navy/slate palette, replacing its prominent green accents with restrained warm-gold labels.

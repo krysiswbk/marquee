@@ -76,6 +76,17 @@ with sync_playwright() as playwright:
         install_routes(page)
         page.goto("http://marquee.test/kiosk", wait_until="domcontentloaded")
         page.wait_for_selector('.kiosk-primary [data-view=""][aria-current="page"]')
+        if width == 390:
+            page.locator(".kiosk-more").click()
+            settings = page.locator(".kiosk-menu details")
+            settings.locator("summary").click()
+            assert settings.evaluate("el => el.open")
+            assert settings.locator("nav a").count() == 5
+            assert all(settings.locator("nav a").nth(index).is_visible() for index in range(5))
+            first_link = settings.locator("nav a").first.bounding_box()
+            menu_box = page.locator(".kiosk-menu").bounding_box()
+            assert first_link["y"] < menu_box["y"] + menu_box["height"] - 44, (first_link, menu_box)
+            page.keyboard.press("Escape")
         for index in range(3):
             for destination in DESTINATIONS:
                 # Start the same resource refresh that normally follows a

@@ -92,6 +92,9 @@
   menu.innerHTML = '<header><h2 id="kiosk-menu-title">More destinations</h2><button type="button" aria-label="Close menu">✕</button></header><nav aria-label="Additional Marquee destinations"></nav><details><summary>Settings</summary><nav aria-label="Marquee control pages"><a href="/live">Live display</a><a href="/settings">Settings</a><a href="/settings/layout?profile=live">Edit screen layout</a><a href="/settings/attention">Alert rules</a><a href="/settings/tests">Test screens</a></nav></details>';
   document.body.append(menu);
   const overflow = menu.querySelector('nav');
+  // Keep control links ahead of the long destination list so opening Settings
+  // on a phone reveals its links immediately instead of below the fold.
+  menu.insertBefore(menu.querySelector('details'), overflow);
   const panel = document.createElement('section'); panel.id = 'kiosk-panel'; panel.className = 'kiosk-section'; panel.hidden = true; panel.inert = true; panel.setAttribute('aria-hidden', 'true'); panel.setAttribute('aria-label', 'Selected kiosk section'); panel.setAttribute('aria-labelledby', 'kiosk-section-title'); document.body.append(panel);
   // The destination is a sibling overlay, so explicitly own the accessibility
   // state of the dashboard it covers. Keep the original values so Home and
