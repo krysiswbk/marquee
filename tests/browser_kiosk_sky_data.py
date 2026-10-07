@@ -24,6 +24,8 @@ def test_kiosk_sky_page_shows_available_sensor_facts_without_aurora_alert():
             executable_path=os.environ.get("MARQUEE_CHROMIUM"), args=["--no-sandbox"]
         )
         page = browser.new_page(viewport={"width": 1280, "height": 800})
+        weather_payload = {"temp": 25, "apparent_temperature": 12,
+                           "temperature_unit": "°C", "sky": SKY}
 
         def route(request):
             path = urlsplit(request.request.url).path
@@ -39,8 +41,7 @@ def test_kiosk_sky_page_shows_available_sensor_facts_without_aurora_alert():
             if path == "/providers":
                 return request.fulfill(json={"providers": {"astronomy": {"state": "ok"}}})
             if path == "/ha-weather.json":
-                return request.fulfill(json={"temp": 25, "apparent_temperature": 12,
-                                             "temperature_unit": "°C", "sky": SKY})
+                return request.fulfill(json=weather_payload)
             if path in ("/settings.json", "/live-settings.json"):
                 return request.fulfill(json={"transitionMs": 0})
             if path == "/ambient.json":
@@ -62,15 +63,28 @@ def test_kiosk_sky_page_shows_available_sensor_facts_without_aurora_alert():
         assert "Partly cloudy" in text
         assert "38% cloud cover" in text
         assert "24.4 km visibility" in text
-        assert "Sun -8°" in text
+        assert "-8°" in text and "sun elevation" in text
         assert "25°" in text
-        assert "Feels like" in text and "12°" in text
-        assert "1 nearby aircraft" in text
-        assert "TEST123" not in text
+        assert "Feels like" in text and "12°C" in text
+        assert "1 plane overhead" in text
+        assert "TEST123" in text
+        assert page.locator(".sky-vista").get_attribute("aria-label")
+        assert page.locator(".sky-map-plane text").text_content() == "TEST123"
+        assert page.locator(".sky-moon-glyph circle.sky-moon-disc").count() == 1
+        assert page.locator(".sky-vista-clouds").count() == 1
         page.get_by_role("button", name="View 1 nearby plane").click()
         assert page.locator(".sky-aircraft-row").count() == 1
         assert "TEST123" in page.locator(".sky-aircraft-row").inner_text()
         assert "21° elevation" in page.locator(".sky-aircraft-row").inner_text()
         page.get_by_role("button", name="Hide 1 nearby plane").click()
-        assert page.locator(".sky-aircraft-row").count() == 0
+        assert not page.locator(".sky-aircraft-row").is_visible()
+
+        # A faulty nighttime HA feels-like sensor can be warmer than the air
+        # by an impossible margin. In that case the display falls back to the
+        # observed temperature instead of showing misleading heat.
+        weather_payload.update({"temp": 12, "apparent_temperature": 25,
+                                "temperature_unit": "°C", "sky": {**SKY, "sun": {"is_day": False}}})
+        page.reload(wait_until="domcontentloaded")
+        assert "Feels like" in page.locator(".sky-temperature").inner_text()
+        assert "12°C" in page.locator(".sky-temperature").inner_text()
         browser.close()

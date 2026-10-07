@@ -1,3 +1,7 @@
+# 2.12.44
+
+- Redesign the kiosk Sky page as an illustrated night-sky panorama with a phase-shaped moon and visible aircraft tracks; prevent impossible nighttime feels-like readings from overriding observed temperature.
+
 # 2.12.43
 
 - Show current temperature and clearly labeled feels-like temperature on the Sky page; normalize differing Home Assistant sensor units before publishing apparent temperature.
