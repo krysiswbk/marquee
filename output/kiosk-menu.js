@@ -54,19 +54,12 @@
   const canonicalView = key => key === 'sky' ? 'astronomy' : key;
   let view = canonicalView(params.get('view') || ''), interrupted = false;
   let calendarMode = params.get('mode') === 'all' ? 'all' : '';
-  let calendarPage = Math.max(1, Number.parseInt(params.get('page') || '1', 10) || 1);
   let sportsMode = ['ufc', 'pfl'].includes(view) && params.get('mode') === 'all' ? 'all' : '';
   let sportsPage = Math.max(1, Number.parseInt(params.get('page') || '1', 10) || 1);
   let calendarDisclosure = null;
-  let calendarPageSize = 4;
-  let calendarPages = [];
-  let calendarPageSizeViewport = '';
-  let calendarLayoutSettled = false;
-  let calendarLayoutSettlementScheduled = false;
-  let calendarLayoutGeneration = 0;
+  let skyAircraftOpen = false;
   let calendarFocusHeadingPending = Boolean(calendarMode);
   let calendarFocusDisclosurePending = false;
-  let calendarFocusRestorePending = '';
   let sportsFocusHeadingPending = Boolean(sportsMode);
   let sportsFocusDisclosurePending = false;
   let sportsFocusControlPending = '';
@@ -171,14 +164,14 @@
   function href(key, agenda = false, page = 1) {
     const u = new URL(location.href);
     key ? u.searchParams.set('view', key) : u.searchParams.delete('view');
-    if ((key === 'calendar' && agenda) || (['ufc', 'pfl'].includes(key) && agenda)) { u.searchParams.set('mode', 'all'); u.searchParams.set('page', String(page)); }
+    if (key === 'calendar' && agenda) { u.searchParams.set('mode', 'all'); u.searchParams.delete('page'); }
+    else if (['ufc', 'pfl'].includes(key) && agenda) { u.searchParams.set('mode', 'all'); u.searchParams.set('page', String(page)); }
     else { u.searchParams.delete('mode'); u.searchParams.delete('page'); }
     return u.pathname + u.search;
   }
   if (view) {
     const initialAgenda = view === 'calendar' && calendarMode === 'all';
     const initialSports = ['ufc', 'pfl'].includes(view) && sportsMode === 'all';
-    const initialDestination = href(view, initialAgenda, calendarPage);
     history.replaceState({marqueeHome: true}, '', href(''));
     history.pushState({marqueeDestination: true}, '', href(view));
     if (initialAgenda || initialSports) history.pushState({marqueeDetail: true}, '', href(view, true, sportsPage));
@@ -398,33 +391,7 @@
     const days = Math.round((new Date(date.getFullYear(), date.getMonth(), date.getDate()) - start) / 86400000);
     return days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : days < 7 ? 'This week' : 'Later';
   }
-  const shortWide = () => window.matchMedia?.('(min-width: 1000px) and (max-height: 700px) and (min-aspect-ratio: 3/2)').matches;
-  const agendaLimit = () => window.matchMedia?.('(max-width: 480px)').matches || shortWide() ? 2 : 3;
-  function measuredAgendaPageSize() {
-    const height = panel.clientHeight || window.innerHeight;
-    const width = window.innerWidth;
-    const available = Math.max(180, height - (width <= 480 ? 210 : 190));
-    const target = width <= 480 ? 3 : shortWide() || width <= 900 ? 4 : 6;
-    return Math.max(3, Math.min(target, Math.floor(available / (width <= 480 ? 64 : 60))));
-  }
-  function invalidateCalendarLayout() {
-    calendarLayoutSettled = false;
-    calendarLayoutSettlementScheduled = false;
-    calendarPages = [];
-    calendarLayoutGeneration += 1;
-  }
-  function scheduleCalendarLayoutSettlement() {
-    if (calendarLayoutSettlementScheduled || calendarLayoutSettled) return;
-    calendarLayoutSettlementScheduled = true;
-    const generation = calendarLayoutGeneration;
-    const frames = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    Promise.resolve(document.fonts?.ready || null).then(frames).then(() => {
-      if (generation !== calendarLayoutGeneration || view !== 'calendar' || calendarMode !== 'all') return;
-      calendarLayoutSettlementScheduled = false;
-      settleCalendarLayout();
-    });
-  }
-  const calendarPageCount = list => calendarPages.length || Math.max(1, Math.ceil(list.length / calendarPageSize));
+  const agendaLimit = () => window.matchMedia?.('(max-width: 480px)').matches || window.matchMedia?.('(min-width: 1000px) and (max-height: 700px) and (min-aspect-ratio: 3/2)').matches ? 2 : 3;
   function calendarRow(c) {
     const birthday = c.subtype === 'birthday_rollup';
     const birthdayRows = birthday ? (c.rows || []).filter(Boolean) : [];
@@ -433,86 +400,18 @@
       : '';
     return `<div class="kiosk-agenda-row ${birthday ? 'is-birthday' : ''}"><time>${esc(c.subtitle || 'All day')}</time><strong>${esc(c.title || 'Untitled')}</strong><small>${esc(birthday ? 'Birthday' : sourceLabel(c))}</small>${subordinate}</div>`;
   }
-  function calendarDetail(list, options = {}) {
-    const settled = calendarLayoutSettled;
-    const measuring = Boolean(options.measuring);
-    const ready = settled || measuring;
-    const pages = ready ? calendarPageCount(list) : 1;
-    if (settled) calendarPage = Math.max(1, Math.min(calendarPage, pages));
-    const entries = options.entries || (ready
-      ? (calendarPages.length ? (calendarPages[calendarPage - 1] || []) : list.slice((calendarPage - 1) * calendarPageSize, calendarPage * calendarPageSize))
-      : []);
-    const grouped = entries.reduce((map, c) => { const key = agendaGroup(dateOf(c)); (map[key] ||= []).push(c); return map; }, {});
-    const liveId = 'calendar-page-announcement';
-    const content = Object.entries(grouped).map(([group, values]) => `<section><h3>${esc(group)}</h3>${values.map(calendarRow).join('')}</section>`).join('') || (ready ? '<p class="kiosk-empty">No events are available.</p>' : '<p class="kiosk-empty">Preparing the full agenda…</p>');
-    const previousDisabled = !settled || calendarPage <= 1;
-    const nextDisabled = !settled || calendarPage >= pages;
-    return `<div class="kiosk-calendar-detail" data-page-size="${calendarPageSize}" data-calendar-layout="${settled ? 'settled' : 'settling'}" aria-busy="${settled ? 'false' : 'true'}"><header class="kiosk-calendar-detail-head"><div><p class="kiosk-kicker">FULL AGENDA</p><h2 id="calendar-agenda-title" tabindex="-1">All calendar events</h2></div><p class="kiosk-calendar-count">Page ${calendarPage} of ${settled ? pages : '…'}</p></header><div class="kiosk-agenda-groups kiosk-calendar-page">${content}</div><div class="kiosk-calendar-controls"><button type="button" data-calendar-control="previous" data-calendar-page="${calendarPage - 1}" aria-disabled="${previousDisabled ? 'true' : 'false'}" ${previousDisabled ? 'disabled' : ''}>Previous</button><button type="button" data-calendar-control="next" data-calendar-page="${calendarPage + 1}" aria-disabled="${nextDisabled ? 'true' : 'false'}" ${nextDisabled ? 'disabled' : ''}>Next</button><button type="button" data-calendar-summary>Back to summary</button><a href="${esc(href(''))}" data-view="">Return to Home</a></div><p class="kiosk-sr-only" id="${liveId}" aria-live="polite" aria-atomic="true">Page ${calendarPage} of ${settled ? pages : '…'}</p></div>`;
-  }
-  function calendarLayoutKey(list) {
-    return `${window.innerWidth}x${window.innerHeight}|${list.map(c => [c.id, c.title, c.subtitle, ...(c.rows || [])].join('¦')).join('¶')}`;
-  }
-  function calendarPageFits(page) {
-    if (!page) return true;
-    if (page.scrollWidth > page.clientWidth + 1) return false;
-    return page.scrollHeight <= page.clientHeight + 1
-      || (calendarPageSize === 1 && page.querySelectorAll('.kiosk-agenda-row').length === 1);
+  function calendarDetail(list) {
+    const grouped = list.reduce((map, c) => { const key = agendaGroup(dateOf(c)); (map[key] ||= []).push(c); return map; }, {});
+    const content = Object.entries(grouped).map(([group, values]) => `<section><h3>${esc(group)}</h3>${values.map(calendarRow).join('')}</section>`).join('') || '<p class="kiosk-empty">No events are available.</p>';
+    return `<div class="kiosk-calendar-detail"><header class="kiosk-calendar-detail-head"><div><p class="kiosk-kicker">FULL AGENDA</p><h2 id="calendar-agenda-title" tabindex="-1">All calendar events</h2></div><p class="kiosk-calendar-count">${list.length} ${list.length === 1 ? 'event' : 'events'}</p></header><div class="kiosk-agenda-groups kiosk-calendar-page" tabindex="0" aria-label="All calendar events; scroll to browse the list">${content}</div><div class="kiosk-calendar-controls"><button type="button" data-calendar-summary>Back to summary</button><a href="${esc(href(''))}" data-view="">Return to Home</a></div></div>`;
   }
   function calendarFocusToken() {
     const active = document.activeElement;
     if (!panel.contains(active)) return '';
-    if (active.dataset.calendarControl) return active.dataset.calendarControl;
-    if (active.dataset.calendarPage) return `page:${active.dataset.calendarPage}`;
     if (active.hasAttribute('data-calendar-summary')) return 'summary';
     if (active.dataset.view === '') return 'home';
     if (active.id === 'calendar-agenda-title') return 'heading';
     return '';
-  }
-  function renderCalendarMeasurement(entries, pageNumber) {
-    calendarPage = pageNumber;
-    const preservedControls = preservePanelControls();
-    panel.innerHTML = `<header class="kiosk-section-head kiosk-section-head-detail"><p>CALENDAR</p><h1 id="kiosk-section-title">Calendar</h1></header>${calendarDetail(entries, {measuring: true, entries})}`;
-    reconcilePanelControls(preservedControls);
-    return panel.querySelector('.kiosk-calendar-page');
-  }
-  function settleCalendarLayout() {
-    const list = calendarEntries(ordered(items('calendar')));
-    const key = calendarLayoutKey(list);
-    const requestedPage = calendarPage;
-    calendarFocusRestorePending = calendarFocusToken();
-    const initial = measuredAgendaPageSize();
-    // Keep ordinary events grouped at the viewport's natural capacity. For
-    // each page, try the largest remaining prefix first; a long event then
-    // cannot make an earlier fitting prefix sparse.
-    calendarPageSize = list.length === 1 ? 1 : initial;
-    const fitted = [];
-    for (let start = 0; start < list.length;) {
-      let end = Math.min(list.length, start + initial);
-      while (end > start) {
-        const entries = list.slice(start, end);
-        const page = renderCalendarMeasurement(entries, fitted.length + 1);
-        if (calendarPageFits(page) || entries.length === 1) {
-          fitted.push(entries);
-          start = end;
-          break;
-        }
-        end -= 1;
-      }
-    }
-    if (!fitted.length) fitted.push([]);
-    calendarPages = fitted;
-    calendarPage = Math.max(1, Math.min(requestedPage, calendarPages.length));
-    calendarPageSizeViewport = key;
-    calendarLayoutSettled = true;
-    drawPanel();
-  }
-  function markCalendarScrollablePage() {
-    const page = panel.querySelector('.kiosk-calendar-page');
-    if (!page || page.scrollHeight <= page.clientHeight + 1) return;
-    page.dataset.calendarOverflow = 'scroll';
-    page.tabIndex = 0;
-    page.setAttribute('aria-label', 'Scroll to reveal the full calendar entry');
-    page.querySelector('.kiosk-agenda-row')?.setAttribute('data-calendar-overflow', 'scroll');
   }
   function renderAgenda(list) {
     const values = ordered(list), feature = values[0];
@@ -534,32 +433,50 @@
   }
   function renderAmbient(list) {
     const feature = ordered(list)[0];
-    const sky = resources.sky.snapshot?.sky || {};
+    const weather = resources.sky.snapshot || {};
+    const sky = weather.sky || {};
     const sun = sky.sun || {}, moon = sky.moon || {};
-    const facts = [];
     const hasNumber = value => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
-    if (sky.condition) {
-      const condition = String(sky.condition).toLowerCase().replaceAll('_', '-');
-      const known = {partlycloudy: 'Partly cloudy', 'partly-cloudy': 'Partly cloudy', clear: 'Clear',
-        'clear-night': 'Clear night', cloudy: 'Cloudy', rainy: 'Rainy', pouring: 'Pouring', fog: 'Foggy'};
-      facts.push(known[condition] || condition.replaceAll('-', ' ').replace(/^./, letter => letter.toUpperCase()));
-    }
-    if (hasNumber(sky.cloud_cover)) facts.push(`Cloud cover · ${Math.round(Number(sky.cloud_cover))}%`);
-    if (hasNumber(sky.visibility)) facts.push(`Visibility · ${Number(sky.visibility).toLocaleString()} ${sky.visibility_unit || 'm'}`);
-    if (hasNumber(sun.elevation)) facts.push(`Sun elevation · ${Number(sun.elevation).toFixed(1)}°`);
-    if (hasNumber(sun.azimuth)) facts.push(`Sun bearing · ${Math.round(Number(sun.azimuth))}°`);
-    if (moon.phase) facts.push(`Moon · ${String(moon.phase).replaceAll('_', ' ')}`);
-    if (hasNumber(moon.illumination)) facts.push(`Illumination · ${Math.round(Number(moon.illumination) * 100)}%`);
-    if (hasNumber(moon.elevation)) facts.push(`Moon elevation · ${Number(moon.elevation).toFixed(1)}°`);
-    if (hasNumber(moon.azimuth)) facts.push(`Moon bearing · ${Math.round(Number(moon.azimuth))}°`);
+    const condition = String(sky.condition || '').toLowerCase().replaceAll('_', '-');
+    const known = {partlycloudy: 'Partly cloudy', 'partly-cloudy': 'Partly cloudy', clear: 'Clear',
+      'clear-night': 'Clear night', cloudy: 'Cloudy', rainy: 'Rainy', pouring: 'Pouring', fog: 'Foggy'};
+    const conditionLabel = known[condition] || condition.replaceAll('-', ' ').replace(/^./, letter => letter.toUpperCase());
     const aircraft = Array.isArray(sky.aircraft) ? sky.aircraft : [];
-    if (aircraft.length) facts.push(`${aircraft.length} aircraft nearby${aircraft[0].callsign ? ` · ${aircraft[0].callsign}` : ''}`);
-    const rows = [...facts, ...(feature ? safeRows(feature) : [])];
-    if (!feature && !rows.length) return sharedState('The sky is quiet for now.', 'Return to Home', false, 'empty');
-    const title = feature?.title || 'The sky above home';
-    const subtitle = feature?.subtitle || (sun.is_day === true ? 'Daylight observations' : sun.is_day === false ? 'Night-sky observations' : 'Live observations');
-    const detail = feature?.detail || (feature ? feature.body : 'Home Assistant sky sensors');
-    return `<div class="kiosk-ambient-surface"><p class="kiosk-kicker">SKY · ${feature ? esc(stateCopy(feature)) : 'LIVE DATA'}</p><h2>${esc(title)}</h2><p class="kiosk-lede">${esc(subtitle)}</p>${detail ? `<p class="kiosk-empty">${esc(detail)}</p>` : ''}<div class="kiosk-ambient-rows">${rows.map(row => `<span>${esc(row)}</span>`).join('')}</div></div>`;
+    const phase = String(moon.phase || '').toLowerCase().replace(/[\s-]+/g, '_');
+    const phaseLabels = {new_moon: 'New moon', waxing_crescent: 'Waxing crescent', first_quarter: 'First quarter',
+      waxing_gibbous: 'Waxing gibbous', full_moon: 'Full moon', waning_gibbous: 'Waning gibbous',
+      last_quarter: 'Last quarter', third_quarter: 'Last quarter', waning_crescent: 'Waning crescent'};
+    const phaseLabel = phaseLabels[phase] || (phase && !['unknown', 'unavailable'].includes(phase)
+      ? phase.replaceAll('_', ' ').replace(/^./, letter => letter.toUpperCase()) : 'Moon phase unavailable');
+    const illumination = hasNumber(moon.illumination) ? Math.round(Number(moon.illumination) * 100) : null;
+    const phaseIndex = ['new_moon', 'waxing_crescent', 'first_quarter', 'waxing_gibbous', 'full_moon', 'waning_gibbous', 'last_quarter', 'waning_crescent'].indexOf(phase);
+    const moonEmoji = phase === 'new_moon' ? '🌑' : phase === 'full_moon' ? '🌕'
+      : phase === 'first_quarter' || phase === 'waxing_crescent' || phase === 'waxing_gibbous' ? '🌓'
+        : phase === 'last_quarter' || phase === 'third_quarter' || phase === 'waning_crescent' || phase === 'waning_gibbous' ? '🌗'
+          : '🌙';
+    const moonFacts = [phaseLabel, illumination === null ? '' : `${illumination}% illuminated`,
+      hasNumber(moon.elevation) ? `${Number(moon.elevation).toFixed(0)}° above horizon` : '',
+      hasNumber(moon.azimuth) ? `${Math.round(Number(moon.azimuth))}° azimuth` : ''].filter(Boolean);
+    const visibility = hasNumber(sky.visibility) ? `${Number(sky.visibility).toLocaleString()} ${sky.visibility_unit || 'km'}` : '';
+    const temperature = hasNumber(weather.temp) ? Math.round(Number(weather.temp)) : null;
+    const feelsLike = hasNumber(weather.apparent_temperature) ? Math.round(Number(weather.apparent_temperature)) : null;
+    const temperatureUnit = weather.temperature_unit === '°F' ? '°F' : '°C';
+    const aircraftRows = aircraft.map((track, index) => {
+      const name = String(track.callsign || track.id || `Aircraft ${index + 1}`).trim();
+      const facts = [hasNumber(track.altitude) ? `${Math.round(Number(track.altitude)).toLocaleString()} m` : '',
+        hasNumber(track.bearing) ? `${Math.round(Number(track.bearing))}° bearing` : '',
+        hasNumber(track.elevation) ? `${Number(track.elevation).toFixed(0)}° elevation` : ''].filter(Boolean);
+      return `<li class="sky-aircraft-row"><span class="sky-aircraft-icon" aria-hidden="true">✈</span><span><strong>${esc(name)}</strong><small>${esc(facts.join(' · ') || 'Nearby aircraft')}</small></span></li>`;
+    }).join('');
+    const planeAction = aircraft.length
+      ? `<button type="button" class="sky-aircraft-toggle" data-sky-aircraft aria-expanded="${skyAircraftOpen}">${skyAircraftOpen ? 'Hide' : 'View'} ${aircraft.length} nearby ${aircraft.length === 1 ? 'plane' : 'planes'} <span aria-hidden="true">${skyAircraftOpen ? '−' : '+'}</span></button>` : '';
+    const eventRows = feature ? safeRows(feature) : [];
+    const dayLabel = sun.is_day === true ? 'Day sky' : sun.is_day === false ? 'Night sky' : 'The sky above home';
+    const sceneTitle = feature?.title || (conditionLabel || dayLabel);
+    const ambient = resources.sky.snapshot ? 'LIVE OBSERVATIONS' : 'WAITING FOR SKY SENSORS';
+    const moonGlyph = `<span class="sky-moon-glyph" aria-hidden="true" data-phase-index="${phaseIndex}">${moonEmoji}</span>`;
+    const clouds = hasNumber(sky.cloud_cover) ? `${Math.round(Number(sky.cloud_cover))}% cloud cover` : '';
+    return `<div class="kiosk-ambient-surface sky-destination"><div class="sky-celestial-backdrop" aria-hidden="true"><span class="sky-orbit sky-orbit-one"></span><span class="sky-orbit sky-orbit-two"></span><span class="sky-horizon-glow"></span></div><div class="sky-destination-main"><p class="kiosk-kicker">SKY · ${ambient}</p><h2>${esc(sceneTitle)}</h2><p class="kiosk-lede">${esc(feature?.subtitle || dayLabel)}${clouds ? ` <span class="sky-condition-dot">·</span> ${esc(clouds)}` : ''}</p>${eventRows.length ? `<p class="kiosk-meta">${eventRows.map(esc).join(' · ')}</p>` : ''}${temperature !== null ? `<div class="sky-temperature" aria-label="Current temperature ${temperature} ${temperatureUnit}${feelsLike === null ? '' : `, feels like ${feelsLike} ${temperatureUnit}`} "><strong>${temperature}°</strong><span>${esc(conditionLabel || 'outside')}</span>${feelsLike === null ? '' : `<small>Feels like <b>${feelsLike}°${esc(temperatureUnit)}</b></small>`}</div>` : ''}<div class="sky-quick-facts">${visibility ? `<span><b>◎</b> ${esc(visibility)} visibility</span>` : ''}${hasNumber(sun.elevation) ? `<span><b>☼</b> Sun ${Number(sun.elevation).toFixed(0)}°</span>` : ''}</div></div><article class="sky-moon-card" aria-label="Current moon phase">${moonGlyph}<div class="sky-moon-copy"><p class="sky-card-label">TONIGHT'S MOON</p><h3>${esc(phaseLabel)}</h3><p>${illumination === null ? 'Phase reported by Home Assistant' : `${illumination}% illuminated`}</p><div class="sky-phase-track" aria-label="Moon phase progression"><span style="--phase-progress:${phaseIndex < 0 ? 0 : phaseIndex / 7 * 100}%"></span></div></div></article>${aircraft.length ? `<section class="sky-aircraft-panel"><div class="sky-aircraft-summary"><span class="sky-plane-count" aria-hidden="true">✈</span><span><strong>${aircraft.length} nearby aircraft</strong><small>Live OpenSky detections near home</small></span>${planeAction}</div>${skyAircraftOpen ? `<ul class="sky-aircraft-list">${aircraftRows}</ul>` : ''}</section>` : `<p class="sky-aircraft-empty">No aircraft are currently being reported nearby.</p>`}<div class="sky-sensor-ribbon">${conditionLabel ? `<span>${esc(conditionLabel)}</span>` : ''}${clouds ? `<span>${esc(clouds)}</span>` : ''}${visibility ? `<span>${esc(visibility)} visibility</span>` : ''}</div></div>`;
   }
   function renderDestination(key, list) { const category = categoryFor(key); return key === 'nhl' ? renderNhl(list) : category === 'sports' ? renderSports(list) : category === 'agenda' ? renderAgenda(list) : category === 'media' ? renderMedia(list) : category === 'sky' ? renderAmbient(list) : list.length ? `<div class="kiosk-items">${list.slice(0, 8).map(button).join('')}</div>` : sharedState('Nothing to show here right now.', 'Return to Home', false, 'empty'); }
   // Refreshes redraw panel markup, but an unchanged visible action must not be
@@ -567,7 +484,6 @@
   // synchronize its rendered state after the new panel content is committed.
   function panelControlKey(node) {
     if (node.matches('a[data-view]')) return `view:${node.dataset.view}`;
-    if (node.matches('[data-calendar-control]')) return `calendar:${node.dataset.calendarControl}`;
     if (node.matches('[data-calendar-summary]')) return 'calendar:summary';
     if (node.matches('[data-sports-control]')) return `sports:${node.dataset.sportsControl}`;
     if (node.matches('[data-sports-summary]')) return 'sports:summary';
@@ -594,7 +510,6 @@
         if (!next.hasAttribute(attribute.name)) current.removeAttribute(attribute.name);
       });
       [...next.attributes].forEach(attribute => current.setAttribute(attribute.name, attribute.value));
-      if (next.matches('[data-calendar-control]')) current.disabled = next.disabled;
       current.replaceChildren(...[...next.childNodes].map(child => child.cloneNode(true)));
       next.replaceWith(current);
     });
@@ -679,18 +594,11 @@
     const sportsDetail = ['ufc', 'pfl'].includes(view) && sportsMode === 'all' && lifecycle.state === 'populated';
     panel.classList.toggle('calendar-detail-surface', detail);
     panel.classList.toggle('sports-detail-surface', sportsDetail);
-    if (detail) {
-      const layoutKey = calendarLayoutKey(calendarEntries(ordered(list)));
-      if (calendarLayoutSettled && calendarPageSizeViewport !== layoutKey) {
-        invalidateCalendarLayout();
-      }
-      scheduleCalendarLayoutSettlement();
-    }
     let html = detail
       ? `<header class="kiosk-section-head kiosk-section-head-detail"><p>CALENDAR</p><h1 id="kiosk-section-title">Calendar</h1></header>${calendarDetail(calendarEntries(ordered(list)))}`
       : `<header class="kiosk-section-head"><p>${esc(categoryFor(view).toUpperCase())}${lifecycle.state === 'partial' ? ' · PARTIAL' : lifecycle.state === 'disconnected' ? ' · OFFLINE' : ''}</p><h1 id="kiosk-section-title"${feature ? ` aria-label="${esc(headingName)}"` : ''}>${esc(label(view))}</h1></header>` + (message ? sharedState(message, 'Return to Home', ['error', 'stale', 'unavailable', 'disconnected', 'partial'].includes(lifecycle.state), lifecycle.state, view, lifecycle.reason) : lifecycle.state === 'partial' ? `<div class="kiosk-partial-surface" data-lifecycle="partial">${sharedState(`${label(view)} is partial`, 'Return to Home', true, 'partial', view, lifecycle.reason)}${renderDestination(view, list)}</div>` : renderDestination(view, list));
     const focusedCalendarControl = detail
-      ? calendarFocusRestorePending || calendarFocusToken()
+      ? (calendarFocusHeadingPending ? '' : calendarFocusToken())
       : '';
     const preserveCalendarDisclosureFocus = !detail && view === 'calendar'
       && panel.contains(document.activeElement)
@@ -704,13 +612,6 @@
       const canonical = new URL(location.href).searchParams.get('page');
       if (canonical !== String(sportsPage)) history.replaceState({marqueeDetail: true}, '', href(view, true, sportsPage));
     }
-    if (detail && calendarLayoutSettled) {
-      // Capacity was measured against every page before controls became
-      // enabled. Navigation only redraws the already-settled page size.
-      markCalendarScrollablePage();
-      const canonical = new URL(location.href).searchParams.get('page');
-      if (canonical !== String(calendarPage)) history.replaceState({marqueeCalendarAgenda: true}, '', href('calendar', true, calendarPage));
-    }
     calendarDisclosure = panel.querySelector('[data-calendar-disclosure]');
     if (!detail && calendarFocusDisclosurePending && calendarDisclosure) {
       calendarDisclosure.focus({preventScroll: true});
@@ -721,18 +622,12 @@
       calendarFocusHeadingPending = false;
       initialDirectFocusPending = false;
     } else if (detail && focusedCalendarControl) {
-      const target = focusedCalendarControl === 'previous' ? '[data-calendar-control="previous"]'
-        : focusedCalendarControl === 'next' ? '[data-calendar-control="next"]'
-          : focusedCalendarControl === 'summary' ? '[data-calendar-summary]'
+      const target = focusedCalendarControl === 'summary' ? '[data-calendar-summary]'
         : focusedCalendarControl === 'home' ? '[data-view=""]'
-          : focusedCalendarControl === 'heading' ? '#calendar-agenda-title'
-            : `[data-calendar-page="${CSS.escape(focusedCalendarControl.slice(5))}"]`;
+          : focusedCalendarControl === 'heading' ? '#calendar-agenda-title' : '';
       const control = panel.querySelector(target);
       if (control && !control.disabled) control.focus({preventScroll: true});
-      else if (focusedCalendarControl === 'next') panel.querySelector('[data-calendar-control="previous"]')?.focus({preventScroll: true});
-      else if (focusedCalendarControl === 'previous') panel.querySelector('[data-calendar-control="next"]')?.focus({preventScroll: true});
     }
-    if (detail) calendarFocusRestorePending = '';
     if (!sportsDetail && sportsFocusDisclosurePending) {
       panel.querySelector('[data-sports-disclosure]')?.focus({preventScroll: true});
       sportsFocusDisclosurePending = false;
@@ -765,22 +660,12 @@
     else if (key) more.focus();
     else primary.querySelector('[data-view=""]')?.focus();
   }
-  function change(key, restoreFocus = true) { key = canonicalView(key); view = key; selected = ''; calendarMode = ''; sportsMode = ''; calendarPage = 1; sportsPage = 1; sportsFocusHeadingPending = false; sportsFocusDisclosurePending = false; sportsFocusControlPending = ''; invalidateCalendarLayout(); calendarPageSizeViewport = ''; calendarFocusDisclosurePending = false; history.pushState({marqueeDestination: Boolean(key)}, '', href(key)); closeMenu(false); drawNavigation(); drawMenu(); drawPanel(); if (restoreFocus) { focusNavigation(key); setTimeout(() => focusNavigation(key), 0); } window.dispatchEvent(new Event('marquee-navigation')); }
-  function openCalendarAgenda() { if (view !== 'calendar' || !items('calendar').length) return; calendarMode = 'all'; calendarPage = 1; invalidateCalendarLayout(); calendarPageSizeViewport = ''; calendarFocusHeadingPending = true; calendarFocusDisclosurePending = false; history.pushState({marqueeCalendarAgenda: true}, '', href('calendar', true, calendarPage)); drawPanel(); }
+  function change(key, restoreFocus = true) { key = canonicalView(key); view = key; selected = ''; calendarMode = ''; sportsMode = ''; sportsPage = 1; sportsFocusHeadingPending = false; sportsFocusDisclosurePending = false; sportsFocusControlPending = ''; calendarFocusDisclosurePending = false; history.pushState({marqueeDestination: Boolean(key)}, '', href(key)); closeMenu(false); drawNavigation(); drawMenu(); drawPanel(); if (restoreFocus) { focusNavigation(key); setTimeout(() => focusNavigation(key), 0); } window.dispatchEvent(new Event('marquee-navigation')); }
+  function openCalendarAgenda() { if (view !== 'calendar' || !items('calendar').length) return; calendarMode = 'all'; calendarFocusHeadingPending = true; calendarFocusDisclosurePending = false; history.pushState({marqueeCalendarAgenda: true}, '', href('calendar', true)); drawPanel(); }
   function closeCalendarAgenda() {
     if (!calendarMode) return;
     calendarFocusDisclosurePending = true;
     history.back();
-    calendarPageSizeViewport = '';
-  }
-  function setCalendarPage(page) {
-    if (!calendarLayoutSettled) return;
-    const list = calendarEntries(ordered(items('calendar'))); const pages = calendarPageCount(list);
-    const nextPage = Math.max(1, Math.min(pages, page));
-    if (nextPage === calendarPage) return;
-    calendarPage = nextPage;
-    history.replaceState({marqueeCalendarAgenda: true}, '', href('calendar', true, calendarPage));
-    drawPanel();
   }
   function openSportsSchedule() { if (!['ufc', 'pfl'].includes(view) || items(view).length < 2) return; sportsMode = 'all'; sportsPage = 1; sportsFocusHeadingPending = true; sportsFocusDisclosurePending = false; history.pushState({marqueeDetail: true}, '', href(view, true, sportsPage)); drawPanel(); }
   function closeSportsSchedule() { if (!sportsMode) return; sportsFocusDisclosurePending = true; history.back(); }
@@ -815,15 +700,14 @@
     if (anchor && rail.contains(anchor)) { e.preventDefault(); navigateFromAnchor(anchor, 'click'); }
   }, true);
   menu.addEventListener('click', e => { if (e.target === menu) { const r = menu.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closeMenu(); } });
-  panel.addEventListener('click', e => { const scoreSummary = e.target.closest('.kiosk-sport-score-details summary'); if (scoreSummary) { scoreDetailsOpen = !scoreSummary.parentElement.open; return; } const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); return; } if (e.target.closest('[data-calendar-disclosure]')) { openCalendarAgenda(); return; } if (e.target.closest('[data-calendar-summary]')) { closeCalendarAgenda(); return; } if (e.target.closest('[data-sports-disclosure]')) { openSportsSchedule(); return; } if (e.target.closest('[data-sports-summary]')) { closeSportsSchedule(); return; } const sportsControl = e.target.closest('[data-sports-control]'); if (sportsControl && !sportsControl.disabled) { sportsFocusControlPending = sportsControl.dataset.sportsControl; setSportsPage(sportsPage + (sportsControl.dataset.sportsControl === 'next' ? 1 : -1)); return; } const page = e.target.closest('[data-calendar-page]'); if (page && !page.disabled && calendarLayoutSettled) { setCalendarPage(Number(page.dataset.calendarPage)); return; } const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); return; } const b = e.target.closest('button[data-item]'); if (b) { selected = b.dataset.item; drawPanel(); primary.querySelector(`[data-view="${CSS.escape(view)}"]`)?.focus(); window.dispatchEvent(new Event('marquee-navigation')); } });
+  panel.addEventListener('click', e => { const scoreSummary = e.target.closest('.kiosk-sport-score-details summary'); if (scoreSummary) { scoreDetailsOpen = !scoreSummary.parentElement.open; return; } const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); return; } if (e.target.closest('[data-sky-aircraft]')) { skyAircraftOpen = !skyAircraftOpen; drawPanel(); panel.querySelector('[data-sky-aircraft]')?.focus({preventScroll: true}); return; } if (e.target.closest('[data-calendar-disclosure]')) { openCalendarAgenda(); return; } if (e.target.closest('[data-calendar-summary]')) { closeCalendarAgenda(); return; } if (e.target.closest('[data-sports-disclosure]')) { openSportsSchedule(); return; } if (e.target.closest('[data-sports-summary]')) { closeSportsSchedule(); return; } const sportsControl = e.target.closest('[data-sports-control]'); if (sportsControl && !sportsControl.disabled) { sportsFocusControlPending = sportsControl.dataset.sportsControl; setSportsPage(sportsPage + (sportsControl.dataset.sportsControl === 'next' ? 1 : -1)); return; } const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); return; } const b = e.target.closest('button[data-item]'); if (b) { selected = b.dataset.item; drawPanel(); primary.querySelector(`[data-view="${CSS.escape(view)}"]`)?.focus(); window.dispatchEvent(new Event('marquee-navigation')); } });
   stage?.addEventListener('click', e => { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); return; } const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); } });
-  document.addEventListener('keydown', e => { if (menu.open || !view) return; if (!calendarMode && !sportsMode && e.target.closest?.('[data-calendar-disclosure]') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openCalendarAgenda(); return; } if (!sportsMode && e.target.closest?.('[data-sports-disclosure]') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openSportsSchedule(); return; } if (calendarMode) { if (e.key === 'Escape' || e.key === 'BrowserBack') { e.preventDefault(); closeCalendarAgenda(); return; } if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); setCalendarPage(calendarPage - 1); return; } if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); setCalendarPage(calendarPage + 1); return; } } else if (sportsMode) { if (e.key === 'Escape' || e.key === 'BrowserBack') { e.preventDefault(); closeSportsSchedule(); return; } if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); setSportsPage(sportsPage - 1); return; } if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); setSportsPage(sportsPage + 1); return; } } else if (e.key === 'Escape') { e.preventDefault(); change(''); } });
+  document.addEventListener('keydown', e => { if (menu.open || !view) return; if (!calendarMode && !sportsMode && e.target.closest?.('[data-calendar-disclosure]') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openCalendarAgenda(); return; } if (!sportsMode && e.target.closest?.('[data-sports-disclosure]') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openSportsSchedule(); return; } if (calendarMode) { if (e.key === 'Escape' || e.key === 'BrowserBack') { e.preventDefault(); closeCalendarAgenda(); return; } } else if (sportsMode) { if (e.key === 'Escape' || e.key === 'BrowserBack') { e.preventDefault(); closeSportsSchedule(); return; } if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); setSportsPage(sportsPage - 1); return; } if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); setSportsPage(sportsPage + 1); return; } } else if (e.key === 'Escape') { e.preventDefault(); change(''); } });
   function restoreHistoryDestinationFocus() { if (historyFocusDestination === null || calendarMode || view === 'calendar') return; const destination = historyFocusDestination; historyFocusDestination = null; focusNavigation(destination); }
   window.addEventListener('marquee-history-focus-owned', () => { historyFocusOwned = true; historyFocusDestination = null; });
   document.addEventListener('focusin', event => { if (historyFocusDestination === null || calendarMode || view === 'calendar') return; const destination = historyFocusDestination; historyFocusDestination = null; if (event.target?.dataset?.view !== destination) focusNavigation(destination); });
-  window.addEventListener('popstate', () => { const overlayOwnsFocus = historyFocusOwned; historyFocusOwned = false; const wasCalendarDetail = view === 'calendar' && calendarMode === 'all'; const wasSportsDetail = ['ufc', 'pfl'].includes(view) && sportsMode === 'all'; const next = new URLSearchParams(location.search); const nextView = canonicalView(next.get('view') || ''); const activityHash = location.hash === '#activity'; const calendarHistoryChange = view === 'calendar' || nextView === 'calendar'; view = nextView; calendarMode = view === 'calendar' && next.get('mode') === 'all' ? 'all' : ''; sportsMode = ['ufc', 'pfl'].includes(view) && next.get('mode') === 'all' ? 'all' : ''; if (calendarHistoryChange) invalidateCalendarLayout(); calendarPageSizeViewport = ''; if (wasCalendarDetail && view === 'calendar' && !calendarMode) calendarFocusDisclosurePending = true; if (!(view === 'calendar' && !calendarMode)) calendarFocusDisclosurePending = false; if (wasSportsDetail && !sportsMode && ['ufc', 'pfl'].includes(view)) sportsFocusDisclosurePending = true; sportsFocusHeadingPending = Boolean(sportsMode); calendarPage = Math.max(1, Number.parseInt(next.get('page') || '1', 10) || 1); sportsPage = Math.max(1, Number.parseInt(next.get('page') || '1', 10) || 1); calendarFocusHeadingPending = Boolean(calendarMode || sportsMode); selected = ''; drawNavigation(false); drawMenu(); drawPanel(); if (!overlayOwnsFocus && !calendarMode && !sportsMode && !activityHash) { if (view !== 'calendar' && !(['ufc', 'pfl'].includes(view))) focusNavigation(view); } window.dispatchEvent(new Event('marquee-navigation')); historyFocusDestination = overlayOwnsFocus || view === 'calendar' || sportsMode || activityHash || (['ufc', 'pfl'].includes(view) && !sportsMode) ? null : view; if (['ufc', 'pfl'].includes(view) && !sportsMode && wasSportsDetail) setTimeout(() => panel.querySelector('[data-sports-disclosure]')?.focus({preventScroll: true}), 0); });
+  window.addEventListener('popstate', () => { const overlayOwnsFocus = historyFocusOwned; historyFocusOwned = false; const wasCalendarDetail = view === 'calendar' && calendarMode === 'all'; const wasSportsDetail = ['ufc', 'pfl'].includes(view) && sportsMode === 'all'; const next = new URLSearchParams(location.search); const nextView = canonicalView(next.get('view') || ''); const activityHash = location.hash === '#activity'; view = nextView; calendarMode = view === 'calendar' && next.get('mode') === 'all' ? 'all' : ''; sportsMode = ['ufc', 'pfl'].includes(view) && next.get('mode') === 'all' ? 'all' : ''; if (wasCalendarDetail && view === 'calendar' && !calendarMode) calendarFocusDisclosurePending = true; if (!(view === 'calendar' && !calendarMode)) calendarFocusDisclosurePending = false; if (wasSportsDetail && !sportsMode && ['ufc', 'pfl'].includes(view)) sportsFocusDisclosurePending = true; sportsFocusHeadingPending = Boolean(sportsMode); sportsPage = Math.max(1, Number.parseInt(next.get('page') || '1', 10) || 1); calendarFocusHeadingPending = Boolean(calendarMode || sportsMode); selected = ''; drawNavigation(false); drawMenu(); drawPanel(); if (!overlayOwnsFocus && !calendarMode && !sportsMode && !activityHash) { if (view !== 'calendar' && !(['ufc', 'pfl'].includes(view))) focusNavigation(view); } window.dispatchEvent(new Event('marquee-navigation')); historyFocusDestination = overlayOwnsFocus || view === 'calendar' || sportsMode || activityHash || (['ufc', 'pfl'].includes(view) && !sportsMode) ? null : view; if (['ufc', 'pfl'].includes(view) && !sportsMode && wasSportsDetail) setTimeout(() => panel.querySelector('[data-sports-disclosure]')?.focus({preventScroll: true}), 0); });
   window.addEventListener('pageshow', restoreHistoryDestinationFocus);
-  window.addEventListener('resize', () => { if (calendarMode && view === 'calendar') { invalidateCalendarLayout(); drawPanel(); } });
   window.addEventListener('marquee-surface-rendered', drawPanel);
   window.MarqueeNavigation = { resolve(payload) { nowPlaying = payload || {playing:false, state:'idle', availability:'idle'}; const wasInterrupted = interrupted; interrupted = Boolean(payload?.attention || payload?.householdFocus); if (interrupted && !wasInterrupted && menu.open) closeMenu(false); drawPanel(); if (interrupted || !view || view === 'plex') return payload; const c = !offline && sections.includes(view) && items(view).find(item => item.id === selected); return c ? c.payload || {playing:true,type:'media_context',key:'browse:'+c.id,context:c} : {playing:false}; }, refresh };
   async function refresh(lifecycle = {}) {

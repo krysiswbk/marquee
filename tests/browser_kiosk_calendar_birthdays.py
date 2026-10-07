@@ -53,44 +53,27 @@ with sync_playwright() as playwright:
         page_errors = []
         page.on("pageerror", lambda error: page_errors.append(str(error)))
         page.goto("http://marquee.test/kiosk?view=calendar&mode=all", wait_until="domcontentloaded")
-        page.wait_for_selector('.kiosk-calendar-detail[data-calendar-layout="settled"]')
-        stable_count = page.locator(".kiosk-calendar-count").inner_text()
-        stable_size = page.locator(".kiosk-calendar-detail").get_attribute("data-page-size")
+        page.wait_for_selector('.kiosk-calendar-detail')
         page.evaluate("window.dispatchEvent(new Event('marquee-surface-rendered'))")
-        page.wait_for_selector('.kiosk-calendar-detail[data-calendar-layout="settled"]')
-        assert page.locator(".kiosk-calendar-count").inner_text() == stable_count
-        assert page.locator(".kiosk-calendar-detail").get_attribute("data-page-size") == stable_size
+        page.wait_for_selector('.kiosk-calendar-detail')
+        assert page.locator(".kiosk-calendar-count").inner_text() == "11 events"
         seen = []
-        visited_pages = 0
-        while True:
-            visited_pages += 1
-            agenda = page.locator(".kiosk-calendar-page")
-            assert agenda.evaluate("el => el.scrollHeight <= el.clientHeight + 1"), (width, height, agenda.bounding_box())
-            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight")
-            if visited_pages == 1:
-                birthday = agenda.locator(".kiosk-agenda-row.is-birthday")
-                assert birthday.count() == 1
-                assert birthday.locator(".kiosk-birthday-rows li").all_inner_texts() == list(BIRTHDAYS[1:])
-                assert birthday.inner_text().count("Birthday") == 1
-            seen.extend(agenda.locator(".kiosk-agenda-row").all_inner_texts())
-            next_button = page.locator('[data-calendar-control="next"]')
-            if next_button.is_disabled():
-                break
-            current = page.locator(".kiosk-calendar-count").inner_text()
-            next_button.click()
-            page.wait_for_function("old => document.querySelector('.kiosk-calendar-count')?.innerText !== old", arg=current)
-            assert page.locator(".kiosk-calendar-detail").get_attribute("data-page-size") == stable_size
-            assert page.locator(".kiosk-calendar-count").inner_text().split(" of ")[1] == stable_count.split(" of ")[1]
-            page.evaluate("window.dispatchEvent(new Event('marquee-surface-rendered'))")
-            assert page.locator(".kiosk-calendar-detail").get_attribute("data-page-size") == stable_size
+        agenda = page.locator(".kiosk-calendar-page")
+        assert agenda.evaluate("el => getComputedStyle(el).overflowY === 'auto'")
+        assert agenda.evaluate("el => el.scrollHeight > el.clientHeight")
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight")
+        birthday = agenda.locator(".kiosk-agenda-row.is-birthday")
+        assert birthday.count() == 1
+        assert birthday.locator(".kiosk-birthday-rows li").all_inner_texts() == list(BIRTHDAYS[1:])
+        assert birthday.inner_text().count("Birthday") == 1
+        seen.extend(agenda.locator(".kiosk-agenda-row").all_inner_texts())
         combined = "\n".join(seen)
         assert all(name in combined for name in BIRTHDAYS), (width, height, seen)
         assert "Annual meeting" in combined
         assert len(seen) == len(set(seen)), (width, height, seen)
-        assert page.locator('[data-calendar-control="previous"]').is_enabled() == (visited_pages > 1)
-        assert page.locator('[data-calendar-control="next"]').is_disabled()
+        assert not page.locator('[data-calendar-control]').count()
         assert not page_errors, (width, height, page_errors)
-        evidence.append((width, height, stable_count, stable_size, visited_pages))
+        evidence.append((width, height, len(seen), agenda.evaluate("el => el.scrollHeight > el.clientHeight")))
         page.close()
     browser.close()
-    print(f"PASS: Calendar agenda settlement stable across target viewports: {evidence}")
+    print(f"PASS: Calendar birthday rows and all events remain in one scrollable list across target viewports: {evidence}")

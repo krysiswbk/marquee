@@ -59,12 +59,12 @@ with sync_playwright() as playwright:
     )
     page = browser.new_page(viewport={"width": 390, "height": 844}, reduced_motion="reduce")
     install_routes(page)
-    page.goto("http://marquee.test/kiosk?view=calendar&mode=all&page=1", wait_until="domcontentloaded")
-    page.wait_for_selector('.kiosk-calendar-detail[data-calendar-layout="settled"]')
+    page.goto("http://marquee.test/kiosk?view=calendar&mode=all", wait_until="domcontentloaded")
+    page.wait_for_selector('.kiosk-calendar-detail')
 
     identity = page.evaluate("""async () => {
         const selectors = [
-            '#kiosk-panel [data-view=""]', '#kiosk-panel [data-calendar-control="next"]', '#kiosk-panel [data-calendar-summary]'
+            '#kiosk-panel [data-view=""]', '#kiosk-panel [data-calendar-summary]'
         ];
         const refs = selectors.map(selector => document.querySelector(selector));
         if (refs.some(ref => !ref)) return {ok: false, reason: 'missing control', connected: refs.map(Boolean)};
@@ -77,13 +77,11 @@ with sync_playwright() as playwright:
     }""")
     assert identity["ok"], identity
 
-    page.locator('#kiosk-panel [data-calendar-control="next"]').click()
-    assert page.url.endswith("/kiosk?view=calendar&mode=all&page=2")
     page.locator('#kiosk-panel [data-calendar-summary]').click()
     assert page.url.endswith("/kiosk?view=calendar")
 
-    page.goto("http://marquee.test/kiosk?view=calendar&mode=all&page=1", wait_until="domcontentloaded")
-    page.wait_for_selector('.kiosk-calendar-detail[data-calendar-layout="settled"]')
+    page.goto("http://marquee.test/kiosk?view=calendar&mode=all", wait_until="domcontentloaded")
+    page.wait_for_selector('.kiosk-calendar-detail')
     home = page.locator('#kiosk-panel [data-view=""]').element_handle()
     for _ in range(3):
         page.evaluate("() => window.MarqueeNavigation.refresh()")
@@ -92,4 +90,4 @@ with sync_playwright() as playwright:
     assert page.url.endswith("/kiosk")
     assert page.locator('.kiosk-primary a[data-view=""][aria-current="page"]').count() == 1
     browser.close()
-    print("PASS: Calendar Home, Next, and summary actions survive ordinary refreshes and activate normally")
+    print("PASS: Calendar Home and summary actions survive ordinary refreshes and activate normally")

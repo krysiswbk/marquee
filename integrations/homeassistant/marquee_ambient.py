@@ -539,13 +539,26 @@ class MarqueeAmbient(hass.Hass):
         # The weather entity does not reliably expose apparent_temperature.
         # Keep the established payload field, sourced only from the dedicated
         # HA feels-like entity; unavailable/non-numeric state remains null.
-        feels_like = self.get_state(self.FEELS_LIKE)
+        feels_state = self.get_state(self.FEELS_LIKE, attribute="all") or {}
+        feels_attrs = feels_state.get("attributes", {}) if isinstance(feels_state, dict) else {}
+        feels_like = (feels_state.get("state") if isinstance(feels_state, dict)
+                      else feels_state)
         try:
             apparent_temperature = float(feels_like)
             if not math.isfinite(apparent_temperature):
                 apparent_temperature = None
         except (TypeError, ValueError):
             apparent_temperature = None
+        # The dedicated feels-like sensor can use a different unit from the
+        # weather entity. The Marquee weather contract carries one shared
+        # temperature_unit, so normalize this value to that unit before send.
+        weather_unit = attrs.get("temperature_unit", "°C")
+        feels_unit = str(feels_attrs.get("unit_of_measurement", weather_unit)).strip().lower()
+        feels_is_f = feels_unit in ("°f", "f", "fahrenheit")
+        weather_is_f = str(weather_unit).strip().lower() in ("°f", "f", "fahrenheit")
+        if apparent_temperature is not None and feels_is_f != weather_is_f:
+            apparent_temperature = ((apparent_temperature - 32) * 5 / 9 if feels_is_f
+                                    else apparent_temperature * 9 / 5 + 32)
         if time.time() - self.weather_forecast_at >= 600:
             try:
                 forecasts = {}
@@ -565,7 +578,7 @@ class MarqueeAmbient(hass.Hass):
                 self.log(f"HA weather forecast unavailable: {error}", level="WARNING")
         payload = {
             "entity_id": self.WEATHER,
-            "temp": attrs.get("temperature"), "temperature_unit": attrs.get("temperature_unit", "°C"),
+            "temp": attrs.get("temperature"), "temperature_unit": weather_unit,
             "condition": state.get("state", "unavailable"),
             "isDay": self.get_state("sun.sun") == "above_horizon",
             "humidity": attrs.get("humidity"), "wind": attrs.get("wind_speed"),

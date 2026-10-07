@@ -1,3 +1,11 @@
+# 2.12.43
+
+- Show current temperature and clearly labeled feels-like temperature on the Sky page; normalize differing Home Assistant sensor units before publishing apparent temperature.
+
+# 2.12.42
+
+- Render Calendar “View all events” as one compact, scrollable agenda list while preserving the summary layout.
+
 # 2.12.41
 
 - Merge live UFC/PFL contexts with their extended browse schedules without duplicating events.

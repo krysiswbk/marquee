@@ -39,7 +39,8 @@ def test_kiosk_sky_page_shows_available_sensor_facts_without_aurora_alert():
             if path == "/providers":
                 return request.fulfill(json={"providers": {"astronomy": {"state": "ok"}}})
             if path == "/ha-weather.json":
-                return request.fulfill(json={"sky": SKY})
+                return request.fulfill(json={"temp": 25, "apparent_temperature": 12,
+                                             "temperature_unit": "°C", "sky": SKY})
             if path in ("/settings.json", "/live-settings.json"):
                 return request.fulfill(json={"transitionMs": 0})
             if path == "/ambient.json":
@@ -54,13 +55,22 @@ def test_kiosk_sky_page_shows_available_sensor_facts_without_aurora_alert():
         surface = page.locator(".kiosk-ambient-surface")
         surface.wait_for()
         text = surface.inner_text()
-        assert "The sky above home" in text
+        assert "SKY" in text
+        assert "TONIGHT'S MOON" in text
+        assert "Waxing gibbous" in text
+        assert "73% illuminated" in text
         assert "Partly cloudy" in text
-        assert "Cloud cover · 38%" in text
-        assert "Visibility · 24.4 km" in text
-        assert "Sun elevation · -8.4°" in text
-        assert "Moon · waxing gibbous" in text
-        assert "Illumination · 73%" in text
-        assert "1 aircraft nearby · TEST123" in text
-        assert "The sky is quiet for now." not in text
+        assert "38% cloud cover" in text
+        assert "24.4 km visibility" in text
+        assert "Sun -8°" in text
+        assert "25°" in text
+        assert "Feels like" in text and "12°" in text
+        assert "1 nearby aircraft" in text
+        assert "TEST123" not in text
+        page.get_by_role("button", name="View 1 nearby plane").click()
+        assert page.locator(".sky-aircraft-row").count() == 1
+        assert "TEST123" in page.locator(".sky-aircraft-row").inner_text()
+        assert "21° elevation" in page.locator(".sky-aircraft-row").inner_text()
+        page.get_by_role("button", name="Hide 1 nearby plane").click()
+        assert page.locator(".sky-aircraft-row").count() == 0
         browser.close()

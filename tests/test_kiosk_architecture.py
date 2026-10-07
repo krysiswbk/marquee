@@ -104,40 +104,33 @@ def test_calendar_contract_groups_and_limits_chronological_agenda():
         assert token in MENU
 
 
-def test_calendar_full_agenda_contract_is_paginated_and_history_addressable():
+def test_calendar_full_agenda_contract_is_scrollable_and_history_addressable():
     for token in (
         'data-calendar-disclosure', 'View all ${fullValues.length} events',
         'calendarMode = params.get(\'mode\') === \'all\'',
         'u.searchParams.set(\'mode\', \'all\')',
-        'u.searchParams.set(\'page\', String(page))',
-        'data-calendar-page', 'Page ${calendarPage} of ${settled ? pages : \'…\'}',
-        'Back to summary', 'Return to Home', 'calendarPageSize',
-        'measuredAgendaPageSize', 'aria-live="polite"',
-        "e.key === 'ArrowLeft' || e.key === 'PageUp'",
-        "e.key === 'ArrowRight' || e.key === 'PageDown'",
-        "e.key === 'Escape' || e.key === 'BrowserBack'",
-        'calendarDisclosure.focus({preventScroll: true})', "history.replaceState({marqueeCalendarAgenda: true}",
+        'Back to summary', 'Return to Home',
+        'All calendar events; scroll to browse the list',
+        'calendarDisclosure.focus({preventScroll: true})', "history.pushState({marqueeCalendarAgenda: true}",
         'calendar-detail-surface',
     ):
         assert token in MENU
     for token in (
-        '.kiosk-calendar-detail{', 'overflow:hidden',
+        '.kiosk-calendar-detail{',
         '.kiosk-calendar-controls button,.kiosk-calendar-controls a',
         'min-width:44px;min-height:44px',
     ):
         assert token in SCREENS
     assert 'more event${remaining === 1 ?' not in MENU
     assert 'remaining beyond this summary' not in MENU
-    assert "document.fonts?.ready" in MENU
-    assert "calendarLayoutSettlementScheduled" in MENU
-    assert 'aria-busy="${settled ? \'false\' : \'true\'}"' in MENU
+    assert 'overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain' in SCREENS
+    assert "calendarPage" not in MENU
 
 
 def test_calendar_focus_and_history_contracts_do_not_steal_control_focus():
     assert "function drawNavigation(preserveFocus = true)" in MENU
     assert "if (preserveFocus && focusedView !== undefined)" in MENU
     assert "document.addEventListener('focusin'" in MENU
-    assert "const calendarHistoryChange = view === 'calendar' || nextView === 'calendar'" in MENU
     assert "drawNavigation(false)" in MENU
     assert "let calendarFocusHeadingPending = Boolean(calendarMode);" in MENU
     assert "let calendarFocusDisclosurePending = false;" in MENU
@@ -145,9 +138,8 @@ def test_calendar_focus_and_history_contracts_do_not_steal_control_focus():
     assert "else if (detail && focusedCalendarControl)" in MENU
     assert "if (!detail && calendarFocusDisclosurePending && calendarDisclosure)" in MENU
     assert "if (preserveCalendarDisclosureFocus) calendarFocusDisclosurePending = true;" in MENU
-    assert 'data-calendar-control="previous"' in MENU
-    assert 'data-calendar-control="next"' in MENU
-    assert "data-calendar-page]:not([disabled])" not in MENU
+    assert 'data-calendar-control="previous"' not in MENU
+    assert 'data-calendar-control="next"' not in MENU
     assert "calendarFocusHeadingPending = true; calendarFocusDisclosurePending = false; history.pushState" in MENU
     assert "if (interrupted && !wasInterrupted && menu.open) closeMenu(false);" in MENU
     assert "history.back();" in MENU
@@ -160,17 +152,12 @@ def test_calendar_focus_and_history_contracts_do_not_steal_control_focus():
     assert "payload.playing === false" not in MENU
 
 
-def test_calendar_fit_and_disclosure_contracts_use_real_geometry_and_touch_target():
-    detail_start = MENU.index("function calendarDetail(list, options = {})")
-    detail_end = MENU.index("function calendarLayoutKey", detail_start)
-    assert "measuredAgendaPageSize" not in MENU[detail_start:detail_end]
-    assert "settleCalendarLayout" in MENU
-    assert "calendarPageFits(page)" in MENU
+def test_calendar_scroll_list_and_disclosure_contracts_use_touch_targets():
+    assert "function calendarDetail(list)" in MENU
     assert "calendarFocusToken" in MENU
-    assert "calendarFocusRestorePending" in MENU
-    assert "calendarPageSize === 1" in MENU
-    assert "page.dataset.calendarOverflow = 'scroll'" in MENU
-    assert "history.replaceState({marqueeCalendarAgenda: true}, '', href('calendar', true, calendarPage))" in MENU
+    assert "calendarPageFits(page)" not in MENU
+    assert "calendarLayoutKey" not in MENU
+    assert "history.replaceState({marqueeCalendarAgenda: true}, '', href('calendar', true, calendarPage))" not in MENU
     for token in (
         ".kiosk-agenda-more{display:inline-flex",
         "min-height:44px",
@@ -211,13 +198,27 @@ def test_navigation_targets_survive_selection_and_resource_renders():
 
 
 def test_healthy_empty_states_do_not_offer_failure_retry():
-    assert "The sky is quiet for now.', 'Return to Home', false, 'empty'" in MENU
+    assert "No aircraft are currently being reported nearby." in MENU
     assert "`${label(view)} is quiet right now.`, 'Return to Home', false, 'empty'" in MENU
     assert "const combatView = key => key === 'ufc' || key === 'pfl';" in MENU
     assert "Checking the published ${promotion} schedule." in MENU
     assert "No upcoming ${combatName(view)} events are scheduled." in MENU
     assert "kiosk-state.is-resolved" in SCREENS
     assert "lifecycle.state, view, lifecycle.reason)" in MENU
+
+
+def test_sky_destination_is_ambient_and_aircraft_are_browsable():
+    for token in (
+        "sky-destination", "sky-moon-card", "TONIGHT'S MOON", "phaseLabels",
+        "sky-aircraft-panel", "data-sky-aircraft", "aria-expanded=", "sky-aircraft-list",
+        "Live OpenSky detections near home", "Math.round(Number(track.altitude))",
+    ):
+        assert token in MENU
+    for token in (
+        ".sky-destination{", ".sky-celestial-backdrop{", ".sky-moon-card{",
+        ".sky-aircraft-panel{", ".sky-aircraft-list{", "@media(max-width:700px)",
+    ):
+        assert token in SCREENS
     assert "data-kiosk-retry" in MENU
 
 
@@ -404,8 +405,7 @@ def test_short_wide_presentation_contract_is_scoped_and_summarizes_secondary_con
     assert ".kiosk-section{overflow:hidden;padding:24px 44px}" in SCREENS
     assert ".kiosk-queue-row:nth-of-type(n+2){display:none}" in SCREENS
     assert ".kiosk-queue-more{display:block;margin:8px 0 0}" in SCREENS
-    assert "const shortWide = () =>" in MENU
-    assert "shortWide() ? 2 : 3" in MENU
+    assert "(min-width: 1000px) and (max-height: 700px) and (min-aspect-ratio: 3/2)" in MENU
 
 
 def test_short_wide_sports_empty_state_keeps_action_reachable_with_readable_rhythm():
