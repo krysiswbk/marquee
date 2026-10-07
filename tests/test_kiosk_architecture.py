@@ -58,7 +58,8 @@ def test_large_display_rail_has_explicit_scale_and_balanced_distribution_tiers()
 def test_sports_contract_keeps_matchup_status_and_next_event_hierarchy():
     for token in ("kiosk-sport-feature", "kiosk-matchup", "NEXT RELEVANT", "stateCopy(feature)"):
         assert token in MENU
-    assert "snapshot.browse?.nhl" in MENU
+    assert "snapshot.browse?.[name]" in MENU
+    assert "['nhl', 'ufc', 'pfl']" in MENU
     assert "function renderNhl(list)" in MENU
     assert "No followed-team games are scheduled." in MENU
     assert "sourceStatus" in MENU and "broadcast" in MENU
