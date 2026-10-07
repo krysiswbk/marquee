@@ -1,3 +1,7 @@
+# 2.12.48
+
+- Show the fresh forecast temperature when the separate weather observation is unavailable.
+
 # 2.12.47
 
 - Add upcoming monitored Radarr movie releases to the kiosk and configurable Movies settings.

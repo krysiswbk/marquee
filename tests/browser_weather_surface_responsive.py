@@ -112,6 +112,7 @@ with sync_playwright() as playwright:
         assert page.evaluate("document.activeElement?.id === 'wx-segment-title'")
         assert page.locator("#wx-segment-title").inner_text() == "Current conditions"
         assert page.locator("#wx-observation-source").count() == 1
+        assert page.locator("#channel-temp").inner_text() == "24°C"
         assert page.locator('.kiosk-primary [data-view=""]:visible').count() == 1
         assert page.locator('.kiosk-primary [data-view="weather"]:visible').count() == 1
         assert page.locator(".kiosk-rail").evaluate(

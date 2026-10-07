@@ -51,7 +51,8 @@
     if(!ctx)return;
     const raw=ctx.weather||{},data=modelFresh()?raw:{},model=data.current||{},now=Date.now();
     const freshObservation=Boolean(observed&&Number.isFinite(observed.temp)&&observed.updated&&now/1000-observed.updated>=0&&now/1000-observed.updated<1800);
-    const temp=freshObservation?observed.temp:null;
+    const modelTemp=model.temperature_2m==null||model.temperature_2m===''?null:Number(model.temperature_2m);
+    const temp=freshObservation?observed.temp:Number.isFinite(modelTemp)?modelTemp:null;
     let kind=condition(model.weather_code??null,model.is_day===0);
     if(freshObservation&&observed.condition){const normalized=String(observed.condition).toLowerCase().replaceAll(' ','-');const names={sunny:'sun',clear:'sun','clear-night':'night',partlycloudy:'partly','partly-cloudy':'partly',cloudy:'cloud',fog:'fog',rainy:'rain',rain:'rain',pouring:'rain',snowy:'snow',snow:'snow','snowy-rainy':'snow',lightning:'storm','lightning-rainy':'storm'};kind={...kind,kind:names[normalized]||kind.kind};}
     card.dataset.sky=kind.kind;
