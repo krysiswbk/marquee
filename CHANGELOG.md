@@ -1,3 +1,7 @@
+# 2.12.45
+
+- Keep the Sky panorama, moon, and aircraft cards visible above the kiosk feed bar on standard landscape displays.
+
 # 2.12.44
 
 - Redesign the kiosk Sky page as an illustrated night-sky panorama with a phase-shaped moon and visible aircraft tracks; prevent impossible nighttime feels-like readings from overriding observed temperature.
