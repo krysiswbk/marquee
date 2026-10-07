@@ -81,7 +81,7 @@
   // as PS5/Xbox/Switch/PC to wrap at their deliberate slash opportunities.
   const titleMarkup = text => esc(text).replace(/\//g, '/<wbr>');
   const fresh = c => (!c.expires || Date.parse(c.expires) > Date.now()) && c.eventState !== 'EXPIRED';
-  const items = key => (key === 'nhl' ? browseContexts : contexts).filter(c => (c.provider || c.source) === key && fresh(c));
+  const items = key => (key === 'nhl' || key === 'ufc' || key === 'pfl' ? browseContexts : contexts).filter(c => (c.provider || c.source) === key && fresh(c));
   document.body.classList.add('browser-controls');
   const rail = document.createElement('div'); rail.className = 'screen-controls kiosk-rail';
   rail.setAttribute('data-kiosk-navigation', 'true');
@@ -869,7 +869,7 @@
       if (resources.contexts.snapshot) {
         const snapshot = resources.contexts.snapshot;
         contexts = clean(snapshot.contexts);
-        browseContexts = clean(snapshot.browse?.nhl);
+        browseContexts = clean(['nhl', 'ufc', 'pfl'].flatMap(name => snapshot.browse?.[name] || []));
       }
       // Plex remains exclusively authoritative through now-playing.json. The
       // provider diagnostics payload must not manufacture a second Plex item.

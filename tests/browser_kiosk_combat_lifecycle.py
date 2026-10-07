@@ -38,7 +38,7 @@ def run():
         )
         for width, height in VIEWPORTS:
             for promotion in ("ufc", "pfl"):
-                for lifecycle in ("empty", "stale", "disconnected", "populated"):
+                for lifecycle in ("empty", "stale", "disconnected", "populated", "future"):
                     page = browser.new_page(viewport={"width": width, "height": height})
                     page.on("pageerror", lambda error: errors.append(str(error)))
                     page.on("console", lambda message: errors.append(message.text) if message.type == "error" else None)
@@ -56,7 +56,8 @@ def run():
                             return route.fulfill(json={"providers": providers})
                         if path == "/contexts":
                             values = [] if lifecycle != "populated" else [event(promotion), event(promotion, suffix="2")]
-                            return route.fulfill(json={"contexts": values, "browse": {}})
+                            browse = {promotion: [event(promotion, suffix="future")]} if lifecycle == "future" else {}
+                            return route.fulfill(json={"contexts": values, "browse": browse})
                         if path == "/providers":
                             health = {"state": "degraded", "stale": True, "reason": "schedule refresh delayed"} if lifecycle == "stale" else {"state": "disabled", "reason": "source is disconnected"} if lifecycle == "disconnected" else {"state": "ok"}
                             return route.fulfill(json={"providers": {promotion: health}})
@@ -71,7 +72,7 @@ def run():
                     page.route("**/*", route)
                     page.goto(f"http://marquee.test/kiosk?view={promotion}", wait_until="domcontentloaded")
                     page.wait_for_selector(".kiosk-section:not([hidden])")
-                    if lifecycle == "populated":
+                    if lifecycle in ("populated", "future"):
                         page.wait_for_selector(".kiosk-broadcast-layout")
                     else:
                         page.wait_for_function("document.querySelector('[data-lifecycle]') !== null")
@@ -86,6 +87,10 @@ def run():
                     elif lifecycle == "disconnected":
                         assert page.locator('[data-lifecycle="disconnected"]').is_visible()
                         assert "source is disconnected" in page.locator(".kiosk-state").inner_text()
+                    elif lifecycle == "future":
+                        assert page.locator(".kiosk-broadcast-layout").is_visible()
+                        assert page.locator(".kiosk-state[data-lifecycle=empty]").count() == 0
+                        assert f"{promotion.upper()} Fight Night future" in page.locator(".kiosk-broadcast-layout").inner_text()
                     else:
                         assert page.locator(".kiosk-broadcast-layout").is_visible()
                         assert page.locator(".kiosk-broadcast-matchup").is_visible()

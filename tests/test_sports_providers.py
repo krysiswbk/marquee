@@ -1,6 +1,6 @@
 import tempfile
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from urllib.parse import parse_qs, urlparse
 
 from cast.marquee.providers.engine import ContextEngine
@@ -86,6 +86,28 @@ class SportsProviderTests(unittest.TestCase):
         self.assertEqual(context.event_state, EventState.LIVE)
         self.assertEqual(context.raw["left"]["logo"], "https://img/10.png")
         self.assertEqual(provider.sport_path, "mma/pfl")
+
+    def test_mma_browse_includes_future_cards_without_adding_them_to_interrupt_candidates(self):
+        starts = NOW + timedelta(days=10)
+        event = {"id": "pfl-future", "name": "PFL World Championship",
+                 "date": starts.isoformat(), "status": {"type": {"state": "pre"}},
+                 "competitions": [{"competitors": [athlete("Fighter A"), athlete("Fighter B")]}]}
+        class Client:
+            def json(self, url, timeout=8):
+                self.url = url
+                return {"events": [event]}
+        client = Client()
+        provider = PFLProvider({"enabled": True, "priority": 90}, self.tmp.name,
+                               client=client, clock=lambda: NOW.timestamp())
+        payload = provider.fetch()
+        self.assertEqual(parse_qs(urlparse(client.url).query)["dates"],
+                         [(NOW - timedelta(days=1)).strftime("%Y%m%d") + "-" +
+                          (NOW + timedelta(days=30)).strftime("%Y%m%d")])
+        self.assertEqual(provider.contexts(payload, NOW), [])
+        browse = provider.browse_contexts(payload, NOW)
+        self.assertEqual(len(browse), 1)
+        self.assertEqual(browse[0].event_state, EventState.UPCOMING)
+        self.assertEqual(browse[0].title, "PFL World Championship")
 
     def test_nhl_filters_to_followed_team(self):
         payload = {"events": [{"id": "game", "name": "Toronto vs Montreal",

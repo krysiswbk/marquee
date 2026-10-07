@@ -53,11 +53,14 @@ class ESPNProvider(Provider):
     refresh_seconds = 60
     stale_seconds = 600
     sport_path = ""
+    lookback_days = 1
+    lookahead_days = 7
 
     def fetch(self):
         from datetime import datetime, timezone
         now = datetime.fromtimestamp(self.clock(), timezone.utc)
-        start, end = now - timedelta(days=1), now + timedelta(days=7)
+        start = now - timedelta(days=self.lookback_days)
+        end = now + timedelta(days=self.lookahead_days)
         dates = start.strftime("%Y%m%d") + "-" + end.strftime("%Y%m%d")
         url = ("https://site.api.espn.com/apis/site/v2/sports/" + self.sport_path
                + "/scoreboard?limit=100&dates=" + dates)
@@ -299,8 +302,9 @@ def _result(fight):
 class MMAProvider(ESPNProvider):
     """Shared fight-card normalization for ESPN MMA promotions."""
     accent = "#d20a0a"
+    lookahead_days = 30
 
-    def contexts(self, payload, now):
+    def _contexts(self, payload, now, browse=False):
         preevent = int(self.config.get("preevent_minutes", 120))
         result_minutes = int(self.config.get("result_minutes", 180))
         priority = int(self.config.get("priority", 90))
@@ -314,7 +318,10 @@ class MMAProvider(ESPNProvider):
             if not starts:
                 continue
             lifecycle = _lifecycle(_state(event), starts, now, preevent)
-            if lifecycle == EventState.UPCOMING and starts - now > timedelta(hours=24):
+            if (not browse and lifecycle == EventState.UPCOMING
+                    and starts - now > timedelta(hours=24)):
+                continue
+            if browse and lifecycle in (EventState.POST_EVENT, EventState.RESULT):
                 continue
             fights = event.get("competitions") or []
             active = next((fight for fight in fights if _state(fight) == "in"), None)
@@ -347,6 +354,12 @@ class MMAProvider(ESPNProvider):
                 raw={"left": _side(sides[0]) if sides else {},
                      "right": _side(sides[1]) if len(sides) > 1 else {}, "status": status}))
         return values
+
+    def contexts(self, payload, now):
+        return self._contexts(payload, now)
+
+    def browse_contexts(self, payload, now):
+        return self._contexts(payload, now, browse=True)
 
 
 class UFCProvider(MMAProvider):

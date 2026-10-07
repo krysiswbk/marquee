@@ -1,3 +1,7 @@
+# 2.12.40
+
+- Include scheduled UFC/PFL cards up to 30 days ahead on their explicit pages, while keeping distant events out of ambient interruption candidates.
+
 # 2.12.39
 
 - Place the kiosk Settings disclosure before the long destination list so its links are visible when opened on mobile.
