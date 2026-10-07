@@ -339,14 +339,15 @@
   };
   const sportSide = (side, fallback, align) => `<div class="kiosk-sport-side ${align}">${nhlLogo(side)}<strong>${esc(nhlName(side, fallback))}</strong><small>${esc(nhlSense(side))}</small></div>`;
   const sportDetails = feature => { const details = [nhlDate(feature), feature.detail || '', feature.broadcast || '', nhlStatus(feature)]; return details.filter(Boolean); };
-  const renderSportStage = (feature, source, details = []) => {
+  const renderSportStage = (feature, source, details = [], scoreDetails = []) => {
     const left = feature.left || {}, right = feature.right || {};
     const state = String(feature.eventState || '').toUpperCase();
     const final = ['RESULT', 'POST_EVENT'].includes(state);
     const live = state === 'LIVE';
     const matchupName = nhlMatchupName(left, right);
     const status = live ? (nhlStatus(feature) || 'Live now') : final ? 'Final' : '';
-    const rows = details.length ? `<div class="kiosk-sport-context">${details.map(detail => `<span>${esc(detail)}</span>`).join('')}</div>` : '';
+    const scoreLog = scoreDetails.length ? `<details class="kiosk-sport-score-details"><summary>Score details</summary><ul aria-label="Goal-by-goal scoring">${scoreDetails.map(goal => `<li>${esc(goal)}</li>`).join('')}</ul></details>` : '';
+    const rows = details.length || scoreLog ? `<div class="kiosk-sport-context">${details.map(detail => `<span>${esc(detail)}</span>`).join('')}${scoreLog}</div>` : '';
     const displayTitle = sportDisplayTitle(feature);
     return `<div class="kiosk-sports-layout kiosk-broadcast-layout"><article class="kiosk-sport-feature" aria-label="${esc(matchupName)}">
       <div class="kiosk-sport-eyebrow"><span>${esc(sportPhase(feature))}</span><span>${esc(source)}</span></div>
@@ -359,7 +360,11 @@
   function renderNhl(list) {
     const feature = ordered(list)[0];
     if (!feature) return sharedState('No followed-team games are scheduled.', 'Return to Home', false, 'empty');
-    return renderSportStage(feature, 'NHL', sportDetails(feature));
+    const ppLabel = feature.powerPlay === 'No active power play' ? 'NO POWER PLAY' :
+      feature.powerPlay ? `POWER PLAY · ${feature.powerPlay}` : '';
+    const liveDetail = [feature.lastGoal ? `LAST GOAL · ${feature.lastGoal}` : '', ppLabel].filter(Boolean).join('  ·  ');
+    const liveDetails = liveDetail ? [liveDetail] : [];
+    return renderSportStage(feature, 'NHL', [...liveDetails, ...sportDetails(feature)], feature.scoreDetails || []);
   }
   function renderSports(list) {
     // The shared sports contract retains kiosk-matchup and NEXT RELEVANT

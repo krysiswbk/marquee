@@ -67,6 +67,25 @@ class MMABridgeTests(unittest.TestCase):
         self.assertEqual(payload['rows'],[])
         self.assertEqual(app.set_state.call_args.kwargs['state'],'pfl')
 
+    def test_ufc_tracker_prior_winner_and_available_odds_reach_kiosk_rows(self):
+        now=datetime.now(timezone.utc)
+        states={'sensor.ufc_tracker':{'state':'IN','attributes':{
+            'league_path':'ufc','date':now.isoformat(),'event_name':'UFC Fight Night',
+            'team_name':'Fighter A','opponent_name':'Fighter B',
+            'last_play':'1. *A. WINNER v. B. LOSER (KO/TKO/Sub: R2@1:42); 2. C. LOSER v. D. WINNER* (Dec: 29-28);',
+            'odds':'Fighter A -145','overunder':'2.5'}}}
+        app=self.module.MarqueeAmbient()
+        app.bridge=self.module.requests
+        app.get_state=lambda entity,**kwargs:states.get(entity,{})
+        app.set_state=Mock();app.show_kiosk_marquee=Mock();app.log=Mock();app.kiosk_context=None
+        with patch.object(self.module.requests,'post') as post:
+            app.publish_sports({})
+            payload=next(c.kwargs['json'] for c in post.call_args_list if c.kwargs['json']['id']=='ha:sensor.ufc_tracker')
+        self.assertEqual(payload['rows'],[
+            'LAST RESULT · D. WINNER def. C. LOSER · Dec: 29-28',
+            'LAST RESULT · A. WINNER def. B. LOSER · KO/TKO/Sub: R2@1:42',
+            'ODDS · Fighter A -145 · O/U 2.5'])
+
     def test_sky_prefers_aggregate_and_omits_unavailable_moon_facts(self):
         app = self.module.MarqueeAmbient()
         states = {

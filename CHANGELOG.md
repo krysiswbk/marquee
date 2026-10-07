@@ -1,3 +1,7 @@
+# 2.12.36
+
+- Surface NHL goal-by-goal scoring and live power-play state, plus Team Tracker MMA prior-fight results and odds, without changing the sports-stage layout.
+
 # 2.12.35
 
 - Keep legacy Home Assistant Open-Meteo visibility readings in their configured km unit when older bridge payloads omit the unit.

@@ -85,6 +85,73 @@ class NHLProvider(ESPNProvider):
     lookahead_days = 7
     max_dates = 14
 
+    def _summary_url(self, event_id):
+        return ("https://site.api.espn.com/apis/site/v2/sports/" + self.sport_path
+                + "/summary?event=" + str(event_id))
+
+    @staticmethod
+    def _score_details(summary):
+        """Normalize ESPN's play-by-play goals and current power-play state."""
+        plays = summary.get("plays") or []
+        header = summary.get("header") or {}
+        competition = (header.get("competitions") or [{}])[0]
+        teams = {str((side.get("team") or {}).get("id", "")):
+                 (side.get("team") or {}).get("abbreviation", "")
+                 for side in competition.get("competitors", [])}
+        goals = []
+        for play in plays:
+            if not play.get("scoringPlay"):
+                continue
+            clock = (play.get("clock") or {}).get("displayValue", "")
+            period = (play.get("period") or {}).get("displayValue", "")
+            team_id = str((play.get("team") or {}).get("id", ""))
+            text = str(play.get("text", "")).strip()
+            when = " ".join(part for part in (period, clock) if part)
+            goals.append(" · ".join(part for part in (when, teams.get(team_id, ""), text) if part))
+
+        power_play = ""
+        on_ice = summary.get("onIce") or []
+        goalie_ids = set()
+        for group in (summary.get("boxscore") or {}).get("players", []):
+            for stat_group in group.get("statistics", []):
+                if str(stat_group.get("name", "")).lower() != "goalies":
+                    continue
+                for player in stat_group.get("athletes", []):
+                    goalie_ids.add(str((player.get("athlete") or {}).get("id", "")))
+        skaters, goalies_present = {}, set()
+        for team in on_ice:
+            team_id = str(team.get("teamId", ""))
+            ids = {str(entry.get("athleteid", "")) for entry in team.get("entries", [])}
+            if ids & goalie_ids:
+                goalies_present.add(team_id)
+            skaters[team_id] = len(ids - goalie_ids)
+        # Both goalies must be present; this avoids mislabeling an empty-net
+        # 6-on-5 as a power play. Unequal active skaters identify the PP side.
+        game_status = competition.get("status") or {}
+        in_intermission = (game_status.get("displayClock") == "20:00"
+                           and game_status.get("displayPeriod"))
+        last_play = plays[-1] if plays else {}
+        if (not in_intermission and (last_play.get("type") or {}).get("text") != "Period End"
+                and len(skaters) == 2 and len(goalies_present) == 2
+                and max(skaters.values()) <= 5):
+            sides = sorted(skaters.items(), key=lambda item: item[1])
+            if sides[1][1] == sides[0][1]:
+                power_play = "No active power play"
+            elif sides[1][1] > sides[0][1]:
+                power_play = teams.get(sides[1][0], "")
+        last_goal = ""
+        if goals:
+            latest = next((play for play in reversed(plays) if play.get("scoringPlay")), {})
+            text = str(latest.get("text", "")).strip()
+            scorer = text.split(" Goal", 1)[0].strip() or text
+            when = " ".join(part for part in (
+                (latest.get("period") or {}).get("displayValue", ""),
+                (latest.get("clock") or {}).get("displayValue", "")) if part)
+            team = teams.get(str((latest.get("team") or {}).get("id", "")), "")
+            last_goal = " · ".join(part for part in (when, team, scorer) if part)
+        return {"scoreDetails": goals[-12:], "lastGoal": last_goal,
+                "powerPlay": power_play}
+
     def _date_urls(self, now):
         first = now - timedelta(days=self.lookback_days)
         count = min(self.max_dates, self.lookback_days + self.lookahead_days + 1)
@@ -126,6 +193,22 @@ class NHLProvider(ESPNProvider):
                     events.append(event)
         if len(failed_dates) == len(urls):
             raise RuntimeError("NHL schedule failed for every requested date")
+        # Scoreboard data omits the goal log. Keep this enrichment optional so
+        # a play-by-play outage never takes down schedules or score reporting.
+        followed_teams = {str(team).upper() for team in self.config.get("teams", ["TOR"])}
+        for event in events:
+            event_id = str(event.get("id", "")).strip()
+            competitors = ((event.get("competitions") or [{}])[0].get("competitors") or [])
+            has_followed_team = any(
+                str((side.get("team") or {}).get("abbreviation", "")).upper() in followed_teams
+                for side in competitors)
+            if not event_id or _state(event) != "in" or not has_followed_team:
+                continue
+            try:
+                event["_marqueeScoreDetails"] = self._score_details(
+                    self._get_json(self._summary_url(event_id)))
+            except Exception:
+                event["_marqueeScoreDetails"] = {}
         events.sort(key=lambda event: (event.get("date") or "", str(event.get("id", ""))))
         return {"events": events, "_fetch": {
             "requestedDates": len(urls), "successfulDates": len(urls) - len(failed_dates),
@@ -182,7 +265,8 @@ class NHLProvider(ESPNProvider):
                 targets=["kiosk", "hubs"] if lifecycle in (EventState.LIVE, EventState.POST_EVENT) else ["kiosk"],
                 accent="#1f67b1", raw={"left": _side(followed), "right": _side(opponent),
                                         "status": status,
-                                        "broadcast": ", ".join(dict.fromkeys(broadcasts))}))
+                                        "broadcast": ", ".join(dict.fromkeys(broadcasts)),
+                                        **(event.get("_marqueeScoreDetails") or {})}))
         return values
 
     def contexts(self, payload, now):
@@ -240,6 +324,13 @@ class MMAProvider(ESPNProvider):
             rows = (["LAST · " + _result(fight) for fight in reversed(completed[-2:])]
                     if lifecycle in (EventState.LIVE, EventState.POST_EVENT) else
                     ["CARD · " + _fight_label(fight) for fight in reversed(fights[-2:])])
+            odds_data = current.get("odds") or event.get("odds") or []
+            odds = odds_data if isinstance(odds_data, dict) else next(
+                (item for item in odds_data if isinstance(item, dict)), {})
+            odds_text = str(odds.get("details") or "").strip() if isinstance(odds, dict) else ""
+            over_under = str(odds.get("overUnder") or "").strip() if isinstance(odds, dict) else ""
+            if odds_text:
+                rows.append("ODDS · " + odds_text + (" · O/U " + over_under if over_under else ""))
             status = ((((current.get("status") or {}).get("type") or {}).get("shortDetail"))
                       or (((event.get("status") or {}).get("type") or {}).get("shortDetail", "")))
             venue = (event.get("venues") or [{}])[0].get("fullName", "")

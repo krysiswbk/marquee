@@ -21,7 +21,8 @@ def context(state="UPCOMING", logos=True, long_names=False, title="Toronto Maple
         left["score"], right["score"] = "3", "2"
     if state in ("RESULT", "POST_EVENT"):
         left["score"], right["score"] = "4", "2"
-    return {"id": "nhl:fixture", "provider": "nhl", "source": "nhl", "title": title, "subtitle": "NHL Hockey", "detail": "Scotiabank Arena", "broadcast": "Sportsnet", "starts": "2026-10-01T23:00:00+00:00", "eventState": state, "status": "Final" if state in ("RESULT", "POST_EVENT") else "In Progress" if state == "LIVE" else "Coming up", "sourceStatus": "Final" if state in ("RESULT", "POST_EVENT") else "In Progress" if state == "LIVE" else "", "left": left, "right": right, "targets": ["kiosk"], "expires": "2026-10-05T00:00:00+00:00", "rows": []}
+    live = state == "LIVE"
+    return {"id": "nhl:fixture", "provider": "nhl", "source": "nhl", "title": title, "subtitle": "NHL Hockey", "detail": "Scotiabank Arena", "broadcast": "Sportsnet", "starts": "2026-10-01T23:00:00+00:00", "eventState": state, "status": "Final" if state in ("RESULT", "POST_EVENT") else "In Progress" if live else "Coming up", "sourceStatus": "Final" if state in ("RESULT", "POST_EVENT") else "In Progress" if live else "", "left": left, "right": right, "targets": ["kiosk"], "expires": "2026-12-05T00:00:00+00:00", "rows": [], "lastGoal": "1st 9:08 · MTL · Cole Caufield", "powerPlay": "MTL" if live else "", "scoreDetails": ["1st 9:08 · MTL · Cole Caufield Goal (2), assists: Nick Suzuki", "2nd 2:14 · TOR · Auston Matthews Goal (4)"] if live else []}
 
 
 def run():
@@ -75,6 +76,13 @@ def run():
                         assert page.locator(".kiosk-broadcast-layout h2").inner_text() == "Stanley Cup Playoffs"
                     elif fixture == "live":
                         assert "3" in page.locator(".kiosk-broadcast-state").inner_text()
+                        assert "LAST GOAL" in page.locator(".kiosk-sport-context").inner_text()
+                        assert "POWER PLAY · MTL" in page.locator(".kiosk-sport-context").inner_text()
+                        assert page.locator(".kiosk-sport-score-details").count() == 1
+                        assert not page.locator(".kiosk-sport-score-details").evaluate("el => el.open")
+                        page.locator(".kiosk-sport-score-details summary").click()
+                        assert "Cole Caufield" in page.locator(".kiosk-sport-score-details li").first.inner_text()
+                        page.locator(".kiosk-sport-score-details summary").click()
                     else:
                         assert "4" in page.locator(".kiosk-broadcast-state").inner_text()
                 elif fixture == "empty":

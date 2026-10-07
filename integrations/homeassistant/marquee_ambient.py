@@ -1,5 +1,6 @@
 import requests
 import math
+import re
 from marquee_bridge import BridgeSession
 from marquee_kiosk import kiosk_awake
 from datetime import datetime, timedelta, timezone
@@ -193,6 +194,35 @@ class MarqueeAmbient(hass.Hass):
                 upcoming.append((starts, 0 if league == "ufc" else 1, league))
         return min(upcoming)[2] if upcoming else "none"
 
+    @staticmethod
+    def mma_result_rows(value):
+        """Turn Team Tracker's marked prior-bout string into readable results."""
+        rows = []
+        for item in str(value or "").split(";"):
+            item = item.strip()
+            if not item:
+                continue
+            item = re.sub(r"^\d+\.\s*", "", item)
+            matchup, separator, finish = item.partition(" (")
+            winner_side = "left" if matchup.startswith("*") else "right" if matchup.endswith("*") else ""
+            matchup = matchup.strip("* ")
+            left, vs, right = matchup.partition(" v. ")
+            if not vs:
+                rows.append("LAST RESULT · " + item)
+                continue
+            if not winner_side:
+                result = "LAST RESULT · " + matchup
+                if separator:
+                    result += " · " + finish.rstrip(")")
+                rows.append(result)
+                continue
+            winner, loser = (left, right) if winner_side == "left" else (right, left)
+            result = "LAST RESULT · " + winner + " def. " + loser
+            if separator:
+                result += " · " + finish.rstrip(")")
+            rows.append(result)
+        return list(reversed(rows[-2:]))
+
     def publish_sports(self, kwargs):
         kiosk_candidates = []
         now = datetime.now(timezone.utc)
@@ -254,7 +284,20 @@ class MarqueeAmbient(hass.Hass):
                         bullets = [line.lstrip("• ") for line in
                                    str(calendar_attrs.get("description", "")).splitlines()
                                    if line.strip().startswith("•")]
-                        rows = bullets[:3]
+                        rows = bullets[:2]
+                    if attrs.get("last_play"):
+                        rows = self.mma_result_rows(attrs["last_play"]) + rows
+                    odds = str(attrs.get("odds") or "").strip()
+                    over_under = str(attrs.get("overunder") or "").strip()
+                    if odds:
+                        rows.append("ODDS · " + odds + (" · O/U " + over_under if over_under else ""))
+                elif league == "pfl":
+                    if attrs.get("last_play"):
+                        rows = self.mma_result_rows(attrs["last_play"])
+                    odds = str(attrs.get("odds") or "").strip()
+                    over_under = str(attrs.get("overunder") or "").strip()
+                    if odds:
+                        rows.append("ODDS · " + odds + (" · O/U " + over_under if over_under else ""))
                 status = attrs.get("clock") or ""
                 if live and attrs.get("quarter"):
                     status = f"{attrs.get('quarter')} · {status}"

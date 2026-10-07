@@ -29,7 +29,8 @@ class SportsProviderTests(unittest.TestCase):
                             "type": {"state": "post"}}}
         live = {"type": {"abbreviation": "Middleweight"},
                 "competitors": [athlete("E", ident="5"), athlete("F", ident="6")],
-                "status": {"type": {"state": "in", "shortDetail": "Round 1"}}}
+                "status": {"type": {"state": "in", "shortDetail": "Round 1"}},
+                "odds": [{"details": "Fighter E -145", "overUnder": "2.5"}]}
         payload = {"events": [{"id": "card", "name": "UFC Fight Night",
             "date": "2026-09-08T23:00Z", "status": {"type": {"state": "in"}},
             "competitions": [done1, done2, live], "venues": [{"fullName": "Arena"}]}]}
@@ -38,7 +39,38 @@ class SportsProviderTests(unittest.TestCase):
         self.assertEqual(context.event_state, EventState.LIVE)
         self.assertEqual(context.raw["left"]["logo"], "https://img/5.png")
         self.assertEqual(context.stats,
-            ["LAST · C def. D · R3 5:00", "LAST · B def. A · R2 1:32"])
+            ["LAST · C def. D · R3 5:00", "LAST · B def. A · R2 1:32",
+             "ODDS · Fighter E -145 · O/U 2.5"])
+
+    def test_nhl_summary_maps_last_goal_and_live_power_play_without_empty_net_false_positive(self):
+        summary = {
+            "header": {"competitions": [{"competitors": [
+                {"team": {"id": "21", "abbreviation": "TOR"}},
+                {"team": {"id": "27", "abbreviation": "NSH"}}],
+                "status": {"displayClock": "10:00", "displayPeriod": "2nd"}}]},
+            "plays": [{"scoringPlay": True, "text": "Steven Stamkos Goal (2) Wrist Shot",
+                       "clock": {"displayValue": "7:13"},
+                       "period": {"displayValue": "1st"}, "team": {"id": "27"}}],
+            "onIce": [{"teamId": "21", "entries": [{"athleteid": str(i)} for i in range(1, 7)]},
+                      {"teamId": "27", "entries": [{"athleteid": str(i)} for i in range(11, 16)]}],
+            "boxscore": {"players": [{"statistics": [{"name": "goalies", "athletes": [
+                {"athlete": {"id": "1"}}, {"athlete": {"id": "11"}}]}]}]}}
+        details = NHLProvider._score_details(summary)
+        self.assertEqual(details["lastGoal"], "1st 7:13 · NSH · Steven Stamkos")
+        self.assertEqual(details["powerPlay"], "TOR")
+        self.assertEqual(details["scoreDetails"], ["1st 7:13 · NSH · Steven Stamkos Goal (2) Wrist Shot"])
+        summary["header"]["competitions"][0]["status"]["displayClock"] = "20:00"
+        summary["plays"].append({"type": {"text": "Period End"}})
+        self.assertEqual(NHLProvider._score_details(summary)["powerPlay"], "")
+        summary["header"]["competitions"][0]["status"]["displayClock"] = "10:00"
+        summary["plays"].pop()
+        summary["onIce"][0]["entries"] = summary["onIce"][0]["entries"][1:]
+        self.assertEqual(NHLProvider._score_details(summary)["powerPlay"], "")
+        summary["onIce"][0]["entries"].append({"athleteid": "1"})
+        summary["onIce"][1]["entries"].extend([{"athleteid": "16"}, {"athleteid": "17"}])
+        summary["boxscore"]["players"][0]["statistics"][0]["athletes"].append(
+            {"athlete": {"id": "16"}})
+        self.assertEqual(NHLProvider._score_details(summary)["powerPlay"], "No active power play")
 
     def test_pfl_normalizes_its_own_league_with_fighter_art(self):
         fight = {"competitors":[athlete("Fighter A", ident="10"), athlete("Fighter B", ident="11")],
@@ -60,12 +92,18 @@ class SportsProviderTests(unittest.TestCase):
             "date": "2026-09-09T01:00Z", "status": {"type": {"state": "in"}},
             "competitions": [{"competitors": [
                 {"team": {"abbreviation": "TOR", "displayName": "Maple Leafs"}},
-                {"team": {"abbreviation": "MTL", "displayName": "Canadiens"}}]}]}]}
+                {"team": {"abbreviation": "MTL", "displayName": "Canadiens"}}]}],
+            "_marqueeScoreDetails": {"lastGoal": "1st 7:13 · MTL · Cole Caufield",
+                                     "powerPlay": "MTL", "scoreDetails": ["Goal detail"]}}]}
         provider = NHLProvider({"enabled": True, "priority": 90, "teams": ["TOR"]},
                                self.tmp.name)
         values = provider.contexts(payload, NOW)
         self.assertEqual(len(values), 1)
         self.assertEqual(values[0].event_state, EventState.LIVE)
+        rendered = values[0].display_dict()
+        self.assertEqual(rendered["lastGoal"], "1st 7:13 · MTL · Cole Caufield")
+        self.assertEqual(rendered["powerPlay"], "MTL")
+        self.assertEqual(rendered["scoreDetails"], ["Goal detail"])
 
     def test_nhl_browse_keeps_future_followed_game_out_of_interruption_candidates(self):
         payload = {"events": [{"id": "future", "name": "Maple Leafs at Canadiens",
@@ -105,6 +143,8 @@ class SportsProviderTests(unittest.TestCase):
 
         class Client:
             def json(self, url, timeout=8):
+                if "/summary?" in url:
+                    return {"plays": []}
                 calls.append(parse_qs(urlparse(url).query)["dates"][0])
                 return payloads[min(len(calls) - 1, 2)]
 
