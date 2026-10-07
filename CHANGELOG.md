@@ -1,3 +1,10 @@
+# 2.12.47
+
+- Add upcoming monitored Radarr movie releases to the kiosk and configurable Movies settings.
+- Use Home Assistant's Open-Meteo apparent temperature for Marquee's feels-like reading.
+- Expand Sky with sun bearing, moon position and phase timing, and local weather details.
+- Refresh versioned kiosk asset URLs for this release.
+
 # 2.12.46
 
 - Apply one nighttime feels-like sanity check across Sky, Cast, weather, and compact weather summaries; remove redundant Sky/source labels and repeated cloud facts.
