@@ -40,7 +40,7 @@
     "weather": {"enabled": true, "priority": 85, "radar": true, "precip_probability": 55, "approach_minutes": 60, "wind_gust_kmh": 70, "radar_span_degrees": 3.0},
     "tv": {"enabled": false, "priority": 60, "url": "http://sonarr:8989", "api_key": "", "tracked_shows": [], "lookahead_hours": 24, "tracking_mode": "show_all"},
     "astronomy": {"enabled": true, "priority": 50, "kp_threshold": 6.0},
-    "movies": {"enabled": false, "priority": 55},
+    "movies": {"enabled": false, "priority": 55, "url": "http://radarr:7878", "api_key": "", "lookahead_days": 90},
     "trailers": {"enabled": false, "priority": 50},
     "major_events": {"enabled": false, "priority": 40},
     "gaming": {"enabled": false, "priority": 45, "release_lookahead_days": 30,

@@ -14,7 +14,7 @@ class MarqueeAmbient(hass.Hass):
     SENSOR = "sensor.living_room_motion_sensor_illuminance"
     URL = "http://10.10.9.37:8084/ambient"
     WEATHER = "weather.environment_canada_forecast"
-    FEELS_LIKE = "sensor.outside_feels_like_temperature"
+    FEELS_LIKE = "sensor.open_meteo_apparent_temperature"
     WEATHER_SUMMARY = "sensor.marquee_weather_summary"
     CLOUD_COVER = "sensor.open_meteo_cloud_cover"
     VISIBILITY = "sensor.open_meteo_visibility"

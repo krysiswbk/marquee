@@ -1,10 +1,13 @@
 import json
+import importlib.util
 import ssl
+import sys
 import tempfile
 import time
+import types
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 from cast.marquee.providers.ha_weather import clean_observation, forecast_payload
@@ -14,12 +17,85 @@ from cast.marquee.api.bridge import authorize
 
 def test_publisher_sources_apparent_temperature_from_authoritative_ha_entity():
     source = (Path(__file__).parents[1] / 'integrations/homeassistant/marquee_ambient.py').read_text()
-    assert 'FEELS_LIKE = "sensor.outside_feels_like_temperature"' in source
+    assert 'FEELS_LIKE = "sensor.open_meteo_apparent_temperature"' in source
     assert 'self.get_state(self.FEELS_LIKE, attribute="all")' in source
     assert 'feels_is_f != weather_is_f' in source
     assert 'apparent_temperature - 32' in source
     assert '"apparent_temperature": apparent_temperature' in source
     assert 'attrs.get("apparent_temperature")' not in source
+
+
+def load_ambient():
+    fake_hassapi = types.ModuleType('appdaemon.plugins.hass.hassapi')
+    fake_hassapi.Hass = type('Hass', (), {})
+    fake_bridge = types.ModuleType('marquee_bridge')
+    fake_bridge.BridgeSession = type('BridgeSession', (), {})
+    fake_kiosk = types.ModuleType('marquee_kiosk')
+    fake_kiosk.kiosk_awake = lambda: True
+    fake_presence = types.ModuleType('marquee_presence')
+    fake_presence.bedroom_eligible = lambda: True
+    modules = {
+        'appdaemon': types.ModuleType('appdaemon'),
+        'appdaemon.plugins': types.ModuleType('appdaemon.plugins'),
+        'appdaemon.plugins.hass': types.ModuleType('appdaemon.plugins.hass'),
+        'appdaemon.plugins.hass.hassapi': fake_hassapi,
+        'marquee_bridge': fake_bridge,
+        'marquee_kiosk': fake_kiosk,
+        'marquee_presence': fake_presence,
+    }
+    path = Path(__file__).parents[1] / 'integrations/homeassistant/marquee_ambient.py'
+    spec = importlib.util.spec_from_file_location('ha_ambient_test', path)
+    module = importlib.util.module_from_spec(spec)
+    with patch.dict(sys.modules, modules):
+        spec.loader.exec_module(module)
+    return module
+
+
+def test_publish_weather_uses_open_meteo_apparent_temperature_unchanged():
+    module = load_ambient()
+    app = module.MarqueeAmbient()
+    states = {
+        module.MarqueeAmbient.WEATHER: {'state': 'clear', 'attributes': {}},
+        module.MarqueeAmbient.FEELS_LIKE: 8.3,
+        'sun.sun': 'above_horizon',
+    }
+    requested = []
+    app.get_state = lambda entity, **kwargs: (requested.append(entity), states.get(entity))[1]
+    app.weather_forecast_at = time.time()
+    app.weather_forecasts = {}
+    app.bridge = SimpleNamespace(post=Mock())
+    app.bridge.post.return_value.raise_for_status = Mock()
+    app.sky_contract = Mock(return_value={})
+    app.publish_weather({})
+
+    payload = app.bridge.post.call_args.kwargs['json']
+    assert module.MarqueeAmbient.FEELS_LIKE == 'sensor.open_meteo_apparent_temperature'
+    assert module.MarqueeAmbient.FEELS_LIKE in requested
+    assert 'sensor.outside_feels_like_temperature' not in requested
+    assert payload['apparent_temperature'] == 8.3
+
+
+def test_publish_weather_keeps_unavailable_apparent_temperature_unknown():
+    module = load_ambient()
+    app = module.MarqueeAmbient()
+    states = {
+        module.MarqueeAmbient.WEATHER: {'state': 'clear', 'attributes': {}},
+        module.MarqueeAmbient.FEELS_LIKE: 'unavailable',
+        'sun.sun': 'above_horizon',
+    }
+    requested = []
+    app.get_state = lambda entity, **kwargs: (requested.append(entity), states.get(entity))[1]
+    app.weather_forecast_at = time.time()
+    app.weather_forecasts = {}
+    app.bridge = SimpleNamespace(post=Mock())
+    app.bridge.post.return_value.raise_for_status = Mock()
+    app.sky_contract = Mock(return_value={})
+    app.publish_weather({})
+
+    payload = app.bridge.post.call_args.kwargs['json']
+    assert module.MarqueeAmbient.FEELS_LIKE in requested
+    assert 'sensor.outside_feels_like_temperature' not in requested
+    assert payload['apparent_temperature'] is None
 
 
 def test_publisher_preserves_authoritative_precipitation_units():

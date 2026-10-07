@@ -62,7 +62,8 @@ DEFAULT_CONFIG = {
         "astronomy": {"enabled": True, "priority": 50, "kp_threshold": 6.0,
                       "aurora": True, "iss": False, "meteor_showers": True,
                       "eclipses": True, "minimum_significance": 70},
-        "movies": {"enabled": False, "priority": 55},
+        "movies": {"enabled": False, "priority": 55, "url": "", "api_key": "",
+                   "lookahead_days": 90},
         "trailers": {"enabled": False, "priority": 50},
         "major_events": {"enabled": False, "priority": 40},
         "gaming": {"enabled": False, "priority": 45, "claims_url": "",
@@ -79,7 +80,8 @@ DEFAULT_CONFIG = {
     },
 }
 
-SECRET_PATHS = {("providers", "tv", "api_key"), ("providers", "gaming", "api_key")}
+SECRET_PATHS = {("providers", "tv", "api_key"), ("providers", "gaming", "api_key"),
+                ("providers", "movies", "api_key")}
 
 
 def merge(base, update):
@@ -189,7 +191,7 @@ def validate_config(value):
         provider["enabled"] = bool(provider.get("enabled"))
         provider["priority"] = _number(provider.get("priority", 40), 0, 100,
                                        f"providers.{name}.priority", True)
-        if name in ("movies", "trailers", "major_events", "music"):
+        if name in ("trailers", "major_events", "music"):
             # These are diagnostic placeholders, not installable adapters.
             # Persisting an enabled checkbox would falsely imply a setup path.
             provider["enabled"] = False
@@ -230,6 +232,11 @@ def validate_config(value):
         raise ValueError("providers.tv.tracking_mode must be show_all or tracked_only")
     tv["lookahead_hours"] = _number(tv.get("lookahead_hours", 24), 1, 168,
                                      "providers.tv.lookahead_hours", True)
+    movies = result["providers"]["movies"]
+    movies["url"] = str(movies.get("url", "")).strip().rstrip("/")[:500]
+    movies["api_key"] = str(movies.get("api_key", "")).strip()[:500]
+    movies["lookahead_days"] = _number(movies.get("lookahead_days", 90), 1, 365,
+                                       "providers.movies.lookahead_days", True)
     gaming = result["providers"]["gaming"]
     gaming["claims_url"] = str(gaming.get("claims_url", "")).strip()[:500]
     gaming["lookback_days"] = _number(gaming.get("lookback_days", 7), 1, 30,
@@ -352,7 +359,7 @@ class ConfigRepository:
     def effective(self):
         config = self.stored()
         env = self.env if self.env is not None else os.environ
-        general, tv = config["general"], config["providers"]["tv"]
+        general, tv, movies = config["general"], config["providers"]["tv"], config["providers"]["movies"]
         if env.get("MARQUEE_LATITUDE"):
             general["latitude"] = float(env["MARQUEE_LATITUDE"])
         if env.get("MARQUEE_LONGITUDE"):
@@ -363,6 +370,10 @@ class ConfigRepository:
             tv.update(enabled=True, url=env["SONARR_URL"].rstrip("/"))
         if env.get("SONARR_API_KEY"):
             tv["api_key"] = env["SONARR_API_KEY"]
+        if env.get("RADARR_URL"):
+            movies.update(enabled=True, url=env["RADARR_URL"].rstrip("/"))
+        if env.get("RADARR_API_KEY"):
+            movies["api_key"] = env["RADARR_API_KEY"]
         return validate_config(config)
 
     def save(self, incoming):

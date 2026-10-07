@@ -1,5 +1,6 @@
 from .astronomy import AstronomyProvider
 from .sonarr import SonarrProvider
+from .radarr import RadarrProvider
 from .weather import WeatherProvider
 from .sports import NHLProvider, UFCProvider, PFLProvider
 from .gaming import GamingProvider
@@ -25,6 +26,7 @@ def create_providers(config, data_dir, client=None):
     providers = []
     mapping = (("nhl", NHLProvider), ("ufc", UFCProvider), ("pfl", PFLProvider),
                ("weather", WeatherProvider), ("tv", SonarrProvider),
+               ("movies", RadarrProvider),
                ("astronomy", AstronomyProvider), ("gaming", GamingProvider),
                ("calendar", CalendarProvider))
     for name, cls in mapping:
@@ -37,7 +39,6 @@ def create_providers(config, data_dir, client=None):
             item["disabled_reason"] = "location not configured"
         providers.append(cls(item, data_dir, client=client))
     requirements = {
-        "movies": "configure TMDb and/or Radarr relevance source",
         "trailers": "configure TMDb API key or approved official-channel feeds",
         "major_events": "enable and configure explicit event interests",
         "music": "configure Music Assistant, ListenBrainz, or Last.fm adapter",

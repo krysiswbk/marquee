@@ -112,6 +112,15 @@ listed subset), while `tracked_only` emits nothing unless a series is named in
 `Untitled`, or “To be announced/determined”) and missing/placeholder air dates
 are always suppressed in both modes.
 
+### Movie releases (Radarr)
+
+Upcoming monitored movie releases come from the Radarr v3 calendar. Configure
+the URL and API key under **Settings → Movies / Radarr**, or set `RADARR_URL`
+and `RADARR_API_KEY` in the environment. The look-ahead defaults to 90 days.
+Movies with placeholder titles, missing dates, or an existing file are
+filtered. Available artwork and TMDb links are included when Radarr provides
+them. Refresh: 15 minutes, stale cache: 2 hours.
+
 ### Astronomy
 
 NOAA SWPC's one-minute planetary K-index JSON creates an aurora candidate only
@@ -204,7 +213,8 @@ unchanged.
 
 ## Deliberately not enabled yet
 
-- Movies: choose Radarr/Plex watchlist plus TMDb as the relevance path.
+- Movies: Radarr now provides monitored upcoming movie releases; Plex
+  watchlists and TMDb relevance enrichment remain future additions.
 - Trailers: TMDb video metadata or explicit official-channel feeds; YouTube API
   is optional and must not become mandatory.
 - Major events: require curated interests/feed selection to avoid a generic-news

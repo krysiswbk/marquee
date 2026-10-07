@@ -13,6 +13,8 @@ services:
       PLEX_USERS: ""   # comma-separated usernames; empty = everyone. A list typed on the settings page replaces this.
       BLOCK_TAGS: ""   # do-not-cast words matched against genres/tags, e.g. "adult, xxx, 18+"; empty = cast everything
       TMDB_API_KEY: ""
+      RADARR_URL: ""       # optional — enables upcoming monitored movie releases
+      RADARR_API_KEY: ""   # optional — also settable in Marquee settings
       # --- Media backend (optional) ---
       # All of these can also be set on the settings page (backend dropdown,
       # server address, API key) — the page wins, env is the default.

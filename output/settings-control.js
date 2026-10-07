@@ -99,7 +99,10 @@
       ['Look ahead', 'lookahead_days', 'number', 'days', 1, 90],
       ['Allow Cast takeovers', 'allow_cast', 'toggle'], ['Cast minimum weight', 'cast_min_priority', 'number', '', 80, 100]
     ] },
-    movies: { label: 'Movies', desc: 'No provider adapter is configured.', unavailable: true },
+    movies: { label: 'Movies / Radarr', desc: 'Upcoming monitored movies.', target: 'Kiosk', fields: [
+      ['Radarr URL', 'url', 'url'], ['Radarr API key', 'api_key', 'password', 'Blank keeps the saved key'],
+      ['Look ahead', 'lookahead_days', 'number', 'days', 1, 365]
+    ] },
     trailers: { label: 'Trailers', desc: 'No provider adapter is configured.', unavailable: true },
     major_events: { label: 'Major events', desc: 'Unavailable until a curated source is configured.', unavailable: true },
     music: { label: 'Music', desc: 'No provider adapter is configured.', unavailable: true }

@@ -18,7 +18,7 @@
     "weather": {"enabled": true, "radar": true, "precip_probability": 55, "wind_gust_kmh": 70},
     "tv": {"enabled": false, "url": "http://sonarr:8989", "api_key": ""},
     "astronomy": {"enabled": true, "kp_threshold": 6.0},
-    "movies": {"enabled": false},
+    "movies": {"enabled": false, "url": "http://radarr:7878", "api_key": "", "lookahead_days": 90},
     "trailers": {"enabled": false},
     "major_events": {"enabled": false},
     "gaming": {"enabled": false},
