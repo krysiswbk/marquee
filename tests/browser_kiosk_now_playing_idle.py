@@ -70,6 +70,9 @@ with sync_playwright() as playwright:
         assert page.evaluate("getComputedStyle(document.querySelector('#idle-weather-range')).paddingInlineStart") != "0px"
         assert page.locator("#kiosk-section-title").inner_text() == "Nothing is playing"
         assert page.locator(".kiosk-section.now-playing-surface").evaluate("el => !el.hidden && el.getBoundingClientRect().width > 0 && el.getBoundingClientRect().height > 0")
+        assert page.evaluate("getComputedStyle(document.querySelector('.kiosk-now-playing-head > p')).color") == "rgb(255, 226, 120)"
+        assert page.evaluate("getComputedStyle(document.querySelector('.kiosk-home-action')).backgroundColor") == "rgb(36, 52, 71)"
+        assert page.evaluate("getComputedStyle(document.querySelector('.kiosk-now-playing-body .kiosk-weather-separator')).color") == "rgb(129, 147, 166)"
         assert page.locator(".kiosk-home-action").inner_text() == "Return to Home"
         assert "There is no active session" in page.locator(".kiosk-now-playing-detail").inner_text()
         page.evaluate("window.MarqueeNavigation.resolve({playing:true, state:'playing', title:'Episode', key:'plex:episode', progress:{offsetMs:120, durationMs:600}}); document.body.classList.remove('idle'); document.querySelector('.stage').classList.remove('hidden')")

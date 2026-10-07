@@ -1,3 +1,7 @@
+# 2.12.38
+
+- Restyle the Plex no-playback kiosk screen in the shared navy/slate palette, replacing its prominent green accents with restrained warm-gold labels.
+
 # 2.12.37
 
 - Keep the NHL score-details disclosure open across routine kiosk refresh redraws.
