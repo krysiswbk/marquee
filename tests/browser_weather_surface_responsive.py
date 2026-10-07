@@ -51,6 +51,7 @@ def route_for(route):
 
 def weather_context(query):
     alert = "weather-alert" in query
+    night_fails_like = "night-feels" in query
     now = datetime.now(timezone.utc)
     hours = [
         {"at": (now.replace(minute=0, second=0, microsecond=0)).isoformat(),
@@ -79,9 +80,10 @@ def weather_context(query):
         "weather": {
             "timezone": "America/Toronto",
             "generated_at": now.isoformat(),
-            "current": {"temperature_2m": 24, "apparent_temperature": 26,
+            "current": {"temperature_2m": 12.5 if night_fails_like else 24,
+                         "apparent_temperature": 25.1 if night_fails_like else 26,
                          "relative_humidity_2m": 49, "wind_speed_10m": 12,
-                         "weather_code": 0, "is_day": 1},
+                         "weather_code": 0, "is_day": 0 if night_fails_like else 1},
             "hours": hours, "days": days, "radar_relevant": True,
         },
     }
@@ -262,6 +264,14 @@ with sync_playwright() as playwright:
         assert containment["warningInCard"] and containment["controlsInViewport"], (width, height, containment)
         assert containment["viewportContained"] and not containment["horizontalOverflow"], (width, height, containment)
         alert.close()
+    night_fails_like = browser.new_page(viewport={"width": 1024, "height": 600})
+    night_fails_like.route("**/*", route_for)
+    night_fails_like.goto("http://marquee.test/kiosk?view=weather&night-feels=1", wait_until="domcontentloaded")
+    night_fails_like.wait_for_selector(".stage.weather-context .wx-broadcast")
+    night_fails_like.wait_for_function("document.querySelector('#channel-metrics')?.innerText.includes('Feels like')")
+    metric_text = night_fails_like.locator("#channel-metrics").inner_text()
+    assert "13°C" in metric_text and "25" not in metric_text, metric_text
+    night_fails_like.close()
     browser.close()
 
 print("PASS: weather hierarchy has no clipping/overlap, horizontal overflow, or undersized controls across target viewports")

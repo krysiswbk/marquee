@@ -1,3 +1,7 @@
+# 2.12.46
+
+- Apply one nighttime feels-like sanity check across Sky, Cast, weather, and compact weather summaries; remove redundant Sky/source labels and repeated cloud facts.
+
 # 2.12.45
 
 - Keep the Sky panorama, moon, and aircraft cards visible above the kiosk feed bar on standard landscape displays.

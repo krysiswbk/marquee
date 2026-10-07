@@ -437,7 +437,7 @@
     const sky = weather.sky || {};
     const sun = sky.sun || {}, moon = sky.moon || {};
     const hasNumber = value => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
-    const condition = String(sky.condition || '').toLowerCase().replaceAll('_', '-');
+    const condition = String(sky.condition || weather.condition || '').toLowerCase().replaceAll('_', '-');
     const known = {partlycloudy: 'Partly cloudy', 'partly-cloudy': 'Partly cloudy', clear: 'Clear',
       'clear-night': 'Clear night', cloudy: 'Cloudy', rainy: 'Rainy', pouring: 'Pouring', fog: 'Foggy'};
     const conditionLabel = known[condition] || condition.replaceAll('-', ' ').replace(/^./, letter => letter.toUpperCase());
@@ -455,12 +455,9 @@
       hasNumber(moon.azimuth) ? `${Math.round(Number(moon.azimuth))}° azimuth` : ''].filter(Boolean);
     const visibility = hasNumber(sky.visibility) ? `${Number(sky.visibility).toLocaleString()} ${sky.visibility_unit || 'km'}` : '';
     const temperature = hasNumber(weather.temp) ? Math.round(Number(weather.temp)) : null;
-    let feelsLike = hasNumber(weather.apparent_temperature) ? Math.round(Number(weather.apparent_temperature)) : null;
-    // At night, a feels-like reading substantially warmer than the air cannot
-    // be explained by solar heating. Avoid surfacing a mismapped/stale HA value
-    // such as 25°C when the observed air temperature is 12°C.
-    if (feelsLike !== null && temperature !== null && sun.is_day === false
-        && feelsLike - temperature > 5) feelsLike = temperature;
+    const apparentValue = window.MarqueeApparentTemperature
+      ? window.MarqueeApparentTemperature(weather) : weather.apparent_temperature;
+    const feelsLike = hasNumber(apparentValue) ? Math.round(Number(apparentValue)) : null;
     const temperatureUnit = weather.temperature_unit === '°F' ? '°F' : '°C';
     const aircraftRows = aircraft.map((track, index) => {
       const name = String(track.callsign || track.id || `Aircraft ${index + 1}`).trim();
@@ -471,8 +468,8 @@
     }).join('');
     const eventRows = feature ? safeRows(feature) : [];
     const dayLabel = sun.is_day === true ? 'Day sky' : sun.is_day === false ? 'Night sky' : 'The sky above home';
-    const sceneTitle = feature?.title || (conditionLabel || dayLabel);
-    const ambient = resources.sky.snapshot ? 'LIVE OBSERVATIONS' : 'WAITING FOR SKY SENSORS';
+    const sceneTitle = conditionLabel || (feature?.title && !/^sky$/i.test(feature.title) ? feature.title : dayLabel);
+    const ambient = '';
     const moonShadow = ({new_moon: '<circle class="sky-moon-shadow" cx="50" cy="50" r="48"/>',
       waxing_crescent: '<ellipse class="sky-moon-shadow" cx="24" cy="50" rx="40" ry="48"/>',
       first_quarter: '<path class="sky-moon-shadow" d="M2 2h48v96H2z"/>',

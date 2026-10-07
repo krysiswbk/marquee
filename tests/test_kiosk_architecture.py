@@ -211,7 +211,7 @@ def test_sky_destination_is_ambient_and_aircraft_are_browsable():
     for token in (
         "sky-destination", "sky-moon-card", "TONIGHT'S MOON", "phaseLabels",
         "sky-aircraft-panel", "data-sky-aircraft", "aria-expanded=", "sky-aircraft-list",
-        "Live nearby aircraft", "Math.round(Number(track.altitude))",
+        "No aircraft are currently being reported nearby.", "Math.round(Number(track.altitude))",
     ):
         assert token in MENU
     for token in (

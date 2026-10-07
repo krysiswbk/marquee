@@ -56,13 +56,16 @@ def test_kiosk_sky_page_shows_available_sensor_facts_without_aurora_alert():
         surface = page.locator(".kiosk-ambient-surface")
         surface.wait_for()
         text = surface.inner_text()
-        assert "SKY" in text
+        assert "Night sky" in text
+        assert "LIVE OBSERVATIONS" not in text
+        assert "Home Assistant" not in text
         assert "TONIGHT'S MOON" in text
         assert "Waxing gibbous" in text
         assert "73% illuminated" in text
         assert "Partly cloudy" in text
-        assert "38% cloud cover" in text
-        assert "24.4 km visibility" in text
+        assert text.count("38% cloud cover") == 1
+        assert "24.4 km" in text and "visibility" in text
+        assert "Live nearby aircraft" not in text
         assert "-8°" in text and "sun elevation" in text
         assert "25°" in text
         assert "Feels like" in text and "12°C" in text

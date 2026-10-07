@@ -39,6 +39,9 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
                 referer = route.request.headers.get("referer", "")
                 if "no-amount" in url or "no-amount" in referer:
                     weather["hourly"][0].pop("precipitation", None)
+                if "night-feels" in url or "night-feels" in referer:
+                    weather.update({"temp": 12.5, "condition": "clear-night", "isDay": False,
+                                    "apparent_temperature": 25.1})
                 return route.fulfill(json=weather)
             if path in ("/settings.json", "/live-settings.json"):
                 return route.fulfill(json={"transitionMs": 0})
@@ -153,5 +156,15 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
         assert "Rain 65%" in absent_content
         assert "expected" not in absent_content
         assert "mm" not in absent_content
+
+        night = browser.new_page(viewport={"width": 1024, "height": 600})
+        night.route("**/*", route)
+        night.goto("http://marquee.test/image?night-feels=1", wait_until="domcontentloaded")
+        night.wait_for_selector("#idle-weather-icon svg")
+        night.wait_for_function("document.querySelector('#idle-weather-feels').textContent !== ''")
+        assert night.locator("#idle-weather-temp").inner_text() == "13°C"
+        assert night.locator("#idle-weather-feels").inner_text() == "Feels 13°"
+        assert "25" not in night.locator(".idle-weather-secondary").inner_text()
+        night.close()
         absent.close()
         browser.close()

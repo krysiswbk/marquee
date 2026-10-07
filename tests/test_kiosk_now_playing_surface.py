@@ -86,11 +86,13 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn("body.kiosk-now-playing[data-template=street] .b-progress{left:5.5vw;top:86vh", SCREENS)
 
     def test_authoritative_apparent_temperature_accepts_numeric_strings_only(self):
-        self.assertIn("lastWx?.apparent_temperature == null || lastWx.apparent_temperature === ''", INDEX)
-        self.assertIn("? null : Number(lastWx.apparent_temperature)", INDEX)
+        self.assertIn("weather?.apparent_temperature == null || weather.apparent_temperature === ''", INDEX)
+        self.assertIn("const apparent = Number(weather.apparent_temperature)", INDEX)
+        self.assertIn("apparent - temperature > 5", INDEX)
+        self.assertIn("parseApparentTemperature(lastWx)", INDEX)
         self.assertIn("Number.isFinite(apparentTemperature)", INDEX)
         weather_channel = (ROOT / "output/weather-channel.js").read_text()
-        self.assertIn("Number(model.apparent_temperature)", weather_channel)
+        self.assertIn("window.MarqueeApparentTemperature", weather_channel)
         self.assertIn("Number.isFinite(apparentTemperature)", weather_channel)
 
     def test_compact_sports_and_context_weather_include_authoritative_feels_like(self):
