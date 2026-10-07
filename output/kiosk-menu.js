@@ -81,7 +81,12 @@
   // as PS5/Xbox/Switch/PC to wrap at their deliberate slash opportunities.
   const titleMarkup = text => esc(text).replace(/\//g, '/<wbr>');
   const fresh = c => (!c.expires || Date.parse(c.expires) > Date.now()) && c.eventState !== 'EXPIRED';
-  const items = key => (key === 'nhl' || key === 'ufc' || key === 'pfl' ? browseContexts : contexts).filter(c => (c.provider || c.source) === key && fresh(c));
+  const items = key => {
+    const sources = key === 'nhl' ? [browseContexts] :
+      key === 'ufc' || key === 'pfl' ? [contexts, browseContexts] : [contexts];
+    return [...new Map(sources.flat().filter(c => (c.provider || c.source) === key && fresh(c))
+      .map(context => [context.id, context])).values()];
+  };
   document.body.classList.add('browser-controls');
   const rail = document.createElement('div'); rail.className = 'screen-controls kiosk-rail';
   rail.setAttribute('data-kiosk-navigation', 'true');

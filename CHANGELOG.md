@@ -1,3 +1,7 @@
+# 2.12.41
+
+- Merge live UFC/PFL contexts with their extended browse schedules without duplicating events.
+
 # 2.12.40
 
 - Include scheduled UFC/PFL cards up to 30 days ahead on their explicit pages, while keeping distant events out of ambient interruption candidates.
