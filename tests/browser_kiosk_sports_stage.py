@@ -82,7 +82,12 @@ def run():
                         assert not page.locator(".kiosk-sport-score-details").evaluate("el => el.open")
                         page.locator(".kiosk-sport-score-details summary").click()
                         assert "Cole Caufield" in page.locator(".kiosk-sport-score-details li").first.inner_text()
+                        page.evaluate("window.dispatchEvent(new Event('marquee-surface-rendered'))")
+                        page.wait_for_timeout(1300)
+                        assert page.locator(".kiosk-sport-score-details").evaluate("el => el.open"), "score details closed during the kiosk refresh redraw"
                         page.locator(".kiosk-sport-score-details summary").click()
+                        page.evaluate("window.dispatchEvent(new Event('marquee-surface-rendered'))")
+                        assert not page.locator(".kiosk-sport-score-details").evaluate("el => el.open"), "user-closed score details reopened on redraw"
                     else:
                         assert "4" in page.locator(".kiosk-broadcast-state").inner_text()
                 elif fixture == "empty":
