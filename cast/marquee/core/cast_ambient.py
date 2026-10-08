@@ -23,11 +23,12 @@ def calendar_agenda(contexts, limit=5):
     items = items[:max(2, int(limit))]
     if len(items) < 2:
         return None
-    rows = [" · ".join(value for value in (item.get("title"),
-                                            item.get("subtitle")) if value)
-            for item in items]
-    rows = [row[:180] for row in rows if row]
-    if len(rows) < 2:
+    rows = [{
+        "title": str(item.get("title", "")).strip()[:120],
+        "when": str(item.get("subtitle", "")).strip()[:80],
+    } for item in items[1:]]
+    rows = [row for row in rows if row["title"]]
+    if len(rows) + 1 < 2:
         return None
     first = items[0]
     return {
@@ -36,8 +37,9 @@ def calendar_agenda(contexts, limit=5):
         "priority": max(int(item.get("priority", 0)) for item in items),
         "relevance": max(int(item.get("relevance", 0)) for item in items),
         "urgency": max(int(item.get("urgency", 0)) for item in items),
-        "title": "Upcoming", "subtitle": f"{len(rows)} calendar events", "detail": "",
-        "status": "Coming up", "starts": first.get("starts", ""),
+        "title": str(first.get("title", "Upcoming"))[:120],
+        "subtitle": str(first.get("subtitle", ""))[:80], "detail": "",
+        "status": "Up next", "starts": first.get("starts", ""),
         "expires": max((str(item.get("expires", "")) for item in items), default=""),
         "targets": ["kiosk"], "rows": rows, "allDay": False, "location": "",
         "castTakeover": False, "eventState": "UPCOMING",

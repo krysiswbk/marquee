@@ -43,7 +43,14 @@ def _exercise(page, kind, row_count, weather_text=""):
           const labels = ['Washers', 'New Moon', 'Thanksgiving Day', 'School pickup', 'Dentist appointment'];
           agenda.replaceChildren(...Array.from({length: rowCount}, (_, i) => {
             const item = document.createElement('span');
-            item.textContent = labels[i] || `Event ${i + 1}`;
+            if (kind === 'ambient_agenda') {
+              const when = document.createElement('time');
+              when.textContent = `Tomorrow · ${6 + i}:00 PM`;
+              const title = document.createElement('strong');
+              title.textContent = labels[i] || `Event ${i + 1}`;
+              item.className = 'context-agenda-row';
+              item.append(when, title);
+            } else item.textContent = labels[i] || `Event ${i + 1}`;
             return item;
           }));
           agenda.hidden = rowCount === 0;
@@ -57,7 +64,7 @@ def _exercise(page, kind, row_count, weather_text=""):
             agendaMaxHeight: getComputedStyle(agenda).maxHeight,
             agendaRowGap: getComputedStyle(agenda).rowGap,
             clockBox: clock,
-            clockCenter: [clock.left + clock.width / 2, clock.top + clock.height / 2],
+            clockDisplay: getComputedStyle(document.querySelector('.context-time')).display,
             weatherText: document.querySelector('#context-weather').textContent,
             weatherDisplay: getComputedStyle(document.querySelector('#context-weather')).display,
             weatherBox: box('#context-weather'),
@@ -76,7 +83,7 @@ def _exercise(page, kind, row_count, weather_text=""):
     )
 
 
-def test_cast_calendar_centers_clock_and_fits_five_chips_above_it():
+def test_cast_calendar_matches_kiosk_agenda_and_fits_five_events():
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(
             executable_path=os.environ.get("MARQUEE_CHROMIUM"), args=["--no-sandbox"]
@@ -88,21 +95,20 @@ def test_cast_calendar_centers_clock_and_fits_five_chips_above_it():
                 result = _exercise(page, kind, 5)
                 assert result["kind"] == kind
                 assert result["rowsHidden"] is False
-                assert float(result["clockSize"].replace("px", "")) >= 5.5 * 16
-                assert result["agendaMaxHeight"] == f"{height * 0.36:g}px"
-                assert result["agendaRowGap"] == f"{height * 0.007:g}px"
+                assert result["clockDisplay"] == "none"
+                assert float(result["clockSize"].replace("px", "")) >= 16
+                assert result["agendaMaxHeight"] == f"{height * 0.72:g}px"
+                assert result["agendaRowGap"] == "0px"
                 assert len(result["chipBoxes"]) == 5
-                assert all(chip["bottom"] <= result["clockBox"]["top"] for chip in result["chipBoxes"])
-                assert result["copyBox"]["bottom"] <= result["clockBox"]["top"]
-                assert abs(result["clockCenter"][0] - width / 2) < 1
-                assert abs(result["clockCenter"][1] - height / 2) < 1
-                assert result["clockBox"]["width"] > width * 0.25
+                assert all(chip["left"] >= result["copyBox"]["right"] for chip in result["chipBoxes"])
+                assert all(chip["width"] > width * 0.3 for chip in result["chipBoxes"])
+                assert result["copyBox"]["width"] > width * 0.35
                 assert not result["overlaps"]
                 page.close()
         browser.close()
 
 
-def test_cast_single_calendar_event_and_ambient_agenda_center_clock_when_rows_are_empty():
+def test_cast_calendar_hides_empty_rows_and_clock_without_clipping_the_event():
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(
             executable_path=os.environ.get("MARQUEE_CHROMIUM"), args=["--no-sandbox"]
@@ -115,17 +121,12 @@ def test_cast_single_calendar_event_and_ambient_agenda_center_clock_when_rows_ar
             assert result["rowsHeight"] == 0
             assert result["weatherText"] == ""
             assert result["weatherDisplay"] == "none"
-            assert abs(result["clockCenter"][0] - 640) < 1
-            assert abs(result["clockCenter"][1] - 400) < 1
-            assert result["copyBox"]["bottom"] < result["clockBox"]["top"]
-            assert result["clockBox"]["width"] > 1280 * 0.25
+            assert result["clockDisplay"] == "none"
+            assert result["copyBox"]["width"] > 1280 * 0.35
             assert not result["overlaps"]
             populated = _exercise(page, kind, 0, "17°C · Clear")
             assert populated["weatherText"] == "17°C · Clear"
-            assert populated["weatherDisplay"] != "none"
-            assert populated["weatherBox"]["top"] - populated["clockBox"]["bottom"] >= 1
+            assert populated["weatherDisplay"] == "none"
             assert not populated["overlaps"]
-            assert abs(populated["clockCenter"][0] - 640) < 1
-            assert abs(populated["clockCenter"][1] - 400) < 1
             page.close()
         browser.close()

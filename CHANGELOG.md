@@ -1,3 +1,8 @@
+# 2.12.49
+
+- Rework Cast calendar cards to follow the kiosk agenda hierarchy, with the next event featured beside readable upcoming event rows.
+- Promote the first event in the Cast ambient agenda and retain separate event titles and times for supporting rows.
+
 # 2.12.48
 
 - Show the fresh forecast temperature when the separate weather observation is unavailable.

@@ -21,7 +21,11 @@ class CastCalendarAgendaTests(unittest.TestCase):
         ]
         agenda = calendar_agenda(contexts)
         self.assertEqual(agenda["id"], "calendar:ambient-agenda")
-        self.assertEqual(agenda["rows"], ["Pickup · Today · 4:00 PM", "Dinner · Tomorrow · 6:00 PM"])
+        self.assertEqual(agenda["title"], "Pickup")
+        self.assertEqual(agenda["subtitle"], "Today · 4:00 PM")
+        self.assertEqual(agenda["rows"], [
+            {"title": "Dinner", "when": "Tomorrow · 6:00 PM"},
+        ])
         self.assertFalse(agenda["castTakeover"])
 
     def test_single_calendar_item_and_urgent_takeover_are_not_collapsed(self):

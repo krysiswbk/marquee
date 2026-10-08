@@ -21,20 +21,21 @@ body .context-time .context-weather{font-size:clamp(14px,1.4vw,28px);white-space
 body .context-card{overflow:hidden;grid-template-rows:auto minmax(0,1fr) auto!important}
 body .context-copy{max-height:100%;overflow:auto}.context-card .context-title{font-size:min(var(--context-title-size,5vw),7vh)}
 body .context-art{max-height:100%}.context-rows{flex-wrap:wrap}
-/* Cast calendar geometry is intentionally here, after the base row rule
-   above. Keep the row contract explicit even though the glance elements are
-   positioned in bands, so the later !important base declaration cannot
-   strand the clock in leftover agenda space. */
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]){grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) minmax(0,1fr)!important;grid-template-areas:none!important;display:grid!important}
+/* Cast calendar cards follow the kiosk agenda: one clear next event beside
+   the upcoming list. A large floating clock obscured both columns at TV scale. */
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]){box-sizing:border-box!important;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr)!important;grid-template-rows:auto minmax(0,1fr)!important;grid-template-areas:"source source" "copy rows"!important;gap:2vh 4vw!important;padding:6vh 6vw!important;display:grid!important}
 body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-head{display:contents}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-source{position:absolute;top:5vh;left:5vw;right:auto;width:max-content;z-index:1}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-copy{position:absolute;left:5vw;right:auto;top:10vh;width:40vw;max-width:none;height:auto;align-self:auto;overflow:hidden;text-align:left;z-index:1}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-time{display:contents}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-weather:empty{display:none}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-clock{position:absolute;left:50%;top:50%;display:block;transform:translate(-50%,-50%);font-size:clamp(5.5rem,12vw,12rem);line-height:.9;letter-spacing:-.06em;z-index:0}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-weather{position:absolute;left:50%;top:calc(50% + clamp(2.75rem,5.4vw,5.4rem) + 2vh);width:min(90vw,1200px);transform:translateX(-50%);margin:0;text-align:center;z-index:0}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-rows{position:absolute;left:52vw;right:5vw;top:4vh;width:auto;max-height:36vh;display:grid;grid-template-columns:minmax(0,1fr);gap:.7vh;padding-top:1vh;font-size:clamp(1rem,1.6vw,1.5rem);z-index:1}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-rows span{min-width:0;padding:.7vh .8vw;border-radius:.45rem;border-left:3px solid var(--accent);background:rgba(255,255,255,.055);white-space:normal}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-source{grid-area:source;align-self:center;width:max-content;font-size:clamp(14px,1.3vw,22px);letter-spacing:.18em}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-copy{grid-area:copy;position:static;align-self:center;width:auto;max-width:none;height:auto;overflow:hidden;text-align:left}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-title{font-size:clamp(2.6rem,5.2vw,6rem);line-height:1.02;overflow-wrap:anywhere}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-subtitle{margin-top:1.2vh;font-size:clamp(1.25rem,2vw,2.2rem);line-height:1.2}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-detail{margin-top:.8vh;font-size:clamp(1rem,1.35vw,1.5rem)}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-time{display:none}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-weather{display:none!important}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-rows{grid-area:rows;align-self:center;width:auto;max-height:72vh;display:grid;grid-template-columns:minmax(0,1fr);gap:0;padding:0;border-top:1px solid rgba(255,255,255,.22);font-size:clamp(1.1rem,1.65vw,1.7rem);overflow:auto}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-rows span{min-width:0;display:flex;flex-direction:column;gap:.35vh;padding:1.5vh .6vw;border-radius:0;border:0;border-bottom:1px solid rgba(255,255,255,.16);background:transparent;white-space:normal}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-rows time{color:#b6f378;font-size:.78em;font-weight:700;letter-spacing:.035em}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-rows strong{color:var(--text);font-weight:650;line-height:1.2}
 /* Broadcast weather: observations + hourly desk + extended forecast, radar only when relevant. */
 body .stage.weather-context .weather-card{inset:0;bottom:0;padding:0;display:block;background:linear-gradient(130deg,#075798,#0b315e 65%,#061b38);color:#fff;overflow:hidden;font-family:'Space Grotesk',system-ui,sans-serif}
 body.brain-live .stage.weather-context .weather-card{bottom:8vh}
