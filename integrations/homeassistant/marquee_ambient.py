@@ -27,6 +27,12 @@ class MarqueeAmbient(hass.Hass):
     XBOX_IN_GAME = "binary_sensor.krysiswbk_in_game"
     XBOX_POSTER = "image.krysiswbk_poster"
     XBOX_URL = "http://10.10.9.37:8084/ha-xbox"
+    CAST_PLAYBACK_URL = "http://10.10.9.37:8084/cast-playback"
+    CAST_RECEIVERS = {
+        "10.10.3.73": "media_player.nest_hub_max",
+        "10.10.3.74": "media_player.nesthubccec_2",
+        "10.10.3.81": "media_player.bedroom_display",
+    }
     GARAGE_OCCUPANCY = "input_boolean.garage_os"
     GARAGE_URL = "http://10.10.9.37:8084/garage-occupancy"
     PRESENCE_URL = "http://10.10.9.37:8084/presence"
@@ -70,6 +76,10 @@ class MarqueeAmbient(hass.Hass):
         self.listen_state(self.xbox_changed, self.XBOX_POSTER, attribute="all")
         self.run_in(self.publish_xbox, 6)
         self.run_every(self.publish_xbox, "now+15", 15)
+        for entity in self.CAST_RECEIVERS.values():
+            self.listen_state(self.cast_playback_changed, entity, attribute="all")
+        self.run_in(self.publish_cast_playback, 5)
+        self.run_every(self.publish_cast_playback, "now+10", 10)
         self.weather_forecasts = {}
         self.weather_forecast_at = 0
         self.run_in(self.publish_garage, 4)
@@ -83,6 +93,33 @@ class MarqueeAmbient(hass.Hass):
 
     def xbox_changed(self, entity, attribute, old, new, kwargs):
         self.publish_xbox({})
+
+    def cast_playback_changed(self, entity, attribute, old, new, kwargs):
+        self.publish_cast_playback({})
+
+    def publish_cast_playback(self, kwargs):
+        """Publish media ownership for Marquee's three Google Cast receivers."""
+        try:
+            receivers = {}
+            for target, entity in self.CAST_RECEIVERS.items():
+                value = self.get_state(entity, attribute="all") or {}
+                if isinstance(value, dict):
+                    state = str(value.get("state", "unavailable")).strip().lower()
+                    attrs = value.get("attributes", {})
+                else:
+                    state, attrs = str(value).strip().lower(), {}
+                receivers[target] = {
+                    "state": state if state else "unavailable",
+                    "app": str(attrs.get("app_name") or "")[:100],
+                    "media": bool(attrs.get("media_content_id") or
+                                   attrs.get("media_title") or
+                                   attrs.get("media_artist")),
+                }
+            response = self.bridge.post(self.CAST_PLAYBACK_URL,
+                                        json={"receivers": receivers}, timeout=5)
+            response.raise_for_status()
+        except Exception as error:
+            self.log(f"Marquee Cast playback publish failed: {error}", level="WARNING")
 
     def publish_xbox(self, kwargs):
         """Publish only current Xbox activity; Marquee decides display priority."""

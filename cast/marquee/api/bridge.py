@@ -5,7 +5,7 @@ import ssl
 from pathlib import Path
 from http.server import ThreadingHTTPServer
 
-WRITES = frozenset(('/ha-weather', '/ha-xbox', '/weather-context', '/weather-radar', '/ambient',
+WRITES = frozenset(('/ha-weather', '/ha-xbox', '/cast-playback', '/weather-context', '/weather-radar', '/ambient',
     '/garage-occupancy', '/presence', '/calendar-events', '/gaming-releases', '/contexts',
     '/kiosk-activity', '/api/attention/signals'))
 READS = frozenset(('/api/attention/bindings', '/now-playing.json', '/healthz'))

@@ -118,6 +118,12 @@ class Runtime:
                 if playing and playing != last_playing:
                     s.log_warn("no cast device configured — pick one on the "
                                "settings page or set HUB_IP")
+            elif getattr(s, "cast_external_playback",
+                         lambda _target: False)(s.hub_ip()):
+                # A native media app owns this receiver until HA confirms it
+                # is idle; neither idle recovery nor Marquee playback may take
+                # over an external Cast session.
+                pass
             elif not playing:
                 # Native Cast mode owns the display between media sessions.
                 # Releasing here returns Nest Hubs to Backdrop/another app,
@@ -147,6 +153,9 @@ class Runtime:
     def _reconcile_garage(self, backend, playing, secondary_mode, garage_wanted,
                           modes, last_garage, last_modes):
         s = self.s
+        if (s.GARAGE_HUB_IP and getattr(s, "cast_external_playback",
+                                        lambda _target: False)(s.GARAGE_HUB_IP)):
+            return False
         if s.GARAGE_HUB_IP and (garage_wanted != last_garage or modes[1] != last_modes[1]):
             if garage_wanted:
                 reason = ("mirroring active context" if secondary_mode == "mirror"
@@ -162,6 +171,7 @@ class Runtime:
                 print("garage unoccupied at startup -> releasing stale marquee",
                       flush=True)
                 s.catt_for(s.GARAGE_HUB_IP, "stop")
+        return garage_wanted
 
     def _reconcile_presence_targets(self, info, playing, now, last_wanted):
         s = self.s
@@ -178,6 +188,9 @@ class Runtime:
             held = bool(getattr(s, "manual_cast_hold_active",
                                 lambda _target, _now=None: False)(ip, now)
                         and not absolute_veto)
+            if getattr(s, "cast_external_playback", lambda _target: False)(ip):
+                wanted[ip] = False
+                continue
             protected = bool(playing or (info and
                 info.get("attention", {}).get("urgency") == "CRITICAL"))
             if wanted[ip] and not last_wanted.get(ip, False):
@@ -220,8 +233,9 @@ class Runtime:
                     last_playing, last_modes[0] = playing, modes[0]
                     self._recovered("main Cast reconciliation")
                 try:
-                    self._reconcile_garage(backend, playing, secondary_mode, garage_wanted,
-                                           modes, last_garage, last_modes)
+                    garage_wanted = self._reconcile_garage(
+                        backend, playing, secondary_mode, garage_wanted,
+                        modes, last_garage, last_modes)
                 except Exception as error:
                     self._failed("garage Cast reconciliation", error)
                 else:

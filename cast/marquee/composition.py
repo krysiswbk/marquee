@@ -57,6 +57,7 @@ from marquee.core.cast_ambient import calendar_agenda
 from marquee.core.events import EventBus
 from marquee.services.screen_testing import SAMPLES, forced_context, sample_catalog
 from marquee.services.media import atomic_write
+from marquee.services import media
 
 from marquee import __version__
 
@@ -220,6 +221,9 @@ LIVE_SETTINGS_PATH = os.path.join(DATA_DIR, "live-settings.json")
 AMBIENT_PATH = os.path.join(DATA_DIR, "ambient.json")
 HA_WEATHER_PATH = os.path.join(DATA_DIR, "ha-weather.json")
 HA_XBOX_PATH = os.path.join(DATA_DIR, "ha-xbox.json")
+HA_CAST_PLAYBACK_PATH = os.path.join(DATA_DIR, "ha-cast-playback.json")
+media.HA_CAST_PLAYBACK_PATH = HA_CAST_PLAYBACK_PATH
+cast_external_playback = media.cast_external_playback
 XBOX_POSTER_EXTENSIONS = {"image/jpeg": ".jpg", "image/png": ".png",
                           "image/webp": ".webp"}
 CUSTOM_BACKDROP_PATH = os.path.join(DATA_DIR, "custom-backdrop.img")

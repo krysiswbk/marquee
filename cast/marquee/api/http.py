@@ -669,6 +669,35 @@ class WebHandler(BaseHTTPRequestHandler):
             except Exception as e:
                 return self._send(json.dumps({"ok": False, "error": str(e)}),
                                   "application/json", 400)
+        if path == "/cast-playback":
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                if not 0 < length <= 8 * 1024:
+                    raise ValueError("invalid Cast playback payload size")
+                body = json.loads(self.rfile.read(length))
+                receivers = body.get("receivers") if isinstance(body, dict) else None
+                if not isinstance(receivers, dict):
+                    raise ValueError("Cast playback receivers must be an object")
+                clean = {}
+                for ip, entry in receivers.items():
+                    if ip not in PRESENCE_TARGETS or not isinstance(entry, dict):
+                        continue
+                    state = str(entry.get("state", "unavailable")).strip().lower()
+                    if state not in ("playing", "paused", "buffering", "idle", "off",
+                                     "on", "standby", "unknown", "unavailable"):
+                        state = "unknown"
+                    clean[ip] = {"state": state,
+                                 "app": str(entry.get("app") or "").strip()[:100],
+                                 "media": entry.get("media") is True}
+                if not clean:
+                    raise ValueError("no configured Cast receivers in payload")
+                clean["updated"] = time.time()
+                os.makedirs(DATA_DIR, exist_ok=True)
+                atomic_write(HA_CAST_PLAYBACK_PATH, json.dumps(clean))
+                return self._send(json.dumps({"ok": True}), "application/json")
+            except Exception as e:
+                return self._send(json.dumps({"ok": False, "error": str(e)}),
+                                  "application/json", 400)
         if path not in ("/save", "/live-save"):
             return self._send("not found", "text/plain", 404)
         return self._save_settings(path, partial=False)

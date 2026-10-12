@@ -21,6 +21,9 @@ CAST_MUTE_SETTLE = float(os.environ.get("CAST_MUTE_SETTLE_SECONDS", "0.8"))
 CAST_UNMUTE_DELAY = float(os.environ.get("CAST_UNMUTE_DELAY_SECONDS", "2.5"))
 
 FANART_KEY_ENV = os.environ.get("FANART_API_KEY", "")
+HA_CAST_PLAYBACK_PATH = os.path.join(
+    os.environ.get("DATA_DIR", os.path.join(os.path.dirname(__file__), "../../../output")),
+    "ha-cast-playback.json")
 FANART_TYPES = {
     "background": ("moviebackground", "showbackground"),
     "poster": ("movieposter", "tvposter"),
@@ -229,6 +232,28 @@ def dashcast_active_for(target):
     except Exception as e:
         log_warn(f"Cast display status unavailable for {target}: {e}")
         return False
+
+
+def cast_external_playback(target, now=None):
+    """Fail safe if HA reports that a Cast receiver may own external media."""
+    try:
+        with open(HA_CAST_PLAYBACK_PATH, encoding="utf-8") as handle:
+            value = json.load(handle)
+        updated = float(value.get("updated", 0))
+        age = (time.time() if now is None else now) - updated
+        if age < 0 or age > 35:
+            return True
+        entry = value.get(target)
+        if not isinstance(entry, dict):
+            return True
+        state = str(entry.get("state", "unknown")).lower()
+        app = str(entry.get("app", "")).lower()
+        if "dashcast" in app:
+            return False
+        return state in ("playing", "paused", "buffering", "unknown", "unavailable")
+    except (OSError, ValueError, TypeError):
+        # Missing or malformed telemetry must never authorize taking over a Hub.
+        return True
 
 
 _wx_cache = {"at": 0.0, "zip": None, "loc": "", "data": {}}

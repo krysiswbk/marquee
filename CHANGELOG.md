@@ -1,3 +1,7 @@
+# 2.12.64
+
+- Yield each Google Cast receiver to external playback and resume Marquee after it returns idle.
+
 # 2.12.63
 
 - Reserve the kiosk rail's horizontal padding before assigning direct destinations.
