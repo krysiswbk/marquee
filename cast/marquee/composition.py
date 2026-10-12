@@ -32,6 +32,7 @@ the HUB_IP env fallback.
 from .attention.briefing import supporting
 
 import json
+import base64
 import mimetypes
 import os
 import re
@@ -55,6 +56,7 @@ from marquee.core.arbitration import ContextArbiter
 from marquee.core.cast_ambient import calendar_agenda
 from marquee.core.events import EventBus
 from marquee.services.screen_testing import SAMPLES, forced_context, sample_catalog
+from marquee.services.media import atomic_write
 
 from marquee import __version__
 
@@ -217,6 +219,9 @@ SETTINGS_PATH = os.path.join(DATA_DIR, "settings.json")
 LIVE_SETTINGS_PATH = os.path.join(DATA_DIR, "live-settings.json")
 AMBIENT_PATH = os.path.join(DATA_DIR, "ambient.json")
 HA_WEATHER_PATH = os.path.join(DATA_DIR, "ha-weather.json")
+HA_XBOX_PATH = os.path.join(DATA_DIR, "ha-xbox.json")
+XBOX_POSTER_EXTENSIONS = {"image/jpeg": ".jpg", "image/png": ".png",
+                          "image/webp": ".webp"}
 CUSTOM_BACKDROP_PATH = os.path.join(DATA_DIR, "custom-backdrop.img")
 MAX_CUSTOM_BACKDROP_BYTES = 15 * 1024 * 1024
 
@@ -633,6 +638,45 @@ def load_live_settings():
     migration step. Subsequent Cast edits cannot alter the live layout.
     """
     return _load_settings_file(LIVE_SETTINGS_PATH, fallback=load_settings())
+
+
+def xbox_now_playing():
+    """Read the last Home Assistant Xbox snapshot without exposing HA config."""
+    try:
+        with open(HA_XBOX_PATH, encoding="utf-8") as handle:
+            value = json.load(handle)
+    except (OSError, ValueError, TypeError):
+        value = {}
+    if not isinstance(value, dict):
+        value = {}
+    title = str(value.get("title") or "").strip()[:160]
+    try:
+        fresh = 0 <= time.time() - float(value.get("updated", 0)) < 90
+    except (TypeError, ValueError):
+        fresh = False
+    active = bool(value.get("active")) and bool(title) and fresh
+    poster = ""
+    if active and value.get("poster") == "/xbox-poster":
+        poster_ext = XBOX_POSTER_EXTENSIONS.get(value.get("posterType"))
+        if poster_ext and os.path.isfile(os.path.join(DATA_DIR, "xbox-poster" + poster_ext)):
+            poster = "/xbox-poster"
+    return {
+        "active": active,
+        "title": title if active else "",
+        "activity": str(value.get("activity") or "").strip()[:240] if active else "",
+        "player": str(value.get("player") or "").strip()[:100] if active else "",
+        "gameTime": str(value.get("gameTime") or "").strip()[:100] if active else "",
+        "poster": poster,
+        "posterType": value.get("posterType") if poster else "",
+        "description": str(value.get("description") or "").strip()[:900] if active else "",
+        "genre": str(value.get("genre") or "").strip()[:100] if active else "",
+        "developer": str(value.get("developer") or "").strip()[:100] if active else "",
+        "publisher": str(value.get("publisher") or "").strip()[:100] if active else "",
+        "achievements": str(value.get("achievements") or "").strip()[:60] if active else "",
+        "gamerscore": str(value.get("gamerscore") or "").strip()[:60] if active else "",
+        "progress": str(value.get("progress") or "").strip()[:24] if active else "",
+        "platform": str(value.get("platform") or "").strip()[:80] if active else "",
+    }
 
 
 def clean_block_position(position, template=None):

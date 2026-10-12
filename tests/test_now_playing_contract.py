@@ -1,10 +1,40 @@
 import unittest
 from unittest.mock import patch
+from pathlib import Path
+import json
+import tempfile
 
 from cast.marquee.api import http
 
 
 class NowPlayingContractTests(unittest.TestCase):
+    def test_xbox_snapshot_is_fresh_only_and_contains_display_fields(self):
+        import sys
+        sys.path.insert(0, str(Path(__file__).parents[1] / "cast"))
+        from marquee import composition
+        payload = {"active": True, "title": "Forza Horizon 6",
+                   "activity": "Going Sideways", "description": "Explore Japan.",
+                   "poster": "/xbox-poster", "posterType": "image/jpeg",
+                   "updated": 950}
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "ha-xbox.json"
+            (Path(directory) / "xbox-poster.jpg").write_bytes(b"poster")
+            path.write_text(json.dumps(payload))
+            with patch.object(composition, "HA_XBOX_PATH", str(path)), \
+                    patch.object(composition, "DATA_DIR", directory), \
+                    patch.object(composition.time, "time", return_value=1000):
+                current = composition.xbox_now_playing()
+                self.assertTrue(current["active"])
+                self.assertEqual(current["title"], "Forza Horizon 6")
+                self.assertEqual(current["description"], "Explore Japan.")
+                self.assertEqual(current["poster"], "/xbox-poster")
+                self.assertNotIn("token", repr(current))
+                with patch.object(composition.time, "time", return_value=1050):
+                    stale = composition.xbox_now_playing()
+        self.assertFalse(stale["active"])
+        self.assertEqual(stale["title"], "")
+        self.assertEqual(stale["poster"], "")
+
     def test_idle_payload_has_no_media_identity(self):
         with patch.object(http, "CURRENT_PLEX", {"info": None, "stale": False}, create=True), \
                 patch.object(http, "best_context", return_value=None, create=True):

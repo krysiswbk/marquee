@@ -155,6 +155,14 @@ class WebHandler(BaseHTTPRequestHandler):
             self._send_file(AMBIENT_PATH)
         elif path == "/ha-weather.json":
             self._send(json.dumps(weather()), "application/json")
+        elif path == "/xbox-now-playing.json":
+            self._send(json.dumps(xbox_now_playing()), "application/json")
+        elif path == "/xbox-poster":
+            info = xbox_now_playing()
+            extension = XBOX_POSTER_EXTENSIONS.get(info.get("posterType"))
+            if not info.get("active") or not extension:
+                return self._send("not found", "text/plain", 404)
+            return self._send_file(os.path.join(DATA_DIR, "xbox-poster" + extension))
         elif path == "/devices":
             self._send(json.dumps(scan_devices("refresh" in self.path)),
                        "application/json")
@@ -605,6 +613,58 @@ class WebHandler(BaseHTTPRequestHandler):
                 clean = clean_observation(body)
                 os.makedirs(DATA_DIR, exist_ok=True)
                 atomic_write(HA_WEATHER_PATH, json.dumps(clean))
+                return self._send(json.dumps({"ok": True}), "application/json")
+            except Exception as e:
+                return self._send(json.dumps({"ok": False, "error": str(e)}),
+                                  "application/json", 400)
+        if path == "/ha-xbox":
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                if not 0 < length <= 32 * 1024:
+                    raise ValueError("invalid Xbox payload size")
+                body = json.loads(self.rfile.read(length))
+                if not isinstance(body, dict):
+                    raise ValueError("Xbox payload must be an object")
+                active = body.get("active") is True
+                poster_type = body.get("posterType")
+                poster_data = body.get("posterData")
+                poster = ""
+                if (active and poster_type in XBOX_POSTER_EXTENSIONS and
+                        isinstance(poster_data, str) and len(poster_data) <= 3 * 1024 * 1024):
+                    try:
+                        image = base64.b64decode(poster_data, validate=True)
+                    except (ValueError, TypeError):
+                        image = b""
+                    if image and len(image) <= 2 * 1024 * 1024:
+                        poster = "/xbox-poster"
+                        atomic_write(os.path.join(DATA_DIR, "xbox-poster" +
+                                                  XBOX_POSTER_EXTENSIONS[poster_type]), image, "wb")
+                if not poster:
+                    for extension in XBOX_POSTER_EXTENSIONS.values():
+                        try:
+                            os.unlink(os.path.join(DATA_DIR, "xbox-poster" + extension))
+                        except FileNotFoundError:
+                            pass
+                clean = {
+                    "active": active,
+                    "title": str(body.get("title") or "").strip()[:160] if active else "",
+                    "activity": str(body.get("activity") or "").strip()[:240] if active else "",
+                    "player": str(body.get("player") or "").strip()[:100] if active else "",
+                    "gameTime": str(body.get("gameTime") or "").strip()[:100] if active else "",
+                    "poster": poster,
+                    "posterType": poster_type if poster else "",
+                    "description": str(body.get("description") or "").strip()[:900] if active else "",
+                    "genre": str(body.get("genre") or "").strip()[:100] if active else "",
+                    "developer": str(body.get("developer") or "").strip()[:100] if active else "",
+                    "publisher": str(body.get("publisher") or "").strip()[:100] if active else "",
+                    "achievements": str(body.get("achievements") or "").strip()[:60] if active else "",
+                    "gamerscore": str(body.get("gamerscore") or "").strip()[:60] if active else "",
+                    "progress": str(body.get("progress") or "").strip()[:24] if active else "",
+                    "platform": str(body.get("platform") or "").strip()[:80] if active else "",
+                    "updated": time.time(),
+                }
+                os.makedirs(DATA_DIR, exist_ok=True)
+                atomic_write(HA_XBOX_PATH, json.dumps(clean))
                 return self._send(json.dumps({"ok": True}), "application/json")
             except Exception as e:
                 return self._send(json.dumps({"ok": False, "error": str(e)}),

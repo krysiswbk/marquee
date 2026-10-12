@@ -745,11 +745,11 @@
   body.live-editing [data-layout] { outline:none; }
   body.live-editing .screen-controls, body.live-editing nav { display:none !important; }
 </style>
-<link rel="stylesheet" href="/brain.css?v=2.12.58">
-<link rel="stylesheet" href="/screens.css?v=2.12.58">
-<link rel="stylesheet" href="/weather-channel.css?v=2.12.58">
+<link rel="stylesheet" href="/brain.css?v=2.12.59">
+<link rel="stylesheet" href="/screens.css?v=2.12.59">
+<link rel="stylesheet" href="/weather-channel.css?v=2.12.59">
 <link rel="stylesheet" href="/scene-themes.css?v=2.9.7">
-<link rel="stylesheet" href="/sky-ambient.css?v=2.12.58">
+<link rel="stylesheet" href="/sky-ambient.css?v=2.12.59">
 <body data-template="spotlight">
 <img class="bg" id="bg" alt="">
 <img class="fa" id="fa1" alt=""><img class="fa" id="fa2" alt="">
@@ -850,13 +850,13 @@
 <time class="cast-clock-overlay" id="cast-clock-overlay"></time>
 <div class="idle-screen"><div class="idle-house"><div class="idle-kicker" id="idle-kicker">Home</div><div class="idle-greeting" id="idle-greeting"></div><div class="idle-state" id="idle-state" hidden></div><div class="idle-note" id="idle-note" hidden></div><time class="idle-clock" id="idle-clock"></time><div class="idle-date" id="idle-date"></div><div class="idle-weather" id="idle-weather" aria-label="Current weather"><div class="idle-weather-primary"><span class="idle-weather-icon" id="idle-weather-icon" aria-hidden="true"></span><strong id="idle-weather-temp"></strong><span id="idle-weather-condition"></span></div><div class="idle-weather-secondary"><span id="idle-weather-feels"></span><span id="idle-weather-range"></span><span id="idle-weather-rain"></span></div><div class="idle-weather-status" id="idle-weather-status"></div></div></div></div>
 <div class="ambient-veil" aria-hidden="true"></div>
-<script src="/lifecycle.js?v=2.12.58"></script>
-<script src="/state-contract.js?v=2.12.58"></script>
-<script src="/weather-channel.js?v=2.12.58"></script>
-<script src="/sky-ambient.js?v=2.12.58"></script>
-<script src="/weather-summary.js?v=2.12.58"></script>
-<script src="/now-playing-progress.js?v=2.12.58"></script>
-<script src="/brain.js?v=2.12.58"></script>
+<script src="/lifecycle.js?v=2.12.59"></script>
+<script src="/state-contract.js?v=2.12.59"></script>
+<script src="/weather-channel.js?v=2.12.59"></script>
+<script src="/sky-ambient.js?v=2.12.59"></script>
+<script src="/weather-summary.js?v=2.12.59"></script>
+<script src="/now-playing-progress.js?v=2.12.59"></script>
+<script src="/brain.js?v=2.12.59"></script>
 <script>
 
   const $ = id => document.getElementById(id);
@@ -2808,6 +2808,12 @@ ${chase.join('')}
         const response = await fetch('/now-playing.json?t=' + Date.now() + display, {signal: lifecycle.signal});
         if (!response.ok) return;
         d = await response.json();
+        if (directPlex && !DEMO) {
+          try {
+            const xboxResponse = await fetch('/xbox-now-playing.json?t=' + Date.now(), {signal: lifecycle.signal});
+            if (xboxResponse.ok) d.xbox = await xboxResponse.json();
+          } catch (error) { if (error?.name === 'AbortError') return; }
+        }
       }
     } catch (e) { if (!DEMO && e?.name !== 'AbortError') return; }
     if (lifecycle.isCurrent && !lifecycle.isCurrent()) return;
@@ -2826,9 +2832,13 @@ ${chase.join('')}
     liveEvents?.close();
     liveEventScope = scope;
     const events = liveEvents = new EventSource('/events?display=' + encodeURIComponent(scope));
-    events.addEventListener('context', event => {
+    events.addEventListener('context', async event => {
       try {
         const d = JSON.parse(event.data);
+        if (directPlex) {
+          const xboxResponse = await fetch('/xbox-now-playing.json?t=' + Date.now());
+          if (xboxResponse.ok) d.xbox = await xboxResponse.json();
+        }
         payloadRevision++;
         applyPayload(d);
       } catch (e) {}
@@ -2862,6 +2872,10 @@ ${chase.join('')}
     if (latestPayload) applyPayload(latestPayload);
     tick();
   });
+  window.addEventListener('marquee-now-playing-platform', event => {
+    const payload = event.detail || latestPayload;
+    if (payload) applyPayload(payload);
+  });
 
   window.addEventListener('marquee-brain', () => {
     if (!DEMO && new URLSearchParams(location.search).get('view') === 'weather') tick();
@@ -2877,4 +2891,4 @@ ${chase.join('')}
   window.MarqueeLifecycle.register('surface-animation', {interval: 1000, refresh: () => paint()});
 </script>
 
-<script src="/kiosk-menu.js?v=2.12.58"></script>
+<script src="/kiosk-menu.js?v=2.12.59"></script>

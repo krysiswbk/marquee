@@ -51,6 +51,7 @@
   // surface is visible, but it must never manufacture a replacement Plex
   // state from browse contexts or from the previous render.
   let nowPlaying = null;
+  let nowPlayingPlatform = 'plex';
   const canonicalView = key => key === 'sky' ? 'astronomy' : key;
   let view = canonicalView(params.get('view') || ''), interrupted = false;
   let calendarMode = params.get('mode') === 'all' ? 'all' : '';
@@ -94,10 +95,11 @@
   // on a phone reveals its links immediately instead of below the fold.
   menu.insertBefore(menu.querySelector('details'), overflow);
   const panel = document.createElement('section'); panel.id = 'kiosk-panel'; panel.className = 'kiosk-section'; panel.hidden = true; panel.inert = true; panel.setAttribute('aria-hidden', 'true'); panel.setAttribute('aria-label', 'Selected kiosk section'); panel.setAttribute('aria-labelledby', 'kiosk-section-title'); document.body.append(panel);
+  const platformSwitch = document.createElement('button'); platformSwitch.type = 'button'; platformSwitch.className = 'kiosk-xbox-floating-toggle'; platformSwitch.hidden = true; platformSwitch.setAttribute('aria-label', 'Switch between Plex and Xbox'); document.body.append(platformSwitch);
   // The destination is a sibling overlay, so explicitly own the accessibility
   // state of the dashboard it covers. Keep the original values so Home and
   // browser history can restore the dashboard without stale inert/hidden state.
-  const backgroundNodes = [...document.body.children].filter(node => ![rail, menu, panel].includes(node));
+  const backgroundNodes = [...document.body.children].filter(node => ![rail, menu, panel, platformSwitch].includes(node));
   const backgroundState = backgroundNodes.map(node => ({
     node,
     inert: node.inert,
@@ -520,6 +522,7 @@
     if (node.matches('[data-sports-summary]')) return 'sports:summary';
     if (node.matches('[data-calendar-disclosure]')) return 'calendar:disclosure';
     if (node.matches('[data-sports-disclosure]')) return 'sports:disclosure';
+    if (node.matches('[data-now-playing-platform]')) return `now-playing:${node.dataset.nowPlayingPlatform}`;
     if (node.matches('[data-kiosk-retry]')) return 'retry';
     if (node.matches('button[data-item]')) return `item:${node.dataset.item}`;
     return null;
@@ -570,8 +573,12 @@
     // Plex has two legitimate owners. Active playback belongs to the real
     // media stage; every non-playing/manual lifecycle belongs to this panel.
     // Never let the stage and panel hide each other during the hand-off.
-    const plexActive = view === 'plex' && nowPlaying?.playing === true;
-    const kioskPlaybackActive = LIVE_SURFACE && ATTENTION_DISPLAY === 'kiosk' && nowPlaying?.playing === true;
+    const xbox = nowPlaying?.xbox && typeof nowPlaying.xbox === 'object' ? nowPlaying.xbox : null;
+    const xboxActive = xbox?.active === true;
+    if (!xboxActive) nowPlayingPlatform = 'plex';
+    else if (nowPlaying?.playing !== true) nowPlayingPlatform = 'xbox';
+    const plexActive = view === 'plex' && nowPlaying?.playing === true && nowPlayingPlatform !== 'xbox';
+    const kioskPlaybackActive = LIVE_SURFACE && ATTENTION_DISPLAY === 'kiosk' && nowPlaying?.playing === true && nowPlayingPlatform !== 'xbox';
     document.body.classList.toggle('kiosk-now-playing', plexActive);
     document.body.classList.toggle('kiosk-playback-active', kioskPlaybackActive);
     panel.classList.toggle('now-playing-surface', view === 'plex');
@@ -582,12 +589,34 @@
     const surface = active && view === 'weather' && selected ? 'weather'
       : active && plexActive ? 'stage' : active ? 'panel' : 'dashboard';
     setBackgroundActive(active, surface);
-    panel.hidden = !active || surface !== 'panel' || Boolean(selected); panel.inert = !active || panel.hidden;
+    panel.hidden = !active || surface !== 'panel' || Boolean(selected); panel.inert = !active || panel.hidden || (view === 'plex' && xboxActive && nowPlayingPlatform === 'xbox');
+    document.body.classList.toggle('kiosk-xbox-now-playing', view === 'plex' && xboxActive && nowPlayingPlatform === 'xbox');
+    platformSwitch.hidden = view !== 'plex' || !xboxActive || (nowPlayingPlatform === 'xbox' && nowPlaying?.playing !== true);
+    platformSwitch.textContent = nowPlayingPlatform === 'xbox' ? 'Back to Plex' : `Next · Xbox: ${xbox?.title || 'Game'}`;
+    platformSwitch.inert = false;
+    platformSwitch.removeAttribute('aria-hidden');
     if (panel.hidden && !selected) {
       if (panel.contains(document.activeElement)) {
         focusNavigation(view);
         if (panel.contains(document.activeElement)) document.activeElement.blur();
       }
+      return;
+    }
+    if (view === 'plex' && xboxActive && nowPlayingPlatform === 'xbox') {
+      const title = xbox.title || 'Xbox game';
+      const detail = [xbox.activity, xbox.player].filter(Boolean).join(' · ');
+      const facts = [xbox.genre, xbox.developer, xbox.publisher, xbox.achievements ? `Achievements ${xbox.achievements}` : '', xbox.gamerscore ? `Gamerscore ${xbox.gamerscore}` : '', xbox.progress ? `Completion ${xbox.progress}` : '', xbox.platform].filter(Boolean);
+      const metadata = facts.length ? `<div class="kiosk-xbox-facts">${facts.map(fact => `<span>${esc(fact)}</span>`).join('')}</div>` : '';
+      const description = xbox.description ? `<p class="kiosk-xbox-description">${esc(xbox.description)}</p>` : '';
+      const poster = xbox.poster ? `<img class="kiosk-xbox-poster" src="${esc(xbox.poster)}" alt="">` : '<div class="kiosk-xbox-placeholder" aria-hidden="true">XBOX</div>';
+      const weather = ['idle-weather-temp', 'idle-weather-condition', 'idle-weather-feels', 'idle-weather-range']
+        .map(id => document.querySelector(`#${id}`)?.textContent?.trim() || '').filter(Boolean);
+      const weatherLabels = ['Temperature', 'Conditions', 'Feels like', 'High and low'];
+      const weatherMarkup = weather.length ? `<div class="kiosk-weather-context" aria-label="Current weather">${weather.map((fact, index) => `${index ? '<span class="kiosk-weather-separator" aria-hidden="true">·</span>' : ''}<span class="kiosk-weather-fact" aria-label="${esc(`${weatherLabels[index]}: ${fact}`)}">${esc(fact)}</span>`).join('')}</div>` : '';
+      panel.innerHTML = `<header class="kiosk-now-playing-head"><p>NOW PLAYING · XBOX</p><h1 id="kiosk-section-title">${esc(title)}</h1>${detail ? `<p class="kiosk-now-playing-detail">${esc(detail)}</p>` : ''}</header><div class="kiosk-xbox-body">${poster}<div class="kiosk-xbox-copy">${metadata}${description}${weatherMarkup}<div class="kiosk-now-playing-actions"><a class="kiosk-home-action" href="${esc(href(''))}" data-view="">Return to Home</a></div></div></div>`;
+      reconcilePanelControls(preservedControls);
+      focusInitialDestination();
+      preserveDirectHeadingFocus(preserveHeadingFocus);
       return;
     }
     if (view === 'plex') {
@@ -613,7 +642,8 @@
         : '<div class="kiosk-weather-context" aria-label="Current weather">Home display ready</div>';
       const unavailableMark = unavailable || stale ? `<div class="kiosk-state-mark is-${unavailable ? 'unavailable' : 'stale'}" aria-hidden="true"><span>${unavailable ? '!' : '↻'}</span></div>` : '';
       const retry = unavailable || stale ? '<button type="button" class="kiosk-retry" data-kiosk-retry>Check again</button>' : '';
-      panel.innerHTML = `<header class="kiosk-now-playing-head"><p>NOW PLAYING</p><h1 id="kiosk-section-title">${esc(title)}</h1>${detail ? `<p class="kiosk-now-playing-detail">${esc(detail)}</p>` : ''}</header><div class="kiosk-now-playing-body">${unavailableMark}<div class="kiosk-now-playing-copy">${weatherMarkup}<div class="kiosk-now-playing-actions"><a class="kiosk-home-action" href="${esc(href(''))}" data-view="">Return to Home</a>${retry}</div></div></div>`;
+      const xboxNext = xboxActive ? `<button type="button" class="kiosk-xbox-toggle" data-now-playing-platform="xbox">Next · Xbox: ${esc(xbox.title || 'Game')}</button>` : '';
+      panel.innerHTML = `<header class="kiosk-now-playing-head"><p>NOW PLAYING · PLEX</p><h1 id="kiosk-section-title">${esc(title)}</h1>${detail ? `<p class="kiosk-now-playing-detail">${esc(detail)}</p>` : ''}</header><div class="kiosk-now-playing-body">${unavailableMark}<div class="kiosk-now-playing-copy">${weatherMarkup}<div class="kiosk-now-playing-actions">${xboxNext}<a class="kiosk-home-action" href="${esc(href(''))}" data-view="">Return to Home</a>${retry}</div></div></div>`;
       reconcilePanelControls(preservedControls);
       focusInitialDestination();
       preserveDirectHeadingFocus(preserveHeadingFocus);
@@ -737,7 +767,8 @@
     if (anchor && rail.contains(anchor)) { e.preventDefault(); navigateFromAnchor(anchor, 'click'); }
   }, true);
   menu.addEventListener('click', e => { if (e.target === menu) { const r = menu.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) closeMenu(); } });
-  panel.addEventListener('click', e => { const scoreSummary = e.target.closest('.kiosk-sport-score-details summary'); if (scoreSummary) { scoreDetailsOpen = !scoreSummary.parentElement.open; return; } const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); return; } if (e.target.closest('[data-sky-aircraft]')) { skyAircraftOpen = !skyAircraftOpen; drawPanel(); panel.querySelector('[data-sky-aircraft]')?.focus({preventScroll: true}); return; } if (e.target.closest('[data-calendar-disclosure]')) { openCalendarAgenda(); return; } if (e.target.closest('[data-calendar-summary]')) { closeCalendarAgenda(); return; } if (e.target.closest('[data-sports-disclosure]')) { openSportsSchedule(); return; } if (e.target.closest('[data-sports-summary]')) { closeSportsSchedule(); return; } const sportsControl = e.target.closest('[data-sports-control]'); if (sportsControl && !sportsControl.disabled) { sportsFocusControlPending = sportsControl.dataset.sportsControl; setSportsPage(sportsPage + (sportsControl.dataset.sportsControl === 'next' ? 1 : -1)); return; } const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); return; } const b = e.target.closest('button[data-item]'); if (b) { selected = b.dataset.item; drawPanel(); primary.querySelector(`[data-view="${CSS.escape(view)}"]`)?.focus(); window.dispatchEvent(new Event('marquee-navigation')); } });
+  panel.addEventListener('click', e => { const scoreSummary = e.target.closest('.kiosk-sport-score-details summary'); if (scoreSummary) { scoreDetailsOpen = !scoreSummary.parentElement.open; return; } const platform = e.target.closest('[data-now-playing-platform]'); if (platform) { nowPlayingPlatform = platform.dataset.nowPlayingPlatform === 'xbox' ? 'xbox' : 'plex'; drawPanel(); window.dispatchEvent(new CustomEvent('marquee-now-playing-platform', {detail: nowPlaying})); return; } const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); return; } if (e.target.closest('[data-sky-aircraft]')) { skyAircraftOpen = !skyAircraftOpen; drawPanel(); panel.querySelector('[data-sky-aircraft]')?.focus({preventScroll: true}); return; } if (e.target.closest('[data-calendar-disclosure]')) { openCalendarAgenda(); return; } if (e.target.closest('[data-calendar-summary]')) { closeCalendarAgenda(); return; } if (e.target.closest('[data-sports-disclosure]')) { openSportsSchedule(); return; } if (e.target.closest('[data-sports-summary]')) { closeSportsSchedule(); return; } const sportsControl = e.target.closest('[data-sports-control]'); if (sportsControl && !sportsControl.disabled) { sportsFocusControlPending = sportsControl.dataset.sportsControl; setSportsPage(sportsPage + (sportsControl.dataset.sportsControl === 'next' ? 1 : -1)); return; } const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); return; } const b = e.target.closest('button[data-item]'); if (b) { selected = b.dataset.item; drawPanel(); primary.querySelector(`[data-view="${CSS.escape(view)}"]`)?.focus(); window.dispatchEvent(new Event('marquee-navigation')); } });
+  platformSwitch.addEventListener('click', () => { nowPlayingPlatform = nowPlayingPlatform === 'xbox' ? 'plex' : 'xbox'; drawPanel(); window.dispatchEvent(new CustomEvent('marquee-now-playing-platform', {detail: nowPlaying})); });
   stage?.addEventListener('click', e => { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); return; } const retry = e.target.closest('button[data-kiosk-retry]'); if (retry) { retry.disabled = true; retry.textContent = 'Checking…'; refresh().finally(() => { retry.disabled = false; }); } });
   document.addEventListener('keydown', e => { if (menu.open || !view) return; if (!calendarMode && !sportsMode && e.target.closest?.('[data-calendar-disclosure]') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openCalendarAgenda(); return; } if (!sportsMode && e.target.closest?.('[data-sports-disclosure]') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openSportsSchedule(); return; } if (calendarMode) { if (e.key === 'Escape' || e.key === 'BrowserBack') { e.preventDefault(); closeCalendarAgenda(); return; } } else if (sportsMode) { if (e.key === 'Escape' || e.key === 'BrowserBack') { e.preventDefault(); closeSportsSchedule(); return; } if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); setSportsPage(sportsPage - 1); return; } if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); setSportsPage(sportsPage + 1); return; } } else if (e.key === 'Escape') { e.preventDefault(); change(''); } });
   function restoreHistoryDestinationFocus() { if (historyFocusDestination === null || calendarMode || view === 'calendar') return; const destination = historyFocusDestination; historyFocusDestination = null; focusNavigation(destination); }

@@ -1,6 +1,7 @@
 import requests
 import math
 import re
+import base64
 from marquee_bridge import BridgeSession
 from marquee_kiosk import kiosk_awake
 from datetime import datetime, timedelta, timezone
@@ -21,6 +22,11 @@ class MarqueeAmbient(hass.Hass):
     MOON_PHASE = "sensor.moon_phase"
     SUN = "sun.sun"
     WEATHER_URL = "http://10.10.9.37:8084/ha-weather"
+    XBOX_NOW_PLAYING = "sensor.krysiswbk_now_playing"
+    XBOX_ACTIVITY = "sensor.krysiswbk_status"
+    XBOX_IN_GAME = "binary_sensor.krysiswbk_in_game"
+    XBOX_POSTER = "image.krysiswbk_poster"
+    XBOX_URL = "http://10.10.9.37:8084/ha-xbox"
     GARAGE_OCCUPANCY = "input_boolean.garage_os"
     GARAGE_URL = "http://10.10.9.37:8084/garage-occupancy"
     PRESENCE_URL = "http://10.10.9.37:8084/presence"
@@ -58,6 +64,12 @@ class MarqueeAmbient(hass.Hass):
         self.run_in(self.evaluate, 2)
         self.run_in(self.publish_weather, 3)
         self.run_every(self.publish_weather, "now+60", 60)
+        self.listen_state(self.xbox_changed, self.XBOX_NOW_PLAYING, attribute="all")
+        self.listen_state(self.xbox_changed, self.XBOX_ACTIVITY, attribute="all")
+        self.listen_state(self.xbox_changed, self.XBOX_IN_GAME, attribute="all")
+        self.listen_state(self.xbox_changed, self.XBOX_POSTER, attribute="all")
+        self.run_in(self.publish_xbox, 6)
+        self.run_every(self.publish_xbox, "now+15", 15)
         self.weather_forecasts = {}
         self.weather_forecast_at = 0
         self.run_in(self.publish_garage, 4)
@@ -68,6 +80,65 @@ class MarqueeAmbient(hass.Hass):
 
     def sport_changed(self, entity, attribute, old, new, kwargs):
         self.publish_sports({})
+
+    def xbox_changed(self, entity, attribute, old, new, kwargs):
+        self.publish_xbox({})
+
+    def publish_xbox(self, kwargs):
+        """Publish only current Xbox activity; Marquee decides display priority."""
+        try:
+            game_state = self.get_state(self.XBOX_NOW_PLAYING, attribute="all") or {}
+            game_attrs = game_state.get("attributes", {}) if isinstance(game_state, dict) else {}
+            title = str(game_state.get("state", "") if isinstance(game_state, dict)
+                        else game_state or "").strip()
+            activity = str(self.get_state(self.XBOX_ACTIVITY) or "").strip()
+            in_game = str(self.get_state(self.XBOX_IN_GAME) or "").lower() == "on"
+            active = bool(title) and title.lower() not in ("unknown", "unavailable", "none") and in_game
+            poster = ""
+            poster_data = ""
+            poster_type = ""
+            if active:
+                attrs = self.get_state(self.XBOX_POSTER, attribute="all") or {}
+                if isinstance(attrs, dict):
+                    poster = (attrs.get("attributes", {}).get("entity_picture") or poster)
+                if isinstance(poster, str) and poster.startswith("/api/image_proxy/"):
+                    try:
+                        response = requests.get("http://supervisor/core" + poster,
+                                                timeout=8, allow_redirects=False, stream=True)
+                        if response.status_code == 200:
+                            content_type = response.headers.get("Content-Type", "").split(";", 1)[0].lower()
+                            extensions = {"image/jpeg": ".jpg", "image/png": ".png",
+                                          "image/webp": ".webp"}
+                            if content_type in extensions:
+                                image = bytearray()
+                                for chunk in response.iter_content(16384):
+                                    if len(image) + len(chunk) > 2 * 1024 * 1024:
+                                        image.clear()
+                                        break
+                                    image.extend(chunk)
+                                if image:
+                                    poster_data = base64.b64encode(image).decode("ascii")
+                                    poster_type = content_type
+                        response.close()
+                    except Exception:
+                        # The game/activity remains useful when artwork is delayed.
+                        pass
+            poster = ""
+            payload = {"active": active, "title": title if active else "",
+                       "activity": activity if active else "", "poster": poster if active else "",
+                       "posterData": poster_data, "posterType": poster_type,
+                       "description": game_attrs.get("short_description", "") if active else "",
+                       "genre": game_attrs.get("genres", "") if active else "",
+                       "developer": game_attrs.get("developer", "") if active else "",
+                       "publisher": game_attrs.get("publisher", "") if active else "",
+                       "achievements": game_attrs.get("achievements", "") if active else "",
+                       "gamerscore": game_attrs.get("gamerscore", "") if active else "",
+                       "progress": game_attrs.get("progress", "") if active else "",
+                       "platform": game_attrs.get("platform", "") if active else ""}
+            response = self.bridge.post(self.XBOX_URL, json=payload, timeout=5)
+            response.raise_for_status()
+        except Exception as error:
+            self.log(f"Marquee Xbox publish failed: {error}", level="WARNING")
 
     @staticmethod
     def _finite(value, low=None, high=None):
