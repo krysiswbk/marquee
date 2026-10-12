@@ -665,3 +665,15 @@ html[data-kiosk-theme=plex] body.brain-live .brain-dock-people{color:#a8b8cb!imp
 html[data-kiosk-theme=synthwave] body.brain-live:not([data-kiosk-view=plex]):not(.kiosk-now-playing):not(.cast-display) .context-card{background-image:radial-gradient(ellipse at 82% 12%,#ff4fc82b,transparent 42%),linear-gradient(135deg,#100b22,#21123d 64%,#100b22)!important}
 html[data-kiosk-theme=synthwave] body.brain-live:not([data-kiosk-view=plex]):not(.kiosk-now-playing):not(.cast-display) .stage .context-card :is(.eyebrow,.context-status,.context-source,.context-rows time,.weather-separator){color:#ff70d2!important}
 html[data-kiosk-theme=synthwave] body.brain-live:not([data-kiosk-view=plex]):not(.kiosk-now-playing):not(.cast-display) .stage .context-card .active-stream-count{background:#ff4fc8!important;color:#100b22!important}
+
+/* The Sky panorama belongs to the same synthwave kiosk suite: keep its
+   illustration and live aircraft markers out of the old blue/lime palette. */
+html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-vista{border-color:#ff4fc866;background:radial-gradient(ellipse at 50% 18%,#ff4fc82b,transparent 58%),linear-gradient(155deg,#291542,#100b22 68%,#21123d);box-shadow:inset 0 1px #fff2,0 18px 44px #0005}
+html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-vista #sky-haze stop:first-child{stop-color:#291542}
+html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-vista #sky-haze stop:last-child{stop-color:#53316e}
+html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-vista #sky-glow stop:first-child{stop-color:#ff4fc8;stop-opacity:.28}
+html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-vista #sky-glow stop:last-child{stop-color:#b942e2;stop-opacity:0}
+html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-vista-clouds{fill:#c3a9d4;filter:drop-shadow(0 4px 12px #ff4fc855)}
+html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-map-plane{fill:#ff70d2;filter:drop-shadow(0 0 4px #ff4fc8aa)}
+html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-map-plane circle{stroke:#100b22}
+html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-vista-horizon{fill:#100b22;opacity:.84}

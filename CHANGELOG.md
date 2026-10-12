@@ -1,3 +1,7 @@
+# 2.12.55
+
+- Finish the Sky panorama in the synthwave palette and replace its lime aircraft markers with pink.
+
 # 2.12.54
 
 - Keep explicitly selected kiosk destinations visible while a household alert is active; retain alert priority on Home and automatic display.

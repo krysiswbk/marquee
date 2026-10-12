@@ -75,6 +75,20 @@ def test_kiosk_sky_page_shows_available_sensor_facts_without_aurora_alert():
         assert page.locator(".sky-map-plane text").text_content() == "TEST123"
         assert page.locator(".sky-moon-glyph circle.sky-moon-disc").count() == 1
         assert page.locator(".sky-vista-clouds").count() == 1
+        panorama_palette = page.locator(".sky-vista").evaluate("""el => ({
+            theme: document.documentElement.dataset.kioskTheme,
+            firstHaze: getComputedStyle(el.querySelector('#sky-haze stop:first-child')).stopColor,
+            lastHaze: getComputedStyle(el.querySelector('#sky-haze stop:last-child')).stopColor,
+            cloud: getComputedStyle(el.querySelector('.sky-vista-clouds')).fill,
+            aircraft: getComputedStyle(el.querySelector('.sky-map-plane')).fill,
+        })""")
+        assert panorama_palette == {
+            "theme": "synthwave",
+            "firstHaze": "rgb(41, 21, 66)",
+            "lastHaze": "rgb(83, 49, 110)",
+            "cloud": "rgb(195, 169, 212)",
+            "aircraft": "rgb(255, 112, 210)",
+        }, panorama_palette
         page.get_by_role("button", name="View 1 nearby plane").click()
         assert page.locator(".sky-aircraft-row").count() == 1
         assert "TEST123" in page.locator(".sky-aircraft-row").inner_text()
