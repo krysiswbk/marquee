@@ -89,6 +89,25 @@ def test_kiosk_sky_page_shows_available_sensor_facts_without_aurora_alert():
             "cloud": "rgb(195, 169, 212)",
             "aircraft": "rgb(255, 112, 210)",
         }, panorama_palette
+        page.set_viewport_size({"width": 1024, "height": 600})
+        page.wait_for_timeout(100)
+        compact_fit = page.locator("#kiosk-panel").evaluate("""panel => {
+            const sky = panel.querySelector('.sky-destination');
+            const rect = element => element.getBoundingClientRect();
+            return {
+                sectionBottom: rect(panel).bottom,
+                skyBottom: rect(sky).bottom,
+                stageScroll: panel.scrollHeight - panel.clientHeight,
+                moonVisible: rect(sky.querySelector('.sky-moon-card')).height > 0,
+                aircraftControlVisible: rect(sky.querySelector('.sky-aircraft-toggle')).height >= 44,
+                pageWidth: document.documentElement.scrollWidth,
+            };
+        }""")
+        assert compact_fit["skyBottom"] <= compact_fit["sectionBottom"]
+        assert compact_fit["stageScroll"] == 0
+        assert compact_fit["moonVisible"]
+        assert compact_fit["aircraftControlVisible"]
+        assert compact_fit["pageWidth"] <= 1024
         page.get_by_role("button", name="View 1 nearby plane").click()
         assert page.locator(".sky-aircraft-row").count() == 1
         assert "TEST123" in page.locator(".sky-aircraft-row").inner_text()

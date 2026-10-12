@@ -1,3 +1,7 @@
+# 2.12.56
+
+- Fit Sky weather, moon, and aircraft details inside short widescreen kiosk displays.
+
 # 2.12.55
 
 - Finish the Sky panorama in the synthwave palette and replace its lime aircraft markers with pink.
