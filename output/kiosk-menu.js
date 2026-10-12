@@ -575,7 +575,10 @@
     document.body.classList.toggle('kiosk-now-playing', plexActive);
     document.body.classList.toggle('kiosk-playback-active', kioskPlaybackActive);
     panel.classList.toggle('now-playing-surface', view === 'plex');
-    const active = Boolean(view) && !interrupted && view !== 'household';
+    // A person who chooses a destination should see it immediately, even
+    // while Home is showing a household alert. Alerts still take priority
+    // when the dashboard or automatic rotation owns the display.
+    const active = Boolean(view) && view !== 'household';
     const surface = active && view === 'weather' && selected ? 'weather'
       : active && plexActive ? 'stage' : active ? 'panel' : 'dashboard';
     setBackgroundActive(active, surface);

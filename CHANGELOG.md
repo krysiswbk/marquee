@@ -1,3 +1,7 @@
+# 2.12.54
+
+- Keep explicitly selected kiosk destinations visible while a household alert is active; retain alert priority on Home and automatic display.
+
 # 2.12.49
 
 - Rework Cast calendar cards to follow the kiosk agenda hierarchy, with the next event featured beside readable upcoming event rows.
