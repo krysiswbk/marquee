@@ -450,7 +450,7 @@ DEFAULT_SETTINGS = {
     "sportsTextSize": 100, "sportsWeatherSize": 100,
     "liveVisibility": {},
     "liveLayout": {},
-    "liveTheme": "studio",
+    "liveTheme": "afterhours",
     "showDeviceLocation": True,
     "streetRainAnimation": True,
     "customBackdropEnabled": False,

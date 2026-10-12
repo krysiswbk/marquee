@@ -70,8 +70,23 @@ with sync_playwright() as playwright:
     browser = playwright.chromium.launch(
         executable_path=os.environ.get("MARQUEE_CHROMIUM"), args=["--no-sandbox"]
     )
-    for width, height in ((390, 844), (1500, 1000)):
+    for width, height in ((390, 844), (800, 900), (1500, 1000)):
         context = browser.new_context(viewport={"width": width, "height": height}, has_touch=True)
+        for direct_view, expected_theme in (("calendar", "synthwave"), ("plex", None)):
+            cold_page = context.new_page()
+            install_routes(cold_page)
+            cold_page.route("**/kiosk-menu.js*", lambda route: route.abort())
+            cold_page.goto(f"http://marquee.test/kiosk?view={direct_view}", wait_until="domcontentloaded")
+            assert cold_page.locator("html").get_attribute("data-kiosk-theme") == expected_theme
+            if expected_theme:
+                initial_canvas = cold_page.evaluate("""() => {
+                  const section=document.createElement('section'); section.className='kiosk-section';
+                  document.body.append(section);
+                  const style=getComputedStyle(section);
+                  return {background:style.backgroundColor,image:style.backgroundImage};
+                }""")
+                assert initial_canvas["background"] == "rgb(16, 11, 34)" and "rgba(255, 79, 200," in initial_canvas["image"], (width, direct_view, initial_canvas)
+            cold_page.close()
         page = context.new_page()
         install_routes(page)
         page.goto("http://marquee.test/kiosk", wait_until="domcontentloaded")
@@ -93,6 +108,26 @@ with sync_playwright() as playwright:
                 # navigation, then activate during its render window.
                 page.evaluate("window.MarqueeNavigation.refresh()")
                 activate(page, destination, touch=index % 2 == 0)
+                assert page.locator("html").get_attribute("data-kiosk-theme") == ("synthwave" if destination != "plex" else None)
+                assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), (width, height, destination)
+                if destination not in ("plex", "weather"):
+                    surface = page.locator("#kiosk-panel")
+                    page.wait_for_function("key => { const panel=document.querySelector('#kiosk-panel'); return panel && !panel.hidden && panel.dataset.section===key }", arg=destination)
+                    palette = surface.evaluate("el => { const s=getComputedStyle(el); return {background:s.backgroundColor,image:s.backgroundImage,color:s.color,border:s.borderColor,box:el.getBoundingClientRect().toJSON()} }")
+                    assert palette["background"] == "rgb(16, 11, 34)", (width, destination, palette)
+                    assert "rgba(255, 79, 200," in palette["image"], (width, destination, palette)
+                    assert palette["color"] == "rgb(255, 240, 251)", (width, destination, palette)
+                    box = palette["box"]
+                    assert box["left"] >= -1 and box["top"] >= -1 and box["right"] <= width + 1 and box["bottom"] <= height + 1, (width, height, destination, box)
+                    lime = surface.evaluate("""el => {
+                      const tokens=['rgb(182, 243, 120)','rgb(216, 255, 149)','rgb(195, 252, 134)','rgb(199, 250, 143)','rgb(210, 255, 155)'];
+                      return [...el.querySelectorAll('*')].filter(node => node.getClientRects().length).flatMap(node => {
+                        const s=getComputedStyle(node), values=[s.color,s.backgroundColor,s.borderColor,s.outlineColor,s.fill,s.stroke,s.backgroundImage,s.boxShadow];
+                        return values.some(value => tokens.some(token => value.includes(token)))
+                          ? [{tag:node.tagName,classes:String(node.className?.baseVal||node.className||''),text:(node.textContent||'').trim().slice(0,70),values:values.filter(value=>tokens.some(token=>value.includes(token)))}] : [];
+                      }).slice(0,12);
+                    }""")
+                    assert not lime, (width, destination, lime)
                 assert page.locator(
                     f'.kiosk-rail a[data-view="{destination}"][aria-current="page"], '
                     f'.kiosk-menu a[data-view="{destination}"][aria-current="page"]'

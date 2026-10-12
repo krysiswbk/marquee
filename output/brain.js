@@ -8,7 +8,7 @@
   shell.innerHTML=`<header class="brain-mast"><div class="brain-brand"><em>M/</em> MARQUEE <a class="brain-customize" href="/settings/layout?profile=live" aria-label="Customize the household desk"><span class="brain-customize-icon" aria-hidden="true">↗</span><span class="brain-customize-label">Customize</span></a></div><div class="brain-edition">THE HOUSEHOLD EDITION</div><div class="brain-connection" id="brain-connection">CONNECTING</div></header>
   <section class="brain-panel" id="brain-house"><div class="brain-eyebrow"><span>Right now</span><b id="brain-house-label">THE HOUSE</b></div><div class="brain-lead"><div><h1 class="brain-headline" id="brain-headline" data-history-focus-owner tabindex="-1">Listening to the house.</h1><div class="brain-summary" id="brain-summary">Waiting for a fresh household snapshot.</div></div><div class="brain-orbit" id="brain-symbol" aria-hidden="true">⌂</div></div><div class="brain-openings" id="brain-openings"></div><div id="brain-device-health" class="brain-summary" role="status" hidden></div><button class="brain-ack" id="brain-ack" hidden>Got it · keep monitoring</button><button type="button" class="brain-retry" id="brain-retry" hidden>Try again</button></section>
   <section class="brain-panel" id="brain-activity"><div class="brain-eyebrow"><span>Just happened</span><b>LAST 15 MIN</b></div><div id="brain-events"></div></section>
-  <section class="brain-panel" id="brain-agenda"><div class="brain-birthday"><div class="brain-eyebrow"><span>People first</span><b>✳</b></div><div id="brain-birthdays"></div></div><div class="brain-upnext"><div class="brain-eyebrow"><span>On the horizon</span><b>↗</b></div><div id="brain-upnext"></div></div></section>
+  <section class="brain-panel" id="brain-agenda"><div class="brain-eyebrow"><span>Coming up</span><b>↗</b></div><div class="brain-agenda-list" id="brain-agenda-list"></div><a class="brain-agenda-more" id="brain-agenda-link" href="/kiosk?view=calendar&mode=all">View full Calendar</a></section>
   <section class="brain-activity-view" id="brain-activity-view" role="dialog" aria-modal="true" aria-labelledby="brain-activity-title" hidden><div class="brain-activity-dialog"><header><div><p class="brain-eyebrow">Household record</p><h2 id="brain-activity-title" tabindex="-1">Recent activity</h2><p id="brain-activity-count"></p></div><button type="button" id="brain-activity-close" aria-label="Close recent activity">Close</button></header><div id="brain-activity-list" role="region" aria-label="Recent activity records; use arrow keys or scroll to review" tabindex="0"></div></div></section>`;
   document.body.append(shell);
   const weatherLink=document.createElement('a');weatherLink.className='brain-weather-link';weatherLink.href=q.get('view')==='weather'?'/live':'/live?view=weather';weatherLink.textContent=q.get('view')==='weather'?'← HOUSEHOLD DESK':'LOCAL WEATHER ↗';document.body.append(weatherLink);
@@ -46,7 +46,7 @@
     copy.setAttribute('aria-label',fullText);
     copy.dataset.fullText=fullText;
   }
-  let state=null, wx=null, received=0, theme='studio', visibility={}, lastToast='', toastUntil=0, alertId='', hiddenByBlank=false, feedDisconnected=false;
+  let state=null, wx=null, received=0, theme='afterhours', visibility={}, lastToast='', toastUntil=0, alertId='', hiddenByBlank=false, feedDisconnected=false;
   let fitFrame=0;
   function elapsed(seconds){const n=Math.max(0,Math.floor(seconds));return n<60?'just now':n<3600?`${Math.floor(n/60)}m`: `${Math.floor(n/3600)}h ${Math.floor(n%3600/60)}m`}
   function set(id,text){$(id).textContent=text}
@@ -91,23 +91,18 @@
     // turn a disconnected snapshot into current agenda guidance.
     const cards=fresh?(state.cards||[]).filter(c=>!c.expires||Date.parse(c.expires)>Date.now()):[];
     const birthdays=cards.find(c=>c.subtype==='birthday_rollup');
-    if(birthdays){
-      const birthdayRows=(birthdays.rows||[]).filter(Boolean), birthdayHref='/kiosk?view=calendar&mode=all';
-      const birthdayCount=birthdayRows.length+1;
-      const birthdayMore=birthdayRows.length>1?`<li><a class="brain-agenda-more" href="${birthdayHref}" aria-label="View all ${birthdayCount} birthdays">View all ${birthdayCount} birthdays</a></li>`:'';
-      $('brain-birthdays').innerHTML=`<h2>${esc(birthdays.title)}</h2><div class="birthday-when">${esc(birthdays.subtitle)}</div><ul>${birthdayRows.slice(0,1).map(r=>`<li>${esc(r)}</li>`).join('')}${birthdayMore}</ul>`;
-    }else $('brain-birthdays').innerHTML='<p class="brain-empty">No birthdays in the next three weeks.</p>';
     const near=c=>!c.starts||Date.parse(c.starts)<=Date.now()+3*86400000;
     const upcomingAll=cards.filter(c=>c.type==='calendar_event'&&c.subtype!=='birthday_rollup'&&near(c))
       .sort((a,b)=>(Number(b.priority)||0)-(Number(a.priority)||0)||String(a.starts||'').localeCompare(String(b.starts||'')));
-    const upcoming=upcomingAll.slice(0,3), upcomingHref='/kiosk?view=calendar&mode=all';
-    const upcomingMore=upcomingAll.length>1?`<a class="brain-agenda-more" href="${upcomingHref}" aria-label="View all ${upcomingAll.length} upcoming events">View all ${upcomingAll.length} upcoming events</a>`:'';
-    $('brain-upnext').innerHTML=upcoming.length?`${upcoming.slice(0,1).map(c=>`<div class="brain-agenda-item"><strong>${esc(c.title)}</strong><span>${esc(c.subtitle||c.detail)}</span></div>`).join('')}${upcomingMore}`:'<p class="brain-empty">A little room in the calendar.</p>';
-    const agendaState=!fresh?'stale':(birthdays||upcoming.length?'ready':'empty');
+    const birthdayRows=(birthdays?.rows||[]).filter(Boolean);
+    const birthdaySubtitle=birthdays?[birthdays.subtitle,birthdayRows.length?`+ ${birthdayRows.length} more ${birthdayRows.length===1?'birthday':'birthdays'}`:''].filter(Boolean).join(' · '):'';
+    const agendaItems=[...(birthdays?[{title:birthdays.title,subtitle:birthdaySubtitle}]:[]),...upcomingAll].slice(0,2);
+    $('brain-agenda-list').innerHTML=agendaItems.length?agendaItems.map(c=>`<div class="brain-agenda-item"><strong>${esc(c.title)}</strong><span>${esc(c.subtitle||c.detail||'')}</span></div>`).join(''):'<p class="brain-empty">No birthdays or events coming up.</p>';
+    $('brain-agenda-link').hidden=!fresh;
+    const agendaState=!fresh?'stale':(agendaItems.length?'ready':'empty');
     $('brain-agenda').dataset.agendaState=agendaState;
     if(!fresh){
-      $('brain-birthdays').innerHTML='<p class="brain-empty">People and calendar context unavailable while the house feed is offline.</p>';
-      $('brain-upnext').innerHTML='';
+      $('brain-agenda-list').innerHTML='<p class="brain-empty">Calendar context unavailable while the house feed is offline.</p>';
     }
     $('brain-people').innerHTML=(state.people||[]).map(p=>`<span class="brain-person" data-home="${fresh&&p.state.toLowerCase()==='home'}">${esc(p.name)} · ${esc(fresh?p.state:'Unknown')}</span>`).join('');
     let feed=[];
@@ -119,10 +114,6 @@
       if(state.guests)feed.push(feedEntry('Guest mode is on · The house is expecting company','Guest mode is on'));
       if(state.sleeping)feed.push(feedEntry('Someone is sleeping · Keep it low-key','Someone is sleeping · Keep it low-key'));
       if(state.garage_occupied)feed.push(feedEntry('Garage occupied · Someone’s out in the workshop','Garage occupied · Someone’s out in the workshop'));
-      feed.push(...cards.filter(c=>c.type!=='weather'&&c.type!=='astronomy'&&(c.subtype==='birthday_rollup'||near(c))).map(c=>{
-        const full=`${c.title} · ${c.subtitle||c.detail||''}`;
-        return feedEntry(full,`Calendar: ${narrowLabel(c.title)}`);
-      }));
       if(state.network==='online')feed.push(feedEntry('House network online','House network online'));
       if(state.unknown?.length)feed.push(feedEntry(`Not reporting: ${state.unknown.join(', ')}`,feedTier()==='phone'?`${state.unknown.length} device${state.unknown.length===1?'':'s'} not reporting`:`Not reporting: ${compactNames(state.unknown,'devices')}`));
       if(!feed.length)feed=[feedEntry('The house is listening for its next real update')];
@@ -210,7 +201,7 @@
   async function poll(lifecycle={}){if(demo)return;try{const r=await fetch('/api/brain',{signal:lifecycle.signal});if(!r.ok)throw Error();state=await r.json();feedDisconnected=false;received=Date.now()/1000;render();window.dispatchEvent(new Event('marquee-brain'))}catch(error){if(error?.name==='AbortError')return;if(state){feedDisconnected=false;state.fresh=false;render()}else{feedDisconnected=true;state={fresh:false,openings:[],events:[],cards:[],alerts:[],people:[]};render()}}}
   $('brain-retry').onclick=()=>{ $('brain-retry').disabled=true; window.MarqueeLifecycle.request('brain'); setTimeout(()=>{$('brain-retry').disabled=false},500); };
   async function pollWeather(lifecycle={}){try{const r=await fetch('/ha-weather.json',{signal:lifecycle.signal});if(r.ok){wx=await r.json();weather()}}catch(error){if(error?.name!=='AbortError'){} }}
-  window.MarqueeBrain={weatherContext(){return state?.cards?.find(c=>c.type==='weather'&&(!c.expires||Date.parse(c.expires)>Date.now()))},configure(cfg,fallback){theme=['studio','afterhours','dispatch'].includes(cfg.liveTheme)?cfg.liveTheme:'studio';document.body.dataset.liveTheme=theme;visibility=cfg.liveVisibility?.home||{};hiddenByBlank=fallback?.screen==='blank';render()},weather};
+  window.MarqueeBrain={weatherContext(){return state?.cards?.find(c=>c.type==='weather'&&(!c.expires||Date.parse(c.expires)>Date.now()))},configure(cfg,fallback){theme='afterhours';document.body.dataset.liveTheme=theme;visibility=cfg.liveVisibility?.home||{};hiddenByBlank=fallback?.screen==='blank';render()},weather};
   window.addEventListener('resize',fitHousePanel);
   if(document.fonts?.ready)document.fonts.ready.then(fitHousePanel);
   if(demo){const now=Date.now()/1000;received=now;state={fresh:true,source_at:now,openings:[{id:'preview:balcony',name:'Balcony door',category:'exterior_door',state:'open',since:now-420,duration:420}],unknown:[],people:[{name:'Alex',state:'Home'},{name:'Jamie',state:'Away'}],events:[{id:'preview:lock',title:'Front door lock unlocked',at:now-75,expires:now+825},{id:'preview:door',title:'Balcony door opened',at:now-420,expires:now+480}],cards:[{type:'calendar_event',subtype:'birthday_rollup',title:"Casey’s birthday",subtitle:'Tomorrow · September 12',rows:['Jordan · In 6 days','Sam · In 12 days']},{type:'calendar_event',title:'Recycling pickup',subtitle:'Tomorrow morning'},{type:'calendar_event',title:'Dinner with friends',subtitle:'Saturday · 6:30 PM'}],alerts:[],network:'online'};wx={temp:21,condition:'partly cloudy',wind:14,humidity:52,updated:now};render();weather()}

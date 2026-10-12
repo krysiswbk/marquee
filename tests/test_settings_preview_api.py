@@ -63,6 +63,24 @@ def test_canonical_pages_and_retired_bookmarks(monkeypatch, tmp_path):
         assert _request(old) == (302, 'redirect', new)
 
 
+def test_live_theme_defaults_and_legacy_values_normalize_to_weather(monkeypatch, tmp_path):
+    _, live_path = _configure_handler(monkeypatch, tmp_path)
+    assert composition.DEFAULT_SETTINGS["liveTheme"] == "afterhours"
+    live_path.write_text(json.dumps({
+        "liveTheme": "studio",
+        "liveLayout": {"home": {"clock": {"x": 18, "scale": 1.2}}},
+    }))
+
+    code, _, response = _request("/live-settings", "PATCH", {"clockSeconds": True})
+
+    assert code == 200 and response["ok"]
+    assert response["settings"]["liveTheme"] == "afterhours"
+    assert response["settings"]["liveLayout"]["home"]["clock"] == {"x": 18, "scale": 1.2}
+    saved_live = json.loads(live_path.read_text())
+    assert saved_live["liveTheme"] == "afterhours"
+    assert saved_live["liveLayout"]["home"]["clock"] == {"x": 18, "scale": 1.2}
+
+
 def test_partial_profile_patches_preserve_secrets_and_isolate_profiles(monkeypatch, tmp_path):
     settings_path, live_path = _configure_handler(monkeypatch, tmp_path)
     settings_path.write_text(json.dumps({

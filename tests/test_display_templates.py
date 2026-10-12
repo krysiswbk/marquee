@@ -120,10 +120,9 @@ class DisplayTemplateTests(unittest.TestCase):
     def test_dashboard_calendar_summaries_offer_full_agenda_handoff(self):
         brain = (Path(__file__).parents[1] / "output" / "brain.js").read_text()
         styles = (Path(__file__).parents[1] / "output" / "brain.css").read_text()
-        self.assertIn("const birthdayRows=(birthdays.rows||[]).filter(Boolean)", brain)
-        self.assertIn("const birthdayCount=birthdayRows.length+1", brain)
-        self.assertIn("View all ${birthdayCount} birthdays", brain)
-        self.assertIn("View all ${upcomingAll.length} upcoming events", brain)
+        self.assertIn("const birthdayRows=(birthdays?.rows||[]).filter(Boolean)", brain)
+        self.assertIn("const agendaItems=[...(birthdays?[{title:birthdays.title,subtitle:birthdaySubtitle}]:[]),...upcomingAll].slice(0,2)", brain)
+        self.assertIn("View full Calendar", brain)
         self.assertIn("/kiosk?view=calendar&mode=all", brain)
         self.assertIn("min-height:44px", styles)
         self.assertIn(".brain-agenda-more:focus-visible", styles)

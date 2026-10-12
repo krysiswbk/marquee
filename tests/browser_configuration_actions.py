@@ -22,7 +22,7 @@ with sync_playwright() as playwright:
     )
     page = browser.new_page(viewport={"width": 393, "height": 852})
     settings = {
-        "liveTheme": "studio",
+        "liveTheme": "afterhours",
         "liveLayout": {"home": {"clock": {"x": 0}}},
         "liveVisibility": {"home": {"clock": True}},
         "clockFormat": "12h",
@@ -61,7 +61,8 @@ with sync_playwright() as playwright:
     assert page.locator("#save").is_disabled()
     assert page.locator("#discard").is_disabled()
 
-    page.locator("#liveTheme").select_option("afterhours")
+    page.locator(".controls details summary").click()
+    page.locator("#clockFormat").select_option("24h")
     assert not page.locator("#save").is_disabled()
     assert not page.locator("#discard").is_disabled()
 
@@ -70,7 +71,8 @@ with sync_playwright() as playwright:
     assert page.locator("#save").is_disabled()
     assert "Draft discarded" in page.locator("#status").inner_text()
 
-    page.locator("#liveTheme").select_option("dispatch")
+    page.locator("#visible").click()
+    assert not page.locator("#save").is_disabled()
     fail_save["value"] = True
     page.locator("#save").click()
     page.wait_for_timeout(500)

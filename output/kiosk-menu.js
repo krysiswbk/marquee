@@ -561,6 +561,9 @@
     const failedResources = Object.values(resources).filter(resourceFailure).length;
     const resourceNotice = offline ? ' · Sources unavailable' : failedResources ? ` · ${failedResources} source${failedResources === 1 ? '' : 's'} delayed` : '';
     const valid = sections.includes(view), list = valid ? items(view) : [];
+    document.body.dataset.kioskView = view;
+    if (view && view !== 'plex') document.documentElement.dataset.kioskTheme = 'synthwave';
+    else delete document.documentElement.dataset.kioskTheme;
     const lifecyclePreview = valid ? destinationLifecycle(view, list) : null;
     if (selected && (!list.some(c => c.id === selected) || lifecyclePreview?.state === 'disconnected')) selected = '';
     if (view === 'weather' && !selected && list.length && lifecyclePreview?.state === 'populated') selected = (list.find(c => ['alert','extreme'].includes(c.subtype)) || list.find(c => c.subtype === 'current') || list[0]).id;

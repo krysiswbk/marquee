@@ -667,8 +667,7 @@ class WebHandler(BaseHTTPRequestHandler):
             merged["blockLayout"] = migrate_block_layout(
                 merged["blockLayout"], merged.get("template") or "spotlight")
             migrate_show_flags(merged)
-            if merged.get("liveTheme") not in ("studio", "afterhours", "dispatch"):
-                merged["liveTheme"] = "studio"
+            merged["liveTheme"] = "afterhours"
             if merged["theme"] not in THEMES:
                 merged["theme"] = "amber"
             if merged["template"] not in TEMPLATES:

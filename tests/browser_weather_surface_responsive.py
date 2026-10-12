@@ -113,6 +113,8 @@ with sync_playwright() as playwright:
         assert page.locator("#wx-segment-title").inner_text() == "Current conditions"
         assert page.locator("#wx-observation-source").count() == 1
         assert page.locator("#channel-temp").inner_text() == "24°C"
+        weather_palette = page.locator(".weather-head").evaluate("el => { const s=getComputedStyle(el); return {background:s.backgroundColor,accent:s.borderBottomColor,source:getComputedStyle(el.querySelector('.weather-source')).color} }")
+        assert weather_palette == {"background": "rgb(27, 18, 51)", "accent": "rgb(255, 79, 200)", "source": "rgb(255, 240, 251)"}, (width, weather_palette)
         assert page.locator('.kiosk-primary [data-view=""]:visible').count() == 1
         assert page.locator('.kiosk-primary [data-view="weather"]:visible').count() == 1
         assert page.locator(".kiosk-rail").evaluate(

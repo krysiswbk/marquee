@@ -127,13 +127,13 @@ with sync_playwright() as playwright:
                 assert agenda.is_visible()
                 assert "Casey’s birthday" in agenda.inner_text()
                 assert "Urgent school pickup change" in agenda.inner_text()
-                assert "View all 3 birthdays" in agenda.inner_text()
-                assert "View all 3 upcoming events" in agenda.inner_text()
+                assert "coming up" in agenda.inner_text().lower()
+                assert "View full Calendar" in agenda.inner_text()
                 links = agenda.locator("a.brain-agenda-more")
-                assert links.count() == 2
-                assert all(link.get_attribute("href") == "/kiosk?view=calendar&mode=all" for link in [links.nth(0), links.nth(1)])
-                assert all(link.bounding_box()["height"] >= 44 for link in [links.nth(0), links.nth(1)])
-                assert all(link.evaluate("el => getComputedStyle(el).display === 'inline-flex'") for link in [links.nth(0), links.nth(1)])
+                assert links.count() == 1
+                assert links.first.get_attribute("href") == "/kiosk?view=calendar&mode=all"
+                assert links.first.bounding_box()["height"] >= 44
+                assert links.first.evaluate("el => ['inline-flex', 'flex'].includes(getComputedStyle(el).display)")
                 links.first.focus()
                 assert page.evaluate("document.activeElement?.classList.contains('brain-agenda-more')")
                 if width == 700:
@@ -161,12 +161,9 @@ with sync_playwright() as playwright:
                             // their ellipsis; assert the visible containing line box instead.
                             const paintBox = node.parentElement.closest('.brain-agenda-item, .brain-agenda-more, .brain-eyebrow, h2, .birthday-when, li, .brain-empty') || node.parentElement;
                             const rects = [...paintBox.getClientRects()];
-                            const column = node.parentElement.closest('.brain-birthday, .brain-upnext');
-                            const columnBox = column && column.getBoundingClientRect();
                             for (const rect of rects) {
-                                const within = rect.top >= box.top - 1 && rect.bottom <= box.bottom + 1 &&
-                                    (!columnBox || (rect.left >= columnBox.left - 1 && rect.right <= columnBox.right + 1));
-                                if (!within) failures.push({text: node.nodeValue.trim(), rect: {top: rect.top, bottom: rect.bottom}, agenda: {top: box.top, bottom: box.bottom}, column: columnBox && {left: columnBox.left, right: columnBox.right, top: columnBox.top, bottom: columnBox.bottom}});
+                                const within = rect.top >= box.top - 1 && rect.bottom <= box.bottom + 1 && rect.left >= box.left - 1 && rect.right <= box.right + 1;
+                                if (!within) failures.push({text: node.nodeValue.trim(), rect: {left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom}, agenda: {left: box.left, right: box.right, top: box.top, bottom: box.bottom}});
                             }
                         }
                         return failures;
