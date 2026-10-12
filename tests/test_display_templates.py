@@ -23,6 +23,16 @@ class DisplayTemplateTests(unittest.TestCase):
                 else:
                     self.assertEqual(query_version, version)
 
+    def test_automatic_home_uses_synthwave_and_ignores_provider_accents(self):
+        self.assertIn("if (earlyView !== 'plex' && !excludedSurface)", DISPLAY)
+        kiosk_menu = (Path(__file__).parents[1] / "output" / "kiosk-menu.js").read_text()
+        self.assertIn("if (view !== 'plex') document.documentElement.dataset.kioskTheme = 'synthwave'", kiosk_menu)
+        self.assertIn(":root[data-kiosk-theme=synthwave]{--bg:#100b22!important", SCREENS)
+        self.assertIn("--accent:#ff4fc8!important", SCREENS)
+        self.assertIn("body.brain-live:not([data-kiosk-view=plex])", SCREENS)
+        self.assertIn(".context-card{background-image:radial-gradient(ellipse at 82% 12%,#ff4fc82b", SCREENS)
+        self.assertIn(":not(.kiosk-now-playing):not(.cast-display) .context-card", SCREENS)
+
     def test_generic_context_collapses_when_artwork_is_missing(self):
         self.assertIn("context-card.no-art", DISPLAY)
         self.assertIn("contextCard.classList.toggle('no-art', !artVisible)", DISPLAY)

@@ -644,3 +644,12 @@ html[data-kiosk-theme=synthwave] body:not([data-kiosk-view=plex]) .kiosk-more.is
 html[data-kiosk-theme=synthwave] body:not([data-kiosk-view=plex]) .kiosk-menu a[aria-current=page]{border-color:#ff4fc8!important;background:#ff4fc825!important;color:#fff0fb!important}
 body.brain-live.kiosk-destination-active .kiosk-section.now-playing-surface{background-color:#101d2a;background-image:radial-gradient(circle,transparent 0 49%,#ffe27820 49.2% 49.5%,transparent 49.8% 62.5%,#ffe27808 62.7% 63.3%) right 8% top 17%/min(38vw,520px) min(38vw,520px) no-repeat,radial-gradient(circle at 74% 42%,#29465e 0 1px,transparent 2px) 0 0/34px 34px,radial-gradient(ellipse at 78% 46%,#28465caa 0,transparent 42%),linear-gradient(135deg,#101d2a,#080d16 72%)}
 body.brain-live.kiosk-destination-active .kiosk-section.now-playing-surface .kiosk-now-playing-head>p:first-child{color:#ffe278}
+
+
+/* The automatic Home rotation also renders provider contexts on the Cast stage.
+   Lock that surface to the synthwave palette so provider accents cannot leak lime
+   or amber back into non-Plex Marquee screens. */
+:root[data-kiosk-theme=synthwave]{--bg:#100b22!important;--panel:#1b1233!important;--line:#53316e!important;--text:#fff0fb!important;--text-soft:#e2cbe9!important;--muted:#c3a9d4!important;--faint:#9f86b0!important;--accent:#ff4fc8!important;--accent-glow:rgba(255,79,200,.18)!important;--chip-border:#53316e!important;--track:#291542!important}
+html[data-kiosk-theme=synthwave] body.brain-live:not([data-kiosk-view=plex]):not(.kiosk-now-playing):not(.cast-display) .context-card{background-image:radial-gradient(ellipse at 82% 12%,#ff4fc82b,transparent 42%),linear-gradient(135deg,#100b22,#21123d 64%,#100b22)!important}
+html[data-kiosk-theme=synthwave] body.brain-live:not([data-kiosk-view=plex]):not(.kiosk-now-playing):not(.cast-display) .stage .context-card :is(.eyebrow,.context-status,.context-source,.context-rows time,.weather-separator){color:#ff70d2!important}
+html[data-kiosk-theme=synthwave] body.brain-live:not([data-kiosk-view=plex]):not(.kiosk-now-playing):not(.cast-display) .stage .context-card .active-stream-count{background:#ff4fc8!important;color:#100b22!important}

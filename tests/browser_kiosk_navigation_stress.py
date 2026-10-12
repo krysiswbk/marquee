@@ -72,20 +72,33 @@ with sync_playwright() as playwright:
     )
     for width, height in ((390, 844), (800, 900), (1500, 1000)):
         context = browser.new_context(viewport={"width": width, "height": height}, has_touch=True)
-        for direct_view, expected_theme in (("calendar", "synthwave"), ("plex", None)):
+        for direct_view, expected_theme in (("", "synthwave"), ("calendar", "synthwave"), ("plex", None)):
             cold_page = context.new_page()
             install_routes(cold_page)
             cold_page.route("**/kiosk-menu.js*", lambda route: route.abort())
-            cold_page.goto(f"http://marquee.test/kiosk?view={direct_view}", wait_until="domcontentloaded")
+            cold_url = f"http://marquee.test/kiosk?view={direct_view}" if direct_view else "http://marquee.test/kiosk"
+            cold_page.goto(cold_url, wait_until="domcontentloaded")
             assert cold_page.locator("html").get_attribute("data-kiosk-theme") == expected_theme
             if expected_theme:
                 initial_canvas = cold_page.evaluate("""() => {
                   const section=document.createElement('section'); section.className='kiosk-section';
                   document.body.append(section);
-                  const style=getComputedStyle(section);
-                  return {background:style.backgroundColor,image:style.backgroundImage};
+                  const stage=document.querySelector('.stage')||document.body.appendChild(document.createElement('div'));
+                  stage.classList.add('stage'); document.body.classList.add('brain-live');
+                  const context=document.createElement('section'); context.className='context-card';
+                  context.innerHTML='<p class="eyebrow">Provider accent</p>'; stage.append(context);
+                  document.documentElement.style.setProperty('--accent','#b6f378');
+                  const style=getComputedStyle(section), theme=getComputedStyle(document.documentElement);
+                  return {background:style.backgroundColor,image:style.backgroundImage,
+                    accent:theme.getPropertyValue('--accent').trim(),
+                    contextImage:getComputedStyle(context).backgroundImage,
+                    contextAccent:getComputedStyle(context.querySelector('.eyebrow')).color};
                 }""")
                 assert initial_canvas["background"] == "rgb(16, 11, 34)" and "rgba(255, 79, 200," in initial_canvas["image"], (width, direct_view, initial_canvas)
+                assert initial_canvas["accent"] == "#ff4fc8", (width, direct_view, initial_canvas)
+                if not direct_view:
+                    assert "rgba(255, 79, 200," in initial_canvas["contextImage"], (width, initial_canvas)
+                    assert initial_canvas["contextAccent"] == "rgb(255, 112, 210)", (width, initial_canvas)
             cold_page.close()
         page = context.new_page()
         install_routes(page)
@@ -141,6 +154,7 @@ with sync_playwright() as playwright:
             (home.tap() if index % 2 == 0 else home.click())
             page.wait_for_function("!new URL(location.href).searchParams.get('view')")
             assert page.locator('.kiosk-primary [data-view=""][aria-current="page"]').count() == 1
+            assert page.locator("html").get_attribute("data-kiosk-theme") == "synthwave"
             assert page.locator(".kiosk-menu[open]").count() == 0
         context.close()
     browser.close()
