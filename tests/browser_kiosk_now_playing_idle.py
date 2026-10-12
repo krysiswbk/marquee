@@ -137,6 +137,8 @@ with sync_playwright() as playwright:
             assert active_page.locator("#plot").text_content() == long_summary
             assert active_page.locator(".b-plot").is_visible()
             assert active_page.locator("#plot").evaluate("el => getComputedStyle(el).webkitLineClamp") == "none"
+            assert active_page.locator("#plot").evaluate("el => getComputedStyle(el).maxWidth") == "none"
+            assert active_page.locator("#plot").evaluate("el => getComputedStyle(el).display") == "block"
             assert active_page.locator(".stage").evaluate("el => el.scrollHeight > el.clientHeight")
             assert active_page.locator("#subtitle").inner_text() == "Season 2 · Episode 4"
             assert active_page.locator("#device-name").inner_text() == "Living Room TV"

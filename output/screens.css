@@ -285,7 +285,7 @@ body.kiosk-now-playing .poster,body.kiosk-playback-active .poster{border-radius:
 body.kiosk-now-playing .b-ratings,body.kiosk-now-playing .b-stream,body.kiosk-playback-active .b-ratings,body.kiosk-playback-active .b-stream{display:none!important;}
 body.kiosk-now-playing .b-identity,body.kiosk-playback-active .b-identity{--logo-box-height:16vh;--logo-box-width:54vw;}
 body.kiosk-now-playing .title,body.kiosk-playback-active .title{display:block;-webkit-line-clamp:unset;-webkit-box-orient:initial;max-height:none;overflow:visible;text-overflow:clip;font-size:clamp(44px,5.8vw,88px);overflow-wrap:anywhere;}
-body.kiosk-now-playing .plot,body.kiosk-playback-active .plot{display:block;-webkit-line-clamp:unset;-webkit-box-orient:initial;max-height:none;overflow:visible;text-overflow:clip;max-width:60ch;font-size:clamp(18px,1.7vw,26px);}
+body.kiosk-now-playing .plot,body.kiosk-playback-active .plot{display:block;-webkit-line-clamp:unset;-webkit-box-orient:initial;max-height:none;overflow:visible;text-overflow:clip;max-width:none;font-size:clamp(18px,1.7vw,26px);}
 body.kiosk-now-playing .b-progress,body.kiosk-playback-active .b-progress{width:min(54vw,760px);}
 body.kiosk-now-playing .b-device,body.kiosk-now-playing .b-viewer,body.kiosk-now-playing .b-tracks,body.kiosk-now-playing .b-activity,body.kiosk-playback-active .b-device,body.kiosk-playback-active .b-viewer,body.kiosk-playback-active .b-tracks,body.kiosk-playback-active .b-activity{position:absolute;left:6vw;bottom:calc(9vh + 72px);width:min(28vw,420px);height:8vh;min-width:0;overflow:hidden;}
 body.kiosk-now-playing .b-device *,body.kiosk-playback-active .b-device *{max-width:100%;overflow-wrap:anywhere;}
@@ -335,7 +335,8 @@ body.kiosk-now-playing .b-device *,body.kiosk-playback-active .b-device *{max-wi
  body.kiosk-playback-active .b-ratings,
  body.kiosk-playback-active .b-stream,body.kiosk-playback-active .b-viewer,
  body.kiosk-playback-active .b-tracks,body.kiosk-playback-active .b-activity{display:none!important;}
- body.kiosk-now-playing .title,body.kiosk-playback-active .title{font-size:clamp(30px,9vw,48px);overflow-wrap:anywhere;}
+ body.kiosk-now-playing .title,body.kiosk-playback-active .title{display:block;-webkit-line-clamp:unset;-webkit-box-orient:initial;max-height:none;overflow:visible;text-overflow:clip;font-size:clamp(30px,9vw,48px);overflow-wrap:anywhere;}
+ body.kiosk-now-playing .plot,body.kiosk-playback-active .plot{display:block;-webkit-line-clamp:unset;-webkit-box-orient:initial;max-height:none;overflow:visible;text-overflow:clip;max-width:none;}
  body.kiosk-now-playing .meta,body.kiosk-playback-active .meta{overflow-wrap:anywhere;}
  body.kiosk-now-playing .b-weather,body.kiosk-playback-active .b-weather{position:absolute!important;top:max(16px,env(safe-area-inset-top));right:20px;left:auto!important;width:min(62vw,250px)!important;z-index:4;}
  body.kiosk-now-playing .wx,body.kiosk-playback-active .wx{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:.15em .45em;min-width:0;font-size:clamp(13px,3.2vw,16px);line-height:1.25;white-space:normal;text-align:right;}
