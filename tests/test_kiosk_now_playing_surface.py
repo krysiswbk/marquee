@@ -76,6 +76,14 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn("body.kiosk-now-playing .b-device,body.kiosk-now-playing .b-viewer", SCREENS)
         self.assertIn("body.kiosk-now-playing .b-device *,body.kiosk-playback-active .b-device *", SCREENS)
 
+    def test_now_playing_titles_and_summaries_are_not_clamped(self):
+        self.assertIn("body.kiosk-now-playing .stage,body.kiosk-playback-active .stage{grid-template-columns", SCREENS)
+        self.assertIn("align-content:start;column-gap:clamp(28px,4vw,72px);overflow-x:hidden;overflow-y:auto", SCREENS)
+        self.assertIn("body.kiosk-now-playing .title,body.kiosk-playback-active .title{display:block;-webkit-line-clamp:unset", SCREENS)
+        self.assertIn("body.kiosk-now-playing .plot,body.kiosk-playback-active .plot{display:block;-webkit-line-clamp:unset", SCREENS)
+        self.assertIn('"meta poster" "plot poster" "progress poster" "device device"', SCREENS)
+        self.assertNotIn("body.kiosk-playback-active .b-plot,body.kiosk-playback-active .b-ratings", SCREENS)
+
     def test_street_now_playing_restores_the_established_screening_composition(self):
         self.assertIn("body.kiosk-now-playing[data-template=street] .stage{display:block;padding:0;}", SCREENS)
         self.assertIn("body.kiosk-now-playing[data-template=street] .b-streetframe{display:block!important", SCREENS)
@@ -169,7 +177,7 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         )
 
     def test_phone_playback_attaches_bounded_art_to_editorial_content(self):
-        self.assertIn('grid-template-areas:"category poster" "identity poster" "meta poster" "progress poster" "device device"', SCREENS)
+        self.assertIn('grid-template-areas:"category poster" "identity poster" "meta poster" "plot poster" "progress poster" "device device"', SCREENS)
         self.assertIn("justify-self:end", SCREENS)
         self.assertIn("max-height:198px", SCREENS)
         self.assertIn("Check back when the next event is published.", MENU)
