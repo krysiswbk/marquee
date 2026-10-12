@@ -104,6 +104,16 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn("window.MarqueeApparentTemperature", weather_channel)
         self.assertIn("Number.isFinite(apparentTemperature)", weather_channel)
 
+    def test_synthwave_unavailable_and_retry_states_match_the_suite_palette(self):
+        self.assertIn(".kiosk-state-mark:is(.is-stale,.is-partial,.is-error,.is-unavailable,.is-disconnected){color:#ff70d2", SCREENS)
+        self.assertIn(".kiosk-retry{border-color:#ff4fc8!important;background:#291542!important;color:#ff8cdd!important}", SCREENS)
+
+    def test_sky_summary_cards_fit_landscape_kiosk_stage(self):
+        self.assertIn("@media(min-width:701px) and (min-aspect-ratio:4/3) and (max-height:1000px)", SCREENS)
+        self.assertIn("grid-template-rows:minmax(0,1fr) minmax(92px,auto) auto", SCREENS)
+        self.assertIn(".sky-sensor-ribbon{grid-row:3;align-self:center;min-height:0}", SCREENS)
+        self.assertIn(".sky-aircraft-empty,.sky-vista-caption,.sky-sensor-ribbon){color:#c3a9d4}", SCREENS)
+
     def test_compact_sports_and_context_weather_include_authoritative_feels_like(self):
         self.assertIn("const compactWeatherLine = weather =>", INDEX)
         self.assertIn("Number.isFinite(apparent) ? ` · Feels ${Math.round(apparent)}°` : ''", INDEX)

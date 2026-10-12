@@ -622,6 +622,7 @@ html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sk
 html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-celestial-backdrop{background:radial-gradient(ellipse at 82% 10%,#ff4fc82b,transparent 36%),radial-gradient(ellipse at 12% 86%,#9b42e229,transparent 38%)}
 html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] :is(.sky-moon-card,.sky-aircraft-panel,.sky-detail-card,.sky-sun-bearing,.sky-weather-facts>span){border-color:#53316e;background-color:#1b1233}
 html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] :is(.sky-condition-dot,.sky-quick-facts b,.sky-moon-card .sky-card-label,.sky-phase-track span,.sky-plane-count,.sky-aircraft-toggle,.sky-detail-card>span){color:#ff70d2}
+html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] :is(.sky-destination-main .kiosk-lede,.sky-weather-facts small,.sky-temperature>span,.sky-temperature small,.sky-temperature small b,.sky-moon-copy>p:not(.sky-card-label),.sky-aircraft-summary small,.sky-aircraft-row small,.sky-aircraft-empty,.sky-vista-caption,.sky-sensor-ribbon){color:#c3a9d4}
 html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] :is(.sky-phase-track span,.sky-aircraft-toggle){border-color:#ff4fc8;background-color:#ff4fc81a}
 html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-phase-track span{background:linear-gradient(90deg,#ff4fc8,#ff4fc8)!important;box-shadow:0 0 10px #ff4fc888}
 html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-plane-count{background:#ff4fc81a!important;color:#ff70d2!important}
@@ -640,6 +641,9 @@ html[data-kiosk-theme=synthwave] body:not([data-kiosk-view=plex]) .kiosk-menu{bo
 html[data-kiosk-theme=synthwave] body:not([data-kiosk-view=plex]) .kiosk-menu a[aria-current=page]{border-color:#ff4fc8;background:#ff4fc825;color:#fff0fb}
 html[data-kiosk-theme=synthwave] body:not([data-kiosk-view=plex]) .kiosk-menu :focus-visible{outline-color:#ff4fc8}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .kiosk-state-mark.is-loading{color:#ff4fc8!important;border-color:#ff4fc899!important}
+html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .kiosk-state-mark:is(.is-stale,.is-partial,.is-error,.is-unavailable,.is-disconnected){color:#ff70d2!important;border-color:#ff4fc899!important;box-shadow:0 0 42px #ff4fc814}
+html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .kiosk-retry{border-color:#ff4fc8!important;background:#291542!important;color:#ff8cdd!important}
+html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .kiosk-retry:is(:hover,:focus-visible){background:#ff4fc8!important;color:#100b22!important}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .kiosk-queue-label{color:#ff4fc8!important}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .kiosk-sport-eyebrow{color:#ff4fc8!important}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .kiosk-broadcast-state:not(.is-live):not(.is-final){color:#ff70d2!important}
@@ -681,6 +685,23 @@ html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sk
 html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-map-plane{fill:#ff70d2;filter:drop-shadow(0 0 4px #ff4fc8aa)}
 html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-map-plane circle{stroke:#100b22}
 html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-vista-horizon{fill:#100b22;opacity:.84}
+
+/* Keep the full Sky summary, moon phase and aircraft control in the visible
+   kiosk stage on the common landscape display heights. */
+@media(min-width:701px) and (min-aspect-ratio:4/3) and (max-height:1000px){
+  .kiosk-section[data-section=astronomy]{display:flex;flex-direction:column;overflow:hidden;padding:clamp(18px,2.4vh,28px) clamp(24px,4vw,64px)}
+  .kiosk-section[data-section=astronomy] .kiosk-section-head{flex:0 0 auto}
+  .kiosk-section[data-section=astronomy] .kiosk-section-head h1{margin-bottom:clamp(10px,1.8vh,18px)}
+  .kiosk-section[data-section=astronomy] .sky-destination{box-sizing:border-box;flex:1 1 auto;width:100%;max-width:none;height:auto;min-height:0;grid-template-rows:minmax(0,1fr) minmax(92px,auto) auto;gap:clamp(10px,1.2vw,16px);padding:clamp(14px,2vw,24px)}
+  .kiosk-section[data-section=astronomy] :is(.sky-vista,.sky-vista svg){height:100%;min-height:0}
+  .kiosk-section[data-section=astronomy] .sky-moon-card{box-sizing:border-box;height:100%;min-height:0;gap:12px;padding:10px 16px}
+  .kiosk-section[data-section=astronomy] .sky-moon-glyph{width:clamp(58px,6vw,84px)}
+  .kiosk-section[data-section=astronomy] .sky-moon-copy h3{font-size:clamp(18px,2vw,25px)}
+  .kiosk-section[data-section=astronomy] .sky-phase-track{margin-top:8px}
+  .kiosk-section[data-section=astronomy] .sky-aircraft-panel{box-sizing:border-box;height:100%;min-height:0}
+  .kiosk-section[data-section=astronomy] .sky-aircraft-summary{min-height:64px;padding:8px 12px}
+  .kiosk-section[data-section=astronomy] .sky-sensor-ribbon{grid-row:3;align-self:center;min-height:0}
+}
 
 /* Keep all primary Sky facts and its two adjacent cards inside a short,
    landscape display, where the shared kiosk stage cannot scroll. */

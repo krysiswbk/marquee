@@ -1,3 +1,7 @@
+# 2.12.60
+
+- Keep unavailable destination states in the Synthwave palette and fit Sky's weather, moon, and aircraft details inside landscape kiosk stages.
+
 # 2.12.56
 
 - Fit Sky weather, moon, and aircraft details inside short widescreen kiosk displays.
