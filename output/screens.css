@@ -206,7 +206,7 @@ body.browser-controls .kiosk-rail{justify-content:flex-start;padding:6px max(16p
 
 /* Kiosk destinations follow the synthwave Weather identity. Plex Now Playing
    retains its own established artwork-led presentation. */
-body.brain-live .kiosk-section:not(.now-playing-surface){--kiosk-bg:#100b22;--kiosk-panel:#1b1233;--kiosk-panel-strong:#29194a;--kiosk-ink:#fff0fb;--kiosk-muted:#c3a9d4;--kiosk-accent:#ff4fc8;--kiosk-cyan:#6cf4e5;--kiosk-line:#53316e;color:var(--kiosk-ink);font-family:'Space Grotesk',system-ui,sans-serif;background-color:var(--kiosk-bg);background-image:radial-gradient(ellipse at 92% 6%,#a52cff15,transparent 34%),radial-gradient(ellipse at 8% 92%,#20cce20c,transparent 38%),linear-gradient(135deg,#100b22,#1b1035 64%,#100b22)}
+body.brain-live .kiosk-section:not(.now-playing-surface){--kiosk-bg:#100b22;--kiosk-panel:#1b1233;--kiosk-panel-strong:#29194a;--kiosk-ink:#fff0fb;--kiosk-muted:#c3a9d4;--kiosk-accent:#ff4fc8;--kiosk-cyan:#ff4fc8;--kiosk-line:#53316e;color:var(--kiosk-ink);font-family:'Space Grotesk',system-ui,sans-serif;background-color:var(--kiosk-bg);background-image:radial-gradient(ellipse at 92% 6%,#a52cff15,transparent 34%),radial-gradient(ellipse at 8% 92%,#9b42e20c,transparent 38%),linear-gradient(135deg,#100b22,#1b1035 64%,#100b22)}
 body.brain-live .kiosk-section:not(.now-playing-surface) header p,body.brain-live .kiosk-section:not(.now-playing-surface) .kiosk-kicker{color:var(--kiosk-accent)}
 body.brain-live .kiosk-section:not(.now-playing-surface) .kiosk-section-head{border-bottom:2px solid var(--kiosk-accent);text-shadow:0 0 28px #ff4fc822}
 body.brain-live .kiosk-section:not(.now-playing-surface) h1{color:var(--kiosk-ink);font-family:'Oswald','Space Grotesk',system-ui,sans-serif}
@@ -604,20 +604,20 @@ body.kiosk-now-playing .b-device *,body.kiosk-playback-active .b-device *{max-wi
 /* Kiosk destinations share the Marquee synthwave palette. Keep scene-specific
    hierarchy and semantic status colors, while unifying the canvas and actions.
    Cast receiver scenes and the established Plex surface are intentionally out. */
-html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface){--kiosk-bg:#100b22;--kiosk-panel:#1b1233;--kiosk-panel-strong:#29194a;--kiosk-ink:#fff0fb;--kiosk-muted:#c3a9d4;--kiosk-accent:#ff4fc8;--kiosk-cyan:#6cf4e5;--kiosk-line:#53316e;color:#fff0fb;border-color:#53316e;background-color:#100b22;background-image:radial-gradient(ellipse at 88% 8%,#ff4fc81c,transparent 38%),radial-gradient(ellipse at 8% 92%,#9b42e21a,transparent 42%),linear-gradient(135deg,#100b22,#1b1035 62%,#100b22)}
+html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface){--kiosk-bg:#100b22;--kiosk-panel:#1b1233;--kiosk-panel-strong:#29194a;--kiosk-ink:#fff0fb;--kiosk-muted:#c3a9d4;--kiosk-accent:#ff4fc8;--kiosk-cyan:#ff4fc8;--kiosk-line:#53316e;color:#fff0fb;border-color:#53316e;background-color:#100b22;background-image:radial-gradient(ellipse at 88% 8%,#ff4fc81c,transparent 38%),radial-gradient(ellipse at 8% 92%,#9b42e21a,transparent 42%),linear-gradient(135deg,#100b22,#1b1035 62%,#100b22)}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :is(.kiosk-kicker,.kiosk-eyebrow,.kiosk-section-head>p,.sky-card-label){color:#ff4fc8}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :is(a,button){border-color:#ff4fc8;color:#ff8cdd}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :is(a,button):is(:hover,:focus-visible){background:#ff4fc8;color:#100b22}
-html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :is(:focus-visible,.kiosk-calendar-page:focus-visible,.kiosk-sports-content:focus-visible){outline-color:#6cf4e5}
+html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :is(:focus-visible,.kiosk-calendar-page:focus-visible,.kiosk-sports-content:focus-visible){outline-color:#ff4fc8}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :is(.kiosk-editorial-feature,.kiosk-sport-feature,.kiosk-agenda-feature,.kiosk-calendar-detail,.kiosk-state){border-color:#53316e;background-color:#1b1233;background-image:linear-gradient(135deg,#291542,#17102b 72%)}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :is(.kiosk-queue-row,.kiosk-agenda-row,.kiosk-support){border-color:#53316e}
-html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .kiosk-section-head h1:focus-visible{text-decoration-color:#6cf4e5}
+html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .kiosk-section-head h1:focus-visible{text-decoration-color:#ff4fc8}
 html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-destination{border-color:#53316e;background:radial-gradient(ellipse at 80% 4%,#ff4fc825,transparent 38%),linear-gradient(145deg,#100b22f5,#21123de8 55%,#100b22)}
 html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-celestial-backdrop{background:radial-gradient(ellipse at 82% 10%,#ff4fc82b,transparent 36%),radial-gradient(ellipse at 12% 86%,#9b42e229,transparent 38%)}
 html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] :is(.sky-moon-card,.sky-aircraft-panel,.sky-detail-card,.sky-sun-bearing,.sky-weather-facts>span){border-color:#53316e;background-color:#1b1233}
 html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] :is(.sky-condition-dot,.sky-quick-facts b,.sky-moon-card .sky-card-label,.sky-phase-track span,.sky-plane-count,.sky-aircraft-toggle,.sky-detail-card>span){color:#ff70d2}
 html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] :is(.sky-phase-track span,.sky-aircraft-toggle){border-color:#ff4fc8;background-color:#ff4fc81a}
-html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-phase-track span{background:linear-gradient(90deg,#ff4fc8,#6cf4e5)!important;box-shadow:0 0 10px #ff4fc888}
+html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-phase-track span{background:linear-gradient(90deg,#ff4fc8,#ff4fc8)!important;box-shadow:0 0 10px #ff4fc888}
 html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-plane-count{background:#ff4fc81a!important;color:#ff70d2!important}
 html[data-kiosk-theme=synthwave] body .stage.weather-context .weather-card{background:radial-gradient(ellipse at 85% 18%,#ff4fc82b,transparent 42%),linear-gradient(135deg,#100b22,#21123d 64%,#100b22);color:#fff0fb}
 html[data-kiosk-theme=synthwave] body .stage.weather-context .weather-head{background:#1b1233;border-bottom-color:#ff4fc8}
@@ -627,11 +627,12 @@ html[data-kiosk-theme=synthwave] body .stage.weather-context :is(.weather-clock,
 html[data-kiosk-theme=synthwave] body .stage.weather-context .channel-hours{border-color:#53316e}
 html[data-kiosk-theme=synthwave] body:not([data-kiosk-view=plex]) .kiosk-rail{border-color:#53316e;background:linear-gradient(90deg,#100b22,#1b1233 52%,#100b22)}
 html[data-kiosk-theme=synthwave] body:not([data-kiosk-view=plex]) .kiosk-primary a[aria-current=page]{background:#ff4fc825;border-color:#ff4fc8;color:#fff0fb}
+html[data-kiosk-theme=synthwave] body.brain-live.browser-controls .kiosk-primary a[aria-current=page]:focus{outline-color:#ff4fc8!important}
 html[data-kiosk-theme=synthwave] body:not([data-kiosk-view=plex]) .kiosk-more{border-color:#53316e;background:#1b1233;color:#fff0fb}
-html[data-kiosk-theme=synthwave] body:not([data-kiosk-view=plex]) .kiosk-rail :focus-visible{outline-color:#6cf4e5}
+html[data-kiosk-theme=synthwave] body:not([data-kiosk-view=plex]) .kiosk-rail :focus-visible{outline-color:#ff4fc8}
 html[data-kiosk-theme=synthwave] body:not([data-kiosk-view=plex]) .kiosk-menu{border-color:#53316e;background:#100b22;color:#fff0fb}
 html[data-kiosk-theme=synthwave] body:not([data-kiosk-view=plex]) .kiosk-menu a[aria-current=page]{border-color:#ff4fc8;background:#ff4fc825;color:#fff0fb}
-html[data-kiosk-theme=synthwave] body:not([data-kiosk-view=plex]) .kiosk-menu :focus-visible{outline-color:#6cf4e5}
+html[data-kiosk-theme=synthwave] body:not([data-kiosk-view=plex]) .kiosk-menu :focus-visible{outline-color:#ff4fc8}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .kiosk-state-mark.is-loading{color:#ff4fc8!important;border-color:#ff4fc899!important}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .kiosk-queue-label{color:#ff4fc8!important}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .kiosk-sport-eyebrow{color:#ff4fc8!important}
@@ -639,7 +640,7 @@ html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .kiosk-broadcast-center span{color:#ff8cdd!important}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :is(.kiosk-agenda-more,.kiosk-calendar-controls button,.kiosk-calendar-controls a,.kiosk-sports-disclosure button,.kiosk-sports-controls button,.kiosk-sports-controls a,.kiosk-home-action){border-color:#ff4fc8!important;background:#291542!important;color:#ff8cdd!important}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :is(.kiosk-agenda-more,.kiosk-calendar-controls button,.kiosk-calendar-controls a,.kiosk-sports-disclosure button,.kiosk-sports-controls button,.kiosk-sports-controls a,.kiosk-home-action):is(:hover,:focus-visible){background:#ff4fc8!important;color:#100b22!important}
-html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :is(.kiosk-agenda-more,.kiosk-calendar-controls :focus-visible,.kiosk-sports-disclosure :focus-visible,.kiosk-sports-controls :focus-visible,.kiosk-home-action:focus-visible){outline-color:#6cf4e5!important}
+html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :is(.kiosk-agenda-more,.kiosk-calendar-controls :focus-visible,.kiosk-sports-disclosure :focus-visible,.kiosk-sports-controls :focus-visible,.kiosk-home-action:focus-visible){outline-color:#ff4fc8!important}
 html[data-kiosk-theme=synthwave] body:not([data-kiosk-view=plex]) .kiosk-more.is-active{background:#ff4fc825!important;border-color:#ff4fc8!important;color:#fff0fb!important}
 html[data-kiosk-theme=synthwave] body:not([data-kiosk-view=plex]) .kiosk-menu a[aria-current=page]{border-color:#ff4fc8!important;background:#ff4fc825!important;color:#fff0fb!important}
 body.brain-live.kiosk-destination-active .kiosk-section.now-playing-surface{background-color:#101d2a;background-image:radial-gradient(circle,transparent 0 49%,#ffe27820 49.2% 49.5%,transparent 49.8% 62.5%,#ffe27808 62.7% 63.3%) right 8% top 17%/min(38vw,520px) min(38vw,520px) no-repeat,radial-gradient(circle at 74% 42%,#29465e 0 1px,transparent 2px) 0 0/34px 34px,radial-gradient(ellipse at 78% 46%,#28465caa 0,transparent 42%),linear-gradient(135deg,#101d2a,#080d16 72%)}
@@ -650,6 +651,15 @@ body.brain-live.kiosk-destination-active .kiosk-section.now-playing-surface .kio
    Lock that surface to the synthwave palette so provider accents cannot leak lime
    or amber back into non-Plex Marquee screens. */
 :root[data-kiosk-theme=synthwave]{--bg:#100b22!important;--panel:#1b1233!important;--line:#53316e!important;--text:#fff0fb!important;--text-soft:#e2cbe9!important;--muted:#c3a9d4!important;--faint:#9f86b0!important;--accent:#ff4fc8!important;--accent-glow:rgba(255,79,200,.18)!important;--chip-border:#53316e!important;--track:#291542!important}
+/* Plex Now Playing keeps its complete established shell and accent system. */
+:root[data-kiosk-theme=plex]{--bg:#101d2a!important;--panel:#243447!important;--line:#55667d!important;--text:#eef2ff!important;--text-soft:#d8e2ef!important;--muted:#a8b8cb!important;--faint:#8193a6!important;--accent:#ffe278!important;--accent-glow:rgba(255,226,120,.12)!important;--chip-border:#55667d!important;--track:#29465c!important}
+html[data-kiosk-theme=plex] body.browser-controls .kiosk-rail{border-color:#34495d;background:#101820}
+html[data-kiosk-theme=plex] body.brain-live.browser-controls .kiosk-primary a[aria-current=page]{background:#243447!important;border-color:#55667d!important;color:#eef2ff!important}
+html[data-kiosk-theme=plex] body.brain-live.browser-controls .kiosk-primary a[aria-current=page]:focus{outline-color:#ffe278!important}
+html[data-kiosk-theme=plex] body.brain-live.browser-controls .kiosk-rail :focus-visible{outline-color:#ffe278!important}
+html[data-kiosk-theme=plex] body.brain-live .brain-dock{border-color:#34495d!important;border-top-color:#34495d!important;background:#100d19!important;color:#eef2ff!important}
+html[data-kiosk-theme=plex] body.brain-live .brain-dock-brand{color:#ffe278!important}
+html[data-kiosk-theme=plex] body.brain-live .brain-dock-people{color:#a8b8cb!important}
 html[data-kiosk-theme=synthwave] body.brain-live:not([data-kiosk-view=plex]):not(.kiosk-now-playing):not(.cast-display) .context-card{background-image:radial-gradient(ellipse at 82% 12%,#ff4fc82b,transparent 42%),linear-gradient(135deg,#100b22,#21123d 64%,#100b22)!important}
 html[data-kiosk-theme=synthwave] body.brain-live:not([data-kiosk-view=plex]):not(.kiosk-now-playing):not(.cast-display) .stage .context-card :is(.eyebrow,.context-status,.context-source,.context-rows time,.weather-separator){color:#ff70d2!important}
 html[data-kiosk-theme=synthwave] body.brain-live:not([data-kiosk-view=plex]):not(.kiosk-now-playing):not(.cast-display) .stage .context-card .active-stream-count{background:#ff4fc8!important;color:#100b22!important}

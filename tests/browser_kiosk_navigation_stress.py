@@ -72,14 +72,14 @@ with sync_playwright() as playwright:
     )
     for width, height in ((390, 844), (800, 900), (1500, 1000)):
         context = browser.new_context(viewport={"width": width, "height": height}, has_touch=True)
-        for direct_view, expected_theme in (("", "synthwave"), ("calendar", "synthwave"), ("plex", None)):
+        for direct_view, expected_theme in (("", "synthwave"), ("calendar", "synthwave"), ("plex", "plex")):
             cold_page = context.new_page()
             install_routes(cold_page)
             cold_page.route("**/kiosk-menu.js*", lambda route: route.abort())
             cold_url = f"http://marquee.test/kiosk?view={direct_view}" if direct_view else "http://marquee.test/kiosk"
             cold_page.goto(cold_url, wait_until="domcontentloaded")
             assert cold_page.locator("html").get_attribute("data-kiosk-theme") == expected_theme
-            if expected_theme:
+            if expected_theme == "synthwave":
                 initial_canvas = cold_page.evaluate("""() => {
                   const section=document.createElement('section'); section.className='kiosk-section';
                   document.body.append(section);
@@ -99,6 +99,12 @@ with sync_playwright() as playwright:
                 if not direct_view:
                     assert "rgba(255, 79, 200," in initial_canvas["contextImage"], (width, initial_canvas)
                     assert initial_canvas["contextAccent"] == "rgb(255, 112, 210)", (width, initial_canvas)
+            elif expected_theme == "plex":
+                plex_palette = cold_page.evaluate("""() => ({
+                  background:getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),
+                  accent:getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()
+                })""")
+                assert plex_palette == {"background":"#101d2a", "accent":"#ffe278"}, (width, plex_palette)
             cold_page.close()
         page = context.new_page()
         install_routes(page)
@@ -121,7 +127,14 @@ with sync_playwright() as playwright:
                 # navigation, then activate during its render window.
                 page.evaluate("window.MarqueeNavigation.refresh()")
                 activate(page, destination, touch=index % 2 == 0)
-                assert page.locator("html").get_attribute("data-kiosk-theme") == ("synthwave" if destination != "plex" else None)
+                assert page.locator("html").get_attribute("data-kiosk-theme") == ("plex" if destination == "plex" else "synthwave")
+                active_link = page.locator(f'.kiosk-primary a[data-view="{destination}"]')
+                active_link.evaluate("el => el.focus()")
+                selected_colors = active_link.evaluate("el => ({outline:getComputedStyle(el).outlineColor,border:getComputedStyle(el).borderColor,background:getComputedStyle(el).backgroundColor})")
+                if destination == "plex":
+                    assert selected_colors["border"] == "rgb(85, 102, 125)", (width, destination, selected_colors)
+                else:
+                    assert selected_colors["border"] == "rgb(255, 79, 200)", (width, destination, selected_colors)
                 assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), (width, height, destination)
                 if destination not in ("plex", "weather"):
                     surface = page.locator("#kiosk-panel")

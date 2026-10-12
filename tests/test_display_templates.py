@@ -5,6 +5,7 @@ import unittest
 
 DISPLAY = (Path(__file__).parents[1] / "output" / "index.html").read_text()
 SCREENS = (Path(__file__).parents[1] / "output" / "screens.css").read_text()
+ROOT = Path(__file__).parents[1]
 
 
 class DisplayTemplateTests(unittest.TestCase):
@@ -24,11 +25,22 @@ class DisplayTemplateTests(unittest.TestCase):
                     self.assertEqual(query_version, version)
 
     def test_automatic_home_uses_synthwave_and_ignores_provider_accents(self):
-        self.assertIn("if (earlyView !== 'plex' && !excludedSurface)", DISPLAY)
+        self.assertIn("if (!excludedSurface) document.documentElement.dataset.kioskTheme = earlyView === 'plex' ? 'plex' : 'synthwave'", DISPLAY)
         kiosk_menu = (Path(__file__).parents[1] / "output" / "kiosk-menu.js").read_text()
-        self.assertIn("if (view !== 'plex') document.documentElement.dataset.kioskTheme = 'synthwave'", kiosk_menu)
+        self.assertIn("if (view === 'plex') document.documentElement.dataset.kioskTheme = 'plex'", kiosk_menu)
         self.assertIn(":root[data-kiosk-theme=synthwave]{--bg:#100b22!important", SCREENS)
         self.assertIn("--accent:#ff4fc8!important", SCREENS)
+        self.assertNotIn("#6cf4e5", SCREENS)
+        self.assertNotIn("#20cce2", SCREENS)
+
+    def test_plex_exception_preserves_shell_and_theme_focus_is_pink(self):
+        self.assertIn("earlyView === 'plex' ? 'plex' : 'synthwave'", DISPLAY)
+        self.assertIn("if (view === 'plex') document.documentElement.dataset.kioskTheme = 'plex'", (ROOT / "output/kiosk-menu.js").read_text())
+        self.assertIn("html[data-kiosk-theme=plex] body.browser-controls .kiosk-rail", SCREENS)
+        self.assertIn("html[data-kiosk-theme=plex] body.brain-live .brain-dock", SCREENS)
+        self.assertIn("html[data-kiosk-theme=synthwave] body:not([data-kiosk-view=plex]) .kiosk-rail :focus-visible{outline-color:#ff4fc8}", SCREENS)
+        self.assertIn("html[data-kiosk-theme=synthwave] body.brain-live.browser-controls .kiosk-primary a[aria-current=page]:focus{outline-color:#ff4fc8!important}", SCREENS)
+        self.assertIn("html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :is(:focus-visible,.kiosk-calendar-page:focus-visible,.kiosk-sports-content:focus-visible){outline-color:#ff4fc8}", SCREENS)
         self.assertIn("body.brain-live:not([data-kiosk-view=plex])", SCREENS)
         self.assertIn(".context-card{background-image:radial-gradient(ellipse at 82% 12%,#ff4fc82b", SCREENS)
         self.assertIn(":not(.kiosk-now-playing):not(.cast-display) .context-card", SCREENS)
