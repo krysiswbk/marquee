@@ -703,6 +703,12 @@ html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sk
   .kiosk-section[data-section=astronomy] .sky-sensor-ribbon{grid-row:3;align-self:center;min-height:0}
 }
 
+/* Scale oversized combat cards just enough to expose event details above the
+   fixed house-feed bar on standard landscape kiosk screens. */
+@media(min-width:1000px) and (min-height:701px) and (max-height:1000px) and (min-aspect-ratio:3/2){
+  .kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-broadcast-layout{transform:scale(.88);transform-origin:center top}
+}
+
 /* Keep all primary Sky facts and its two adjacent cards inside a short,
    landscape display, where the shared kiosk stage cannot scroll. */
 @media(min-width:1000px) and (max-height:700px) and (min-aspect-ratio:3/2){

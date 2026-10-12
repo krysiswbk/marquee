@@ -1,6 +1,6 @@
-# 2.12.60
+# 2.12.61
 
-- Keep unavailable destination states in the Synthwave palette and fit Sky's weather, moon, and aircraft details inside landscape kiosk stages.
+- Keep unavailable destination states in the Synthwave palette and fit Sky and combat event details inside landscape kiosk stages.
 
 # 2.12.56
 

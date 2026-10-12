@@ -114,6 +114,10 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn(".sky-sensor-ribbon{grid-row:3;align-self:center;min-height:0}", SCREENS)
         self.assertIn(".sky-aircraft-empty,.sky-vista-caption,.sky-sensor-ribbon){color:#c3a9d4}", SCREENS)
 
+    def test_combat_event_card_fits_above_kiosk_house_feed(self):
+        self.assertIn("@media(min-width:1000px) and (min-height:701px) and (max-height:1000px) and (min-aspect-ratio:3/2)", SCREENS)
+        self.assertIn(".kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-broadcast-layout{transform:scale(.88);transform-origin:center top}", SCREENS)
+
     def test_compact_sports_and_context_weather_include_authoritative_feels_like(self):
         self.assertIn("const compactWeatherLine = weather =>", INDEX)
         self.assertIn("Number.isFinite(apparent) ? ` · Feels ${Math.round(apparent)}°` : ''", INDEX)
