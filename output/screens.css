@@ -34,7 +34,9 @@ body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=
 body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-weather{display:none!important}
 body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-rows{grid-area:rows;align-self:center;width:auto;max-height:72vh;display:grid;grid-template-columns:minmax(0,1fr);gap:0;padding:0;border-top:1px solid rgba(255,255,255,.22);font-size:clamp(1.1rem,1.65vw,1.7rem);overflow:auto}
 body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-rows span{min-width:0;display:flex;flex-direction:column;gap:.35vh;padding:1.5vh .6vw;border-radius:0;border:0;border-bottom:1px solid rgba(255,255,255,.16);background:transparent;white-space:normal}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-rows time{color:#b6f378;font-size:.78em;font-weight:700;letter-spacing:.035em}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]){background:radial-gradient(ellipse at 82% 12%,#ff4fc82b,transparent 42%),linear-gradient(135deg,#100b22,#21123d 64%,#100b22)!important;border:1px solid #53316e}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-source{color:#ff70d2}
+body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-rows time{color:#ff70d2;font-size:.78em;font-weight:700;letter-spacing:.035em}
 body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-rows strong{color:var(--text);font-weight:650;line-height:1.2}
 /* Broadcast weather: observations + hourly desk + extended forecast, radar only when relevant. */
 body .stage.weather-context .weather-card{inset:0;bottom:0;padding:0;display:block;background:linear-gradient(130deg,#075798,#0b315e 65%,#061b38);color:#fff;overflow:hidden;font-family:'Space Grotesk',system-ui,sans-serif}

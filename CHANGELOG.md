@@ -1,3 +1,7 @@
+# 2.12.62
+
+- Bring the Cast calendar agenda fully into the Synthwave palette.
+
 # 2.12.61
 
 - Keep unavailable destination states in the Synthwave palette and fit Sky and combat event details inside landscape kiosk stages.

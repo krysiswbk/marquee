@@ -63,6 +63,9 @@ def _exercise(page, kind, row_count, weather_text=""):
             clockSize: getComputedStyle(document.querySelector('#context-clock')).fontSize,
             agendaMaxHeight: getComputedStyle(agenda).maxHeight,
             agendaRowGap: getComputedStyle(agenda).rowGap,
+            cardBackground: getComputedStyle(card).backgroundImage,
+            sourceColor: getComputedStyle(document.querySelector('#context-source')).color,
+            timeColors: [...agenda.querySelectorAll('time')].map(time => getComputedStyle(time).color),
             clockBox: clock,
             clockDisplay: getComputedStyle(document.querySelector('.context-time')).display,
             weatherText: document.querySelector('#context-weather').textContent,
@@ -100,6 +103,9 @@ def test_cast_calendar_matches_kiosk_agenda_and_fits_five_events():
                 assert result["agendaMaxHeight"] == f"{height * 0.72:g}px"
                 assert result["agendaRowGap"] == "0px"
                 assert len(result["chipBoxes"]) == 5
+                assert "rgba(255, 79, 200," in result["cardBackground"]
+                assert result["sourceColor"] == "rgb(255, 112, 210)"
+                assert all(color == "rgb(255, 112, 210)" for color in result["timeColors"])
                 assert all(chip["left"] >= result["copyBox"]["right"] for chip in result["chipBoxes"])
                 assert all(chip["width"] > width * 0.3 for chip in result["chipBoxes"])
                 assert result["copyBox"]["width"] > width * 0.35
