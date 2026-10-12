@@ -615,6 +615,7 @@ html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :is(.kiosk-editorial-feature,.kiosk-sport-feature,.kiosk-agenda-feature,.kiosk-calendar-detail,.kiosk-state){border-color:#53316e;background-color:#1b1233;background-image:linear-gradient(135deg,#291542,#17102b 72%)}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :is(.kiosk-queue-row,.kiosk-agenda-row,.kiosk-support){border-color:#53316e}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .kiosk-section-head h1:focus-visible{text-decoration-color:#ff4fc8}
+html[data-kiosk-theme=plex] body .now-playing-surface .kiosk-now-playing-head h1:focus-visible{text-decoration-color:#ffe278}
 html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-destination{border-color:#53316e;background:radial-gradient(ellipse at 80% 4%,#ff4fc825,transparent 38%),linear-gradient(145deg,#100b22f5,#21123de8 55%,#100b22)}
 html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sky-celestial-backdrop{background:radial-gradient(ellipse at 82% 10%,#ff4fc82b,transparent 36%),radial-gradient(ellipse at 12% 86%,#9b42e229,transparent 38%)}
 html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] :is(.sky-moon-card,.sky-aircraft-panel,.sky-detail-card,.sky-sun-bearing,.sky-weather-facts>span){border-color:#53316e;background-color:#1b1233}

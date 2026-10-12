@@ -46,6 +46,7 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertNotIn("The room is quiet. Choose Home", MENU)
         self.assertIn("display:inline-block;width:fit-content;max-width:100%", SCREENS)
         self.assertIn(".now-playing-surface .kiosk-now-playing-head h1:focus-visible", SCREENS)
+        self.assertIn("html[data-kiosk-theme=plex] body .now-playing-surface .kiosk-now-playing-head h1:focus-visible{text-decoration-color:#ffe278}", SCREENS)
         self.assertIn("outline-offset:7px", SCREENS)
         self.assertIn("idle-weather-feels", MENU)
         self.assertIn("Feels like", MENU)
