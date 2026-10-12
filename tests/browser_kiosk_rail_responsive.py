@@ -10,11 +10,13 @@ from playwright.sync_api import sync_playwright
 ROOT = Path(__file__).resolve().parents[1]
 VIEWPORTS = [(360, 800), (393, 852), (430, 932), (700, 900),
              (1024, 600), (1280, 600), (1500, 900)]
-DESTINATIONS = ("plex", "nhl", "ufc", "pfl", "weather", "tv", "astronomy", "gaming", "calendar")
+DESTINATIONS = ("plex", "nhl", "ufc", "pfl", "weather", "tv", "astronomy", "gaming",
+                "calendar", "movies", "trailers", "major_events", "music")
 TEST_DESTINATIONS = DESTINATIONS
 LABELS = {"plex": "Now playing", "nhl": "NHL", "ufc": "UFC", "pfl": "PFL",
           "weather": "Weather", "tv": "TV", "astronomy": "Sky", "gaming": "Gaming",
-          "calendar": "Calendar"}
+          "calendar": "Calendar", "movies": "Movies", "trailers": "Trailers",
+          "major_events": "Events", "music": "Music"}
 
 
 with sync_playwright() as playwright:
@@ -85,6 +87,8 @@ with sync_playwright() as playwright:
                 "el => el.scrollWidth <= el.clientWidth + 1")
             assert page.locator(".kiosk-primary").evaluate(
                 "el => [...el.querySelectorAll('a:not([hidden])')].every(a => a.offsetHeight >= 44)")
+            assert page.locator(".kiosk-primary").evaluate(
+                "el => el.scrollWidth <= el.clientWidth + 1"), (width, destination, "destination row overflow")
             rail_metrics = page.locator(".kiosk-rail").evaluate("el => { const icon = el.querySelector('.kiosk-primary a:not([hidden]) .kiosk-icon'); const primary = el.querySelector('.kiosk-primary'); const brand = el.querySelector('.kiosk-brand'); return {height: el.getBoundingClientRect().height, icon: icon.getBoundingClientRect().width, type: getComputedStyle(primary.querySelector('a')).fontSize, justify: getComputedStyle(primary).justifyContent, centered: primary.getBoundingClientRect().left + primary.getBoundingClientRect().width / 2, brandRight: brand.getBoundingClientRect().right}; }")
             assert rail_metrics["height"] == 62, (width, rail_metrics)
             if width <= 700:

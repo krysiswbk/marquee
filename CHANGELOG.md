@@ -1,3 +1,7 @@
+# 2.12.63
+
+- Reserve the kiosk rail's horizontal padding before assigning direct destinations.
+
 # 2.12.62
 
 - Bring the Cast calendar agenda fully into the Synthwave palette.

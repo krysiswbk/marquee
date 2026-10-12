@@ -207,9 +207,12 @@
     }
     primary.querySelectorAll('a').forEach(a => a.hidden = false); more.hidden = false;
     const brand = rail.querySelector('.kiosk-brand');
-    const railGap = parseFloat(getComputedStyle(rail).columnGap) || 0;
+    const railStyle = getComputedStyle(rail);
+    const railGap = parseFloat(railStyle.columnGap) || 0;
     const primaryGap = parseFloat(getComputedStyle(primary).columnGap) || 0;
-    const available = () => Math.max(0, rail.getBoundingClientRect().width - brand.getBoundingClientRect().width - more.getBoundingClientRect().width - (railGap * 2));
+    const available = () => Math.max(0, rail.clientWidth - (parseFloat(railStyle.paddingLeft) || 0)
+      - (parseFloat(railStyle.paddingRight) || 0) - brand.getBoundingClientRect().width
+      - more.getBoundingClientRect().width - (railGap * 2));
     const visibleWidth = () => [...primary.children].filter(a => !a.hidden).reduce((sum, a) => sum + a.offsetWidth, 0) + Math.max(0, primary.querySelectorAll(':scope > a:not([hidden])').length - 1) * primaryGap;
     // Home and the current destination must remain direct, even when the
     // current destination would otherwise be the next item sent to More.
