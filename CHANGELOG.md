@@ -1,3 +1,9 @@
+# 2.12.66
+
+- Move kiosk notifications to the left and widen them; add breathing room to the Calendar feature card and replace the short pink heading rule with a full-width divider.
+- Theme idle Plex Now Playing in Synthwave and keep Sky populated when some entity data is unavailable.
+- Refresh versioned kiosk assets.
+
 # 2.12.64
 
 - Yield each Google Cast receiver to external playback and resume Marquee after it returns idle.

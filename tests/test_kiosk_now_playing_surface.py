@@ -85,6 +85,11 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn('"meta poster" "plot poster" "progress poster" "device device"', SCREENS)
         self.assertNotIn("body.kiosk-playback-active .b-plot,body.kiosk-playback-active .b-ratings", SCREENS)
 
+    def test_idle_plex_kiosk_has_explicit_synthwave_theme(self):
+        self.assertIn("body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface", SCREENS)
+        self.assertIn("background-color:#100b22", SCREENS)
+        self.assertIn(".kiosk-now-playing-head>p:first-child,.kiosk-weather-separator){color:#ff4fc8!important}", SCREENS)
+
     def test_street_now_playing_restores_the_established_screening_composition(self):
         self.assertIn("body.kiosk-now-playing[data-template=street] .stage{display:block;padding:0;}", SCREENS)
         self.assertIn("body.kiosk-now-playing[data-template=street] .b-streetframe{display:block!important", SCREENS)

@@ -210,7 +210,7 @@ body.browser-controls .kiosk-rail{justify-content:flex-start;padding:6px max(16p
    retains its own established artwork-led presentation. */
 body.brain-live .kiosk-section:not(.now-playing-surface){--kiosk-bg:#100b22;--kiosk-panel:#1b1233;--kiosk-panel-strong:#29194a;--kiosk-ink:#fff0fb;--kiosk-muted:#c3a9d4;--kiosk-accent:#ff4fc8;--kiosk-cyan:#ff4fc8;--kiosk-line:#53316e;color:var(--kiosk-ink);font-family:'Space Grotesk',system-ui,sans-serif;background-color:var(--kiosk-bg);background-image:radial-gradient(ellipse at 92% 6%,#a52cff15,transparent 34%),radial-gradient(ellipse at 8% 92%,#9b42e20c,transparent 38%),linear-gradient(135deg,#100b22,#1b1035 64%,#100b22)}
 body.brain-live .kiosk-section:not(.now-playing-surface) header p,body.brain-live .kiosk-section:not(.now-playing-surface) .kiosk-kicker{color:var(--kiosk-accent)}
-body.brain-live .kiosk-section:not(.now-playing-surface) .kiosk-section-head{border-bottom:2px solid var(--kiosk-accent);text-shadow:0 0 28px #ff4fc822}
+body.brain-live .kiosk-section:not(.now-playing-surface) .kiosk-section-head{text-shadow:0 0 28px #ff4fc822}
 body.brain-live .kiosk-section:not(.now-playing-surface) h1{color:var(--kiosk-ink);font-family:'Oswald','Space Grotesk',system-ui,sans-serif}
 body.brain-live .kiosk-section:not(.now-playing-surface) .kiosk-lede{color:var(--kiosk-ink)}
 body.brain-live .kiosk-section:not(.now-playing-surface) :is(.kiosk-meta,.kiosk-empty,.kiosk-agenda-row time,.kiosk-agenda-row small,.kiosk-queue-row span){color:var(--kiosk-muted)}
@@ -725,4 +725,29 @@ html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=astronomy] .sk
   .kiosk-section[data-section=astronomy] .sky-moon-copy h3{font-size:20px}
   .kiosk-section[data-section=astronomy] .sky-moon-copy .sky-card-label{margin:0 0 4px}
   .kiosk-section[data-section=astronomy] .sky-aircraft-panel{box-sizing:border-box;height:96px;min-height:0;overflow:hidden}
+  .kiosk-section:is([data-section=gaming],[data-section=tv]){display:flex;flex-direction:column;overflow:visible}
+  .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial{flex:1 1 auto;min-height:0;grid-template-rows:minmax(0,1fr)}
+  .kiosk-section:is([data-section=gaming],[data-section=tv]) .kiosk-editorial-feature{height:100%;box-sizing:border-box;padding:16px}
+  .kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-state{align-items:flex-start;gap:20px;margin-top:18px}
+  .kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-state-mark{width:64px;height:64px;font-size:48px}
+  .kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-state h2{font-size:clamp(32px,3.2vw,42px);line-height:1.05}
+  /* UFC's two-line empty heading otherwise gets a fractional 1.05 line box;
+     integer line-height removes its 1px scroll rounding overflow. */
+  .kiosk-section[data-section=ufc] .kiosk-state h2{line-height:1}
+  .kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-state .kiosk-empty{margin:8px 0;font-size:20px;line-height:1.25}
+  .kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-state .kiosk-now-playing-actions{margin-top:12px}
+  .kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-home-action,
+  .kiosk-section:is([data-section=ufc],[data-section=pfl]) .kiosk-retry{box-sizing:border-box}
 }
+
+/* Kiosk spacing and themed idle Plex state. */
+body.brain-live .kiosk-section:not(.now-playing-surface) .kiosk-section-head{border-bottom:0}
+body.brain-live .kiosk-section:not(.now-playing-surface) .kiosk-section-head h1{padding-bottom:clamp(12px,1.8vh,22px);border-bottom:1px solid var(--kiosk-line)}
+body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-feature{box-sizing:border-box;padding:clamp(28px,4vw,60px);min-width:0}
+body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda{column-gap:clamp(28px,5vw,80px)}
+body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface{--kiosk-bg:#100b22;--kiosk-panel:#1b1233;--kiosk-accent:#ff4fc8;--kiosk-muted:#c3a9d4;color:#fff0fb;background-color:#100b22;background-image:radial-gradient(circle,transparent 0 49%,#ff4fc820 49.2% 49.5%,transparent 49.8% 62.5%,#9b42e220 62.7% 63%,transparent 63.3%) right 8% top 17%/min(38vw,520px) min(38vw,520px) no-repeat,radial-gradient(circle at 74% 42%,#692354 0 1px,transparent 2px) 0 0/34px 34px,radial-gradient(ellipse at 78% 46%,#a52cff33 0,transparent 42%),linear-gradient(135deg,#100b22,#1b1035 72%)}
+body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface :is(.kiosk-now-playing-head>p:first-child,.kiosk-weather-separator){color:#ff4fc8!important}
+body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface :is(.kiosk-now-playing-head h1,.kiosk-weather-context){color:#fff0fb}
+body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface .kiosk-home-action{background:#291542!important;color:#ff8cdd!important;border-color:#ff4fc8!important}
+body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface .kiosk-retry{background:#1b1233!important;color:#ff8cdd!important;border-color:#53316e!important}
+@media(max-aspect-ratio:1/1){body.brain-live .brain-toast.show{left:3vw;right:auto;width:calc(100vw - 6vw);max-width:none}}

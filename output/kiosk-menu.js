@@ -271,6 +271,18 @@
     if (resources.contexts.phase === 'loading') return { state: 'loading', reason: 'context request pending' };
     if (resources.contexts.phase === 'disconnected') return { state: 'disconnected', reason: 'context source cannot be reached' };
     const provider = health[key] || {};
+    // Sky is composed from several independent Home Assistant entities. A
+    // single unavailable sensor must not invalidate the complete scene.
+    if (key === 'astronomy') {
+      const sky = resources.sky.snapshot?.sky || resources.sky.snapshot || {};
+      const hasScene = Boolean(sky.sun || sky.moon || sky.condition || sky.weather || sky.cloud_cover !== undefined
+        || sky.visibility !== undefined || sky.aircraft?.length);
+      if (resources.sky.phase === 'loading' && !hasScene) return { state: 'loading', reason: 'Sky data request pending' };
+      if (resources.sky.phase === 'disconnected' && !hasScene) return { state: 'disconnected', reason: 'Sky source cannot be reached' };
+      if (resources.sky.phase === 'stale' && !hasScene) return { state: 'stale', reason: 'Sky source has no retained scene data' };
+      if (provider.state === 'error' && !hasScene) return { state: 'error', reason: provider.error || provider.reason || 'Sky source failed' };
+      return { state: hasScene ? 'populated' : 'empty', reason: '' };
+    }
     if (resources.contexts.phase === 'stale') return { state: 'stale', reason: 'retained context snapshot' };
     if (provider.stale) return { state: 'stale', reason: provider.reason || 'provider data is delayed' };
     if (provider.state === 'degraded') return { state: 'partial', reason: provider.reason || 'some provider data is delayed' };

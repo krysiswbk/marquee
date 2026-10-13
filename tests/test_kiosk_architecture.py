@@ -318,7 +318,7 @@ def test_empty_and_unavailable_states_share_home_and_retry_actions():
 
 
 def test_destination_owns_background_accessibility_state_and_history_focus():
-    assert "const backgroundNodes = [...document.body.children].filter(node => ![rail, menu, panel].includes(node));" in MENU
+    assert "const backgroundNodes = [...document.body.children].filter(node => ![rail, menu, panel, platformSwitch].includes(node));" in MENU
     assert "node.inert = true" in MENU
     assert "node.setAttribute('aria-hidden', 'true')" in MENU
     assert "if (ariaHidden === null) node.removeAttribute('aria-hidden');" in MENU
