@@ -10,7 +10,7 @@ from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 VIEWPORTS = [(320, 720), (360, 720), (393, 852), (430, 852),
-             (700, 900), (1024, 600), (1500, 900), (3000, 2000)]
+             (700, 900), (1024, 600), (1280, 720), (1500, 900), (3000, 2000)]
 HEALTH_NAMES = ["Nursery Motion & Lux Motion — Upstairs Hallway",
                 "Nursery Window Contact — South-facing Window"]
 
@@ -105,6 +105,15 @@ with sync_playwright() as playwright:
         page.wait_for_selector("#brain-dock-copy")
         page.wait_for_timeout(250)
 
+        toast = page.locator(".brain-toast")
+        toast.evaluate("el => el.classList.add('show')")
+        assert toast.get_attribute("role") == "status"
+        assert toast.evaluate(
+            "el => { const r=el.getBoundingClientRect(), s=getComputedStyle(el); "
+            "return r.width <= 1 && r.height <= 1 && s.clipPath === 'inset(50%)'; }"
+        ), (width, height)
+        toast.evaluate("el => el.classList.remove('show')")
+
         assert page.locator(".kiosk-rail").is_visible()
         assert page.locator(".stage.weather-context").evaluate("el => !el.inert && !el.hasAttribute('aria-hidden') && !el.classList.contains('kiosk-covered')")
         assert page.locator(".kiosk-section").evaluate("el => el.hidden && el.inert && el.getAttribute('aria-hidden') === 'true'")
@@ -152,6 +161,14 @@ with sync_playwright() as playwright:
             "return !text || text.getBoundingClientRect().bottom <= "
             "el.getBoundingClientRect().bottom + 1; }"
         )
+        if (width, height) == (1280, 720):
+            assert page.locator(".wx-panel.channel-current").evaluate(
+                "el => getComputedStyle(el).overflowY === 'visible'"
+            )
+            assert page.locator(".channel-outlook").evaluate(
+                "el => getComputedStyle(el).maxHeight === 'none' && "
+                "getComputedStyle(el).overflowY === 'visible'"
+            )
 
         if width <= 700:
             assert page.locator(".wx-footer").evaluate("el => getComputedStyle(el).display === 'none'")

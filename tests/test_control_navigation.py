@@ -239,7 +239,7 @@ class ControlNavigationTests(unittest.TestCase):
     def test_shallow_landscape_current_weather_uses_complete_first_look_composition(self):
         weather = (ROOT / "output" / "weather-channel.css").read_text()
         shallow = weather.split(
-            "@media(min-width:1000px) and (max-height:700px) and (min-aspect-ratio:3/2)",
+            "@media(min-width:1000px) and (max-height:760px) and (min-aspect-ratio:3/2)",
             1,
         )[1].split("@media(prefers-reduced-motion", 1)[0]
         for token in (
