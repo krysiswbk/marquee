@@ -41,7 +41,6 @@ body.brain-live.kiosk-now-playing .brain-person[data-home=true]{color:#d2f86b}
 body.brain-live.kiosk-now-playing .brain-toast.show{background:#d2f86b;color:#13180d;border-left-color:#fff}
 body.brain-live .screen-controls{bottom:9vh;z-index:18;opacity:0;transition:opacity .2s}body.brain-live .screen-controls:hover,body.brain-live .screen-controls:focus-within{opacity:1}
 body.brain-live .brain-toast.show{display:flex;position:fixed;left:3vw;right:auto;top:3vh;z-index:25;background:var(--desk-accent);color:#170b28;padding:1.8vh 2vw;box-shadow:0 10px 60px #0008;gap:1vw;align-items:center;font:600 1.15vw var(--desk-font);width:min(52vw,760px);max-width:calc(100vw - 6vw);box-sizing:border-box;border-left:5px solid var(--desk-cyan)}.brain-toast small{font-size:.8vw;opacity:.65;display:block;margin-top:.4vh}
-body.brain-live .brain-toast.show{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important}
 /* Marquee Weather synthwave broadcast styling. */
 body.brain-live .brain-mast{border-bottom:3px solid var(--desk-accent)}
 body.brain-live .brain-brand{font-family:'Oswald',var(--desk-font);font-size:clamp(18px,1.75vw,28px);letter-spacing:.035em;text-transform:uppercase}

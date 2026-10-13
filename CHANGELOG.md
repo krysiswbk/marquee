@@ -1,3 +1,8 @@
+# 2.12.67
+
+- Show kiosk notifications on the left at their intended size instead of clipping the live region; retain wider left-side layout.
+- Refresh cache-busted kiosk assets.
+
 # 2.12.66
 
 - Move kiosk notifications to the left and widen them; add breathing room to the Calendar feature card and replace the short pink heading rule with a full-width divider.

@@ -110,7 +110,9 @@ with sync_playwright() as playwright:
         assert toast.get_attribute("role") == "status"
         assert toast.evaluate(
             "el => { const r=el.getBoundingClientRect(), s=getComputedStyle(el); "
-            "return r.width <= 1 && r.height <= 1 && s.clipPath === 'inset(50%)'; }"
+            "return r.width > 1 && r.height > 1 && r.left >= 0 && "
+            "r.left <= window.innerWidth * 0.05 && r.right <= window.innerWidth + 1 && "
+            "s.position === 'fixed'; }"
         ), (width, height)
         toast.evaluate("el => el.classList.remove('show')")
 
