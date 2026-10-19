@@ -101,6 +101,25 @@ class NowPlayingContractTests(unittest.TestCase):
         self.assertIs(payload, ambient)
         choose.assert_called_once()
 
+    def test_clock_media_kiosk_shows_idle_clock_without_active_media(self):
+        ambient = {"playing": True, "type": "media_context", "title": "Upcoming movie"}
+        repository = type("Repository", (), {"effective": lambda self: {
+            "display": {"kiosk_presentation": "clock_media"}}})()
+        with patch.object(http, "CURRENT_PLEX", {"info": None, "stale": False}, create=True), \
+                patch.object(http, "best_context", return_value=ambient, create=True), \
+                patch.object(http, "CONFIG_REPOSITORY", repository, create=True):
+            self.assertEqual(http.now_playing_payload("kiosk"),
+                             {"playing": False, "state": "idle", "availability": "idle"})
+
+    def test_clock_media_kiosk_preserves_household_notification(self):
+        notice = {"playing": False, "householdFocus": {"title": "Garage door closed"}}
+        repository = type("Repository", (), {"effective": lambda self: {
+            "display": {"kiosk_presentation": "clock_media"}}})()
+        with patch.object(http, "CURRENT_PLEX", {"info": None, "stale": False}, create=True), \
+                patch.object(http, "best_context", return_value=notice, create=True), \
+                patch.object(http, "CONFIG_REPOSITORY", repository, create=True):
+            self.assertIs(http.now_playing_payload("kiosk"), notice)
+
     def test_explicit_plex_scope_clears_ambient_when_idle(self):
         ambient = {"playing": True, "type": "media_context", "title": "UFC Fight Night"}
         with patch.object(http, "CURRENT_PLEX", {"info": None, "stale": False}, create=True), \

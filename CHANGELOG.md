@@ -1,3 +1,9 @@
+# 2.12.68
+
+- Add a calm kiosk presentation that holds clock and weather until active media or critical attention; keep other screens available through navigation.
+- Keep household notifications while reducing idle panel redraws and stopping the rotating house feed.
+- Expose the kiosk presentation choice in display settings.
+
 # 2.12.67
 
 - Show kiosk notifications on the left at their intended size instead of clipping the live region; retain wider left-side layout.

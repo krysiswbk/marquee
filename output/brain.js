@@ -118,7 +118,7 @@
       if(state.unknown?.length)feed.push(feedEntry(`Not reporting: ${state.unknown.join(', ')}`,feedTier()==='phone'?`${state.unknown.length} device${state.unknown.length===1?'':'s'} not reporting`:`Not reporting: ${compactNames(state.unknown,'devices')}`));
       if(!feed.length)feed=[feedEntry('The house is listening for its next real update')];
     }
-    renderFeedEntry(feed[Math.floor(now/12)%feed.length]);
+    renderFeedEntry(feed[0]);
     if(event&&now-event.at<45&&event.id!==lastToast&&!demo){lastToast=event.id;toastUntil=now+12;toast.innerHTML=`<span aria-hidden="true">↗</span><div>${esc(event.title)}<small>Just happened at home</small></div>`}
     toast.classList.toggle('show',now<toastUntil);
     for(const [block,id]of [['house','brain-house'],['activity','brain-activity'],['agenda','brain-agenda']])$(id).hidden=visibility[block]===false;
@@ -209,5 +209,7 @@
     window.MarqueeLifecycle.register('brain',{interval:3000,refresh:poll});
     window.MarqueeLifecycle.register('brain-weather',{interval:60000,refresh:pollWeather});
   }
-  window.MarqueeLifecycle.register('brain-animation',{interval:1000,refresh:()=>{render();weather()}});
+  // Relative times only change by the minute. Fresh signals still render as
+  // soon as the three-second brain poll returns.
+  window.MarqueeLifecycle.register('brain-animation',{interval:60000,refresh:()=>{render();weather()}});
 })();

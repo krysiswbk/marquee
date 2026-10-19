@@ -19,6 +19,7 @@ DEFAULT_CONFIG = {
     "display": {
         "rotation_seconds": 30, "transition_ms": 700,
         "minimum_context_seconds": 12, "default_screen": "plex",
+        "kiosk_presentation": "context",
         "live_rotation_seconds": 30, "live_fallback_every": 2,
         "secondary_screen_mode": "off",
         "kiosk_interaction_idle_seconds": 30,
@@ -144,6 +145,10 @@ def validate_config(value):
         "display.live_fallback_every", True)
     display["secondary_screen_mode"] = str(
         display.get("secondary_screen_mode", "off")).strip().lower()
+    display["kiosk_presentation"] = str(
+        display.get("kiosk_presentation", "context")).strip().lower()
+    if display["kiosk_presentation"] not in ("context", "clock_media"):
+        raise ValueError("display.kiosk_presentation must be context or clock_media")
     if display["secondary_screen_mode"] not in ("off", "weather", "mirror"):
         raise ValueError("display.secondary_screen_mode must be off, weather, or mirror")
     display["kiosk_interaction_idle_seconds"] = _number(

@@ -51,6 +51,13 @@ def now_playing_payload(display):
         return info
     if media:
         return media
+    repository = globals().get("CONFIG_REPOSITORY")
+    if (display == "kiosk" and repository is not None and
+            repository.effective()["display"]["kiosk_presentation"] == "clock_media" and
+            not (isinstance(info, dict) and (info.get("attention") or info.get("householdFocus")))):
+        # The household desk and its event feed remain mounted on the idle
+        # clock. Ordinary provider cards stay available through navigation.
+        info = None
     if info:
         return info
     if CURRENT_PLEX.get("stale"):
