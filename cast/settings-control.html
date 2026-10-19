@@ -8,13 +8,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
-  <link rel="stylesheet" href="/settings-control.css?v=2.12.74">
-  <link rel="stylesheet" href="/control-touch-contract.css?v=2.12.74">
+  <link rel="stylesheet" href="/settings-control.css?v=2.12.75">
+  <link rel="stylesheet" href="/control-touch-contract.css?v=2.12.75">
   <style>.mode-state{display:inline-block;margin-top:7px;color:var(--amber);font-size:12px;font-weight:750}.workspace-nav{display:flex;align-items:center;gap:3px;margin:14px 0 0;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:thin}.workspace-nav a{display:flex;align-items:center;min-height:44px;padding:9px 12px;color:var(--mut);font-size:14px;font-weight:700;text-decoration:none;white-space:nowrap}.workspace-nav a[aria-current=page]{color:var(--amber);box-shadow:inset 0 -2px var(--amber)}.workspace-nav .view-display{margin-left:auto;color:var(--amber)}.product-rows{display:grid;gap:0}.product-row{display:flex;justify-content:space-between;gap:18px;padding:11px 4px;border-top:1px solid var(--line)}.release-copy{max-height:320px;overflow:auto;white-space:pre-wrap;color:var(--mut);font:13px/1.5 ui-monospace,monospace}@media(max-width:520px){html,body{overflow-x:hidden}.shell>*{min-width:0}.setting-row label{min-width:0}.savebar button{min-width:0;font-size:13px}.savebar:has(button:disabled){padding-block:8px}.savebar:has(button:disabled) button:disabled{display:none}.workspace-nav{margin-inline:-14px;padding-inline:8px}.workspace-nav .view-display{margin-left:0}.product-row{display:block}.product-row>*:last-child{display:block;margin-top:4px}}</style>
   <style>.health-item{display:grid;gap:4px;align-content:start;min-width:0}.health-provider{font-size:15px}.health-status{font-weight:750}.health-status.stale{color:var(--amber)}.health-explanation{line-height:1.35}.health-recency{font-size:11px!important;color:var(--muted);line-height:1.35}.health-item>span:not(.health-status):not(.health-explanation):not(.health-recency){font-size:12px;color:var(--muted)}@media(max-width:520px){.health-item{padding:13px 14px}}</style>
-  <link rel="stylesheet" href="/settings-narrow-nav.css?v=2.12.74">
-  <script defer src="/numeric-controls.js?v=2.12.74"></script>
-  <script defer src="/settings-control.js?v=2.12.74"></script>
+  <link rel="stylesheet" href="/settings-narrow-nav.css?v=2.12.75">
+  <script defer src="/numeric-controls.js?v=2.12.75"></script>
+  <script defer src="/settings-control.js?v=2.12.75"></script>
 </head>
 <body class="admin-touch-contract">
 <main class="shell">
@@ -122,7 +122,7 @@
         <div class="setting-row"><label for="attention-enabled"><strong>Alerts enabled</strong><small>Ambient rotation continues when alerts are off.</small></label><input class="switch" id="attention-enabled" type="checkbox" role="switch"></div>
         <details><summary>Quiet hours</summary><div class="field-grid inset"><div class="field"><label for="quiet-start">Start</label><select id="quiet-start"></select></div><div class="field"><label for="quiet-end">End</label><select id="quiet-end"></select></div></div></details>
       </section>
-      <section class="panel"><div class="panel-title"><div><h3>Monitored devices</h3><p>Names come from Home Assistant when available. Removed devices remain here until you save or discard.</p></div></div><div id="binding-groups"></div></section>
+      <section class="panel"><div class="panel-title"><div><h3>Monitored devices</h3><p>Names come from Home Assistant when available. Removed devices remain here until you save or discard.</p></div></div><div id="binding-groups"></div><div class="related-links"><a href="/settings/attention#alert-entities-json">Add or remove alert entities as JSON</a><span>Use the entity list editor for new devices, categories, and locations. Warning rules are on the same page.</span></div></section>
       <section class="panel" id="nursery-health"><div class="panel-title"><div><h3>Nursery device health</h3><p>Configured nursery bindings and current availability.</p></div><span class="health-badge" id="nursery-health-badge">Checking…</span></div><div id="nursery-health-list"></div></section>
       <div class="savebar" data-area="alerts"><span class="area-status" role="status" aria-live="polite"></span><button type="button" class="secondary discard">Discard alert edits</button><button type="button" class="primary save-area">Save alerts</button></div>
     </section>

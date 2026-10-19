@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Marquee — Household attention</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
-  <link rel="stylesheet" href="/control-shell.css?v=2.12.74">
-  <link rel="stylesheet" href="/settings-admin.css">
-<link rel="stylesheet" href="/control-touch-contract.css?v=2.12.74">
-<link rel="stylesheet" href="/control-shell-narrow.css?v=2.12.74">
-<script defer src="/numeric-controls.js?v=2.12.74"></script>
-<script defer src="/control-shell.js?v=2.12.74"></script>
-  <script defer src="/attention-settings.js"></script>
+  <link rel="stylesheet" href="/control-shell.css?v=2.12.75">
+  <link rel="stylesheet" href="/settings-admin.css?v=2.12.75">
+<link rel="stylesheet" href="/control-touch-contract.css?v=2.12.75">
+<link rel="stylesheet" href="/control-shell-narrow.css?v=2.12.75">
+<script defer src="/numeric-controls.js?v=2.12.75"></script>
+<script defer src="/control-shell.js?v=2.12.75"></script>
+  <script defer src="/attention-settings.js?v=2.12.75"></script>
 </head>
 <body class="admin-touch-contract">
   <main class="settings-admin">
@@ -39,6 +39,17 @@
       <div id="policy-summary" class="summary-copy"></div>
       <div id="policy-editor" hidden></div>
     </section>
+
+    <details class="admin-card grouping" id="alert-entities-json">
+      <summary><span><b>Alert entities · JSON</b><small>Add or remove Home Assistant entities in one editable list.</small></span></summary>
+      <div class="group-body">
+        <p>Each entry needs an <code>entity_id</code>. Set <code>category</code> to match a warning rule below; <code>location</code> groups devices in the household view. Saving validates the list and replaces the current bindings.</p>
+        <label for="signal-bindings-json">Monitored entity bindings</label>
+        <textarea id="signal-bindings-json" class="entity-json" spellcheck="false" aria-describedby="signal-bindings-json-help signal-bindings-json-error"></textarea>
+        <small id="signal-bindings-json-help">JSON array example: [{"entity_id":"binary_sensor.front_door","category":"exterior_door","location":"entrance"}]. Rules with explicit entity lists can be edited below.</small>
+        <small id="signal-bindings-json-error" class="mq-field-error" role="alert" hidden></small>
+      </div>
+    </details>
 
     <details class="admin-card grouping" id="signal-binding-group">
       <summary><span><b>Signal bindings</b><small>Home Assistant entities that create household observations.</small></span><em id="signal-binding-count">0 bindings</em></summary>

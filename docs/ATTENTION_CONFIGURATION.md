@@ -11,6 +11,27 @@ or appliance entity is assumed. [Complete examples](attention.example.json) use
 intentionally fictitious `example_*` entity names: replace those before enabling.
 Keep the default weather rule when replacing the rule list if you want its takeover.
 
+## Add or remove alert entities
+
+Open **Settings → Alerts → Add or remove alert entities as JSON**. The editor at
+`/settings/attention#alert-entities-json` shows the current `signal_bindings` array.
+Add or remove objects, then select **Save attention policy**. Invalid JSON,
+duplicate entity IDs, and malformed bindings are rejected before saving. The
+same list is stored in the `attention` object of `/config/marquee.json`; the
+settings page is the supported way to edit it while Marquee is running.
+
+```json
+[
+  {"entity_id":"binary_sensor.front_door","category":"exterior_door","location":"entrance"},
+  {"entity_id":"binary_sensor.nursery_door","category":"maintenance","location":"nursery"}
+]
+```
+
+`category` connects a binding to a warning rule. Rules that name specific
+entities have their own **Entities** field lower on the same page. Remove an
+entity from that field too when retiring a specifically targeted warning.
+The Home Assistant producer picks up the saved binding list automatically.
+
 ## Inputs and context
 
 `signal_bindings` entries have `entity_id`, optional `type` (defaults to the HA

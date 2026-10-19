@@ -94,9 +94,13 @@
     control.addEventListener('input', () => { try { write(JSON.parse(control.value)); state.invalidEditors.delete(control); control.removeAttribute('aria-invalid'); error.textContent = description || 'Condition is valid JSON.'; error.className = ''; changed(); } catch (_) { state.invalidEditors.add(control); control.closest('.grouping')?.setAttribute('open', ''); control.setAttribute('aria-invalid', 'true'); error.textContent = 'Enter valid JSON before saving.'; error.className = 'mq-field-error'; changed(); } });
     wrap.append(control, error); return wrap;
   }
+  function updatePolicySummary() {
+    const c = state.draft;
+    $('#policy-summary').textContent = `${c.enabled ? 'Enabled' : 'Disabled'} · ${c.signal_bindings.length} signal bindings · ${c.rules.length} rules · quiet ${String(c.quiet_hours.start).padStart(2, '0')}:00–${String(c.quiet_hours.end).padStart(2, '0')}:00`;
+  }
   function renderPolicy() {
     const editor = $('#policy-editor'); editor.replaceChildren(); const c = state.draft;
-    $('#policy-summary').textContent = `${c.enabled ? 'Enabled' : 'Disabled'} · ${c.signal_bindings.length} signal bindings · ${c.rules.length} rules · quiet ${String(c.quiet_hours.start).padStart(2, '0')}:00–${String(c.quiet_hours.end).padStart(2, '0')}:00`;
+    updatePolicySummary();
     const globals = element('div'); globals.append(text('h3', 'Policy limits'));
     globals.append(fieldGrid(
       check('Attention enabled', c.enabled, value => c.enabled = value),
@@ -144,9 +148,47 @@
         input('Category', binding.category || '', value => value ? binding.category = value : delete binding.category),
         input('Location', binding.location || '', value => value ? binding.location = value : delete binding.location),
         numeric('TTL', binding.ttl ?? '', value => value ? binding.ttl = number(value) : delete binding.ttl, 'binding_ttl', scopedId('signal-binding', index, 'ttl'))
-      )); body.append(removeButton('Remove binding', () => { state.draft.signal_bindings.splice(index, 1); renderSignals(); changed(); })); root.append(row);
+      )); body.append(removeButton('Remove binding', () => { state.draft.signal_bindings.splice(index, 1); renderSignals(); renderSignalJson(); changed(); })); root.append(row);
     });
     if (!root.children.length) root.append(text('p', 'No matching bindings.', 'empty'));
+  }
+  function validateSignalJson(bindings) {
+    if (!Array.isArray(bindings) || bindings.length > 2000) throw Error('Enter a JSON array with at most 2,000 bindings.');
+    const seen = new Set();
+    bindings.forEach((binding, index) => {
+      if (!binding || Array.isArray(binding) || typeof binding !== 'object') throw Error(`Entry ${index + 1} must be an object.`);
+      if (Object.keys(binding).some(key => !['entity_id', 'type', 'category', 'location', 'ttl'].includes(key))) throw Error(`Entry ${index + 1} has an unknown field.`);
+      if (typeof binding.entity_id !== 'string' || !/^[a-zA-Z0-9_.:-]{1,120}$/.test(binding.entity_id)) throw Error(`Entry ${index + 1} needs a valid entity_id.`);
+      if (seen.has(binding.entity_id)) throw Error(`Duplicate entity: ${binding.entity_id}.`);
+      seen.add(binding.entity_id);
+      for (const key of ['type', 'category', 'location']) {
+        if (key in binding && (typeof binding[key] !== 'string' || binding[key].length > 120)) throw Error(`Entry ${index + 1}: ${key} must be text up to 120 characters.`);
+      }
+      if ('ttl' in binding && (typeof binding.ttl !== 'number' || !Number.isFinite(binding.ttl) || binding.ttl < 5 || binding.ttl > 86400)) throw Error(`Entry ${index + 1}: ttl must be 5–86,400 seconds.`);
+    });
+  }
+  function renderSignalJson(force = false) {
+    const control = $('#signal-bindings-json');
+    if (!state.draft || (state.invalidEditors.has(control) && !force)) return;
+    control.value = JSON.stringify(state.draft.signal_bindings, null, 2);
+    control.removeAttribute('aria-invalid');
+    $('#signal-bindings-json-error').hidden = true;
+    state.invalidEditors.delete(control);
+  }
+  function editSignalJson() {
+    const control = $('#signal-bindings-json'), error = $('#signal-bindings-json-error');
+    try {
+      const bindings = JSON.parse(control.value);
+      validateSignalJson(bindings);
+      state.draft.signal_bindings = bindings;
+      state.invalidEditors.delete(control); control.removeAttribute('aria-invalid'); error.hidden = true;
+      renderSignals(); updatePolicySummary();
+    } catch (problem) {
+      state.invalidEditors.add(control); control.setAttribute('aria-invalid', 'true');
+      error.textContent = problem instanceof SyntaxError ? 'Enter valid JSON before saving.' : problem.message;
+      error.hidden = false;
+    }
+    changed();
   }
   function renderContexts() {
     const root = $('#context-bindings'); root.replaceChildren();
@@ -251,7 +293,7 @@
       if (replaceDraft) {
         const wasConflict = state.conflict;
         state.base = clone(data.config); state.draft = clone(data.config); state.conflict = false; state.invalidEditors.clear();
-        renderPolicy(); renderSignals(); renderContexts(); renderRules(); $('#discard').textContent = 'Discard changes';
+        renderPolicy(); renderSignals(); renderSignalJson(true); renderContexts(); renderRules(); $('#discard').textContent = 'Discard changes';
         changed();
         if (wasConflict) $('#save-status').textContent = 'Loaded the newer policy; your stale draft was discarded.';
       }
@@ -261,7 +303,9 @@
   }
   function addRule() { state.draft.rules.push({ id: 'rule-' + (state.draft.rules.length + 1), title: 'New household attention', summary: '', match: { category: 'household' }, active_state: 'on', debounce: 0, cooldown: 300, persistence: 'while_active', interruptibility: true, minimum_display_time: 15, maximum_display_time: 0, acknowledgement_required: false, acknowledgement: 'reduce', ack_delta: -30, recent_delta: -15, confidence_weight: 20, worsening_seconds: 300, strategy: 'global', eligible_displays: [], preferred_scene: 'attention', fallback_scene: 'attention', grouping_key: '', dedupe_key: '', modifiers: [], escalation: [{ id: 'active', after: 0, priority: 20, urgency: 'ACTIONABLE' }] }); renderRules(); changed(); }
   $('#refresh').onclick = refresh; $('#signal-search').oninput = renderSignals; $('#rule-search').oninput = renderRules;
-  $('#add-signal').onclick = () => { state.draft.signal_bindings.push({ entity_id: 'binary_sensor.new_binding', category: 'household', location: '' }); renderSignals(); changed(); };
+  $('#signal-bindings-json').oninput = editSignalJson;
+  $('#signal-bindings').addEventListener('input', () => renderSignalJson());
+  $('#add-signal').onclick = () => { state.draft.signal_bindings.push({ entity_id: 'binary_sensor.new_binding', category: 'household', location: '' }); renderSignals(); renderSignalJson(); changed(); };
   $('#add-context').onclick = () => { state.draft.context_bindings['new_context'] = { entity_id: 'sensor.new_context' }; renderContexts(); changed(); };
   $('#add-rule').onclick = addRule;
   $('[data-expand="policy-editor"]').onclick = () => { const editor = $('#policy-editor'); editor.hidden = !editor.hidden; };
@@ -274,10 +318,10 @@
         renderDiagnostics(latest); $('#save-status').textContent = 'Loaded the newer policy; your stale draft was discarded.';
       } catch (error) { $('#save-status').textContent = error.message; $('#save-status').className = 'mq-field-error'; }
       finally { lockEditing(false); }
-      if (!state.conflict) { renderPolicy(); renderSignals(); renderContexts(); renderRules(); $('#discard').textContent = 'Discard changes'; }
+      if (!state.conflict) { renderPolicy(); renderSignals(); renderSignalJson(true); renderContexts(); renderRules(); $('#discard').textContent = 'Discard changes'; }
       return;
     }
-    state.invalidEditors.clear(); state.draft = clone(state.base); renderPolicy(); renderSignals(); renderContexts(); renderRules(); $('#discard').textContent = 'Discard changes'; changed(); $('#save-status').textContent = 'Draft discarded.';
+    state.invalidEditors.clear(); state.draft = clone(state.base); renderPolicy(); renderSignals(); renderSignalJson(true); renderContexts(); renderRules(); $('#discard').textContent = 'Discard changes'; changed(); $('#save-status').textContent = 'Draft discarded.';
   };
   $('#save').onclick = async () => {
     if (state.invalidEditors.size) { $('#save-status').textContent = 'Fix each invalid field or JSON condition before saving.'; $('#save-status').className = 'mq-field-error'; document.querySelector('[aria-invalid="true"]')?.focus(); return; }
@@ -295,5 +339,9 @@
     finally { lockEditing(false); }
   };
   window.addEventListener('beforeunload', event => { if (state.dirty) { event.preventDefault(); event.returnValue = ''; } });
+  if (location.hash === '#alert-entities-json') {
+    $('#alert-entities-json').open = true;
+    requestAnimationFrame(() => $('#alert-entities-json').scrollIntoView({ block: 'start' }));
+  }
   refresh();
 })();
