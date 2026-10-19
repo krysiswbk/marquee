@@ -3,6 +3,7 @@
   const live = ['/live','/kiosk'].includes(location.pathname);
   if (!live) return;
   const q = new URLSearchParams(location.search), demo = q.has('demo'), edit = q.has('edit');
+  const castReceiver = ['hubs', 'garage'].includes(q.get('display'));
   document.body.classList.add('brain-live');
   const shell = document.createElement('section'); shell.className='brain-shell';shell.setAttribute('aria-label','Household desk');
   shell.innerHTML=`<header class="brain-mast"><div class="brain-brand"><em>M/</em> MARQUEE <a class="brain-customize" href="/settings/layout?profile=live" aria-label="Customize the household desk"><span class="brain-customize-icon" aria-hidden="true">↗</span><span class="brain-customize-label">Customize</span></a></div><div class="brain-edition">THE HOUSEHOLD EDITION</div><div class="brain-connection" id="brain-connection">CONNECTING</div></header>
@@ -118,7 +119,7 @@
       if(state.unknown?.length)feed.push(feedEntry(`Not reporting: ${state.unknown.join(', ')}`,feedTier()==='phone'?`${state.unknown.length} device${state.unknown.length===1?'':'s'} not reporting`:`Not reporting: ${compactNames(state.unknown,'devices')}`));
       if(!feed.length)feed=[feedEntry('The house is listening for its next real update')];
     }
-    renderFeedEntry(feed[0]);
+    renderFeedEntry(feed[castReceiver ? 0 : Math.floor(now/12)%feed.length]);
     if(event&&now-event.at<45&&event.id!==lastToast&&!demo){lastToast=event.id;toastUntil=now+12;toast.innerHTML=`<span aria-hidden="true">↗</span><div>${esc(event.title)}<small>Just happened at home</small></div>`}
     toast.classList.toggle('show',now<toastUntil);
     for(const [block,id]of [['house','brain-house'],['activity','brain-activity'],['agenda','brain-agenda']])$(id).hidden=visibility[block]===false;

@@ -1,3 +1,7 @@
+# 2.12.70
+
+- Rotate the household feed on physical kiosks while keeping the Hub and garage Cast receiver feeds steady.
+
 # 2.12.69
 
 - Wire the kiosk presentation selector into the display settings Save action.
