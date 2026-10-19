@@ -12,6 +12,32 @@ CASES = (("sports-demo=1", ".sports-card", ".sport-matchup"),
          ("context-demo=media-long", ".context-card", ".context-copy"))
 
 
+def test_cast_idle_uses_saved_synth_theme():
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            executable_path=os.environ.get("MARQUEE_CHROMIUM"), args=["--no-sandbox"])
+        page = browser.new_page(viewport={"width": 1024, "height": 600})
+
+        def route(request):
+            path = request.request.url.split("?", 1)[0].split("marquee.test", 1)[-1]
+            if path == "/image":
+                return request.fulfill(path=str(ROOT / "index.html"), content_type="text/html")
+            asset = ROOT / path.lstrip("/")
+            if asset.is_file():
+                return request.fulfill(path=str(asset))
+            if path == "/settings.json":
+                return request.fulfill(json={"theme": "synthwave", "accent": "#2675df"})
+            return request.fulfill(json={"playing": False})
+
+        page.route("**/*", route)
+        page.goto("http://marquee.test/image", wait_until="domcontentloaded")
+        page.wait_for_function("document.documentElement.dataset.theme === 'synthwave'")
+        assert page.locator("body").evaluate("el => el.classList.contains('idle')")
+        assert page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()") == "#ff4fc8"
+        page.close()
+        browser.close()
+
+
 def run():
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(
