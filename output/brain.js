@@ -14,6 +14,16 @@
   document.body.append(shell);
   const weatherLink=document.createElement('a');weatherLink.className='brain-weather-link';weatherLink.href=q.get('view')==='weather'?'/live':'/live?view=weather';weatherLink.textContent=q.get('view')==='weather'?'← HOUSEHOLD DESK':'LOCAL WEATHER ↗';document.body.append(weatherLink);
   const dock=document.createElement('aside');dock.className='brain-dock';dock.setAttribute('aria-label','Household updates');dock.innerHTML='<span class="brain-dock-brand">M/ HOUSE FEED</span><span class="brain-dock-copy" id="brain-dock-copy">Connecting to the house…</span><div class="brain-dock-people" id="brain-people"></div>';document.body.append(dock);
+  // When Home Assistant embeds the kiosk in a fullscreen popup, its own
+  // dismiss control can sit behind the iframe. Provide an exit in the feed.
+  const parentUrl=document.referrer || window.location.ancestorOrigins?.[0] || '';
+  let dashboardUrl;
+  try { const candidate=new URL(parentUrl); if(window.top!==window&&/^https?:$/.test(candidate.protocol)&&candidate.origin!==location.origin)dashboardUrl=candidate.href; } catch (_) { /* Direct kiosk visit. */ }
+  if(dashboardUrl&&!castReceiver){
+    const close=document.createElement('button');close.type='button';close.className='brain-dock-close';close.textContent='✕ Close';close.setAttribute('aria-label','Close Marquee and return to dashboard');
+    close.onclick=()=>{ window.top.location.href=dashboardUrl; };
+    dock.append(close);
+  }
   const toast=document.createElement('div');toast.className='brain-toast';toast.setAttribute('role','status');document.body.append(toast);
   const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const feedTier=()=>window.matchMedia('(max-width: 430px)').matches?'phone':window.matchMedia('(max-width: 700px)').matches?'tablet':'desktop';
