@@ -1,0 +1,148 @@
+/* Cast sports and media scenes share the household synth palette. These
+   rules are deliberately limited to the receiver; Plex artwork keeps its
+   own presentation, and calendar cards are styled with the agenda. */
+body.cast-display {
+  --cast-ink: var(--text, #fff0fb);
+  --cast-muted: var(--text-soft, #c3a9d4);
+  --cast-accent: var(--accent, #ff4fc8);
+  --cast-line: var(--chip-border, #53316e);
+  --cast-panel: var(--panel, #1b1233);
+  --cast-radius: 8px;
+  --cast-font: "Space Grotesk", system-ui, sans-serif;
+}
+
+body.cast-display .stage.sports .sports-card,
+body.cast-display .stage.contextual .context-card:not(.calendar-scene):not([data-kind="ambient_agenda"]):not([data-kind="birthday_rollup"]) {
+  color: var(--cast-ink);
+  font-family: var(--cast-font);
+  background:
+    radial-gradient(ellipse at 14% 52%, #a52cff25, transparent 52%),
+    radial-gradient(ellipse at 87% 18%, #20d5df1b, transparent 42%),
+    linear-gradient(135deg, var(--bg, #100b22), var(--panel, #21123d) 65%, var(--bg, #100b22));
+  border: 1px solid var(--cast-line);
+}
+
+body.cast-display .stage.sports .sports-card {
+  padding: clamp(18px, 3vh, 36px) clamp(25px, 4vw, 64px);
+  gap: clamp(8px, 1.4vh, 18px);
+}
+body.cast-display .sports-card .sport-head {
+  border-bottom: 2px solid var(--cast-accent);
+  padding-bottom: clamp(8px, 1.4vh, 18px);
+  color: #ff88df;
+  font-size: clamp(13px, 1.3vw, 20px);
+  letter-spacing: .1em;
+}
+body.cast-display .sports-card .sport-title {
+  color: var(--cast-ink);
+  font-family: var(--cast-font);
+  font-size: clamp(21px, min(3vw, 4.5vh), 48px);
+  line-height: 1.12;
+  letter-spacing: -.04em;
+}
+body.cast-display .sports-card .sport-side {
+  padding: clamp(6px, 1vh, 14px);
+  box-sizing: border-box;
+  border: 1px solid var(--cast-line);
+  border-bottom: 3px solid var(--cast-accent);
+  border-radius: var(--cast-radius);
+  background: linear-gradient(180deg, #29194a66, #1b1233e8);
+}
+body.cast-display .sports-card :is(.sport-name, .sport-score, .sport-clock) {
+  color: var(--cast-ink);
+  font-family: var(--cast-font);
+}
+body.cast-display .sports-card .sport-name {
+  font-size: clamp(18px, min(2.4vw, 3.4vh), 36px);
+  line-height: 1.12;
+}
+body.cast-display .sports-card .sport-score { font-size: clamp(38px, 5.5vw, 92px); }
+/* The remote league badge is decorative and can fail on a receiver. The
+   league name in the header remains visible and is more reliable. */
+body.cast-display .sports-card .sport-league-logo { display: none; }
+body.cast-display .sports-card :is(.sport-record, .sport-date, .sport-weather, .sport-subtitle, .sport-rows, .sport-detail) {
+  color: var(--cast-muted);
+  font-family: var(--cast-font);
+}
+body.cast-display .sports-card .sport-record,
+body.cast-display .sports-card .sport-subtitle,
+body.cast-display .sports-card .sport-rows,
+body.cast-display .sports-card .sport-detail {
+  font-size: clamp(14px, 1.35vw, 21px);
+  line-height: 1.3;
+}
+body.cast-display .sports-card .sport-weather { font-size: clamp(14px, 1.4vw, 22px); }
+body.cast-display .sports-card .sport-date { font-size: clamp(12px, 1.15vw, 18px); }
+body.cast-display .sports-card :is(.sport-status, .sport-vs) { color: #ff88df; }
+body.cast-display .sports-card .sport-status { font-size: clamp(18px, 2vw, 30px); }
+body.cast-display .sports-card .sport-footer { border-top: 1px solid var(--cast-line); }
+
+body.cast-display .stage.contextual .context-card:not(.calendar-scene):not([data-kind="ambient_agenda"]):not([data-kind="birthday_rollup"]) {
+  padding: clamp(22px, 4vh, 48px) clamp(28px, 5vw, 78px);
+  gap: clamp(12px, 2vh, 28px) 4vw;
+}
+body.cast-display .context-card:not(.calendar-scene) .context-head {
+  border-bottom: 2px solid var(--cast-accent);
+  padding-bottom: clamp(10px, 1.4vh, 20px);
+}
+body.cast-display .context-card:not(.calendar-scene) .context-source,
+body.cast-display .context-card:not(.calendar-scene) .context-status {
+  color: #ff88df;
+  font-family: var(--cast-font);
+  font-size: clamp(14px, 1.45vw, 22px);
+  letter-spacing: .12em;
+}
+body.cast-display .context-card:not(.calendar-scene) .context-clock {
+  color: var(--cast-ink);
+  font-family: var(--cast-font);
+  font-size: clamp(38px, 5vw, 80px);
+}
+body.cast-display .context-card:not(.calendar-scene) .context-weather {
+  color: var(--cast-muted);
+  font-size: clamp(14px, 1.4vw, 22px);
+}
+body.cast-display .context-card:not(.calendar-scene) .context-title {
+  color: var(--cast-ink);
+  font-family: var(--cast-font);
+  font-size: clamp(34px, min(4.5vw, 7vh), 72px);
+  line-height: 1.08;
+  letter-spacing: -.045em;
+}
+body.cast-display .context-card:not(.calendar-scene) .context-subtitle {
+  color: #f6d8f4;
+  font-size: clamp(19px, 2vw, 30px);
+  line-height: 1.2;
+}
+body.cast-display .context-card:not(.calendar-scene) .context-detail {
+  color: var(--cast-muted);
+  font-size: clamp(17px, 1.55vw, 25px);
+  line-height: 1.35;
+}
+body.cast-display .context-card:not(.calendar-scene) .context-rows {
+  border-top-color: var(--cast-line);
+  color: var(--cast-ink);
+  font-size: clamp(15px, 1.4vw, 22px);
+  max-height: 20vh;
+}
+body.cast-display .context-card:not(.calendar-scene) .context-rows span {
+  border: 1px solid var(--cast-line);
+  border-radius: var(--cast-radius);
+  background: var(--cast-panel);
+  padding: .5em .7em;
+}
+body.cast-display .context-card:not(.calendar-scene) .context-art {
+  background: #29194a66;
+  border: 1px solid var(--cast-line);
+  padding: 2vw;
+  box-sizing: border-box;
+}
+
+@media (max-height: 650px) and (min-aspect-ratio: 6/5) {
+  body.cast-display .stage.sports .sports-card { padding-block: 18px; gap: 8px; }
+  body.cast-display .sports-card .sport-head { padding-bottom: 8px; }
+  body.cast-display .sports-card .sport-side { padding: 6px; gap: 5px; }
+  body.cast-display .sports-card .sport-side img { max-height: 18vh; }
+  body.cast-display .sports-card .sport-footer { padding-top: 6px; }
+  body.cast-display .stage.contextual .context-card:not(.calendar-scene) { padding-block: 20px; gap: 10px 4vw; }
+  body.cast-display .context-card:not(.calendar-scene) .context-rows { max-height: 17vh; padding-top: 8px; }
+}

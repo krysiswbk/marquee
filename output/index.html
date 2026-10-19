@@ -49,6 +49,11 @@
   :root[data-theme="bsides"] {
     --bg: #142226; --panel: #1C3036; --chip-border: #3E565E; --track: #28404A;
     --accent: #D96C2C; --accent-glow: rgba(217, 108, 44, .16); }
+  :root[data-theme="synthwave"] {
+    --bg: #100b22; --panel: #1b1233; --line: #53316e;
+    --text: #fff0fb; --text-soft: #e2cbe9; --muted: #c3a9d4; --faint: #9f86b0;
+    --accent: #ff4fc8; --accent-glow: rgba(255, 79, 200, .2);
+    --chip-border: #53316e; --track: #291542; --pause: #9f86b0; }
 
   html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden;
     font-family: var(--font); -webkit-font-smoothing: antialiased; }
@@ -745,11 +750,13 @@
   body.live-editing [data-layout] { outline:none; }
   body.live-editing .screen-controls, body.live-editing nav { display:none !important; }
 </style>
-<link rel="stylesheet" href="/brain.css?v=2.12.70">
-<link rel="stylesheet" href="/screens.css?v=2.12.70">
-<link rel="stylesheet" href="/weather-channel.css?v=2.12.70">
+<link rel="stylesheet" href="/brain.css?v=2.12.71">
+<link rel="stylesheet" href="/screens.css?v=2.12.71">
+<link rel="stylesheet" href="/weather-channel.css?v=2.12.71">
 <link rel="stylesheet" href="/scene-themes.css?v=2.9.7">
-<link rel="stylesheet" href="/sky-ambient.css?v=2.12.70">
+<link rel="stylesheet" href="/sky-ambient.css?v=2.12.71">
+<link rel="stylesheet" href="/cast-weather-house.css?v=2.12.71">
+<link rel="stylesheet" href="/cast-media-sports.css?v=2.12.71">
 <body data-template="spotlight">
 <img class="bg" id="bg" alt="">
 <img class="fa" id="fa1" alt=""><img class="fa" id="fa2" alt="">
@@ -850,13 +857,13 @@
 <time class="cast-clock-overlay" id="cast-clock-overlay"></time>
 <div class="idle-screen"><div class="idle-house"><div class="idle-kicker" id="idle-kicker">Home</div><div class="idle-greeting" id="idle-greeting"></div><div class="idle-state" id="idle-state" hidden></div><div class="idle-note" id="idle-note" hidden></div><time class="idle-clock" id="idle-clock"></time><div class="idle-date" id="idle-date"></div><div class="idle-weather" id="idle-weather" aria-label="Current weather"><div class="idle-weather-primary"><span class="idle-weather-icon" id="idle-weather-icon" aria-hidden="true"></span><strong id="idle-weather-temp"></strong><span id="idle-weather-condition"></span></div><div class="idle-weather-secondary"><span id="idle-weather-feels"></span><span id="idle-weather-range"></span><span id="idle-weather-rain"></span></div><div class="idle-weather-status" id="idle-weather-status"></div></div></div></div>
 <div class="ambient-veil" aria-hidden="true"></div>
-<script src="/lifecycle.js?v=2.12.70"></script>
-<script src="/state-contract.js?v=2.12.70"></script>
-<script src="/weather-channel.js?v=2.12.70"></script>
-<script src="/sky-ambient.js?v=2.12.70"></script>
-<script src="/weather-summary.js?v=2.12.70"></script>
-<script src="/now-playing-progress.js?v=2.12.70"></script>
-<script src="/brain.js?v=2.12.70"></script>
+<script src="/lifecycle.js?v=2.12.71"></script>
+<script src="/state-contract.js?v=2.12.71"></script>
+<script src="/weather-channel.js?v=2.12.71"></script>
+<script src="/sky-ambient.js?v=2.12.71"></script>
+<script src="/weather-summary.js?v=2.12.71"></script>
+<script src="/now-playing-progress.js?v=2.12.71"></script>
+<script src="/brain.js?v=2.12.71"></script>
 <script>
 
   const $ = id => document.getElementById(id);
@@ -1596,7 +1603,7 @@ ${chase.join('')}
     document.documentElement.dataset.theme = c.theme || 'amber';
     window.MarqueeBrain?.configure(c, fallbackCfg);
     const chosenAccent = (context && context.accent) || c.accent || '';
-    if (/^#[0-9a-fA-F]{6}$/.test(chosenAccent)) {
+    if (!(CAST_DISPLAY && c.theme === 'synthwave') && /^#[0-9a-fA-F]{6}$/.test(chosenAccent)) {
       root.setProperty('--accent', chosenAccent);
       root.setProperty('--accent-glow', hexGlow(chosenAccent));
       // A custom accent tints as deeply as the built-in themes do.
@@ -2891,4 +2898,4 @@ ${chase.join('')}
   window.MarqueeLifecycle.register('surface-animation', {interval: 1000, refresh: () => paint()});
 </script>
 
-<script src="/kiosk-menu.js?v=2.12.70"></script>
+<script src="/kiosk-menu.js?v=2.12.71"></script>

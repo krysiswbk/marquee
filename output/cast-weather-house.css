@@ -1,0 +1,128 @@
+/* The Cast receiver is viewed across a room. Keep its household scenes in the
+   same synth palette as the kiosk, with text sized for a Hub Max. */
+body.cast-display {
+  --cast-bg: var(--bg);
+  --cast-panel: var(--panel);
+  --cast-ink: var(--text);
+  --cast-muted: var(--text-soft);
+  --cast-accent: var(--accent);
+  --cast-line: var(--line);
+}
+
+/* Clock and its companion weather retain the centered Cast composition. */
+body.cast-display .idle-screen {
+  background: radial-gradient(ellipse at 24% 72%, var(--accent-glow), transparent 55%),
+              radial-gradient(ellipse at 83% 18%, var(--accent-glow), transparent 44%),
+              linear-gradient(145deg, var(--cast-bg), var(--cast-panel) 68%, var(--cast-bg));
+}
+body.cast-display .idle-clock { color: var(--cast-ink); }
+body.cast-display .idle-weather-primary strong,
+body.cast-display .idle-weather-primary > span:not(.idle-weather-icon) { color: var(--cast-ink); }
+body.cast-display .idle-weather-secondary,
+body.cast-display .idle-weather-status { color: var(--cast-muted); }
+body.cast-display .idle-weather-secondary > span:not(:empty) + span:not(:empty)::before {
+  color: var(--cast-accent);
+}
+body.cast-display .idle-wx-svg .wx-cloud { fill: #e9d8f1; stroke: #c9a8dd; }
+body.cast-display .idle-wx-svg .wx-moon { fill: #e9d8f1; }
+body.cast-display .idle-wx-svg .wx-rain { stroke: #6cf4e5; }
+body.cast-display .idle-wx-svg .wx-fog { stroke: #c9a8dd; }
+
+/* Weather broadcast uses the same variables as the kiosk Weather channel. */
+body.cast-display .stage.weather-context .weather-card.wx-broadcast {
+  --wx-bg: var(--cast-bg);
+  --wx-panel: var(--cast-panel);
+  --wx-ink: var(--cast-ink);
+  --wx-muted: var(--cast-muted);
+  --wx-accent: var(--cast-accent);
+  --wx-line: var(--cast-line);
+  background: radial-gradient(ellipse at 80% 12%, var(--accent-glow), transparent 46%),
+              linear-gradient(135deg, var(--cast-bg), var(--cast-panel) 68%, var(--cast-bg)) !important;
+}
+body.cast-display .wx-broadcast .weather-head,
+body.cast-display .wx-broadcast .wx-footer { background: var(--cast-panel); }
+body.cast-display .wx-broadcast :is(.channel-hour, .channel-day) {
+  background: var(--cast-panel);
+}
+body.cast-display .wx-broadcast :is(.channel-hour, .channel-day) svg .wx-rain { stroke: #6cf4e5; }
+body.cast-display .wx-broadcast .channel-warning {
+  background: color-mix(in srgb, var(--cast-accent) 32%, var(--cast-bg));
+  border-bottom-color: var(--cast-accent);
+}
+body.cast-display .wx-broadcast .wx-heading p { font-size: clamp(12px, 1vw, 18px); }
+body.cast-display .wx-broadcast .wx-heading small { font-size: clamp(15px, 1.25vw, 21px); }
+body.cast-display .wx-broadcast .wx-heading > span { font-size: clamp(12px, 1vw, 16px); }
+body.cast-display .wx-broadcast .wx-observation > span { font-size: clamp(14px, 1.2vw, 20px); }
+body.cast-display .wx-broadcast .channel-condition { font-size: clamp(28px, 2.5vw, 40px); }
+body.cast-display .wx-broadcast .channel-metrics span { font-size: clamp(16px, 1.5vw, 23px); }
+body.cast-display .wx-broadcast .channel-metrics strong { font-size: clamp(19px, 1.8vw, 27px); }
+body.cast-display .wx-broadcast .channel-outlook { font-size: clamp(16px, 1.4vw, 22px); }
+body.cast-display .wx-broadcast .wx-segments button { font-size: clamp(14px, 1.2vw, 20px); }
+body.cast-display .wx-broadcast .wx-footer > div { font-size: clamp(14px, 1.3vw, 22px); }
+
+/* Provider context cards include household attention, sensor and presence
+   summaries. Their data varies, so reserve a flexible copy area and keep the
+   key text large without affecting the dedicated calendar and media cards. */
+body.cast-display .stage.contextual .context-card:not([data-kind="calendar_event"]):not([data-kind="ambient_agenda"]):not([data-kind="gaming"]):not([data-kind="game_release"]):not([data-kind="tv_release"]) {
+  background: radial-gradient(ellipse at 83% 16%, var(--accent-glow), transparent 43%),
+              linear-gradient(135deg, var(--cast-bg), var(--cast-panel) 67%, var(--cast-bg)) !important;
+  color: var(--cast-ink);
+  border-top: 3px solid var(--cast-accent);
+  gap: clamp(10px, 2vh, 20px) 3vw;
+}
+body.cast-display .stage.contextual .context-card[data-kind="household_attention"] {
+  border-left: 1vw solid var(--cast-accent);
+}
+body.cast-display .context-card:not([data-kind="calendar_event"]):not([data-kind="ambient_agenda"]):not([data-kind="gaming"]):not([data-kind="game_release"]):not([data-kind="tv_release"]) .context-source,
+body.cast-display .context-card:not([data-kind="calendar_event"]):not([data-kind="ambient_agenda"]):not([data-kind="gaming"]):not([data-kind="game_release"]):not([data-kind="tv_release"]) .context-status {
+  color: var(--cast-accent);
+  font-size: clamp(16px, 1.6vw, 25px);
+  letter-spacing: .12em;
+}
+body.cast-display .context-card:not([data-kind="calendar_event"]):not([data-kind="ambient_agenda"]):not([data-kind="gaming"]):not([data-kind="game_release"]):not([data-kind="tv_release"]) .context-title {
+  color: var(--cast-ink);
+  font-size: clamp(38px, 5vw, 82px);
+  line-height: 1.04;
+}
+body.cast-display .context-card:not([data-kind="calendar_event"]):not([data-kind="ambient_agenda"]):not([data-kind="gaming"]):not([data-kind="game_release"]):not([data-kind="tv_release"]) .context-subtitle {
+  color: var(--cast-ink);
+  font-size: clamp(20px, 2.2vw, 35px);
+  line-height: 1.2;
+}
+body.cast-display .context-card:not([data-kind="calendar_event"]):not([data-kind="ambient_agenda"]):not([data-kind="gaming"]):not([data-kind="game_release"]):not([data-kind="tv_release"]) .context-detail {
+  color: var(--cast-muted);
+  font-size: clamp(18px, 1.8vw, 28px);
+  line-height: 1.3;
+}
+body.cast-display .context-card:not([data-kind="calendar_event"]):not([data-kind="ambient_agenda"]):not([data-kind="gaming"]):not([data-kind="game_release"]):not([data-kind="tv_release"]) .context-rows {
+  color: var(--cast-muted);
+  border-top-color: var(--cast-line);
+  font-size: clamp(17px, 1.6vw, 25px);
+  gap: .6vw;
+}
+body.cast-display .context-card:not([data-kind="calendar_event"]):not([data-kind="ambient_agenda"]):not([data-kind="gaming"]):not([data-kind="game_release"]):not([data-kind="tv_release"]) .context-rows span {
+  background: var(--accent-glow);
+  border: 1px solid var(--cast-line);
+  border-radius: 4px;
+  padding: .45vh .7vw;
+}
+body.cast-display .context-card:not([data-kind="calendar_event"]):not([data-kind="ambient_agenda"]):not([data-kind="gaming"]):not([data-kind="game_release"]):not([data-kind="tv_release"]) .context-weather {
+  color: var(--cast-muted);
+  font-size: clamp(17px, 1.7vw, 27px);
+}
+
+@media (max-height: 700px) and (min-aspect-ratio: 3/2) {
+  body.cast-display .stage.contextual .context-card:not([data-kind="calendar_event"]):not([data-kind="ambient_agenda"]):not([data-kind="gaming"]):not([data-kind="game_release"]):not([data-kind="tv_release"]) {
+    padding: 3.5vh 4vw;
+  }
+  body.cast-display .context-card:not([data-kind="calendar_event"]):not([data-kind="ambient_agenda"]):not([data-kind="gaming"]):not([data-kind="game_release"]):not([data-kind="tv_release"]) .context-title {
+    font-size: clamp(34px, 4.4vw, 62px);
+  }
+  body.cast-display .context-card:not([data-kind="calendar_event"]):not([data-kind="ambient_agenda"]):not([data-kind="gaming"]):not([data-kind="game_release"]):not([data-kind="tv_release"]) .context-detail {
+    margin-top: 1vh;
+  }
+  body.cast-display .context-card:not([data-kind="calendar_event"]):not([data-kind="ambient_agenda"]):not([data-kind="gaming"]):not([data-kind="game_release"]):not([data-kind="tv_release"]) .context-rows {
+    max-height: 19vh;
+    padding-top: 1vh;
+  }
+}

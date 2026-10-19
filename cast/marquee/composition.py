@@ -429,7 +429,7 @@ def custom_backdrop_info():
         return None
 
 THEMES = ("amber", "ice", "crimson", "emerald",
-          "campaign", "concrete", "trophy", "bsides")
+          "campaign", "concrete", "trophy", "bsides", "synthwave")
 TEMPLATES = ("spotlight", "split", "hero", "lowerthird", "bigclock", "street",
              "fanart")
 TITLE_FONTS = (

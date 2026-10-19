@@ -751,6 +751,23 @@ body.brain-live .kiosk-section:not(.now-playing-surface) .kiosk-section-head{bor
 body.brain-live .kiosk-section:not(.now-playing-surface) .kiosk-section-head h1{padding-bottom:clamp(12px,1.8vh,22px);border-bottom:1px solid var(--kiosk-line)}
 body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-feature{box-sizing:border-box;padding:clamp(28px,4vw,60px);min-width:0}
 body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda{column-gap:clamp(28px,5vw,80px)}
+/* Calendar is read from across the room. Give event names the widest column,
+   place their source beneath them, and keep the first event concise. */
+body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);column-gap:clamp(22px,4vw,56px)}
+html[data-kiosk-theme=synthwave] body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-feature{border-top:4px solid var(--kiosk-accent);background:radial-gradient(ellipse at 90% 0%,#ff4fc833,transparent 55%),linear-gradient(135deg,#291542,#17102b 72%)}
+body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-feature h2{font-size:clamp(30px,3.3vw,48px);line-height:1.11;letter-spacing:-.025em;overflow-wrap:anywhere}
+body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-feature .kiosk-lede{font-size:clamp(18px,2vw,24px);font-weight:700}
+body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-feature .kiosk-meta{font-size:clamp(15px,1.55vw,18px)}
+body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-row{grid-template-columns:minmax(112px,.42fr) minmax(0,1fr);align-items:start;gap:3px 14px;padding:12px 0}
+body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-row time{grid-column:1;grid-row:1/3;color:#e4c7f1;font-size:clamp(14px,1.45vw,17px);line-height:1.25}
+body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-row strong{grid-column:2;min-width:0;color:#fff6fd;font-size:clamp(19px,2vw,24px);font-weight:700;line-height:1.22;overflow-wrap:anywhere}
+body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-row small{grid-column:2;color:#d8b6e8;font-size:clamp(13px,1.3vw,16px);line-height:1.25}
+body.brain-live .kiosk-section[data-section=calendar] .kiosk-birthday-rows{grid-column:2;color:#f1d5e9;font-size:clamp(14px,1.35vw,17px)}
+body.brain-live .kiosk-section[data-section=calendar] .kiosk-calendar-count{color:#e4c7f1;font-size:16px}
+body.brain-live .kiosk-section[data-section=calendar] .kiosk-calendar-page{border-top:2px solid var(--kiosk-accent)}
+body.brain-live .kiosk-section[data-section=calendar] .kiosk-calendar-page .kiosk-agenda-row{min-height:58px;padding:11px 0}
+@media(max-width:700px){body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda{grid-template-columns:minmax(0,1fr)}body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-feature h2{font-size:clamp(30px,6vw,42px)}body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-row{grid-template-columns:minmax(105px,.35fr) minmax(0,1fr)}}
+@media(max-width:480px){body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-feature{padding:24px}body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-feature h2{font-size:clamp(28px,8vw,36px)}body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-row{grid-template-columns:minmax(0,1fr)}body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-row :is(time,strong,small,.kiosk-birthday-rows){grid-column:1;grid-row:auto}}
 /* Calendar content must remain reachable on shallow wall displays. The full
    agenda keeps its header and actions fixed while its event list scrolls. */
 .kiosk-section.calendar-detail-surface{display:flex;flex-direction:column;box-sizing:border-box}

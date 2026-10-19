@@ -81,6 +81,14 @@ def test_live_theme_defaults_and_legacy_values_normalize_to_weather(monkeypatch,
     assert saved_live["liveLayout"]["home"]["clock"] == {"x": 18, "scale": 1.2}
 
 
+def test_cast_synthwave_theme_is_accepted_without_changing_live_theme(monkeypatch, tmp_path):
+    settings_path, _ = _configure_handler(monkeypatch, tmp_path)
+    code, _, response = _request("/settings", "PATCH", {"theme": "synthwave"})
+    assert code == 200 and response["settings"]["theme"] == "synthwave"
+    assert response["settings"]["liveTheme"] == "afterhours"
+    assert json.loads(settings_path.read_text())["theme"] == "synthwave"
+
+
 def test_partial_profile_patches_preserve_secrets_and_isolate_profiles(monkeypatch, tmp_path):
     settings_path, live_path = _configure_handler(monkeypatch, tmp_path)
     settings_path.write_text(json.dumps({
