@@ -15,11 +15,16 @@ body.cast-display .idle-screen {
               radial-gradient(ellipse at 83% 18%, var(--accent-glow), transparent 44%),
               linear-gradient(145deg, var(--cast-bg), var(--cast-panel) 68%, var(--cast-bg));
 }
-body.cast-display .idle-clock { color: var(--cast-ink); }
+body.cast-display .idle-clock { color: #fff; }
 body.cast-display .idle-weather-primary strong,
 body.cast-display .idle-weather-primary > span:not(.idle-weather-icon) { color: var(--cast-ink); }
 body.cast-display .idle-weather-secondary,
 body.cast-display .idle-weather-status { color: var(--cast-muted); }
+/* The daytime sky is light; its caption needs the existing dark ink. */
+body.cast-display.sky-day .idle-weather-primary strong,
+body.cast-display.sky-day .idle-weather-primary > span:not(.idle-weather-icon),
+body.cast-display.sky-day .idle-weather-secondary,
+body.cast-display.sky-day .idle-weather-status { color: #28343d; }
 body.cast-display .idle-weather-secondary > span:not(:empty) + span:not(:empty)::before {
   color: var(--cast-accent);
 }
