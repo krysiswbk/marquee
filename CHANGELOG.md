@@ -1,3 +1,7 @@
+# 2.12.69
+
+- Wire the kiosk presentation selector into the display settings Save action.
+
 # 2.12.68
 
 - Add a calm kiosk presentation that holds clock and weather until active media or critical attention; keep other screens available through navigation.

@@ -42,7 +42,7 @@
     'mediaBackend', 'plexHost', 'plexToken', 'embyHost', 'embyKey',
     'jellyfinHost', 'jellyfinKey', 'plexUsers', 'plexDevices', 'blockTags'
   ]);
-  const DISPLAY_CONFIG_PREFIXES = ['fallback.'];
+  const DISPLAY_CONFIG_PREFIXES = ['fallback.', 'display.kiosk_presentation'];
   const CONTENT_CONFIG_PREFIXES = ['providers.', 'interests.'];
   const ADVANCED_CONFIG_PREFIXES = ['general.', 'display.', 'context_engine.'];
   const PROFILE_META = {
