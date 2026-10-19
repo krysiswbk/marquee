@@ -34,6 +34,9 @@ def test_cast_idle_uses_saved_synth_theme():
         page.wait_for_function("document.documentElement.dataset.theme === 'synthwave'")
         assert page.locator("body").evaluate("el => el.classList.contains('idle')")
         assert page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()") == "#ff4fc8"
+        page.evaluate("document.body.classList.add('sky-day')")
+        assert page.locator("#idle-weather-temp").evaluate(
+            "el => getComputedStyle(el).color") == "rgb(255, 240, 251)"
         page.close()
         browser.close()
 

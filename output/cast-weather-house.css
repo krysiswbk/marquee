@@ -20,11 +20,11 @@ body.cast-display .idle-weather-primary strong,
 body.cast-display .idle-weather-primary > span:not(.idle-weather-icon) { color: var(--cast-ink); }
 body.cast-display .idle-weather-secondary,
 body.cast-display .idle-weather-status { color: var(--cast-muted); }
-/* The daytime sky is light; its caption needs the existing dark ink. */
-body.cast-display.sky-day .idle-weather-primary strong,
-body.cast-display.sky-day .idle-weather-primary > span:not(.idle-weather-icon),
-body.cast-display.sky-day .idle-weather-secondary,
-body.cast-display.sky-day .idle-weather-status { color: #28343d; }
+/* The synth Cast background stays dark even when the weather is daytime. */
+html[data-theme="synthwave"] body.cast-display.sky-day .idle-weather-primary strong,
+html[data-theme="synthwave"] body.cast-display.sky-day .idle-weather-primary > span:not(.idle-weather-icon) { color: var(--cast-ink); }
+html[data-theme="synthwave"] body.cast-display.sky-day .idle-weather-secondary,
+html[data-theme="synthwave"] body.cast-display.sky-day .idle-weather-status { color: var(--cast-muted); }
 body.cast-display .idle-weather-secondary > span:not(:empty) + span:not(:empty)::before {
   color: var(--cast-accent);
 }
