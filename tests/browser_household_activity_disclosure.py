@@ -26,7 +26,7 @@ def events(count=8):
     return [{
         "id": f"fixture:activity:{index}",
         "title": "X" * 500 if index == 0 else f"Front door activity {index} with a deliberately long authoritative description",
-        "category": "door",
+        "category": "garage_door" if index == 0 else "door",
         "at": now - index * 30,
         "expires": now + 900,
     } for index in range(count)]
@@ -83,6 +83,14 @@ with sync_playwright() as playwright:
         assert page.locator(".brain-activity-record strong").first.evaluate("el => el.textContent.length === 500")
         assert page.locator(".brain-activity-record strong").first.evaluate("el => { const r=el.getBoundingClientRect(); const p=el.parentElement.getBoundingClientRect(); return r.right <= p.right + 1 && r.left >= p.left - 1 }")
         assert page.locator(".brain-activity-record strong").evaluate_all("nodes => new Set(nodes.map(n => n.textContent)).size === 8")
+        assert page.locator(".brain-activity-record span").first.inner_text() == "Garage door"
+        assert page.locator("#brain-activity-view").evaluate("el => el.parentElement.classList.contains('activity-open')")
+        overlay_hit = page.locator(".brain-activity-dialog").evaluate("""el => {
+            const r = el.getBoundingClientRect();
+            const hit = document.elementFromPoint(r.right - 10, r.bottom - 10);
+            return {contains:el.contains(hit), hit:hit?.className, rect:r.toJSON()};
+        }""")
+        assert overlay_hit["contains"], (width, height, overlay_hit)
         assert page.locator("#brain-house").evaluate("el => el.inert && el.getAttribute('aria-hidden') === 'true'")
         assert page.locator(".ambient-veil").evaluate("el => el.inert && el.getAttribute('aria-hidden') === 'true'")
 

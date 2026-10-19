@@ -169,23 +169,28 @@
   function reconcileActivityHash(events,fresh){
     if(fresh&&events.length&&location.hash==='#activity'&&!activityHashConsumed&&!activityOpenState)openActivity(events,true);
   }
+  function activityCategoryLabel(category){
+    const labels={garage_door:'Garage door',door_lock:'Door lock',exterior_door:'Exterior door',window:'Window',visitor:'Visitor',fire_alert:'Fire alert'};
+    const key=String(category||'').trim().toLowerCase();
+    return labels[key]||(/^[a-z][a-z0-9_-]*$/.test(key)?key.replace(/[_-]+/g,' ').replace(/\b[a-z]/g,letter=>letter.toUpperCase()):'Household activity');
+  }
   function renderActivity(events, fresh){
     if(!activityOpenState)return;
     const list=$('brain-activity-list');
     $('brain-activity-count').textContent=!fresh?'Activity is unavailable while the household feed is offline.':`${events.length} event${events.length===1?'':'s'} in the current 15-minute activity window.`;
-    list.innerHTML=fresh&&events.length?events.map(e=>`<article class="brain-activity-record"><time datetime="${esc(new Date(Number(e.at)*1000).toISOString())}">${esc(new Date(Number(e.at)*1000).toLocaleString())} · ${esc(elapsed(Date.now()/1000-e.at))}${Date.now()/1000-e.at>=60?' ago':''}</time><strong>${esc(e.title)}</strong><span>${esc(e.category||'Household activity')}</span></article>`).join(''):'<p class="brain-empty">'+(fresh?'No recent activity is recorded.':'Activity is unavailable while the household feed is offline.')+'</p>';
+    list.innerHTML=fresh&&events.length?events.map(e=>`<article class="brain-activity-record"><time datetime="${esc(new Date(Number(e.at)*1000).toISOString())}">${esc(new Date(Number(e.at)*1000).toLocaleString())} · ${esc(elapsed(Date.now()/1000-e.at))}${Date.now()/1000-e.at>=60?' ago':''}</time><strong>${esc(e.title)}</strong><span>${esc(activityCategoryLabel(e.category))}</span></article>`).join(''):'<p class="brain-empty">'+(fresh?'No recent activity is recorded.':'Activity is unavailable while the household feed is offline.')+'</p>';
   }
   function openActivity(events, fromHistory=false, opener=null){
     if(!events.length)return;
     activityReturnFocus=fromHistory?activityFallback:(opener||(document.activeElement?.isConnected&&document.activeElement!==document.body?document.activeElement:null));activityOpenState=true;activityHashConsumed=true;
     if(!fromHistory){history.pushState({marqueeActivity:true},'',`${location.pathname}${location.search}#activity`);activityHistoryState=true;}
-    setActivityBackground(true);activityView.hidden=false;activityView.setAttribute('aria-hidden','false');renderActivity(events,true);$('brain-activity-close').focus();
+    setActivityBackground(true);shell.classList.add('activity-open');activityView.hidden=false;activityView.setAttribute('aria-hidden','false');renderActivity(events,true);$('brain-activity-close').focus();
   }
   function closeActivity(fromHistory=false){
     if(!activityOpenState)return;
     if(activityHistoryState&&!fromHistory){activityHistoryState=false;activityHistoryTraversalPending=true;window.dispatchEvent(new Event('marquee-history-focus-owned'));history.back();return;}
     activityOpenState=false;activityHistoryState=false;if(location.hash==='#activity'){history.replaceState(history.state,'',`${location.pathname}${location.search}`);activityHashConsumed=true;}
-    activityView.hidden=true;activityView.setAttribute('aria-hidden','true');setActivityBackground(false);
+    activityView.hidden=true;activityView.setAttribute('aria-hidden','true');shell.classList.remove('activity-open');setActivityBackground(false);
     const activityReturnTarget=activityReturnFocus?.isConnected?activityReturnFocus:activityReturnFocus?.id==='brain-activity-open'?$('brain-activity-open'):null;
     const destination=activityReturnTarget&&!activityReturnTarget.matches('[inert]')?activityReturnTarget:activityFallback;
     // History navigation also lets kiosk-menu restore its destination focus;

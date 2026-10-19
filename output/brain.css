@@ -112,6 +112,12 @@ body.brain-live.live-editing .brain-panel{overflow:visible}
 @media (min-width:481px) and (max-width:700px){body.brain-live #brain-activity .brain-empty{font-size:clamp(12px,1.55vw,16px);line-height:1.2}body.brain-live #brain-activity:has(.brain-empty){padding-block:.4vh}}
 @media (max-width:480px){body.brain-live #brain-activity:has(.brain-empty){padding-block:.5vh}body.brain-live #brain-activity .brain-empty{font-size:clamp(12px,3.05vw,16px);line-height:1.1}}
 .brain-activity-view[hidden]{display:none!important}@media(max-width:600px){.brain-activity-view{padding:2vh 3vw}.brain-activity-dialog{width:94vw;max-height:90vh;padding:20px 4vw}.brain-activity-record{display:grid;grid-template-columns:minmax(0,1fr);gap:.4vh}.brain-activity-record time,.brain-activity-record strong,.brain-activity-record span{grid-column:1;grid-row:auto}.brain-activity-record span{font-size:.8em}#brain-activity-list{max-height:70vh}}
+/* Raise the shell while its dialog is open; the feed and browser rail are
+   separate fixed layers that otherwise cover the last activity records. */
+body.brain-live .brain-shell.activity-open{z-index:10019!important;overflow:visible!important}
+body.brain-live .brain-activity-view{z-index:10020;background:#080513e8}
+body.brain-live .brain-activity-dialog{display:flex;flex-direction:column;font-family:var(--desk-font)}
+body.brain-live #brain-activity-list{flex:1 1 auto;min-height:0}
 
 @media(min-aspect-ratio:1/1) and (max-height:700px){body.brain-live .idle-house{top:10vh;bottom:52vh}body.brain-live .idle-clock{font-size:clamp(64px,7vw,92px)}}
 /* Home shows one compact upcoming list; the Calendar destination owns the
