@@ -120,11 +120,10 @@ body.brain-live .brain-activity-dialog{display:flex;flex-direction:column;font-f
 body.brain-live #brain-activity-list{flex:1 1 auto;min-height:0}
 
 @media(min-aspect-ratio:1/1) and (max-height:700px){body.brain-live .idle-house{top:10vh;bottom:52vh}body.brain-live .idle-clock{font-size:clamp(64px,7vw,92px)}}
-/* Home shows one compact upcoming list; the Calendar destination owns the
-   complete agenda. */
+/* Let the Home preview use its space when the house has no recent activity. */
 #brain-agenda{display:flex;flex-direction:column;gap:clamp(6px,1vh,12px);overflow:hidden}
 #brain-agenda .brain-eyebrow{flex:0 0 auto;margin:0}
-.brain-agenda-list{display:grid;gap:.4vh;min-height:0;overflow:hidden}
+.brain-agenda-list{display:grid;grid-auto-rows:max-content;align-content:start;gap:.4vh;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--desk-line) transparent}
 #brain-agenda .brain-agenda-item{min-width:0;padding:.55vh 0;border-bottom:1px solid var(--desk-line);font-size:clamp(14px,1vw,17px);line-height:1.25;overflow:hidden}
 #brain-agenda .brain-agenda-item strong,#brain-agenda .brain-agenda-item span{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis}
 #brain-agenda .brain-agenda-item strong{font-weight:600;white-space:nowrap}
@@ -135,3 +134,13 @@ body.brain-live #brain-activity-list{flex:1 1 auto;min-height:0}
 
 @media(max-width:480px){body.brain-live.idle:not(.kiosk-destination-active) #brain-agenda[data-agenda-state=empty]{display:none}}
 @media(max-width:700px){body.brain-live.idle:not(.kiosk-destination-active) #brain-agenda .brain-agenda-more{display:inline-flex;width:auto;align-self:flex-start;margin-top:4px}}
+@media(min-width:701px) and (min-aspect-ratio:1/1){
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-no-activity{grid-template-rows:auto minmax(0,.7fr) minmax(0,1.3fr);grid-template-areas:'mast mast' '. house' '. agenda'}
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-no-activity #brain-activity{display:none}
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-quiet{grid-template-rows:auto clamp(104px,14vh,130px) minmax(0,1fr)}
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-quiet #brain-house{padding:1.25vh 1.8vw;overflow:hidden}
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-quiet #brain-house .brain-eyebrow{margin-bottom:.5vh}
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-quiet #brain-house .brain-headline{font-size:clamp(22px,2vw,30px);line-height:1.1;margin-bottom:.4vh}
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-quiet #brain-house .brain-summary{font-size:clamp(13px,1vw,15px);line-height:1.3}
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-quiet #brain-house .brain-orbit{width:3.5vw;height:3.5vw;font-size:2vw}
+}

@@ -1,3 +1,8 @@
+# 2.12.86
+
+- Make the Home screen's quiet household status compact and use the recovered space for readable upcoming calendar entries.
+- Show birthday rollup entries and later calendar events in date order; retain prominent active-door, device-failure, and offline states.
+
 # 2.12.85
 
 - Improve Cast and kiosk readability for long media metadata, missing artwork, compact weather, Calendar and Sky at household display sizes.

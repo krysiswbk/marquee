@@ -1,17 +1,22 @@
 """Responsive truth/readability contract for the persistent household feed."""
 
 import os
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 VIEWPORTS = [(320, 720), (360, 800), (393, 852), (430, 932),
-             (481, 900), (700, 900), (1024, 600), (1500, 900)]
+             (481, 900), (700, 900), (1024, 600), (1280, 800), (1500, 900)]
 UNKNOWN = ["Nursery Window", "Office Window", "Basement Window",
            "Garage Entry", "Patio Door", "Workshop Door"]
 HEALTH = ["Nursery Motion & Lux Motion — Upstairs Hallway",
           "Nursery Window Contact — South-facing Window"]
+
+
+def future_start(days):
+    return (datetime.now(timezone.utc) + timedelta(days=days)).isoformat()
 
 
 def snapshot(kind):
@@ -41,10 +46,11 @@ def snapshot(kind):
         {"type": "calendar_event", "subtype": "birthday_rollup", "title": "Casey’s birthday",
          "subtitle": "Tomorrow · Sep 29", "rows": ["Jordan · In 6 days", "Sam · In 12 days"]},
         {"type": "calendar_event", "title": "Annual neighbourhood association planning meeting and accessibility review",
-         "subtitle": "Tomorrow · 7:00 PM", "priority": 40},
-        {"type": "calendar_event", "title": "Urgent school pickup change with a long label", "subtitle": "Today · 4:00 PM",
-         "priority": 90},
-        {"type": "calendar_event", "title": "Third agenda item", "subtitle": "Saturday", "priority": 20},
+         "subtitle": "In 5 days · 7:00 PM", "starts": future_start(5), "priority": 40},
+        {"type": "calendar_event", "title": "Urgent school pickup change with a long label", "subtitle": "In 10 days · 4:00 PM",
+         "starts": future_start(10), "priority": 90},
+        {"type": "calendar_event", "title": "Third agenda item", "subtitle": "In 12 days",
+         "starts": future_start(12), "priority": 20},
     ], "alerts": [], "people": []}
 
 
@@ -127,6 +133,10 @@ with sync_playwright() as playwright:
                 assert agenda.is_visible()
                 assert "Casey’s birthday" in agenda.inner_text()
                 assert "Urgent school pickup change" in agenda.inner_text()
+                assert "Jordan" in agenda.inner_text()
+                if width == 1280:
+                    assert agenda.locator(".brain-agenda-item").count() >= 5
+                    assert not page.locator("#brain-activity").is_visible()
                 assert "coming up" in agenda.inner_text().lower()
                 assert "View full Calendar" in agenda.inner_text()
                 links = agenda.locator("a.brain-agenda-more")
@@ -145,9 +155,13 @@ with sync_playwright() as playwright:
                 assert agenda.evaluate("el => { const a=el.getBoundingClientRect(), d=document.querySelector('.brain-dock').getBoundingClientRect(); return {ok:a.bottom <= d.top + 1, a:{top:a.top,bottom:a.bottom}, d:{top:d.top,bottom:d.bottom}} }")['ok'], (width, height, agenda.bounding_box(), page.locator('.brain-dock').bounding_box())
                 assert agenda.evaluate("el => el.getBoundingClientRect().right <= innerWidth && el.getBoundingClientRect().left >= 0")
                 assert agenda.evaluate("el => el.scrollHeight <= el.clientHeight + 1"), (width, height, agenda.bounding_box(), agenda.evaluate("el => ({scrollHeight:el.scrollHeight, clientHeight:el.clientHeight})"))
+                if width >= 1024:
+                    assert min(agenda.locator(".brain-agenda-item").evaluate_all("nodes => nodes.map(node => node.getBoundingClientRect().height)")) >= 28
                 assert not agenda.evaluate("""
                     el => {
                         const box = el.getBoundingClientRect();
+                        const list = el.querySelector('.brain-agenda-list');
+                        const listBox = list?.getBoundingClientRect();
                         const visible = node => {
                             const style = getComputedStyle(node);
                             return style.display !== 'none' && style.visibility !== 'hidden' && node.getClientRects().length;
@@ -162,6 +176,8 @@ with sync_playwright() as playwright:
                             const paintBox = node.parentElement.closest('.brain-agenda-item, .brain-agenda-more, .brain-eyebrow, h2, .birthday-when, li, .brain-empty') || node.parentElement;
                             const rects = [...paintBox.getClientRects()];
                             for (const rect of rects) {
+                                // Rows outside the scroll viewport remain available by scrolling.
+                                if (listBox && list.contains(paintBox) && (rect.top < listBox.top - 1 || rect.bottom > listBox.bottom + 1)) continue;
                                 const within = rect.top >= box.top - 1 && rect.bottom <= box.bottom + 1 && rect.left >= box.left - 1 && rect.right <= box.right + 1;
                                 if (!within) failures.push({text: node.nodeValue.trim(), rect: {left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom}, agenda: {left: box.left, right: box.right, top: box.top, bottom: box.bottom}});
                             }

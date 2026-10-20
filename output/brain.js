@@ -84,10 +84,9 @@
     set('brain-house-label',!fresh?'SIGNAL LOST':serious||deviceHealth.length?'NEEDS ATTENTION':primary?'HOUSE IN MOTION':'LIVE AT HOME');
     set('brain-symbol',!fresh?'?':serious||deviceHealth.length?'!':primary?'↗':'⌂');
     const duration=primary?Math.max(primary.duration||0,now-primary.since):0;
-    set('brain-headline',!fresh?'The house feed went quiet.':primary?`${primary.name} ${primary.state}.`:serious?serious.title:deviceHealth.length?'Nursery devices are offline.':event&&now-event.at<120?event.title:'Home, in the present.');
-    let summary=!fresh?'Live states are unavailable. The last report is not a current all-clear.':primary?`${duration<60?`Just observed ${primary.state}.`:`Observed ${primary.state} for ${elapsed(duration)}.`} ${serious?'Worth checking before you settle in.':state.sleeping?'Someone is sleeping.':state.weather_state&&/rain|snow/.test(state.weather_state)?'Wet weather outside — worth a look.':state.lock==='locked'?'Front door lock is secured.':''}`:serious?serious.summary:state.lock==='locked'?'Front door locked. Reporting doors and windows are closed.':'No monitored door or window is reporting open.';
+    set('brain-headline',!fresh?'The house feed went quiet.':primary?`${primary.name} ${primary.state}.`:serious?serious.title:deviceHealth.length?'Nursery devices are offline.':event&&now-event.at<120?event.title:'Home');
+    let summary=!fresh?'Live states are unavailable. The last report is not a current all-clear.':primary?`${duration<60?`Just observed ${primary.state}.`:`Observed ${primary.state} for ${elapsed(duration)}.`} ${serious?'Worth checking before you settle in.':state.sleeping?'Someone is sleeping.':state.weather_state&&/rain|snow/.test(state.weather_state)?'Wet weather outside — worth a look.':state.lock==='locked'?'Front door lock is secured.':''}`:serious?serious.summary:state.lock==='locked'?'Front door locked.':state.lock==='unlocked'?'Front door unlocked.':'';
     if(deviceHealth.length)summary='Device status needs attention.';
-    else if(fresh&&state.unknown?.length)summary+=` ${state.unknown.length} household sensor${state.unknown.length===1?' is':'s are'} unavailable.`;
     set('brain-summary',summary);
     $('brain-openings').innerHTML=opening.map(o=>`<span class="brain-tag warm">${esc(o.name)} <small>${esc(o.state)} · ${elapsed(Math.max(o.duration||0,now-o.since))}</small></span>`).join('');
     const actionable=serious?.acknowledgement_required?serious:null;alertId=actionable?.id||'';$('brain-ack').hidden=!actionable||demo;
@@ -96,18 +95,27 @@
     const activityOpenerFocused=$('brain-activity-open')===document.activeElement;
     if(!activityOpenerFocused)$('brain-events').innerHTML=events.length?eventRows.join(''):`<p class="brain-empty">${fresh?'No new door or lock activity in the last 15 minutes.':'Activity feed reconnecting; recent activity is unavailable.'}</p>`;
     if(events.length>3) $('brain-activity-open').onclick=()=>openActivity(events,false,$('brain-activity-open'));
+    shell.classList.toggle('brain-no-activity',fresh&&!events.length);
+    shell.classList.toggle('brain-quiet',fresh&&!events.length&&!primary&&!serious&&!deviceHealth.length);
     renderActivity(events, fresh);
     reconcileActivityHash(events, fresh);
     // Context cards share the household briefing freshness boundary. Do not
     // turn a disconnected snapshot into current agenda guidance.
     const cards=fresh?(state.cards||[]).filter(c=>!c.expires||Date.parse(c.expires)>Date.now()):[];
     const birthdays=cards.find(c=>c.subtype==='birthday_rollup');
-    const near=c=>!c.starts||Date.parse(c.starts)<=Date.now()+3*86400000;
-    const upcomingAll=cards.filter(c=>c.type==='calendar_event'&&c.subtype!=='birthday_rollup'&&near(c))
-      .sort((a,b)=>(Number(b.priority)||0)-(Number(a.priority)||0)||String(a.starts||'').localeCompare(String(b.starts||'')));
+    const upcomingAll=cards.filter(c=>c.type==='calendar_event'&&c.subtype!=='birthday_rollup')
+      .sort((a,b)=>String(a.starts||'').localeCompare(String(b.starts||''))||(Number(b.priority)||0)-(Number(a.priority)||0));
     const birthdayRows=(birthdays?.rows||[]).filter(Boolean);
-    const birthdaySubtitle=birthdays?[birthdays.subtitle,birthdayRows.length?`+ ${birthdayRows.length} more ${birthdayRows.length===1?'birthday':'birthdays'}`:''].filter(Boolean).join(' · '):'';
-    const agendaItems=[...(birthdays?[{title:birthdays.title,subtitle:birthdaySubtitle}]:[]),...upcomingAll].slice(0,2);
+    const dayStart=new Date();dayStart.setHours(0,0,0,0);
+    const relativeDay=text=>{const value=String(text||'');const match=value.match(/In (\d+) days?/i);return dayStart.getTime()+(match?Number(match[1]):/Tomorrow/i.test(value)?1:0)*86400000};
+    const additionalBirthdays=birthdayRows.map(row=>{
+      const value=String(row), separator=value.indexOf(' · ');
+      const subtitle=separator<0?'Birthday':value.slice(separator+3);
+      return {title:separator<0?value:value.slice(0,separator),subtitle,when:relativeDay(subtitle),priority:Number(birthdays?.priority)||0};
+    });
+    const agendaItems=[...(birthdays?[{title:birthdays.title,subtitle:birthdays.subtitle,when:Date.parse(birthdays.starts)||relativeDay(birthdays.subtitle),priority:Number(birthdays.priority)||0},...additionalBirthdays]:[]),
+      ...upcomingAll.map(c=>({...c,when:Date.parse(c.starts)||Infinity}))]
+      .sort((a,b)=>a.when-b.when||(Number(b.priority)||0)-(Number(a.priority)||0)).slice(0,10);
     $('brain-agenda-list').innerHTML=agendaItems.length?agendaItems.map(c=>`<div class="brain-agenda-item"><strong>${esc(c.title)}</strong><span>${esc(c.subtitle||c.detail||'')}</span></div>`).join(''):'<p class="brain-empty">No birthdays or events coming up.</p>';
     $('brain-agenda-link').hidden=!fresh;
     const agendaState=!fresh?'stale':(agendaItems.length?'ready':'empty');
