@@ -30,9 +30,9 @@ with sync_playwright() as p:
     for display in ("kiosk", "hubs", "garage"):
         selected = api("/now-playing.json?display=" + display)
         assert selected["attention"]["urgency"] == "CRITICAL", selected
-    page.wait_for_selector("#items button")
-    page.locator("#items button").filter(has_text="acknowledge").click()
-    page.wait_for_function("document.getElementById('items').textContent.includes('ACKNOWLEDGED')")
+    page.locator("#refresh").click()
+    page.get_by_role("button", name="Acknowledge", exact=True).click()
+    page.wait_for_function("document.getElementById('active-items').textContent.includes('Acknowledged')")
     assert api("/now-playing.json?display=hubs")["playing"]
     page.screenshot(path="/tmp/marquee-brain-debugger.png", full_page=True)
     page.goto(base + "/live")

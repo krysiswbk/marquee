@@ -759,7 +759,12 @@
     more.setAttribute('aria-expanded', 'false');
     if (focus) more.focus();
   }
-  menu.addEventListener('close', () => { more.setAttribute('aria-expanded', 'false'); more.focus(); });
+  menu.addEventListener('close', () => {
+    more.setAttribute('aria-expanded', 'false');
+    // A queued close event must not take focus from a destination chosen after
+    // the dialog closed. Restore More only when focus was left in the dialog.
+    if (menu.contains(document.activeElement) || document.activeElement === document.body) more.focus();
+  });
   menu.addEventListener('cancel', () => { more.setAttribute('aria-expanded', 'false'); });
   menu.querySelector('header button').onclick = () => closeMenu();
   function handleLink(e) { const a = e.target.closest('a[data-view]'); if (a) { e.preventDefault(); change(a.dataset.view); } }

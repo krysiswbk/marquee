@@ -5,6 +5,7 @@ import unittest
 
 DISPLAY = (Path(__file__).parents[1] / "output" / "index.html").read_text()
 SCREENS = (Path(__file__).parents[1] / "output" / "screens.css").read_text()
+CAST_SCENES = (Path(__file__).parents[1] / "output" / "cast-media-sports.css").read_text()
 ROOT = Path(__file__).parents[1]
 
 
@@ -73,13 +74,14 @@ class DisplayTemplateTests(unittest.TestCase):
         self.assertIn("body.cast-display .idle-date", DISPLAY)
 
     def test_cast_ambient_calendar_swaps_clock_and_agenda_regions(self):
-        self.assertIn('data-kind="ambient_agenda"', DISPLAY)
-        self.assertIn('body.cast-display .context-card.no-art:is([data-kind="ambient_agenda"],[data-kind="calendar_event"]) .context-head', DISPLAY)
-        self.assertIn('grid-template-areas:"source source" "copy rows";', DISPLAY)
-        self.assertIn('body.cast-display .context-card.no-art:is([data-kind="ambient_agenda"],[data-kind="calendar_event"]) .context-rows', DISPLAY)
-        self.assertIn('.context-time{display:none}', SCREENS)
-        self.assertIn('body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-rows time{color:#ff70d2;', SCREENS)
-        self.assertIn('linear-gradient(135deg,#100b22,#21123d 64%,#100b22)!important', SCREENS)
+        self.assertIn("classList.toggle('calendar-scene', genericContext && context.type === 'calendar_event')", DISPLAY)
+        self.assertIn('grid-template-areas: "source source" "copy rows";', CAST_SCENES)
+        self.assertIn(':is(.context-time,.context-weather,.context-art) {', CAST_SCENES)
+        self.assertIn('display: none !important;', CAST_SCENES)
+        self.assertIn('linear-gradient(135deg, #100b22, #21123d 64%, #100b22) !important', CAST_SCENES)
+        self.assertIn('.context-rows time {', CAST_SCENES)
+        self.assertNotIn('grid-template-areas:"source source" "copy rows";', DISPLAY)
+        self.assertNotIn('grid-template-areas:"source source" "copy rows";', SCREENS)
         self.assertIn('context-agenda-row', DISPLAY)
         self.assertNotIn('max-height:28vh; padding-top:1vh; font-size:clamp(.85rem,1.35vw,1.4rem);', DISPLAY)
         self.assertIn('items = items[:max(2, int(limit))]', (Path(__file__).parents[1] / "cast" / "marquee" / "core" / "cast_ambient.py").read_text())

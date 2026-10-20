@@ -13,15 +13,12 @@ ROOT = Path(__file__).resolve().parents[1]
 def payload(index):
     return {
         "playing": True,
-        "type": "media_context",
-        "key": f"fixture-{index}",
-        "context": {
-            "source": "calendar",
-            "type": "calendar_event",
-            "title": f"Frame {index}",
-            "subtitle": "Replacement is ready",
-            "detail": "The previous frame remains painted until this frame is committed.",
-        },
+        "state": "playing",
+        "type": "episode",
+        "key": f"plex:fixture-{index}",
+        "title": f"Frame {index}",
+        "subtitle": "Replacement is ready",
+        "summary": "The previous frame remains painted until this frame is committed.",
     }
 
 
@@ -37,11 +34,8 @@ with sync_playwright() as playwright:
             path = request.request.url.split("?", 1)[0].split("marquee.test", 1)[-1]
             if path in ("/kiosk", "/live"):
                 return request.fulfill(path=str(ROOT / "output/index.html"), content_type="text/html")
-            asset = ROOT / "output" / path.lstrip("/")
-            if asset.is_file():
-                return request.fulfill(path=str(asset))
             if path == "/api/config":
-                return request.fulfill(json={"providers": {"calendar": {"enabled": True, "targets": ["kiosk"]}}})
+                return request.fulfill(json={"providers": {"plex": {"enabled": True, "targets": ["kiosk"]}}})
             if path == "/now-playing.json":
                 state["index"] += 1
                 return request.fulfill(json=payload(state["index"]))
@@ -49,26 +43,29 @@ with sync_playwright() as playwright:
                 return request.fulfill(json={"transitionMs": 5000})
             if path == "/ambient.json":
                 return request.fulfill(json={"opacity": 0})
+            asset = ROOT / "output" / path.lstrip("/")
+            if asset.is_file():
+                return request.fulfill(path=str(asset))
             return request.fulfill(json={})
 
         page.route("**/*", route)
         page.goto("http://marquee.test/kiosk?view=plex", wait_until="domcontentloaded")
-        page.wait_for_function("document.querySelector('.stage')?.classList.contains('contextual')")
-        assert page.locator("#context-title").inner_text().startswith("Frame")
+        page.wait_for_function("document.body.classList.contains('kiosk-now-playing') && document.querySelector('#title')?.textContent.startsWith('Frame')")
+        assert page.locator("#title").inner_text().startswith("Frame")
 
         for _ in range(8):
             page.evaluate("window.MarqueeLifecycle.request('now-playing')")
-            page.wait_for_function("document.querySelector('#context-title')?.textContent.includes('Frame')")
+            page.wait_for_function("document.querySelector('#title')?.textContent.includes('Frame')")
             snapshot = page.evaluate("""() => {
                 const stage = document.querySelector('.stage');
-                const title = document.querySelector('#context-title');
+                const title = document.querySelector('#title');
                 const rect = title?.getBoundingClientRect();
                 return {opacity: getComputedStyle(stage).opacity, visible: rect?.width > 0 && rect?.height > 0,
                     title: title?.textContent};
             }""")
             assert snapshot["opacity"] != "0", snapshot
             assert snapshot["visible"], snapshot
-            assert page.locator("#context-title").bounding_box()["width"] > 0
+            assert page.locator("#title").bounding_box()["width"] > 0
         page.close()
     browser.close()
-    print("PASS: repeated replacement cycles keep the committed stage painted and touch-visible")
+    print("PASS: repeated Plex replacements keep the committed stage painted and touch-visible")

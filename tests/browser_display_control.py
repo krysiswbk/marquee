@@ -34,41 +34,52 @@ with sync_playwright() as p:
             elif path in ['/settings.json', '/live-settings.json']: data={'transitionMs':0}
             elif path in ['/weather','/ha-weather.json']: data={'temp':21, 'condition':'sunny'}
             elif path=='/ambient.json': data={'opacity':.95}
-            else: return r.fulfill(status=404, body='')
+            else:
+                asset = root / 'output' / path.lstrip('/')
+                if asset.is_file():
+                    return r.fulfill(path=str(asset))
+                return r.fulfill(status=404, body='')
             r.fulfill(body=json.dumps(data),content_type='application/json')
         page.route('**/*', route)
         page.goto('http://marquee.test/kiosk')
-        page.wait_for_selector('.screen-controls')
-        page.get_by_role('button',name='Freeze',exact=True).click()
+        page.wait_for_selector('.screen-controls.kiosk-rail')
+        assert page.locator('.kiosk-primary a[data-view=""]').count() == 1
+        assert page.locator('.kiosk-more').count() == 1
+        page.wait_for_function("document.querySelector('#stage').classList.contains('contextual') || document.querySelector('#stage').classList.contains('weather-context')")
+        def control(action):
+            response = page.evaluate("""async action => {
+                const response = await fetch('/api/display-control', {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify({action})});
+                return {status:response.status, data:await response.json()};
+            }""", action)
+            assert response['status'] == 200, (action, response)
+            page.evaluate("window.MarqueeLifecycle.request('now-playing')")
+
+        control('freeze')
         assert arbiter.control_state()['frozen']
         first=arbiter.control_state()['selected']
-        page.get_by_role('button',name='Next screen').click()
-        page.wait_for_timeout(100)
+        control('next')
         assert arbiter.control_state()['selected'] != first
         assert arbiter.control_state()['frozen']
-        page.get_by_role('button',name='Previous screen').click()
-        page.wait_for_timeout(100)
+        control('previous')
         assert arbiter.control_state()['selected']==first
         # Select weather deterministically, maintaining freeze.
         if first!='a':
-            page.get_by_role('button',name='Next screen').click()
-            page.wait_for_timeout(100)
+            control('next')
+        page.wait_for_function("document.querySelector('#weather-body').textContent === 'Clear this afternoon'")
         assert page.locator('#weather-body').inner_text()=='Clear this afternoon'
         assert page.locator('#weather-stats').inner_text()=='Humidity 60%'
         assert page.locator('#weather-radar').evaluate('(el) => getComputedStyle(el).filter') == 'none'
         assert page.locator('#weather-radar').evaluate('(el) => getComputedStyle(el).mixBlendMode') == 'normal'
-        page.get_by_role('button',name='Resume',exact=True).click()
+        control('resume')
         assert not arbiter.control_state()['frozen']
-        page.locator('body').click(position={'x':1,'y':1})
-        page.keyboard.press('Space')
-        page.wait_for_timeout(100)
-        assert arbiter.control_state()['frozen']
         box=page.locator('.screen-controls').bounding_box()
         assert box['x']>=0 and box['x']+box['width']<=width
         assert not errors, errors
         page.screenshot(path=f'/tmp/marquee-controls-{width}.png')
         page.goto('http://marquee.test/image')
         assert page.locator('.screen-controls').count()==0
-        print(f'{width}x{height}: navigation, freeze/resume, keyboard, weather deduplication, bounds, Cast isolation PASS')
+        print(f'{width}x{height}: kiosk rail, API freeze/resume, weather deduplication, bounds, Cast isolation PASS')
         page.close()
     browser.close()

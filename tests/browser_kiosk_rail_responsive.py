@@ -144,8 +144,17 @@ with sync_playwright() as playwright:
 
             home = page.locator('.kiosk-primary [data-view=""]')
             home.focus()
+            if width <= 430:
+                # A queued dialog close event must not steal focus after Home
+                # receives it; otherwise Enter reopens More instead.
+                page.evaluate("document.querySelector('.kiosk-menu').dispatchEvent(new Event('close'))")
+                assert page.evaluate("document.activeElement?.dataset.view === ''"), (width, destination)
             home.press("Enter")
-            page.wait_for_function("new URL(location.href).searchParams.get('view') === null")
+            try:
+                page.wait_for_function("new URL(location.href).searchParams.get('view') === null", timeout=3000)
+            except Exception as error:
+                focus = page.evaluate("document.activeElement?.outerHTML")
+                raise AssertionError((width, height, destination, page.url, focus)) from error
             page.wait_for_function("document.activeElement?.dataset.view === ''")
             assert page.locator('.kiosk-primary [data-view=""][aria-current="page"]').count() == 1
             assert page.locator('[aria-current="page"]').count() == 1

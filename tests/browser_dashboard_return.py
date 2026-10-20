@@ -24,6 +24,7 @@ with sync_playwright() as p:
       window.EventSource = class {
         addEventListener(type, callback) { if(type === 'context') window.sendContext =
           payload => callback({data:JSON.stringify(payload)}); }
+        close() {}
       };
     ''')
     def route(r):
@@ -93,7 +94,7 @@ with sync_playwright() as p:
     overflow_destination.click()
     page.wait_for_function("new URL(location.href).searchParams.has('view')")
     assert page.locator('a[aria-current="page"]').count() == 1
-    page.locator('.kiosk-home-action').click()
+    page.locator('.kiosk-primary a[data-view=""]').click()
     page.wait_for_function("!new URL(location.href).searchParams.has('view')")
     assert page.locator('.kiosk-primary a[data-view=""][aria-current="page"]').count() == 1
     assert page.locator('body').evaluate("el=>el.classList.contains('idle')") is False

@@ -90,14 +90,15 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
         self.assertIn("background-color:#100b22", SCREENS)
         self.assertIn(".kiosk-now-playing-head>p:first-child,.kiosk-weather-separator){color:#ff4fc8!important}", SCREENS)
 
-    def test_street_now_playing_restores_the_established_screening_composition(self):
-        self.assertIn("body.kiosk-now-playing[data-template=street] .stage{display:block;padding:0;}", SCREENS)
-        self.assertIn("body.kiosk-now-playing[data-template=street] .b-streetframe{display:block!important", SCREENS)
-        self.assertIn("body.kiosk-now-playing[data-template=street] .b-nowplaying{display:block!important", SCREENS)
-        self.assertIn("left:var(--street-frame-left,63.59375vw)", SCREENS)
-        self.assertIn("left:var(--street-sign-left,62.2vw)", SCREENS)
-        self.assertIn("body.kiosk-now-playing[data-template=street] .b-poster{left:66.4vw;top:18.75vh;width:25vw;height:60vh", SCREENS)
-        self.assertIn("body.kiosk-now-playing[data-template=street] .b-progress{left:5.5vw;top:86vh", SCREENS)
+    def test_street_now_playing_has_one_bounded_screening_composition(self):
+        self.assertEqual(SCREENS.count("/* Street playback has one bounded text lane."), 1)
+        self.assertIn("grid-template-areas:\"identity .\" \"meta .\" \"plot .\"", SCREENS)
+        self.assertIn(".b-identity{\n  grid-area:identity;max-height:", SCREENS)
+        self.assertIn(".b-plot{\n  grid-area:plot;min-height:0;height:auto!important;overflow-y:auto", SCREENS)
+        self.assertIn(".b-streetframe{\n  display:block!important", SCREENS)
+        self.assertIn(".b-nowplaying{\n  display:block!important", SCREENS)
+        self.assertIn(".b-progress{\n  position:fixed!important;inset:auto auto calc(var(--kiosk-lower-safe-area) + 8px)", SCREENS)
+        self.assertNotIn("body.kiosk-now-playing[data-template=street] .stage{display:block;padding:0;}", SCREENS)
 
     def test_authoritative_apparent_temperature_accepts_numeric_strings_only(self):
         self.assertIn("weather?.apparent_temperature == null || weather.apparent_temperature === ''", INDEX)

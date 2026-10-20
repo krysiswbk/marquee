@@ -15,17 +15,17 @@ CASES = (("sports-demo=1", ".sports-card", ".sport-matchup"),
 def test_cast_calendar_and_plex_are_separate_scenes():
     calendar = {"playing": True, "type": "media_context", "key": "calendar:agenda",
                 "context": {"source": "calendar", "type": "calendar_event",
-                            "subtype": "ambient_agenda", "title": "Recycling pickup",
-                            "subtitle": "Today", "rows": [{"when": "Tomorrow", "title": "Birthday"}]}}
+                            "subtype": "pickup_notice",
+                            "title": "Garbage, blue box, green cart, bulk waste (3 items max), and yard waste",
+                            "subtitle": "Today", "artwork": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E",
+                            "rows": [{"when": "Tomorrow", "title": "Birthday"}]}}
     plex = {"playing": True, "type": "episode", "key": "plex:episode",
-            "title": "Scariest House in America", "subtitle": "S3 · E4",
+            "title": "Scariest House in America", "subtitle": "S3 · E4", "poster": True,
             "progress": {"offsetMs": 600000, "durationMs": 2400000}}
     current = {"payload": calendar}
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(
             executable_path=os.environ.get("MARQUEE_CHROMIUM"), args=["--no-sandbox"])
-        page = browser.new_page(viewport={"width": 1024, "height": 600})
-
         def route(request):
             path = request.request.url.split("?", 1)[0].split("marquee.test", 1)[-1]
             if path == "/image":
@@ -34,22 +34,61 @@ def test_cast_calendar_and_plex_are_separate_scenes():
                 return request.fulfill(json=current["payload"])
             if path == "/settings.json":
                 return request.fulfill(json={"theme": "synthwave", "template": "bigclock"})
+            if path == "/poster.jpg":
+                return request.fulfill(body="<svg xmlns='http://www.w3.org/2000/svg' width='200' height='300' />",
+                                       content_type="image/svg+xml")
             asset = ROOT / path.lstrip("/")
             if asset.is_file():
                 return request.fulfill(path=str(asset))
             return request.fulfill(json={})
 
-        page.route("**/*", route)
-        page.goto("http://marquee.test/image", wait_until="domcontentloaded")
-        page.wait_for_function("document.querySelector('#stage').classList.contains('contextual')")
-        assert page.locator(".b-identity").evaluate("el => getComputedStyle(el).display") == "none"
-        current["payload"] = plex
-        page.evaluate("window.MarqueeLifecycle.request('now-playing')")
-        page.wait_for_function("document.querySelector('#stage').classList.contains('cast-media')")
-        assert page.locator("#context-card").evaluate("el => getComputedStyle(el).display") == "none"
-        assert page.locator("#title").inner_text() == plex["title"]
-        assert page.locator(".b-progress").evaluate("el => getComputedStyle(el).display") != "none"
-        page.close()
+        for width, height in ((800, 480), (1024, 600), (1280, 800)):
+            page = browser.new_page(viewport={"width": width, "height": height})
+            page.route("**/*", route)
+            current["payload"] = calendar
+            page.goto("http://marquee.test/image", wait_until="domcontentloaded")
+            page.wait_for_function("document.querySelector('#stage').classList.contains('contextual')")
+            assert page.locator("#context-card").evaluate(
+                "el => el.classList.contains('calendar-scene') && el.classList.contains('no-art')")
+            assert page.locator(".b-identity").evaluate("el => getComputedStyle(el).display") == "none"
+            assert page.locator(".context-time").evaluate("el => getComputedStyle(el).display") == "none"
+            calendar_boxes = page.evaluate("""() => {
+                const box = s => document.querySelector(s).getBoundingClientRect();
+                const card = box('#context-card'), copy = box('.context-copy'), rows = box('#context-rows');
+                return {cardBottom:card.bottom, copyBottom:copy.bottom, rowsBottom:rows.bottom,
+                    gap:rows.left-copy.right, copyScroll:document.querySelector('.context-copy').scrollHeight,
+                    copyHeight:document.querySelector('.context-copy').clientHeight};
+            }""")
+            assert calendar_boxes["gap"] >= 0, (width, height, calendar_boxes)
+            assert calendar_boxes["copyBottom"] <= calendar_boxes["cardBottom"] + 1
+            assert calendar_boxes["rowsBottom"] <= calendar_boxes["cardBottom"] + 1
+            assert calendar_boxes["copyScroll"] <= calendar_boxes["copyHeight"] + 1, (width, height, calendar_boxes)
+
+            current["payload"] = plex
+            page.evaluate("window.MarqueeLifecycle.request('now-playing')")
+            page.wait_for_function("document.querySelector('#stage').classList.contains('cast-media')")
+            assert page.locator("#context-card").evaluate("el => getComputedStyle(el).display") == "none"
+            assert page.locator("#title").inner_text() == plex["title"]
+            assert page.locator(".b-progress").evaluate("el => getComputedStyle(el).display") != "none"
+            page.wait_for_selector(".b-poster:not([hidden])")
+            media_boxes = page.evaluate("""() => {
+                const box = s => document.querySelector(s).getBoundingClientRect();
+                const stage = box('#stage'), identity = box('.b-identity');
+                const poster = box('.b-poster'), progress = box('.b-progress');
+                return {stageBottom:stage.bottom, identityBottom:identity.bottom,
+                    posterBottom:poster.bottom, progressTop:progress.top,
+                    progressBottom:progress.bottom, posterLeft:poster.left,
+                    identityRight:identity.right};
+            }""")
+            assert media_boxes["identityRight"] <= media_boxes["posterLeft"] + 1, (width, height, media_boxes)
+            assert media_boxes["identityBottom"] <= media_boxes["progressTop"] + 1, (width, height, media_boxes)
+            assert media_boxes["posterBottom"] <= media_boxes["progressTop"] + 1, (width, height, media_boxes)
+            assert media_boxes["progressBottom"] <= media_boxes["stageBottom"] + 1
+            current["payload"] = calendar
+            page.evaluate("window.MarqueeLifecycle.request('now-playing')")
+            page.wait_for_function("document.querySelector('#stage').classList.contains('contextual')")
+            assert page.locator(".b-identity").evaluate("el => getComputedStyle(el).display") == "none"
+            page.close()
         browser.close()
 
 

@@ -21,23 +21,6 @@ body .context-time .context-weather{font-size:clamp(14px,1.4vw,28px);white-space
 body .context-card{overflow:hidden;grid-template-rows:auto minmax(0,1fr) auto!important}
 body .context-copy{max-height:100%;overflow:auto}.context-card .context-title{font-size:min(var(--context-title-size,5vw),7vh)}
 body .context-art{max-height:100%}.context-rows{flex-wrap:wrap}
-/* Cast calendar cards follow the kiosk agenda: one clear next event beside
-   the upcoming list. A large floating clock obscured both columns at TV scale. */
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]){box-sizing:border-box!important;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr)!important;grid-template-rows:auto minmax(0,1fr)!important;grid-template-areas:"source source" "copy rows"!important;gap:2vh 4vw!important;padding:6vh 6vw!important;display:grid!important}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-head{display:contents}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-source{grid-area:source;align-self:center;width:max-content;font-size:clamp(14px,1.3vw,22px);letter-spacing:.18em}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-copy{grid-area:copy;position:static;align-self:center;width:auto;max-width:none;height:auto;overflow:hidden;text-align:left}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-title{font-size:clamp(2.6rem,5.2vw,6rem);line-height:1.02;overflow-wrap:anywhere}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-subtitle{margin-top:1.2vh;font-size:clamp(1.25rem,2vw,2.2rem);line-height:1.2}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-detail{margin-top:.8vh;font-size:clamp(1rem,1.35vw,1.5rem)}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-time{display:none}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-weather{display:none!important}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-rows{grid-area:rows;align-self:center;width:auto;max-height:72vh;display:grid;grid-template-columns:minmax(0,1fr);gap:0;padding:0;border-top:1px solid rgba(255,255,255,.22);font-size:clamp(1.1rem,1.65vw,1.7rem);overflow:auto}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-rows span{min-width:0;display:flex;flex-direction:column;gap:.35vh;padding:1.5vh .6vw;border-radius:0;border:0;border-bottom:1px solid rgba(255,255,255,.16);background:transparent;white-space:normal}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]){background:radial-gradient(ellipse at 82% 12%,#ff4fc82b,transparent 42%),linear-gradient(135deg,#100b22,#21123d 64%,#100b22)!important;border:1px solid #53316e}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-source{color:#ff70d2}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-rows time{color:#ff70d2;font-size:.78em;font-weight:700;letter-spacing:.035em}
-body.cast-display .context-card.no-art:is([data-kind=ambient_agenda],[data-kind=calendar_event]) .context-rows strong{color:var(--text);font-weight:650;line-height:1.2}
 /* Broadcast weather: observations + hourly desk + extended forecast, radar only when relevant. */
 body .stage.weather-context .weather-card{inset:0;bottom:0;padding:0;display:block;background:linear-gradient(130deg,#075798,#0b315e 65%,#061b38);color:#fff;overflow:hidden;font-family:'Space Grotesk',system-ui,sans-serif}
 body.brain-live .stage.weather-context .weather-card{bottom:8vh}
@@ -352,22 +335,6 @@ body.kiosk-now-playing .b-device *,body.kiosk-playback-active .b-device *{max-wi
    the stage inset cannot affect its containing block. */
 @media(min-width:481px){body.kiosk-now-playing .b-progress,body.kiosk-playback-active .b-progress{position:fixed!important;inset:auto auto calc(var(--kiosk-lower-safe-area) + 8px) 6vw!important;grid-area:auto!important;transform:none!important;z-index:9001;width:min(54vw,760px)!important;margin:0!important;}}
 @media(min-width:481px){body.kiosk-now-playing .kiosk-section.now-playing-surface{bottom:var(--kiosk-lower-safe-area);}}
-/* The Street template is the established theater-screening composition. The
-   generic kiosk playback grid must not flatten its marquee frame and sign into
-   a metadata wall when Now Playing is selected. Keep this scoped to the
-   explicit Now Playing destination; Home playback and other destinations keep
-   their existing kiosk composition. */
-@media(min-width:481px){
- body.kiosk-now-playing[data-template=street] .stage{display:block;padding:0;}
- body.kiosk-now-playing[data-template=street] .b-streetframe{display:block!important;left:var(--street-frame-left,63.59375vw);top:var(--street-frame-top,14.25vh);width:var(--street-frame-width,30.625vw);height:auto;aspect-ratio:392/552;z-index:1;}
- body.kiosk-now-playing[data-template=street] .b-nowplaying{display:block!important;left:var(--street-sign-left,62.2vw);top:var(--street-sign-top,5.2vh);width:var(--street-sign-width,33.2vw);height:auto;aspect-ratio:396/60;z-index:2;}
- body.kiosk-now-playing[data-template=street] .b-poster{left:66.4vw;top:18.75vh;width:25vw;height:60vh;max-height:none;aspect-ratio:auto;z-index:2;}
- body.kiosk-now-playing[data-template=street] .b-identity{--logo-box-height:30vh;--logo-box-width:40vw;}
- body.kiosk-now-playing[data-template=street] .title{font-size:4.6vw;}
- body.kiosk-now-playing[data-template=street] .plot{max-width:none;font-size:1.55vw;}
- body.kiosk-now-playing[data-template=street] .b-device{left:5.5vw;top:52.5vh;bottom:auto;width:20vw;height:9vh;}
- body.kiosk-now-playing[data-template=street] .b-progress{left:5.5vw;top:86vh;bottom:auto;width:46vw;position:absolute!important;inset:auto!important;inset-inline-start:5.5vw!important;inset-block-start:86vh!important;z-index:initial;}
-}
 .kiosk-queue-label{margin:0;color:#b6f378;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
 .kiosk-queue-row strong,.kiosk-queue-row span{overflow-wrap:anywhere}
 @media(max-width:480px){.kiosk-menu{padding:16px}.kiosk-menu nav{grid-template-columns:1fr}.kiosk-items button{padding:20px}}
@@ -777,9 +744,45 @@ body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface{
 body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface :is(.kiosk-now-playing-head>p:first-child,.kiosk-weather-separator){color:#ff4fc8!important}
 body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface :is(.kiosk-now-playing-head h1,.kiosk-weather-context){color:#fff0fb}
 
-/* The Street scene is also used on the kiosk Home playback view. Keep its
-   theater frame and reserve a readable lane between the device and progress. */
+/* Street playback has one bounded text lane. Its rows grow with the title,
+   while the synopsis scrolls in the space left above the progress bar. */
 @media (min-width:481px){
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .stage{
+  --street-lane-width:48vw;
+  display:grid!important;
+  grid-template-columns:var(--street-lane-width) minmax(0,1fr)!important;
+  grid-template-rows:auto auto minmax(0,1fr);
+  grid-template-areas:"identity ." "meta ." "plot .";
+  align-content:stretch;
+  gap:clamp(8px,1.4vh,16px) 0;
+  box-sizing:border-box;
+  overflow:hidden;
+  padding:17vh 0 calc(var(--kiosk-lower-safe-area) + 20px) 5.5vw!important;
+ }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .stage > :is(.b-identity,.b-meta,.b-plot){
+  position:relative!important;inset:auto!important;transform:none!important;
+  min-width:0;width:100%;max-width:none;max-height:none;box-sizing:border-box;
+ }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-identity{
+  grid-area:identity;max-height:min(26vh,190px)!important;overflow:auto;row-gap:.6vh;
+  --logo-box-height:18vh;--logo-box-width:40vw;
+ }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .title{
+  font-size:clamp(32px,3.8vw,54px);line-height:1.04;
+ }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .subtitle{
+  font-size:clamp(16px,1.8vw,26px);line-height:1.2;
+ }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-meta{
+  grid-area:meta;max-height:16vh!important;overflow:auto;
+ }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-plot{
+  grid-area:plot;min-height:0;height:auto!important;overflow-y:auto;overscroll-behavior:contain;
+  scrollbar-color:#ff4fc8aa #21152b88;
+ }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .plot{
+  font-size:clamp(16px,1.55vw,22px);line-height:1.4;
+ }
  body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-streetframe{
   display:block!important;left:auto!important;right:6vw;top:14vh;
   width:min(31vw,41vh);height:auto;aspect-ratio:392/552;z-index:1;
@@ -797,55 +800,12 @@ body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface 
  body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .poster{
   width:100%;height:100%;object-fit:cover;
  }
- body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-identity{
-  top:17vh;width:48vw;row-gap:.6vh;
- }
- body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .title{
-  font-size:clamp(32px,3.8vw,54px);line-height:1.04;
- }
- body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .subtitle{
-  font-size:clamp(16px,1.8vw,26px);line-height:1.2;
- }
- body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-meta{
-  top:33vh;width:48vw;
- }
- body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-device{
-  top:39.5vh;left:5.5vw;width:min(35vw,420px);height:clamp(48px,7vh,68px);
- }
- body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-device .session-card{
-  height:100%;min-height:0;box-sizing:border-box;padding:0;
-  border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none;
- }
- body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-device :is(.session-glyph,.location-pill){display:none}
- body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-device .session-kicker{color:#FFD9A0;opacity:.9}
- body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-device .session-value{font-size:clamp(17px,2vw,26px)}
- body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-device .session-detail{font-size:clamp(12px,1.1vw,16px)}
- body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-plot{
-  top:49vh;left:5.5vw;width:48vw;
-  height:calc(41vh - var(--kiosk-lower-safe-area) - 16px);
-  min-height:0;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;
-  scrollbar-color:#ff4fc8aa #21152b88;
- }
- body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .plot{
-  font-size:clamp(16px,1.55vw,22px);line-height:1.4;
- }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-device{display:none!important}
  body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-progress{
   position:fixed!important;inset:auto auto calc(var(--kiosk-lower-safe-area) + 8px) 5.5vw!important;
-  width:48vw!important;z-index:9001;
+  width:var(--street-lane-width)!important;z-index:9001;
  }
 }
 body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface .kiosk-home-action{background:#291542!important;color:#ff8cdd!important;border-color:#ff4fc8!important}
 body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface .kiosk-retry{background:#1b1233!important;color:#ff8cdd!important;border-color:#53316e!important}
 @media(max-aspect-ratio:1/1){body.brain-live .brain-toast.show{left:3vw;right:auto;width:calc(100vw - 6vw);max-width:none}}
-
-/* On the wall kiosk, the plot and progress occupy separate fixed lanes. A
-   long Plex summary must never continue behind the progress bar. */
-@media (min-width:481px) {
- body.brain-live.kiosk-playback-active[data-template=street] .b-device { display:none!important; }
- body.brain-live.kiosk-playback-active[data-template=street] .b-plot {
-  top:41vh;
-  bottom:calc(var(--kiosk-lower-safe-area) + 88px);
-  height:auto;
-  overflow-y:auto;
- }
-}

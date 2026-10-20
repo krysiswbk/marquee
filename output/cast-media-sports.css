@@ -1,6 +1,5 @@
-/* Cast sports and media scenes share the household synth palette. These
-   rules are deliberately limited to the receiver; Plex artwork keeps its
-   own presentation, and calendar cards are styled with the agenda. */
+/* Every Cast scene owns its layout. Template positions and provider artwork
+   cannot participate in the agenda or playback grids. */
 body.cast-display {
   --cast-ink: var(--text, #fff0fb);
   --cast-muted: var(--text-soft, #c3a9d4);
@@ -12,7 +11,7 @@ body.cast-display {
 }
 
 body.cast-display .stage.sports .sports-card,
-body.cast-display .stage.contextual .context-card:not(.calendar-scene):not([data-kind="ambient_agenda"]):not([data-kind="birthday_rollup"]) {
+body.cast-display .stage.contextual .context-card:not(:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"],[data-kind="birthday_rollup"])) {
   color: var(--cast-ink);
   font-family: var(--cast-font);
   background:
@@ -77,64 +76,169 @@ body.cast-display .sports-card :is(.sport-status, .sport-vs) { color: #ff88df; }
 body.cast-display .sports-card .sport-status { font-size: clamp(18px, 2vw, 30px); }
 body.cast-display .sports-card .sport-footer { border-top: 1px solid var(--cast-line); }
 
-body.cast-display .stage.contextual .context-card:not(.calendar-scene):not([data-kind="ambient_agenda"]):not([data-kind="birthday_rollup"]) {
+body.cast-display .stage.contextual .context-card:not(:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"],[data-kind="birthday_rollup"])) {
   padding: clamp(22px, 4vh, 48px) clamp(28px, 5vw, 78px);
   gap: clamp(12px, 2vh, 28px) 4vw;
 }
-body.cast-display .context-card:not(.calendar-scene) .context-head {
+body.cast-display .context-card:not(:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"])) .context-head {
   border-bottom: 2px solid var(--cast-accent);
   padding-bottom: clamp(10px, 1.4vh, 20px);
 }
-body.cast-display .context-card:not(.calendar-scene) .context-source,
-body.cast-display .context-card:not(.calendar-scene) .context-status {
+body.cast-display .context-card:not(:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"])) .context-source,
+body.cast-display .context-card:not(:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"])) .context-status {
   color: #ff88df;
   font-family: var(--cast-font);
   font-size: clamp(14px, 1.45vw, 22px);
   letter-spacing: .12em;
 }
-body.cast-display .context-card:not(.calendar-scene) .context-clock {
+body.cast-display .context-card:not(:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"])) .context-clock {
   color: var(--cast-ink);
   font-family: var(--cast-font);
   font-size: clamp(38px, 5vw, 80px);
 }
-body.cast-display .context-card:not(.calendar-scene) .context-weather {
+body.cast-display .context-card:not(:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"])) .context-weather {
   color: var(--cast-muted);
   font-size: clamp(14px, 1.4vw, 22px);
 }
-body.cast-display .context-card:not(.calendar-scene) .context-title {
+body.cast-display .context-card:not(:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"])) .context-title {
   color: var(--cast-ink);
   font-family: var(--cast-font);
   font-size: clamp(34px, min(4.5vw, 7vh), 72px);
   line-height: 1.08;
   letter-spacing: -.045em;
 }
-body.cast-display .context-card:not(.calendar-scene) .context-subtitle {
+body.cast-display .context-card:not(:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"])) .context-subtitle {
   color: #f6d8f4;
   font-size: clamp(19px, 2vw, 30px);
   line-height: 1.2;
 }
-body.cast-display .context-card:not(.calendar-scene) .context-detail {
+body.cast-display .context-card:not(:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"])) .context-detail {
   color: var(--cast-muted);
   font-size: clamp(17px, 1.55vw, 25px);
   line-height: 1.35;
 }
-body.cast-display .context-card:not(.calendar-scene) .context-rows {
+body.cast-display .context-card:not(:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"])) .context-rows {
   border-top-color: var(--cast-line);
   color: var(--cast-ink);
   font-size: clamp(15px, 1.4vw, 22px);
   max-height: 20vh;
 }
-body.cast-display .context-card:not(.calendar-scene) .context-rows span {
+body.cast-display .context-card:not(:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"])) .context-rows span {
   border: 1px solid var(--cast-line);
   border-radius: var(--cast-radius);
   background: var(--cast-panel);
   padding: .5em .7em;
 }
-body.cast-display .context-card:not(.calendar-scene) .context-art {
+body.cast-display .context-card:not(:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"])) .context-art {
   background: #29194a66;
   border: 1px solid var(--cast-line);
   padding: 2vw;
   box-sizing: border-box;
+}
+
+/* Agenda is a complete scene at every receiver size. Match the calendar
+   type, not only a provider subtype: otherwise a renamed subtype inherits
+   the generic clock/art layout and can overlap the event. */
+body.cast-display .stage.contextual .context-card.no-art:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"]):not([data-kind="birthday_rollup"]) {
+  display: grid;
+  box-sizing: border-box;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr);
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  grid-template-areas: "source source" "copy rows";
+  gap: 2vh 4vw;
+  padding: 6vh 6vw;
+  border: 1px solid var(--cast-line);
+  background: radial-gradient(ellipse at 82% 12%, #ff4fc82b, transparent 42%),
+              linear-gradient(135deg, #100b22, #21123d 64%, #100b22) !important;
+  color: var(--cast-ink);
+  font-family: var(--cast-font);
+}
+body.cast-display .context-card.no-art:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"]):not([data-kind="birthday_rollup"]) .context-head {
+  display: contents;
+  border: 0;
+  padding: 0;
+}
+body.cast-display .context-card.no-art:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"]):not([data-kind="birthday_rollup"]) .context-source {
+  grid-area: source;
+  align-self: center;
+  width: max-content;
+  color: #ff70d2;
+  font-size: clamp(14px, 1.3vw, 22px);
+  letter-spacing: .18em;
+}
+body.cast-display .context-card.no-art:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"]):not([data-kind="birthday_rollup"]) :is(.context-time,.context-weather,.context-art) {
+  display: none !important;
+}
+body.cast-display .context-card.no-art:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"]):not([data-kind="birthday_rollup"]) .context-copy {
+  grid-area: copy;
+  position: static;
+  align-self: center;
+  width: auto;
+  max-width: none;
+  max-height: 100%;
+  height: auto;
+  min-height: 0;
+  overflow: auto;
+  text-align: left;
+  border-left: 4px solid var(--cast-accent);
+  padding: 1.5vh 2vw;
+  box-sizing: border-box;
+  background: rgba(33, 18, 61, .82);
+}
+body.cast-display .context-card.no-art:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"]):not([data-kind="birthday_rollup"]) .context-title {
+  color: var(--cast-ink);
+  font-size: clamp(28px, 4.1vw, 58px);
+  line-height: 1.06;
+  overflow-wrap: anywhere;
+}
+body.cast-display .context-card.no-art:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"]):not([data-kind="birthday_rollup"]) .context-subtitle {
+  margin-top: 1.2vh;
+  color: var(--cast-muted);
+  font-size: clamp(17px, 1.8vw, 27px);
+  line-height: 1.2;
+}
+body.cast-display .context-card.no-art:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"]):not([data-kind="birthday_rollup"]) .context-detail {
+  margin-top: .8vh;
+  color: var(--cast-muted);
+  font-size: clamp(15px, 1.35vw, 21px);
+}
+body.cast-display .context-card.no-art:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"]):not([data-kind="birthday_rollup"]) .context-rows {
+  grid-area: rows;
+  align-self: center;
+  width: auto;
+  max-height: 72vh;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+  border-top: 1px solid var(--cast-line);
+  color: var(--cast-ink);
+  font-size: clamp(15px, 1.6vw, 24px);
+  overflow: auto;
+}
+body.cast-display .context-card.no-art:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"]):not([data-kind="birthday_rollup"]) .context-rows span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .35vh;
+  padding: 1.5vh .6vw;
+  border: 0;
+  border-bottom: 1px solid var(--cast-line);
+  border-radius: 0;
+  background: transparent;
+  white-space: normal;
+}
+body.cast-display .context-card.no-art:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"]):not([data-kind="birthday_rollup"]) .context-rows time {
+  color: #ff70d2;
+  font-size: .78em;
+  font-weight: 700;
+  letter-spacing: .035em;
+}
+body.cast-display .context-card.no-art:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"]):not([data-kind="birthday_rollup"]) .context-rows strong {
+  color: var(--cast-ink);
+  font-weight: 650;
+  line-height: 1.2;
 }
 
 @media (max-height: 650px) and (min-aspect-ratio: 6/5) {
@@ -143,8 +247,8 @@ body.cast-display .context-card:not(.calendar-scene) .context-art {
   body.cast-display .sports-card .sport-side { padding: 6px; gap: 5px; }
   body.cast-display .sports-card .sport-side img { max-height: 18vh; }
   body.cast-display .sports-card .sport-footer { padding-top: 6px; }
-  body.cast-display .stage.contextual .context-card:not(.calendar-scene) { padding-block: 20px; gap: 10px 4vw; }
-  body.cast-display .context-card:not(.calendar-scene) .context-rows { max-height: 17vh; padding-top: 8px; }
+  body.cast-display .stage.contextual .context-card:not(:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"])) { padding-block: 20px; gap: 10px 4vw; }
+  body.cast-display .context-card:not(:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"])) .context-rows { max-height: 17vh; padding-top: 8px; }
 }
 
 /* Playback is a complete Cast scene. The saved Big Clock template positions

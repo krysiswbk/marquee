@@ -48,6 +48,6 @@ with sync_playwright() as p:
     assert page.locator('#kiosk-section-title').inner_text() == 'Forza Horizon 6'
     assert page.locator('.kiosk-xbox-floating-toggle').evaluate('el => el.hidden')
     assert not errors, errors
-    page.screenshot(path=str(ROOT / 'evidence-xbox-now-playing.png'))
+    page.screenshot(path='/tmp/marquee-evidence-xbox-now-playing.png')
     browser.close()
 print('PASS: simultaneous Plex and Xbox keep Plex primary, flip to Xbox details, and return to Plex')

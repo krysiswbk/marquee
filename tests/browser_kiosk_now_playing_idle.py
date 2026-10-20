@@ -8,7 +8,8 @@ from playwright.sync_api import sync_playwright
 
 
 ROOT = Path(__file__).resolve().parents[1]
-VIEWPORTS = [(390, 844), (768, 1024), (1024, 600), (1280, 720), (1500, 1000)]
+VIEWPORTS = [(390, 844), (768, 1024), (1024, 600), (1280, 720),
+             (1280, 960), (1500, 1000), (1920, 1080), (3000, 2000)]
 
 
 with sync_playwright() as playwright:
@@ -70,9 +71,9 @@ with sync_playwright() as playwright:
         assert page.evaluate("getComputedStyle(document.querySelector('#idle-weather-range')).paddingInlineStart") != "0px"
         assert page.locator("#kiosk-section-title").inner_text() == "Nothing is playing"
         assert page.locator(".kiosk-section.now-playing-surface").evaluate("el => !el.hidden && el.getBoundingClientRect().width > 0 && el.getBoundingClientRect().height > 0")
-        assert page.evaluate("getComputedStyle(document.querySelector('.kiosk-now-playing-head > p')).color") == "rgb(255, 226, 120)"
-        assert page.evaluate("getComputedStyle(document.querySelector('.kiosk-home-action')).backgroundColor") == "rgb(36, 52, 71)"
-        assert page.evaluate("getComputedStyle(document.querySelector('.kiosk-now-playing-body .kiosk-weather-separator')).color") == "rgb(129, 147, 166)"
+        assert page.evaluate("getComputedStyle(document.querySelector('.kiosk-now-playing-head > p')).color") == "rgb(255, 79, 200)"
+        assert page.evaluate("getComputedStyle(document.querySelector('.kiosk-home-action')).backgroundColor") == "rgb(41, 21, 66)"
+        assert page.evaluate("getComputedStyle(document.querySelector('.kiosk-now-playing-body .kiosk-weather-separator')).color") == "rgb(255, 79, 200)"
         assert page.locator(".kiosk-home-action").inner_text() == "Return to Home"
         assert "There is no active session" in page.locator(".kiosk-now-playing-detail").inner_text()
         page.evaluate("window.MarqueeNavigation.resolve({playing:true, state:'playing', title:'Episode', key:'plex:episode', progress:{offsetMs:120, durationMs:600}}); document.body.classList.remove('idle'); document.querySelector('.stage').classList.remove('hidden')")
@@ -120,7 +121,7 @@ with sync_playwright() as playwright:
                        "summary": long_summary,
                        "subtitle": "Season 2 · Episode 4", "key": "plex:session", "type": "episode",
                        "artwork": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='900'%3E%3Crect width='600' height='900' fill='%232a4054'/%3E%3C/svg%3E",
-                       "progress": {"offsetMs": 1200, "durationMs": 6000},
+                       "progress": {"offsetMs": 120000, "durationMs": 600000},
                        "session": {"device": "Living Room TV", "client": "Plex", "platform": "Roku", "local": True}}
             active_page = browser.new_page(viewport={"width": width, "height": height})
             active_errors = []
@@ -131,7 +132,7 @@ with sync_playwright() as playwright:
             active_payload = now_playing.value.json()
             assert active_payload["title"] == long_title
             assert active_payload["summary"] == long_summary
-            assert active_payload["progress"] == {"offsetMs": 1200, "durationMs": 6000}
+            assert active_payload["progress"] == {"offsetMs": 120000, "durationMs": 600000}
             active_page.wait_for_function("expected => document.querySelector('#title')?.textContent === expected", arg=long_title)
             assert active_page.locator("#title").text_content() == long_title
             assert active_page.locator("#plot").text_content() == long_summary
@@ -139,7 +140,24 @@ with sync_playwright() as playwright:
             assert active_page.locator("#plot").evaluate("el => getComputedStyle(el).webkitLineClamp") == "none"
             assert active_page.locator("#plot").evaluate("el => getComputedStyle(el).maxWidth") == "none"
             assert active_page.locator("#plot").evaluate("el => getComputedStyle(el).display") == "block"
-            assert active_page.locator(".stage").evaluate("el => el.scrollHeight > el.clientHeight")
+            summary_reachable = active_page.evaluate("""() => {
+                const stage = document.querySelector('.stage');
+                const plot = document.querySelector('.b-plot');
+                return stage.scrollHeight > stage.clientHeight ||
+                    plot.getBoundingClientRect().bottom <= stage.getBoundingClientRect().bottom + 1;
+            }""")
+            assert summary_reachable, (width, height, playback_state, "long summary must fit or scroll")
+            visible_overlap = active_page.evaluate("""() => {
+                const plot = document.querySelector('.b-plot').getBoundingClientRect();
+                const progress = document.querySelector('.b-progress').getBoundingClientRect();
+                const stage = document.querySelector('.stage').getBoundingClientRect();
+                const visiblePlotBottom = Math.min(plot.bottom, stage.bottom, innerHeight);
+                const visiblePlotTop = Math.max(plot.top, stage.top, 0);
+                return progress.width > 0 && progress.height > 0 &&
+                    plot.right > progress.left && plot.left < progress.right &&
+                    visiblePlotBottom > progress.top && visiblePlotTop < progress.bottom;
+            }""")
+            assert not visible_overlap, (width, height, playback_state, "summary overlaps progress")
             assert active_page.locator("#subtitle").inner_text() == "Season 2 · Episode 4"
             assert active_page.locator("#device-name").inner_text() == "Living Room TV"
             assert active_page.locator(".b-ratings").evaluate("el => getComputedStyle(el).display === 'none'")

@@ -48,13 +48,13 @@ with sync_playwright() as playwright:
                     assert box["rect"]["height"] >= 44, (width, height, route, selector, box)
             for control in page.locator('input[type="number"], input[type="range"]').evaluate_all(
                 "els => els.filter(el => { const r=el.getBoundingClientRect(); "
-                "return r.width > 0 && r.height > 0; }).map(el => ({id:el.id,min:el.min,max:el.max,step:el.step,described:el.getAttribute('aria-describedby'),name:el.getAttribute('aria-label') || document.querySelector(`label[for=\"${el.id}\"]`)?.innerText || el.closest('label')?.innerText || ''}))"
+                "return r.width > 0 && r.height > 0; }).map(el => ({id:el.id,min:el.min,max:el.max,step:el.step,described:el.getAttribute('aria-describedby'),name:el.getAttribute('aria-label') || [...(el.labels || [])].map(label => label.textContent).join(' ') || ''}))"
             ):
                 assert control["min"] and control["max"] and control["step"], (route, control)
                 assert control["described"], (route, control)
                 assert control["name"].strip(), (route, control)
             for control in page.locator('input[type="number"], input[type="range"]').evaluate_all(
-                "els => els.map(el => ({id:el.id,min:el.min,max:el.max,step:el.step,name:el.getAttribute('aria-label') || document.querySelector(`label[for=\"${el.id}\"]`)?.innerText || el.closest('label')?.innerText || '',described:el.getAttribute('aria-describedby')}))"
+                "els => els.map(el => ({id:el.id,min:el.min,max:el.max,step:el.step,name:el.getAttribute('aria-label') || [...(el.labels || [])].map(label => label.textContent).join(' ') || '',described:el.getAttribute('aria-describedby')}))"
             ):
                 assert control["min"] != '' and control["max"] != '' and control["step"] != '', (route, control)
                 assert control["name"].strip() and control["described"], (route, control)
