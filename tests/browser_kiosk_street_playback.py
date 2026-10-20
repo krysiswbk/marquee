@@ -72,6 +72,9 @@ with sync_playwright() as playwright:
         assert page.locator("#plot").text_content() == SUMMARY
         assert boxes[".b-identity"]["bottom"] < boxes[".b-meta"]["top"]
         assert boxes[".b-device"]["bottom"] < boxes[".b-plot"]["top"]
+        assert page.locator(".b-device .session-card").evaluate(
+            "el => getComputedStyle(el).backgroundColor === 'rgba(0, 0, 0, 0)' && getComputedStyle(el).borderTopWidth === '0px'"
+        )
         assert boxes[".b-plot"]["bottom"] < boxes[".b-progress"]["top"]
         assert boxes[".b-progress"]["bottom"] < boxes[".brain-dock"]["top"]
         assert boxes[".b-plot"]["scrollHeight"] > boxes[".b-plot"]["clientHeight"]

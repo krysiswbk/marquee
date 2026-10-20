@@ -813,8 +813,13 @@ body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface 
   top:39.5vh;left:5.5vw;width:min(35vw,420px);height:clamp(48px,7vh,68px);
  }
  body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-device .session-card{
-  height:100%;min-height:0;box-sizing:border-box;
+  height:100%;min-height:0;box-sizing:border-box;padding:0;
+  border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none;
  }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-device :is(.session-glyph,.location-pill){display:none}
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-device .session-kicker{color:#FFD9A0;opacity:.9}
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-device .session-value{font-size:clamp(17px,2vw,26px)}
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-device .session-detail{font-size:clamp(12px,1.1vw,16px)}
  body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-plot{
   top:49vh;left:5.5vw;width:48vw;
   height:calc(41vh - var(--kiosk-lower-safe-area) - 16px);
