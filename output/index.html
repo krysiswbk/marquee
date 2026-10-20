@@ -597,9 +597,7 @@
   body[data-template="street"].street-day .b-nowplaying .np text { opacity: .8; }
   body[data-template="street"].street-day .scene .pool { display: none; }
 
-  /* Neon "NOW PLAYING" sign: layered glow + an irregular flicker, adapted
-     from Tiff Wong's neon theater sign (credited in CREDITS.md). The glow
-     rides on --accent so it retints with the theme. */
+  /* Warm "NOW PLAYING" lettering flickers inside a dark metal sign. */
   @keyframes neon-flicker {
     0%, 24%, 42%, 68%, 100% { opacity: 1; }
     4% { opacity: .9; } 6% { opacity: .85; } 8% { opacity: .95; }
@@ -608,10 +606,7 @@
     58% { opacity: .9; } 70% { opacity: .9; } 72% { opacity: .95; }
     95% { opacity: .95; } 97% { opacity: .93; } }
   body[data-template="street"] .b-nowplaying .np {
-    filter: drop-shadow(0 0 2px #FFE9C8) drop-shadow(0 0 7px var(--accent, #C9973B))
-      drop-shadow(0 0 14px var(--accent, #C9973B));
     animation: neon-flicker 5.2s linear infinite; }
-  body[data-template="street"].street-day .b-nowplaying .np { filter: none; }
 
   @media (prefers-reduced-motion: reduce) {
     body[data-template="street"].wx-cloud::after,
@@ -748,13 +743,13 @@
   body.live-editing [data-layout] { outline:none; }
   body.live-editing .screen-controls, body.live-editing nav { display:none !important; }
 </style>
-<link rel="stylesheet" href="/brain.css?v=2.12.77">
-<link rel="stylesheet" href="/screens.css?v=2.12.77">
-<link rel="stylesheet" href="/weather-channel.css?v=2.12.77">
+<link rel="stylesheet" href="/brain.css?v=2.12.78">
+<link rel="stylesheet" href="/screens.css?v=2.12.78">
+<link rel="stylesheet" href="/weather-channel.css?v=2.12.78">
 <link rel="stylesheet" href="/scene-themes.css?v=2.9.7">
-<link rel="stylesheet" href="/sky-ambient.css?v=2.12.77">
-<link rel="stylesheet" href="/cast-weather-house.css?v=2.12.77">
-<link rel="stylesheet" href="/cast-media-sports.css?v=2.12.77">
+<link rel="stylesheet" href="/sky-ambient.css?v=2.12.78">
+<link rel="stylesheet" href="/cast-weather-house.css?v=2.12.78">
+<link rel="stylesheet" href="/cast-media-sports.css?v=2.12.78">
 <body data-template="spotlight">
 <img class="bg" id="bg" alt="">
 <img class="fa" id="fa1" alt=""><img class="fa" id="fa2" alt="">
@@ -855,13 +850,13 @@
 <time class="cast-clock-overlay" id="cast-clock-overlay"></time>
 <div class="idle-screen"><div class="idle-house"><div class="idle-kicker" id="idle-kicker">Home</div><div class="idle-greeting" id="idle-greeting"></div><div class="idle-state" id="idle-state" hidden></div><div class="idle-note" id="idle-note" hidden></div><time class="idle-clock" id="idle-clock"></time><div class="idle-date" id="idle-date"></div><div class="idle-weather" id="idle-weather" aria-label="Current weather"><div class="idle-weather-primary"><span class="idle-weather-icon" id="idle-weather-icon" aria-hidden="true"></span><strong id="idle-weather-temp"></strong><span id="idle-weather-condition"></span></div><div class="idle-weather-secondary"><span id="idle-weather-feels"></span><span id="idle-weather-range"></span><span id="idle-weather-rain"></span></div><div class="idle-weather-status" id="idle-weather-status"></div></div></div></div>
 <div class="ambient-veil" aria-hidden="true"></div>
-<script src="/lifecycle.js?v=2.12.77"></script>
-<script src="/state-contract.js?v=2.12.77"></script>
-<script src="/weather-channel.js?v=2.12.77"></script>
-<script src="/sky-ambient.js?v=2.12.77"></script>
-<script src="/weather-summary.js?v=2.12.77"></script>
-<script src="/now-playing-progress.js?v=2.12.77"></script>
-<script src="/brain.js?v=2.12.77"></script>
+<script src="/lifecycle.js?v=2.12.78"></script>
+<script src="/state-contract.js?v=2.12.78"></script>
+<script src="/weather-channel.js?v=2.12.78"></script>
+<script src="/sky-ambient.js?v=2.12.78"></script>
+<script src="/weather-summary.js?v=2.12.78"></script>
+<script src="/now-playing-progress.js?v=2.12.78"></script>
+<script src="/brain.js?v=2.12.78"></script>
 <script>
 
   const $ = id => document.getElementById(id);
@@ -1269,8 +1264,8 @@ ${bulbs.join('')}
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 396 60" preserveAspectRatio="none" font-family="${BLOCKY}">
 <defs><filter id="signSoft"><feGaussianBlur stdDeviation="6"/></filter></defs>
 <g class="np">
-<rect width="396" height="60" rx="8" fill="#14161A" stroke="var(--accent, #C9973B)" stroke-width="3"/>
-<rect x="4" y="4" width="388" height="52" rx="6" fill="none" stroke="#C9973B" stroke-width="1" opacity=".35"/>
+<rect width="396" height="60" rx="8" fill="#14161A" stroke="#5A4533" stroke-width="3"/>
+<rect x="4" y="4" width="388" height="52" rx="6" fill="none" stroke="#95744E" stroke-width="1" opacity=".3"/>
 <text x="198" y="42" text-anchor="middle" font-size="30" fill="#FFD9A0" letter-spacing="10">NOW PLAYING</text>
 <text x="198" y="42" text-anchor="middle" font-size="30" fill="#FFD9A0" letter-spacing="10" opacity=".55" filter="url(#signSoft)">NOW PLAYING</text>
 </g>
@@ -2906,4 +2901,4 @@ ${chase.join('')}
   window.MarqueeLifecycle.register('surface-animation', {interval: 1000, refresh: () => paint()});
 </script>
 
-<script src="/kiosk-menu.js?v=2.12.77"></script>
+<script src="/kiosk-menu.js?v=2.12.78"></script>

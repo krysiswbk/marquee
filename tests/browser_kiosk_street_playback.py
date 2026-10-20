@@ -77,6 +77,9 @@ with sync_playwright() as playwright:
         assert boxes[".b-plot"]["scrollHeight"] > boxes[".b-plot"]["clientHeight"]
         assert boxes[".b-streetframe"]["display"] != "none"
         assert boxes[".b-nowplaying"]["display"] != "none"
+        assert page.locator("#streetframe svg rect").first.get_attribute("stroke") == "#5A4533"
+        assert page.locator("#nowplaying svg rect").first.get_attribute("stroke") == "#5A4533"
+        assert page.locator("#streetframe .bl").count() > 20
         assert boxes[".b-streetframe"]["left"] < boxes[".b-poster"]["left"]
         assert boxes[".b-poster"]["right"] < boxes[".b-streetframe"]["right"]
         assert boxes[".b-streetframe"]["bottom"] < boxes[".brain-dock"]["top"]
