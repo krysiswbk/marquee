@@ -2,6 +2,10 @@
 
 Updated: 2026-10-20. Status: batches 1 and 2 deployed as 2.12.85 and independently verified in a live browser. Resume here before any further work.
 
+Automation status: active
+
+The user requested a 20-minute continuation task. Each run must read this checkpoint first, confirm there is independent work with evidence, and update this same file. Set `Automation status: complete` when the acceptance criteria are met, or `Automation status: blocked` with the exact access/decision needed when no authorized work can proceed. The local user timer disables itself on either terminal value. Do not start a competing campaign or create work merely to keep the timer running.
+
 ## Scope and baseline
 
 - Working checkout: `/home/wbk/marquee-kiosk-calm-20261019`, `main` at initial `dc13b35`, initially clean and tracking `origin/main`. Preserve unrelated work. The user's later instruction explicitly authorizes a validated push and deployment through the established release path.
