@@ -36,8 +36,17 @@ setTimeout(() => {
   setTimeout(() => {
     assert.strictEqual(maximum, 1, 'resume events coalesce');
     gate.splice(0).forEach(done => done());
-    lifecycle.destroy();
-    assert.strictEqual(lifecycle.inspect().length, 0, 'cleanup removes owned resources');
-    console.log('lifecycle: overlap, suspension, resume, and cleanup assertions passed');
+    handle.dispose();
+    let attempts = 0, timeouts = 0;
+    lifecycle.register('hung', {interval: 5, timeout: 20,
+      refresh: () => { attempts++; return new Promise(() => {}); },
+      onError: error => { if (error.name === 'TimeoutError') timeouts++; }});
+    setTimeout(() => {
+      assert.ok(attempts >= 2, 'a hung refresh cannot block later retries');
+      assert.ok(timeouts >= 1, 'the timeout is reported to the resource');
+      lifecycle.destroy();
+      assert.strictEqual(lifecycle.inspect().length, 0, 'cleanup removes owned resources');
+      console.log('lifecycle: overlap, suspension, timeout recovery, and cleanup assertions passed');
+    }, 85);
   }, 10);
 }, 10);

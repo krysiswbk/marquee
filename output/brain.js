@@ -214,7 +214,8 @@
   });
   $('brain-ack').onclick=async()=>{const b=$('brain-ack');b.disabled=true;try{const r=await fetch('/api/attention/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:alertId,action:'acknowledge'})});if(!r.ok)throw Error();await poll()}catch(_){b.textContent='Could not acknowledge · try again'}finally{b.disabled=false}};
   function weather(){window.MarqueeWeather?.observation(wx)}
-  async function poll(lifecycle={}){if(demo)return;try{const r=await fetch('/api/brain',{signal:lifecycle.signal});if(!r.ok)throw Error();state=await r.json();feedDisconnected=false;received=Date.now()/1000;render();window.dispatchEvent(new Event('marquee-brain'))}catch(error){if(error?.name==='AbortError')return;if(state){feedDisconnected=false;state.fresh=false;render()}else{feedDisconnected=true;state={fresh:false,openings:[],events:[],cards:[],alerts:[],people:[]};render()}}}
+  function connectionLost(){feedDisconnected=true;if(state)state.fresh=false;else state={fresh:false,openings:[],events:[],cards:[],alerts:[],people:[]};render()}
+  async function poll(lifecycle={}){if(demo)return;try{const r=await fetch('/api/brain',{signal:lifecycle.signal});if(!r.ok)throw Error();const next=await r.json();if(lifecycle.isCurrent&&!lifecycle.isCurrent())return;state=next;feedDisconnected=false;received=Date.now()/1000;render();window.dispatchEvent(new Event('marquee-brain'))}catch(error){if(error?.name==='AbortError'||lifecycle.isCurrent&&!lifecycle.isCurrent())return;connectionLost()}}
   $('brain-retry').onclick=()=>{ $('brain-retry').disabled=true; window.MarqueeLifecycle.request('brain'); setTimeout(()=>{$('brain-retry').disabled=false},500); };
   async function pollWeather(lifecycle={}){try{const r=await fetch('/ha-weather.json',{signal:lifecycle.signal});if(r.ok){wx=await r.json();weather()}}catch(error){if(error?.name!=='AbortError'){} }}
   window.MarqueeBrain={weatherContext(){return state?.cards?.find(c=>c.type==='weather'&&(!c.expires||Date.parse(c.expires)>Date.now()))},configure(cfg,fallback){theme='afterhours';document.body.dataset.liveTheme=theme;visibility=cfg.liveVisibility?.home||{};hiddenByBlank=fallback?.screen==='blank';render()},weather};
@@ -222,7 +223,7 @@
   if(document.fonts?.ready)document.fonts.ready.then(fitHousePanel);
   if(demo){const now=Date.now()/1000;received=now;state={fresh:true,source_at:now,openings:[{id:'preview:balcony',name:'Balcony door',category:'exterior_door',state:'open',since:now-420,duration:420}],unknown:[],people:[{name:'Alex',state:'Home'},{name:'Jamie',state:'Away'}],events:[{id:'preview:lock',title:'Front door lock unlocked',at:now-75,expires:now+825},{id:'preview:door',title:'Balcony door opened',at:now-420,expires:now+480}],cards:[{type:'calendar_event',subtype:'birthday_rollup',title:"Casey’s birthday",subtitle:'Tomorrow · September 12',rows:['Jordan · In 6 days','Sam · In 12 days']},{type:'calendar_event',title:'Recycling pickup',subtitle:'Tomorrow morning'},{type:'calendar_event',title:'Dinner with friends',subtitle:'Saturday · 6:30 PM'}],alerts:[],network:'online'};wx={temp:21,condition:'partly cloudy',wind:14,humidity:52,updated:now};render();weather()}
   else{
-    window.MarqueeLifecycle.register('brain',{interval:3000,refresh:poll});
+    window.MarqueeLifecycle.register('brain',{interval:3000,timeout:10000,refresh:poll,onError:connectionLost});
     window.MarqueeLifecycle.register('brain-weather',{interval:60000,refresh:pollWeather});
   }
   // Relative times only change by the minute. Fresh signals still render as

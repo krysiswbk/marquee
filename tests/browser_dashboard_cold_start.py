@@ -49,6 +49,14 @@ with sync_playwright() as playwright:
     page.wait_for_function("document.querySelector('#brain-house')?.dataset.state === 'ready'")
     assert page.locator("#brain-connection").inner_text() == "HOUSE CONNECTED"
     assert page.locator("#brain-retry").is_hidden()
+
+    # A Home Assistant outage after the page is already open must recover on
+    # the scheduled poll without a button press or a page reload.
+    failed["brain"] = True
+    page.wait_for_function("document.querySelector('#brain-house')?.dataset.state === 'disconnected'", timeout=8000)
+    failed["brain"] = False
+    page.wait_for_function("document.querySelector('#brain-house')?.dataset.state === 'ready'", timeout=8000)
+    assert page.locator("#brain-connection").inner_text() == "HOUSE CONNECTED"
     assert not errors, errors
     page.close()
     browser.close()

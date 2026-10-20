@@ -14,6 +14,8 @@
   const stop = record => {
     if (record.timer !== null) { clearTimeout(record.timer); record.timer = null; }
     record.epoch++;
+    record.cancel?.();
+    record.cancel = null;
     record.controller?.abort();
     record.controller = null;
     record.running = false;
@@ -38,12 +40,25 @@
       epoch,
       isCurrent: () => active() && records.get(record.name) === record && record.epoch === epoch && !controller.signal.aborted,
     };
-    Promise.resolve().then(() => record.refresh(guard)).catch(error => {
-      if (error?.name !== 'AbortError' && guard.isCurrent()) record.onError?.(error);
+    let timeoutId;
+    const deadline = new Promise((_, reject) => {
+      record.cancel = () => {
+        clearTimeout(timeoutId);
+        reject(Object.assign(new Error('Refresh cancelled'), {name: 'AbortError'}));
+      };
+      timeoutId = setTimeout(() => {
+        reject(Object.assign(new Error(`${record.name} refresh timed out`), {name: 'TimeoutError'}));
+        controller.abort();
+      }, record.timeout);
+    });
+    Promise.race([Promise.resolve().then(() => record.refresh(guard)), deadline]).catch(error => {
+      if (error?.name !== 'AbortError' && active() && records.get(record.name) === record && record.epoch === epoch) record.onError?.(error);
     }).finally(() => {
+      clearTimeout(timeoutId);
       if (records.get(record.name) !== record || record.epoch !== epoch) return;
       record.running = false;
       record.controller = null;
+      record.cancel = null;
       if (record.pending && active()) {
         record.pending = false;
         schedule(record);
@@ -69,6 +84,13 @@
   listen(document, 'visibilitychange', () => document.hidden ? suspend() : resume());
   listen(window, 'pagehide', suspend);
   listen(window, 'pageshow', resume);
+  listen(window, 'online', () => {
+    if (!active()) return;
+    for (const record of records.values()) {
+      if (record.running) record.pending = true;
+      else schedule(record);
+    }
+  });
   listen(window, 'beforeunload', () => api.destroy());
   listen(window, 'unload', () => api.destroy());
 
@@ -76,7 +98,8 @@
     register(name, options = {}) {
       if (records.has(name)) records.get(name).dispose();
       const record = {name, refresh: options.refresh || (() => {}), onError: options.onError,
-        interval: Number(options.interval) || 0, timer: null, controller: null,
+        interval: Number(options.interval) || 0, timeout: Number(options.timeout) > 0 ? Number(options.timeout) : 15000,
+        timer: null, controller: null, cancel: null,
         epoch: 0, running: false, pending: false};
       records.set(name, record);
       schedule(record);
