@@ -88,8 +88,8 @@ body .wx-broadcast [hidden]{display:none!important}
  .wx-heading h1{font-size:clamp(26px,3vw,42px)}
  body .wx-broadcast .channel-current{grid-template-columns:minmax(0,40%) minmax(0,1fr);gap:1.5vw;padding:1.2vh 0}
  .wx-observation{grid-template-columns:30% 1fr;column-gap:1vw;row-gap:.45vh}
- body .wx-broadcast .channel-icon{height:12vh}
- body .wx-broadcast .channel-temp{font-size:clamp(52px,9vw,108px)}
+ body .wx-broadcast:not([data-alert=true]) .channel-icon{height:15vh}
+ body .wx-broadcast:not([data-alert=true]) .channel-temp{font-size:clamp(64px,10.5vw,116px)}
  body .wx-broadcast .channel-condition{font-size:clamp(20px,2.3vw,32px);margin:.5vh 0}
  .wx-observation>span{font-size:clamp(12px,1.05vw,16px)}
  .wx-readings{padding-left:2vw}

@@ -109,6 +109,10 @@ body.mq-controls {
 .mq-attention-content td, .mq-attention-content th { overflow-wrap: anywhere; }
 .mq-controls [aria-invalid=true] { border: 2px solid #ff8585 !important; outline: 2px solid #ff858533; outline-offset: 2px; }
 .mq-controls .mq-field-error { display: block; margin-top: 7px; color: #ff8585; font-weight: 650; }
+.mq-controls .visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
 
 @media (max-width: 760px) {
   .mq-shell-inner { padding: 12px 14px; gap: 8px; flex-wrap: wrap; }

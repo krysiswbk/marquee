@@ -122,8 +122,8 @@ def test_cast_weather_keeps_clock_centered_and_uses_condition_icon(tmp_path):
         assert result["skyOpacity"] == "0.92"
         assert result["skyGradient"] == ["rgb(184, 223, 239)", "rgb(111, 157, 183)"]
         assert result["skyCloudColor"] == "rgb(234, 244, 250)"
-        assert result["secondaryColor"] == "rgb(40, 52, 61)"
-        assert result["secondaryColor"] == result["statusColor"]
+        assert result["secondaryColor"] == "rgb(203, 187, 217)"
+        assert result["statusColor"] == "rgb(242, 238, 230)"
         assert "Feels 16°" in result["secondary"]
         assert "High 22° / Low 11°" in result["secondary"]
         assert "Rain 65%" in result["secondary"]

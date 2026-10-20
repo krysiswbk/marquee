@@ -136,6 +136,44 @@ body.cast-display .context-card:not(:is(.calendar-scene,[data-kind="ambient_agen
   box-sizing: border-box;
 }
 
+/* Contexts without dependable artwork should spend their space on the
+   announcement and readable supporting facts, rather than an empty art bay. */
+body.cast-display .context-card.no-art:is([data-kind="gaming"],[data-kind="game_release"],[data-kind="tv_release"]) .context-copy {
+  width: min(100%, 86ch);
+  max-width: none;
+}
+body.cast-display .context-card.no-art:is([data-kind="gaming"],[data-kind="game_release"],[data-kind="tv_release"]) .context-title {
+  font-size: clamp(40px, min(5vw, 7.5vh), 76px);
+  overflow-wrap: anywhere;
+}
+body.cast-display .context-card.no-art:is([data-kind="gaming"],[data-kind="game_release"],[data-kind="tv_release"]) .context-detail {
+  font-size: clamp(19px, 1.8vw, 27px);
+}
+body.cast-display .context-card.no-art:is([data-kind="gaming"],[data-kind="game_release"],[data-kind="tv_release"]) .context-rows {
+  font-size: clamp(17px, 1.65vw, 24px);
+  max-height: 24vh;
+  align-content: start;
+}
+body.cast-display .context-card.no-art:is([data-kind="gaming"],[data-kind="game_release"],[data-kind="tv_release"]) .context-rows span {
+  min-width: 0;
+  max-width: min(100%, 25em);
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+/* The same long provider fact can arrive with artwork. Keep that row from
+   consuming the receiver's entire metadata area. */
+body.cast-display .context-card:not(.no-art):is([data-kind="gaming"],[data-kind="game_release"],[data-kind="tv_release"]) .context-rows span {
+  min-width: 0;
+  max-width: min(100%, 25em);
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 /* Agenda is a complete scene at every receiver size. Match the calendar
    type, not only a provider subtype: otherwise a renamed subtype inherits
    the generic clock/art layout and can overlap the event. */

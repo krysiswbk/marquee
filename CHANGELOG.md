@@ -1,3 +1,9 @@
+# 2.12.85
+
+- Improve Cast and kiosk readability for long media metadata, missing artwork, compact weather, Calendar and Sky at household display sizes.
+- Clarify Settings touch navigation and preserve keyboard access to long Plex synopses.
+- Refresh versioned display and Settings assets.
+
 # 2.12.70
 
 - Rotate the household feed on physical kiosks while keeping the Hub and garage Cast receiver feeds steady.
