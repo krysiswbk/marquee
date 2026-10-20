@@ -2,11 +2,9 @@
 
 Updated: 2026-10-20. Status: complete. Batches 1 and 2 were deployed as 2.12.85 and independently verified in a live browser.
 
-Automation status: complete
+Campaign status: complete
 
-Completion decision: all ranked browser acceptance criteria are met, the application release is deployed and independently reviewed, and no further implementation or verification batch remains. A read-only check on 2026-10-20 confirmed production `/healthz` still reports `ok: true` and version `2.12.85`. The scheduled Codex process in this checkout was this run; no competing Marquee campaign editor was found. Physical Cast and wired-panel motion, performance, and viewing distance remain unmeasured and require access to those devices if a future task calls for them. Browser emulation is not evidence for those hardware properties.
-
-The user requested a 20-minute continuation task. Each run must read this checkpoint first, confirm there is independent work with evidence, and update this same file. Set `Automation status: complete` when the acceptance criteria are met, or `Automation status: blocked` with the exact access/decision needed when no authorized work can proceed. The local user timer disables itself on either terminal value. Do not start a competing campaign or create work merely to keep the timer running.
+Completion decision: all ranked browser acceptance criteria are met, the application release is deployed and independently reviewed, and no further implementation or verification batch remains. A read-only check on 2026-10-20 confirmed production `/healthz` still reports `ok: true` and version `2.12.85`. A follow-up Codex process found no competing Marquee campaign editor. Physical Cast and wired-panel motion, performance, and viewing distance remain unmeasured and require access to those devices if a future task calls for them. Browser emulation is not evidence for those hardware properties.
 
 ## Scope and baseline
 
