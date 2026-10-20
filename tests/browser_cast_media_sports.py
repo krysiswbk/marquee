@@ -12,6 +12,47 @@ CASES = (("sports-demo=1", ".sports-card", ".sport-matchup"),
          ("context-demo=media-long", ".context-card", ".context-copy"))
 
 
+def test_cast_calendar_and_plex_are_separate_scenes():
+    calendar = {"playing": True, "type": "media_context", "key": "calendar:agenda",
+                "context": {"source": "calendar", "type": "calendar_event",
+                            "subtype": "ambient_agenda", "title": "Recycling pickup",
+                            "subtitle": "Today", "rows": [{"when": "Tomorrow", "title": "Birthday"}]}}
+    plex = {"playing": True, "type": "episode", "key": "plex:episode",
+            "title": "Scariest House in America", "subtitle": "S3 · E4",
+            "progress": {"offsetMs": 600000, "durationMs": 2400000}}
+    current = {"payload": calendar}
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            executable_path=os.environ.get("MARQUEE_CHROMIUM"), args=["--no-sandbox"])
+        page = browser.new_page(viewport={"width": 1024, "height": 600})
+
+        def route(request):
+            path = request.request.url.split("?", 1)[0].split("marquee.test", 1)[-1]
+            if path == "/image":
+                return request.fulfill(path=str(ROOT / "index.html"), content_type="text/html")
+            if path == "/now-playing.json":
+                return request.fulfill(json=current["payload"])
+            if path == "/settings.json":
+                return request.fulfill(json={"theme": "synthwave", "template": "bigclock"})
+            asset = ROOT / path.lstrip("/")
+            if asset.is_file():
+                return request.fulfill(path=str(asset))
+            return request.fulfill(json={})
+
+        page.route("**/*", route)
+        page.goto("http://marquee.test/image", wait_until="domcontentloaded")
+        page.wait_for_function("document.querySelector('#stage').classList.contains('contextual')")
+        assert page.locator(".b-identity").evaluate("el => getComputedStyle(el).display") == "none"
+        current["payload"] = plex
+        page.evaluate("window.MarqueeLifecycle.request('now-playing')")
+        page.wait_for_function("document.querySelector('#stage').classList.contains('cast-media')")
+        assert page.locator("#context-card").evaluate("el => getComputedStyle(el).display") == "none"
+        assert page.locator("#title").inner_text() == plex["title"]
+        assert page.locator(".b-progress").evaluate("el => getComputedStyle(el).display") != "none"
+        page.close()
+        browser.close()
+
+
 def test_cast_idle_uses_saved_synth_theme():
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(

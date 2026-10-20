@@ -837,3 +837,15 @@ body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface 
 body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface .kiosk-home-action{background:#291542!important;color:#ff8cdd!important;border-color:#ff4fc8!important}
 body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface .kiosk-retry{background:#1b1233!important;color:#ff8cdd!important;border-color:#53316e!important}
 @media(max-aspect-ratio:1/1){body.brain-live .brain-toast.show{left:3vw;right:auto;width:calc(100vw - 6vw);max-width:none}}
+
+/* On the wall kiosk, the plot and progress occupy separate fixed lanes. A
+   long Plex summary must never continue behind the progress bar. */
+@media (min-width:481px) {
+ body.brain-live.kiosk-playback-active[data-template=street] .b-device { display:none!important; }
+ body.brain-live.kiosk-playback-active[data-template=street] .b-plot {
+  top:41vh;
+  bottom:calc(var(--kiosk-lower-safe-area) + 88px);
+  height:auto;
+  overflow-y:auto;
+ }
+}
