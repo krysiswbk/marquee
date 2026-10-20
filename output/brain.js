@@ -143,6 +143,33 @@
     for(const [block,id]of [['house','brain-house'],['activity','brain-activity'],['agenda','brain-agenda']])$(id).hidden=visibility[block]===false;
     shell.hidden=hiddenByBlank;dock.hidden=hiddenByBlank;
     fitHousePanel();
+    fitAgenda();
+  }
+  let agendaFitFrame=0;
+  function fitAgenda(){
+    if(agendaFitFrame)cancelAnimationFrame(agendaFitFrame);
+    agendaFitFrame=requestAnimationFrame(()=>{
+      agendaFitFrame=0;
+      const list=$('brain-agenda-list');
+      if(!list || !$('brain-agenda').getClientRects().length)return;
+      const items=[...list.querySelectorAll('.brain-agenda-item')];
+      items.forEach(item=>{item.hidden=false;item.style.gridColumn='';item.style.gridRow=''});
+      const limit=list.getBoundingClientRect().bottom;
+      // Keep complete rows in view; the Calendar link holds the full list.
+      const columns=getComputedStyle(list).gridTemplateColumns.split(' ').length;
+      const firstClipped=items.findIndex(item=>item.getBoundingClientRect().bottom>limit+1);
+      const cutoff=firstClipped<0?items.length:Math.floor(firstClipped/columns)*columns;
+      items.slice(cutoff).forEach(item=>{item.hidden=true});
+      // On the wide Home, read the dates down each column. DOM order stays
+      // chronological for keyboards and screen readers.
+      if(columns>1&&shell.classList.contains('brain-quiet')&&cutoff){
+        const rows=Math.ceil(cutoff/columns);
+        items.slice(0,cutoff).forEach((item,index)=>{
+          item.style.gridColumn=String(Math.floor(index/rows)+1);
+          item.style.gridRow=String(index%rows+1);
+        });
+      }
+    });
   }
   function fitHousePanel(){
     const panel=$('brain-house');
@@ -227,7 +254,7 @@
   $('brain-retry').onclick=()=>{ $('brain-retry').disabled=true; window.MarqueeLifecycle.request('brain'); setTimeout(()=>{$('brain-retry').disabled=false},500); };
   async function pollWeather(lifecycle={}){try{const r=await fetch('/ha-weather.json',{signal:lifecycle.signal});if(r.ok){wx=await r.json();weather()}}catch(error){if(error?.name!=='AbortError'){} }}
   window.MarqueeBrain={weatherContext(){return state?.cards?.find(c=>c.type==='weather'&&(!c.expires||Date.parse(c.expires)>Date.now()))},configure(cfg,fallback){theme='afterhours';document.body.dataset.liveTheme=theme;visibility=cfg.liveVisibility?.home||{};hiddenByBlank=fallback?.screen==='blank';render()},weather};
-  window.addEventListener('resize',fitHousePanel);
+  window.addEventListener('resize',()=>{fitHousePanel();fitAgenda()});
   if(document.fonts?.ready)document.fonts.ready.then(fitHousePanel);
   if(demo){const now=Date.now()/1000;received=now;state={fresh:true,source_at:now,openings:[{id:'preview:balcony',name:'Balcony door',category:'exterior_door',state:'open',since:now-420,duration:420}],unknown:[],people:[{name:'Alex',state:'Home'},{name:'Jamie',state:'Away'}],events:[{id:'preview:lock',title:'Front door lock unlocked',at:now-75,expires:now+825},{id:'preview:door',title:'Balcony door opened',at:now-420,expires:now+480}],cards:[{type:'calendar_event',subtype:'birthday_rollup',title:"Casey’s birthday",subtitle:'Tomorrow · September 12',rows:['Jordan · In 6 days','Sam · In 12 days']},{type:'calendar_event',title:'Recycling pickup',subtitle:'Tomorrow morning'},{type:'calendar_event',title:'Dinner with friends',subtitle:'Saturday · 6:30 PM'}],alerts:[],network:'online'};wx={temp:21,condition:'partly cloudy',wind:14,humidity:52,updated:now};render();weather()}
   else{

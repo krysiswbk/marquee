@@ -8,7 +8,8 @@ from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 VIEWPORTS = [(320, 720), (360, 800), (393, 852), (430, 932),
-             (481, 900), (700, 900), (1024, 600), (1280, 800), (1500, 900)]
+             (481, 900), (700, 900), (1024, 600), (1280, 800),
+             (1500, 900), (1500, 971)]
 UNKNOWN = ["Nursery Window", "Office Window", "Basement Window",
            "Garage Entry", "Patio Door", "Workshop Door"]
 HEALTH = ["Nursery Motion & Lux Motion — Upstairs Hallway",
@@ -131,9 +132,11 @@ with sync_playwright() as playwright:
             if kind == "calendar":
                 assert agenda.get_attribute("data-agenda-state") == "ready"
                 assert agenda.is_visible()
-                assert "Casey’s birthday" in agenda.inner_text()
-                assert "Urgent school pickup change" in agenda.inner_text()
-                assert "Jordan" in agenda.inner_text()
+                # All real entries remain in the DOM even when the preview
+                # shows only complete rows; the full Calendar remains linked.
+                assert "Casey’s birthday" in agenda.text_content()
+                assert "Urgent school pickup change" in agenda.text_content()
+                assert "Jordan" in agenda.text_content()
                 if width == 1280:
                     assert agenda.locator(".brain-agenda-item").count() >= 5
                     assert not page.locator("#brain-activity").is_visible()
@@ -156,7 +159,22 @@ with sync_playwright() as playwright:
                 assert agenda.evaluate("el => el.getBoundingClientRect().right <= innerWidth && el.getBoundingClientRect().left >= 0")
                 assert agenda.evaluate("el => el.scrollHeight <= el.clientHeight + 1"), (width, height, agenda.bounding_box(), agenda.evaluate("el => ({scrollHeight:el.scrollHeight, clientHeight:el.clientHeight})"))
                 if width >= 1024:
-                    assert min(agenda.locator(".brain-agenda-item").evaluate_all("nodes => nodes.map(node => node.getBoundingClientRect().height)")) >= 28
+                    assert min(agenda.locator(".brain-agenda-item:visible").evaluate_all(
+                        "nodes => nodes.map(node => node.getBoundingClientRect().height)")) >= 28
+                if (width, height) in ((1280, 800), (1500, 971)):
+                    visible_rows = agenda.locator(".brain-agenda-item:visible")
+                    assert visible_rows.count() >= 5
+                    assert agenda.evaluate("""el => {
+                        const list = el.querySelector('.brain-agenda-list').getBoundingClientRect();
+                        return [...el.querySelectorAll('.brain-agenda-item')]
+                          .filter(item => item.getClientRects().length)
+                          .every(item => item.getBoundingClientRect().bottom <= list.bottom + 1);
+                    }""")
+                if (width, height) == (1500, 971):
+                    assert agenda.locator(".brain-agenda-item strong:visible").first.evaluate(
+                        "el => parseFloat(getComputedStyle(el).fontSize)") >= 17
+                    assert agenda.locator(".brain-agenda-item span:visible").first.evaluate(
+                        "el => parseFloat(getComputedStyle(el).fontSize)") >= 14
                 assert not agenda.evaluate("""
                     el => {
                         const box = el.getBoundingClientRect();

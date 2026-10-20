@@ -68,6 +68,25 @@ with sync_playwright() as playwright:
             assert page.locator(".kiosk-editorial-feature h2").inner_text() == LONG_TITLE
             assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
 
+            # The destination can briefly replace its title after first paint.
+            # Measure the settled, font-loaded heading rather than that gap.
+            page.evaluate("document.fonts.ready")
+            page.wait_for_function("""() => {
+                const node = document.querySelector('.kiosk-editorial-feature h2');
+                if (!node || !node.getClientRects().length) return false;
+                const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+                while (walker.nextNode()) {
+                    const text = walker.currentNode;
+                    for (const match of text.data.matchAll(/[A-Za-z0-9]+/g)) {
+                        const range = document.createRange();
+                        range.setStart(text, match.index);
+                        range.setEnd(text, match.index + match[0].length);
+                        if (range.getClientRects().length !== 1) return false;
+                    }
+                }
+                return true;
+            }""", timeout=5000)
+
             fragments = page.locator(".kiosk-editorial-feature h2").evaluate("""node => {
                 const textNodes = [];
                 const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);

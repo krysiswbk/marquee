@@ -1,3 +1,8 @@
+# 2.12.87
+
+- Use the quiet Home screen's lower width for larger, chronological upcoming calendar entries at the physical kiosk's measured logical size.
+- Keep complete calendar rows visible while preserving the clock, weather, urgent household states, and full Calendar access.
+
 # 2.12.86
 
 - Make the Home screen's quiet household status compact and use the recovered space for readable upcoming calendar entries.
