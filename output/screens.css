@@ -776,6 +776,59 @@ body.brain-live .kiosk-section[data-section=calendar] .kiosk-calendar-page .kios
 body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface{--kiosk-bg:#100b22;--kiosk-panel:#1b1233;--kiosk-accent:#ff4fc8;--kiosk-muted:#c3a9d4;color:#fff0fb;background-color:#100b22;background-image:radial-gradient(circle,transparent 0 49%,#ff4fc820 49.2% 49.5%,transparent 49.8% 62.5%,#9b42e220 62.7% 63%,transparent 63.3%) right 8% top 17%/min(38vw,520px) min(38vw,520px) no-repeat,radial-gradient(circle at 74% 42%,#692354 0 1px,transparent 2px) 0 0/34px 34px,radial-gradient(ellipse at 78% 46%,#a52cff33 0,transparent 42%),linear-gradient(135deg,#100b22,#1b1035 72%)}
 body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface :is(.kiosk-now-playing-head>p:first-child,.kiosk-weather-separator){color:#ff4fc8!important}
 body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface :is(.kiosk-now-playing-head h1,.kiosk-weather-context){color:#fff0fb}
+
+/* The Street scene is also used on the kiosk Home playback view. Keep its
+   theater frame and reserve a readable lane between the device and progress. */
+@media (min-width:481px){
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-streetframe{
+  display:block!important;left:auto!important;right:6vw;top:14vh;
+  width:min(31vw,41vh);height:auto;aspect-ratio:392/552;z-index:1;
+ }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-nowplaying{
+  display:block!important;left:auto!important;right:5vw;top:5vh;
+  width:min(33vw,44vh);height:auto;aspect-ratio:396/60;z-index:2;
+ }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-poster{
+  left:auto!important;right:calc(6vw + min(31vw,41vh) * .09);
+  top:calc(14vh + min(31vw,41vh) * .09);
+  width:calc(min(31vw,41vh) * .82);height:auto;max-height:none;
+  aspect-ratio:2/3;align-self:auto;justify-self:auto;z-index:2;
+ }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .poster{
+  width:100%;height:100%;object-fit:cover;
+ }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-identity{
+  top:17vh;width:48vw;row-gap:.6vh;
+ }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .title{
+  font-size:clamp(32px,3.8vw,54px);line-height:1.04;
+ }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .subtitle{
+  font-size:clamp(16px,1.8vw,26px);line-height:1.2;
+ }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-meta{
+  top:33vh;width:48vw;
+ }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-device{
+  top:39.5vh;left:5.5vw;width:min(35vw,420px);height:clamp(48px,7vh,68px);
+ }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-device .session-card{
+  height:100%;min-height:0;box-sizing:border-box;
+ }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-plot{
+  top:49vh;left:5.5vw;width:48vw;
+  height:calc(41vh - var(--kiosk-lower-safe-area) - 16px);
+  min-height:0;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;
+  scrollbar-color:#ff4fc8aa #21152b88;
+ }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .plot{
+  font-size:clamp(16px,1.55vw,22px);line-height:1.4;
+ }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-progress{
+  position:fixed!important;inset:auto auto calc(var(--kiosk-lower-safe-area) + 8px) 5.5vw!important;
+  width:48vw!important;z-index:9001;
+ }
+}
 body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface .kiosk-home-action{background:#291542!important;color:#ff8cdd!important;border-color:#ff4fc8!important}
 body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface .kiosk-retry{background:#1b1233!important;color:#ff8cdd!important;border-color:#53316e!important}
 @media(max-aspect-ratio:1/1){body.brain-live .brain-toast.show{left:3vw;right:auto;width:calc(100vw - 6vw);max-width:none}}
