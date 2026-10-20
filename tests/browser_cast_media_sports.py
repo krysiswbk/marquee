@@ -52,6 +52,8 @@ def test_cast_calendar_and_plex_are_separate_scenes():
                 "el => el.classList.contains('calendar-scene') && el.classList.contains('no-art')")
             assert page.locator(".b-identity").evaluate("el => getComputedStyle(el).display") == "none"
             assert page.locator(".context-time").evaluate("el => getComputedStyle(el).display") == "none"
+            assert "Birthday" in page.locator("#context-rows").inner_text()
+            assert "[object Object]" not in page.locator("#context-rows").inner_text()
             calendar_boxes = page.evaluate("""() => {
                 const box = s => document.querySelector(s).getBoundingClientRect();
                 const card = box('#context-card'), copy = box('.context-copy'), rows = box('#context-rows');
@@ -69,6 +71,8 @@ def test_cast_calendar_and_plex_are_separate_scenes():
             page.wait_for_function("document.querySelector('#stage').classList.contains('cast-media')")
             assert page.locator("#context-card").evaluate("el => getComputedStyle(el).display") == "none"
             assert page.locator("#title").inner_text() == plex["title"]
+            assert page.locator("#title").evaluate("el => getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().width > 0")
+            assert not page.locator("#bg").evaluate("el => el.classList.contains('on')")
             assert page.locator(".b-progress").evaluate("el => getComputedStyle(el).display") != "none"
             page.wait_for_selector(".b-poster:not([hidden])")
             media_boxes = page.evaluate("""() => {

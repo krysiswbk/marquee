@@ -108,9 +108,20 @@ with sync_playwright() as playwright:
         pfl, _ = open_page(browser, "http://marquee.test/kiosk?view=pfl", viewport)
         empty = pfl.locator('.kiosk-section[data-section="pfl"] [data-lifecycle="empty"]')
         empty.wait_for()
-        section = pfl.locator('.kiosk-section[data-section="pfl"]')
-        box, section_box = empty.bounding_box(), section.bounding_box()
-        assert box and section_box
+        geometry = pfl.wait_for_function("""() => {
+          const section = document.querySelector('.kiosk-section[data-section="pfl"]');
+          const empty = section?.querySelector('[data-lifecycle="empty"]');
+          if (!section || !empty) return false;
+          const box = empty.getBoundingClientRect();
+          const sectionBox = section.getBoundingClientRect();
+          if (!box.width || !box.height || !sectionBox.width || !sectionBox.height) return false;
+          return {
+            box: {x: box.x, y: box.y, width: box.width, height: box.height},
+            sectionBox: {x: sectionBox.x, y: sectionBox.y,
+                         width: sectionBox.width, height: sectionBox.height}
+          };
+        }""").json_value()
+        box, section_box = geometry["box"], geometry["sectionBox"]
         assert box["x"] >= section_box["x"]
         assert box["x"] + box["width"] <= section_box["x"] + section_box["width"] + 1
         assert pfl.locator("html").evaluate("el => el.scrollWidth <= innerWidth + 1")
