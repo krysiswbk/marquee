@@ -296,6 +296,10 @@ body.cast-display .stage.sports > .block,
 body.cast-display .stage.weather-context > .block { display: none !important; }
 body.cast-display .stage.cast-media > :is(.context-card, .sports-card, .weather-card) { display: none !important; }
 
+/* Sky belongs to ambient and context scenes. Its opaque daytime fill sits
+   above Plex fanart and washes out Cast playback, even for night media. */
+body.cast-display.cast-media-active .sky-layer { display: none; }
+
 /* The compact playback composition remains available to other Cast templates.
    The configured Big Clock uses its original artwork-led layout instead. */
 body.cast-display:not([data-template="bigclock"]) .stage.cast-media {

@@ -1,3 +1,8 @@
+# 2.12.89
+
+- Keep the real media backdrop clear during Cast playback by removing the ambient sky overlay only from that scene; retain sky on idle and context screens.
+- Preserve the saved Big Clock composition and weather/progress while playback changes and receiver polls.
+
 # 2.12.88
 
 - Restore the saved Big Clock hierarchy for Cast playback: prominent centered time, visible media backdrop, contained weather/title/progress at Nest Hub sizes.

@@ -130,6 +130,7 @@ def test_bigclock_keeps_saved_no_poster_layout_across_polls():
     payload = {"playing": True, "type": "movie", "key": "movie:sample",
                "title": "Practical Magic 2", "poster": True, "backdrop": True,
                "progress": {"offsetMs": 3400000, "durationMs": 7800000}}
+    current = {"payload": payload}
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(
             executable_path=os.environ.get("MARQUEE_CHROMIUM"), args=["--no-sandbox"])
@@ -144,7 +145,7 @@ def test_bigclock_keeps_saved_no_poster_layout_across_polls():
                 if path == "/image":
                     return request.fulfill(path=str(ROOT / "index.html"), content_type="text/html")
                 if path == "/now-playing.json":
-                    return request.fulfill(json=payload)
+                    return request.fulfill(json=current["payload"])
                 if path == "/settings.json":
                     return request.fulfill(json={"theme": "synthwave", "template": "bigclock",
                         "blockVisibility": {"bigclock": {"poster": False}}})
@@ -184,6 +185,19 @@ def test_bigclock_keeps_saved_no_poster_layout_across_polls():
             assert metrics["clockBottom"] <= metrics["titleTop"] + 1, (width, metrics)
             assert metrics["titleBottom"] <= metrics["progressTop"] + 1, (width, metrics)
             assert metrics["progressBottom"] <= height + 1, (width, metrics)
+            # Ambient sky is an opaque blue sheet by day and black by night.
+            # Neither should cover real media art, including after a receiver poll.
+            for is_day in (True, False):
+                page.evaluate("isDay => window.MarqueeSky.render({sky:{sun:{is_day:isDay}}})", is_day)
+                assert page.locator("#sky-layer").evaluate(
+                    "el => getComputedStyle(el).display") == "none", (width, is_day)
+                assert page.locator("#bg").evaluate("el => el.classList.contains('on')")
+            current["payload"] = {"playing": False}
+            page.evaluate("window.MarqueeLifecycle.request('now-playing')")
+            page.wait_for_function("document.body.classList.contains('idle')")
+            assert page.locator("#sky-layer").evaluate(
+                "el => getComputedStyle(el).display") != "none", width
+            current["payload"] = payload
             page.close()
         browser.close()
 
