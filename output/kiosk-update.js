@@ -1,7 +1,21 @@
 (() => {
   const params = new URLSearchParams(location.search);
-  if (window.top !== window.self || location.pathname !== '/kiosk' || params.get('wired') !== '1' ||
+  if (location.pathname !== '/kiosk' ||
       ['demo', 'edit', 'receiver'].some(key => params.has(key))) return;
+
+  // Home Assistant opens Marquee inside a cross-origin popup frame. Its URL
+  // does not carry the wired marker. The Cast receiver's frame is same-origin,
+  // so it must remain outside this refresh path.
+  let hostedPopup = false;
+  if (window.top !== window.self) {
+    try {
+      hostedPopup = window.parent.location.origin !== location.origin;
+    } catch (_) {
+      hostedPopup = true;
+    }
+  }
+  if (params.get('wired') !== '1' && !hostedPopup) return;
+  if (window.top !== window.self && !hostedPopup) return;
 
   const version = new URL(document.currentScript.src).searchParams.get('v');
   if (!version) return;

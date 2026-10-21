@@ -1,4 +1,4 @@
-"""Kiosk app updates refresh only its tab after household interaction settles."""
+"""Kiosk app updates refresh wired tabs and HA popups after interaction settles."""
 
 import os
 from pathlib import Path
@@ -27,6 +27,11 @@ with sync_playwright() as playwright:
     })()""")
 
     def route(request):
+        if request.request.url.startswith("http://ha.test/dashboard"):
+            return request.fulfill(
+                body='<iframe name="marquee-popup" src="http://marquee.test/kiosk"></iframe>',
+                content_type="text/html",
+            )
         path = request.request.url.split("?", 1)[0].split("marquee.test", 1)[-1]
         if path == "/kiosk" and "receiver=1" in request.request.url:
             return request.fulfill(path=str(ROOT / "output/kiosk-receiver.html"), content_type="text/html")
@@ -73,10 +78,47 @@ with sync_playwright() as playwright:
     receiver.locator("body").wait_for()
     assert receiver.locator("body").evaluate("() => typeof window.runKioskUpdateCheck") == "undefined"
 
+    popup_page = browser.new_page()
+    popup_page.add_init_script("""(() => {
+      const interval = window.setInterval;
+      window.setInterval = (callback, delay, ...args) => {
+        if (delay === 300000) window.runKioskUpdateCheck = callback;
+        return interval(callback, delay, ...args);
+      };
+    })()""")
+    popup_page.route("**/*", route)
+    popup_navigations = []
+    popup_page.on("framenavigated", lambda frame: popup_navigations.append(frame.url))
+    health["version"] = VERSION
+    popup_page.goto("http://ha.test/dashboard", wait_until="domcontentloaded")
+    popup_page.frame_locator('iframe[name="marquee-popup"]').locator("body").wait_for()
+    popup_frame = popup_page.frame(name="marquee-popup")
+    popup_frame.wait_for_function("typeof window.runKioskUpdateCheck === 'function'")
+    assert popup_frame.url == "http://marquee.test/kiosk"
+    popup_initial = len(popup_navigations)
+    popup_frame.evaluate("() => runKioskUpdateCheck()")
+    assert len(popup_navigations) == popup_initial, "same release reloaded the HA popup"
+
+    health["version"] = "next-release"
+    popup_frame.evaluate("() => window.dispatchEvent(new KeyboardEvent('keydown', {key: 'Tab'}))")
+    popup_frame.evaluate("() => runKioskUpdateCheck()")
+    assert len(popup_navigations) == popup_initial, "active HA popup interaction was interrupted"
+    popup_frame.evaluate("() => { const now = Date.now(); Date.now = () => now + 61000; }")
+    with popup_page.expect_event("framenavigated", predicate=lambda frame: frame == popup_frame):
+        popup_frame.evaluate("() => runKioskUpdateCheck()")
+    assert popup_page.url == "http://ha.test/dashboard", "HA parent navigated during popup update"
+    assert len(popup_navigations) == popup_initial + 1, "new release did not reload the HA popup"
+    for excluded_url in ("/live", "/kiosk?demo=1", "/kiosk?edit=1"):
+        popup_frame.goto(f"http://marquee.test{excluded_url}", wait_until="domcontentloaded")
+        assert popup_frame.evaluate("() => typeof window.runKioskUpdateCheck") == "undefined", (
+            f"updater activated in excluded HA popup view: {excluded_url}"
+        )
+    popup_page.close()
+
     page.goto("http://marquee.test/kiosk?demo=1", wait_until="domcontentloaded")
     demo = len(navigations)
     page.evaluate("() => document.dispatchEvent(new Event('visibilitychange'))")
     page.wait_for_timeout(100)
     assert len(navigations) == demo, "development fixture was reloaded"
     browser.close()
-    print("PASS: kiosk-only release refresh leaves Live and development fixtures alone")
+    print("PASS: wired and HA popup refresh leaves Cast, Live and development fixtures alone")

@@ -1,3 +1,7 @@
+# 2.12.92
+
+- Keep Home Assistant as the wired kiosk entry point and refresh its Marquee popup after app releases without navigating the dashboard.
+
 # 2.12.91
 
 - Refresh the wired Firefox Marquee tab when a newer app release is available and household input has settled; leave Cast, Live, demo, and Home Assistant tabs alone.
