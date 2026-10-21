@@ -22,12 +22,20 @@
   try { const candidate=new URL(parentUrl); if(window.top!==window&&/^https?:$/.test(candidate.protocol)&&candidate.origin!==location.origin)dashboardUrl=candidate.href; } catch (_) { /* Direct kiosk visit. */ }
   // HA may expose no referrer or only its origin. The dedicated popup marker
   // identifies the installed dashboard route regardless of those hints.
-  if(window.top!==window&&!castReceiver&&q.get('v')?.startsWith('household-desk-'))
+  const installedHaPopup=window.top!==window&&!castReceiver&&q.get('v')?.startsWith('household-desk-');
+  if(installedHaPopup)
     dashboardUrl='http://10.10.9.5:8123/dashboard-homepage/0?BrowserID=a38e5c41-b99f0451';
   if(dashboardUrl&&!castReceiver){
+    const actions=document.createElement('div');actions.className='brain-dock-actions';
     const close=document.createElement('button');close.type='button';close.className='brain-dock-close';close.textContent='Home controls';close.setAttribute('aria-label','Home controls in Home Assistant');
     close.onclick=()=>{ window.top.location.href=dashboardUrl; };
-    dock.append(close);
+    actions.append(close);
+    if(installedHaPopup){
+      const doorbell=document.createElement('button');doorbell.type='button';doorbell.className='brain-dock-close brain-dock-doorbell';doorbell.textContent='Doorbell';doorbell.setAttribute('aria-label','Doorbell camera in Home Assistant');
+      doorbell.onclick=()=>{ window.top.location.href='http://10.10.9.5:8123/dashboard-homepage/cameras?BrowserID=a38e5c41-b99f0451'; };
+      actions.append(doorbell);
+    }
+    dock.append(actions);
   }
   const toast=document.createElement('div');toast.className='brain-toast';toast.setAttribute('role','status');document.body.append(toast);
   const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

@@ -1,3 +1,8 @@
+# 2.12.94
+
+- Add a touch and keyboard Doorbell shortcut from the HA-hosted Marquee popup to the existing authenticated Home Assistant Cameras view.
+- Keep the shortcut out of direct kiosk and Cast displays; retain HA camera authentication.
+
 # 2.12.93
 
 - Show fresh sleeping, guest, garage and person context on Home while preserving urgent alerts and stale-data honesty.
