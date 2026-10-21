@@ -125,6 +125,69 @@ def test_cast_idle_uses_saved_synth_theme():
         browser.close()
 
 
+def test_bigclock_keeps_saved_no_poster_layout_across_polls():
+    """The household's Big Clock hides posters; playback must stay artwork-led."""
+    payload = {"playing": True, "type": "movie", "key": "movie:sample",
+               "title": "Practical Magic 2", "poster": True, "backdrop": True,
+               "progress": {"offsetMs": 3400000, "durationMs": 7800000}}
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(
+            executable_path=os.environ.get("MARQUEE_CHROMIUM"), args=["--no-sandbox"])
+        for width, height in ((1024, 600), (1280, 800)):
+            page = browser.new_page(viewport={"width": width, "height": height})
+            poster_requests = []
+            page.on("request", lambda request: poster_requests.append(request.url)
+                    if "/poster.jpg" in request.url else None)
+
+            def route(request):
+                path = request.request.url.split("?", 1)[0].split("marquee.test", 1)[-1]
+                if path == "/image":
+                    return request.fulfill(path=str(ROOT / "index.html"), content_type="text/html")
+                if path == "/now-playing.json":
+                    return request.fulfill(json=payload)
+                if path == "/settings.json":
+                    return request.fulfill(json={"theme": "synthwave", "template": "bigclock",
+                        "blockVisibility": {"bigclock": {"poster": False}}})
+                if path == "/backdrop.jpg":
+                    return request.fulfill(body="<svg xmlns='http://www.w3.org/2000/svg' width='1280' height='800'><rect width='1280' height='800' fill='#553d70'/></svg>",
+                                           content_type="image/svg+xml")
+                asset = ROOT / path.lstrip("/")
+                if asset.is_file():
+                    return request.fulfill(path=str(asset))
+                return request.fulfill(json={})
+
+            page.route("**/*", route)
+            page.goto("http://marquee.test/image?display=hubs", wait_until="domcontentloaded")
+            page.wait_for_function("document.querySelector('#stage').classList.contains('cast-media')")
+            # The receiver polls every five seconds; verify the settled state,
+            # not the brief frame immediately after the poster image loads.
+            page.wait_for_timeout(6200)
+            metrics = page.evaluate("""() => {
+                const stage = document.querySelector('#stage');
+                const clock = document.querySelector('.b-clock').getBoundingClientRect();
+                const title = document.querySelector('.b-identity').getBoundingClientRect();
+                const progress = document.querySelector('.b-progress').getBoundingClientRect();
+                return {posterHidden:document.querySelector('.b-poster').hidden,
+                    posterReady:stage.classList.contains('poster-ready'),
+                    columns:getComputedStyle(stage).gridTemplateColumns,
+                    clockSize:parseFloat(getComputedStyle(document.querySelector('.clock')).fontSize),
+                    clockCenter:clock.left+clock.width/2,
+                    clockBottom:clock.bottom, titleTop:title.top, titleBottom:title.bottom,
+                    progressTop:progress.top, progressBottom:progress.bottom,
+                    backdropOn:document.querySelector('#bg').classList.contains('on')};
+            }""")
+            assert metrics["posterHidden"] and not metrics["posterReady"], (width, metrics)
+            assert not poster_requests, (width, poster_requests)
+            assert metrics["backdropOn"]
+            assert metrics["clockSize"] >= 100, (width, metrics)
+            assert abs(metrics["clockCenter"] - width / 2) < width * .12, (width, metrics)
+            assert metrics["clockBottom"] <= metrics["titleTop"] + 1, (width, metrics)
+            assert metrics["titleBottom"] <= metrics["progressTop"] + 1, (width, metrics)
+            assert metrics["progressBottom"] <= height + 1, (width, metrics)
+            page.close()
+        browser.close()
+
+
 def run():
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(

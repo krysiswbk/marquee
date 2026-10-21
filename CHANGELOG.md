@@ -1,3 +1,8 @@
+# 2.12.88
+
+- Restore the saved Big Clock hierarchy for Cast playback: prominent centered time, visible media backdrop, contained weather/title/progress at Nest Hub sizes.
+- Respect saved poster visibility across repeated media polls, and collapse its space when artwork is unavailable.
+
 # 2.12.87
 
 - Use the quiet Home screen's lower width for larger, chronological upcoming calendar entries at the physical kiosk's measured logical size.
