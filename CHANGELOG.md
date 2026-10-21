@@ -1,3 +1,8 @@
+# 2.12.95
+
+- Make empty, loading, and offline Home calendar states compact, with truthful context and a nearby Calendar link when fresh.
+- Keep the offline retry control visible and reduce the empty recent-activity panel without affecting populated event capacity.
+
 # 2.12.94
 
 - Add a touch and keyboard Doorbell shortcut from the HA-hosted Marquee popup to the existing authenticated Home Assistant Cameras view.

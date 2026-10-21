@@ -195,3 +195,29 @@ body.brain-live #brain-activity-list{flex:1 1 auto;min-height:0}
  body.brain-live.idle:not(.kiosk-destination-active) #brain-house .brain-orbit{width:4vw;height:4vw;font-size:2vw}
  body.brain-live.idle:not(.kiosk-destination-active) .brain-household-state{font-size:clamp(14px,1.5vw,16px);margin-top:.7vh}
 }
+/* Sparse agenda states have only one line of context. Let the card end with
+   that context; keep the full-height layout when real upcoming dates exist. */
+.brain-agenda-more[hidden]{display:none}
+.brain-retry{font-size:clamp(14px,1vw,16px)}
+#brain-agenda:is([data-agenda-state=stale],[data-agenda-state=loading]) .brain-eyebrow b{display:none}
+@media(min-width:701px) and (min-aspect-ratio:1/1){
+ /* A disconnected feed adds a real retry control below two lines of warning.
+    Reserve its full 44px target without changing the active alert layout. */
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell:has(#brain-house[data-state=disconnected]){
+  grid-template-rows:auto clamp(170px,20vh,195px) minmax(0,1fr)
+ }
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell:has(#brain-house[data-state=disconnected]) #brain-activity{
+  height:auto;min-height:0;padding-block:1.2vh;overflow:visible
+ }
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell:has(#brain-house[data-state=disconnected]) #brain-activity .brain-eyebrow{margin-bottom:.8vh}
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell #brain-agenda:is([data-agenda-state=empty],[data-agenda-state=stale],[data-agenda-state=loading]){
+  align-self:start;height:auto;min-height:0;max-height:none;padding:clamp(12px,1.2vh,18px) 2vw;gap:8px;overflow:visible
+ }
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell #brain-agenda:is([data-agenda-state=empty],[data-agenda-state=stale],[data-agenda-state=loading]) .brain-eyebrow{min-height:0}
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell #brain-agenda:is([data-agenda-state=empty],[data-agenda-state=stale],[data-agenda-state=loading]) .brain-agenda-list{
+  flex:0 0 auto;display:block;min-height:0;overflow:visible
+ }
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell #brain-agenda:is([data-agenda-state=empty],[data-agenda-state=stale],[data-agenda-state=loading]) .brain-agenda-more{
+  position:static;align-self:flex-start;margin:0
+ }
+}
