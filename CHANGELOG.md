@@ -1,3 +1,7 @@
+# 2.12.91
+
+- Refresh the wired Firefox Marquee tab when a newer app release is available and household input has settled; leave Cast, Live, demo, and Home Assistant tabs alone.
+
 # 2.12.90
 
 - Move the quiet Home agenda into the empty right-side space beneath household status, with larger complete event rows at the physical kiosk size.
