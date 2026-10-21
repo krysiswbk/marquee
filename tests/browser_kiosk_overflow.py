@@ -97,7 +97,7 @@ with sync_playwright() as playwright:
     dashboard.goto("http://hass.test/dashboard-homepage/0", wait_until="domcontentloaded")
     close = dashboard.frame_locator("iframe").locator(".brain-dock-close")
     close.wait_for(state="visible")
-    assert close.inner_text() == "✕ Close"
+    assert close.inner_text() == "Home controls"
     close.click()
     dashboard.get_by_role("heading", name="Dashboard").wait_for()
     assert visits["count"] >= 2

@@ -7,7 +7,7 @@
   document.body.classList.add('brain-live');
   const shell = document.createElement('section'); shell.className='brain-shell';shell.setAttribute('aria-label','Household desk');
   shell.innerHTML=`<header class="brain-mast"><div class="brain-brand"><em>M/</em> MARQUEE <a class="brain-customize" href="/settings/layout?profile=live" aria-label="Customize the household desk"><span class="brain-customize-icon" aria-hidden="true">↗</span><span class="brain-customize-label">Customize</span></a></div><div class="brain-edition">THE HOUSEHOLD EDITION</div><div class="brain-connection" id="brain-connection">CONNECTING</div></header>
-  <section class="brain-panel" id="brain-house"><div class="brain-eyebrow"><span>Right now</span><b id="brain-house-label">THE HOUSE</b></div><div class="brain-lead"><div><h1 class="brain-headline" id="brain-headline" data-history-focus-owner tabindex="-1">Listening to the house.</h1><div class="brain-summary" id="brain-summary">Waiting for a fresh household snapshot.</div></div><div class="brain-orbit" id="brain-symbol" aria-hidden="true">⌂</div></div><div class="brain-openings" id="brain-openings"></div><div id="brain-device-health" class="brain-summary" role="status" hidden></div><button class="brain-ack" id="brain-ack" hidden>Got it · keep monitoring</button><button type="button" class="brain-retry" id="brain-retry" hidden>Try again</button></section>
+  <section class="brain-panel" id="brain-house"><div class="brain-eyebrow"><span>Right now</span><b id="brain-house-label">THE HOUSE</b></div><div class="brain-lead"><div><h1 class="brain-headline" id="brain-headline" data-history-focus-owner tabindex="-1">Listening to the house.</h1><div class="brain-summary" id="brain-summary">Waiting for a fresh household snapshot.</div></div><div class="brain-orbit" id="brain-symbol" aria-hidden="true">⌂</div></div><ul class="brain-household-state" id="brain-household-state" aria-label="Current household state" hidden></ul><div class="brain-openings" id="brain-openings"></div><div id="brain-device-health" class="brain-summary" role="status" hidden></div><button class="brain-ack" id="brain-ack" hidden>Got it · keep monitoring</button><button type="button" class="brain-retry" id="brain-retry" hidden>Try again</button></section>
   <section class="brain-panel" id="brain-activity"><div class="brain-eyebrow"><span>Just happened</span><b>LAST 15 MIN</b></div><div id="brain-events"></div></section>
   <section class="brain-panel" id="brain-agenda"><div class="brain-eyebrow"><span>Coming up</span><b>↗</b></div><div class="brain-agenda-list" id="brain-agenda-list"></div><a class="brain-agenda-more" id="brain-agenda-link" href="/kiosk?view=calendar&mode=all">View full Calendar</a></section>
   <section class="brain-activity-view" id="brain-activity-view" role="dialog" aria-modal="true" aria-labelledby="brain-activity-title" hidden><div class="brain-activity-dialog"><header><div><p class="brain-eyebrow">Household record</p><h2 id="brain-activity-title" tabindex="-1">Recent activity</h2><p id="brain-activity-count"></p></div><button type="button" id="brain-activity-close" aria-label="Close recent activity">Close</button></header><div id="brain-activity-list" role="region" aria-label="Recent activity records; use arrow keys or scroll to review" tabindex="0"></div></div></section>`;
@@ -20,8 +20,12 @@
   const parentUrl=document.referrer || window.location.ancestorOrigins?.[0] || '';
   let dashboardUrl;
   try { const candidate=new URL(parentUrl); if(window.top!==window&&/^https?:$/.test(candidate.protocol)&&candidate.origin!==location.origin)dashboardUrl=candidate.href; } catch (_) { /* Direct kiosk visit. */ }
+  // HA may expose no referrer or only its origin. The dedicated popup marker
+  // identifies the installed dashboard route regardless of those hints.
+  if(window.top!==window&&!castReceiver&&q.get('v')?.startsWith('household-desk-'))
+    dashboardUrl='http://10.10.9.5:8123/dashboard-homepage/0?BrowserID=a38e5c41-b99f0451';
   if(dashboardUrl&&!castReceiver){
-    const close=document.createElement('button');close.type='button';close.className='brain-dock-close';close.textContent='✕ Close';close.setAttribute('aria-label','Close Marquee and return to dashboard');
+    const close=document.createElement('button');close.type='button';close.className='brain-dock-close';close.textContent='Home controls';close.setAttribute('aria-label','Home controls in Home Assistant');
     close.onclick=()=>{ window.top.location.href=dashboardUrl; };
     dock.append(close);
   }
@@ -86,10 +90,23 @@
     set('brain-symbol',!fresh?'?':serious||deviceHealth.length?'!':primary?'↗':'⌂');
     const duration=primary?Math.max(primary.duration||0,now-primary.since):0;
     set('brain-headline',!fresh?'The house feed went quiet.':primary?`${primary.name} ${primary.state}.`:serious?serious.title:deviceHealth.length?'Nursery devices are offline.':event&&now-event.at<120?event.title:'Home');
-    let summary=!fresh?'Live states are unavailable. The last report is not a current all-clear.':primary?`${duration<60?`Just observed ${primary.state}.`:`Observed ${primary.state} for ${elapsed(duration)}.`} ${serious?'Worth checking before you settle in.':state.sleeping?'Someone is sleeping.':state.weather_state&&/rain|snow/.test(state.weather_state)?'Wet weather outside — worth a look.':state.lock==='locked'?'Front door lock is secured.':''}`:serious?serious.summary:state.lock==='locked'?'Front door locked.':state.lock==='unlocked'?'Front door unlocked.':'';
+    let summary=!fresh?'Live states are unavailable. The last report is not a current all-clear.':primary?`${duration<60?`Just observed ${primary.state}.`:`Observed ${primary.state} for ${elapsed(duration)}.`} ${serious?'Worth checking before you settle in.':state.weather_state&&/rain|snow/.test(state.weather_state)?'Wet weather outside — worth a look.':''}`:serious?serious.summary:state.lock==='locked'?'Front door locked.':state.lock==='unlocked'?'Front door unlocked.':'';
     if(deviceHealth.length)summary='Device status needs attention.';
     set('brain-summary',summary);
-    $('brain-openings').innerHTML=opening.map(o=>`<span class="brain-tag warm">${esc(o.name)} <small>${esc(o.state)} · ${elapsed(Math.max(o.duration||0,now-o.since))}</small></span>`).join('');
+    // Show only facts in the current briefing. A stale snapshot must never
+    // appear to certify a lock, person or mode as current.
+    const facts=[];
+    if(fresh){
+      if(state.sleeping)facts.push('Someone sleeping');
+      if(state.guests)facts.push('Guests expected');
+      if(state.garage_occupied)facts.push('Garage occupied');
+      (state.people||[]).filter(p=>p.name&&String(p.state||'').toLowerCase()==='home')
+        .slice(0,1).forEach(p=>facts.push(`${p.name} home`));
+    }
+    const visibleFacts=facts.slice(0,3);
+    $('brain-household-state').hidden=!visibleFacts.length;
+    $('brain-household-state').innerHTML=visibleFacts.map(fact=>`<li>${esc(fact)}</li>`).join('');
+    $('brain-openings').innerHTML=opening.filter(o=>o!==primary).map(o=>`<span class="brain-tag warm">${esc(o.name)} <small>${esc(o.state)} · ${elapsed(Math.max(o.duration||0,now-o.since))}</small></span>`).join('');
     const actionable=serious?.acknowledgement_required?serious:null;alertId=actionable?.id||'';$('brain-ack').hidden=!actionable||demo;
     const eventRows=events.slice(0,3).map(e=>`<div class="brain-event"><span>${esc(e.title)}</span><time>${elapsed(now-e.at)}${now-e.at>=60?' ago':''}</time></div>`);
     if(events.length>3)eventRows.push(`<div class="brain-event brain-event-more"><button type="button" id="brain-activity-open" data-history-focus-owner aria-label="View all ${events.length} recent events">View all ${events.length} recent events</button></div>`);
@@ -98,6 +115,7 @@
     if(events.length>3) $('brain-activity-open').onclick=()=>openActivity(events,false,$('brain-activity-open'));
     shell.classList.toggle('brain-no-activity',fresh&&!events.length);
     shell.classList.toggle('brain-quiet',fresh&&!events.length&&!primary&&!serious&&!deviceHealth.length);
+    shell.classList.toggle('brain-multiple-openings',opening.length>1);
     renderActivity(events, fresh);
     reconcileActivityHash(events, fresh);
     // Context cards share the household briefing freshness boundary. Do not

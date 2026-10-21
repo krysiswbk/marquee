@@ -383,7 +383,9 @@ class ControlNavigationTests(unittest.TestCase):
         self.assertIn("#brain-house.fit-compact .brain-summary", styles)
         self.assertIn("panel.scrollHeight>panel.clientHeight", brain)
         self.assertIn("document.fonts.ready.then(fitHousePanel)", brain)
-        self.assertIn("opening.map(o=>", brain)
+        # The primary opening is the headline; remaining openings still get
+        # their own tags without an arbitrary count cap.
+        self.assertIn("opening.filter(o=>o!==primary).map(o=>", brain)
         self.assertNotIn("opening.slice(0,5)", brain)
         self.assertNotIn("summary.length > 110", brain)
 

@@ -1,3 +1,8 @@
+# 2.12.93
+
+- Show fresh sleeping, guest, garage and person context on Home while preserving urgent alerts and stale-data honesty.
+- Fit more complete upcoming events below active household status at wired-display sizes, and make the Home Assistant return control clear in its popup.
+
 # 2.12.92
 
 - Keep Home Assistant as the wired kiosk entry point and refresh its Marquee popup after app releases without navigating the dashboard.
