@@ -134,7 +134,6 @@
       if(state.sleeping)feed.push(feedEntry('Someone is sleeping · Keep it low-key','Someone is sleeping · Keep it low-key'));
       if(state.garage_occupied)feed.push(feedEntry('Garage occupied · Someone’s out in the workshop','Garage occupied · Someone’s out in the workshop'));
       if(state.network==='online')feed.push(feedEntry('House network online','House network online'));
-      if(state.unknown?.length)feed.push(feedEntry(`Not reporting: ${state.unknown.join(', ')}`,feedTier()==='phone'?`${state.unknown.length} device${state.unknown.length===1?'':'s'} not reporting`:`Not reporting: ${compactNames(state.unknown,'devices')}`));
       if(!feed.length)feed=[feedEntry('The house is listening for its next real update')];
     }
     renderFeedEntry(feed[castReceiver ? 0 : Math.floor(now/12)%feed.length]);

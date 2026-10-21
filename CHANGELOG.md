@@ -1,3 +1,8 @@
+# 2.12.90
+
+- Move the quiet Home agenda into the empty right-side space beneath household status, with larger complete event rows at the physical kiosk size.
+- Keep long calendar titles and actionable device-health text readable at smaller landscape sizes; stop rotating routine unknown-sensor names in the household footer.
+
 # 2.12.89
 
 - Keep the real media backdrop clear during Cast playback by removing the ambient sky overlay only from that scene; retain sky on idle and context screens.

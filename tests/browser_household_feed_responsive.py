@@ -97,13 +97,10 @@ with sync_playwright() as playwright:
             assert copy.get_attribute("title") == full
 
             if kind == "unknown":
-                if width <= 430:
-                    assert copy.inner_text() == "6 devices not reporting"
-                elif width <= 700:
-                    assert copy.inner_text() == "Not reporting: Nursery Window, Office Window + 4 more devices"
-                else:
-                    assert copy.inner_text() == full
-                assert full == "Not reporting: " + ", ".join(UNKNOWN)
+                # Routine unknown sensors stay out of the glance feed; the
+                # separate device-health state below remains actionable.
+                assert full == "The house is listening for its next real update"
+                assert all(name not in copy.inner_text() for name in UNKNOWN)
             elif kind in ("health", "health_one"):
                 count = 2 if kind == "health" else 1
                 if width <= 430:
