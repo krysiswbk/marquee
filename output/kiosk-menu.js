@@ -584,6 +584,14 @@
     if (view === 'plex') document.documentElement.dataset.kioskTheme = 'plex';
     else document.documentElement.dataset.kioskTheme = 'synthwave';
     const lifecyclePreview = valid ? destinationLifecycle(view, list) : null;
+    // The media and weather surfaces can return before the shared panel render.
+    // The rail must still describe the destination that owns the visible view.
+    const setDestinationStatus = lifecycle => {
+      status.textContent = interrupted ? 'Household attention' : view === 'household' ? 'Household'
+        : (view ? label(view) : 'Marquee · Auto') + (lifecycle?.state === 'partial' ? ' · PARTIAL'
+          : lifecycle?.state === 'disconnected' ? ' · OFFLINE' : resourceNotice);
+    };
+    setDestinationStatus(lifecyclePreview);
     if (selected && (!list.some(c => c.id === selected) || lifecyclePreview?.state === 'disconnected')) selected = '';
     if (view === 'weather' && !selected && list.length && lifecyclePreview?.state === 'populated') selected = (list.find(c => ['alert','extreme'].includes(c.subtype)) || list.find(c => c.subtype === 'current') || list[0]).id;
     // Plex has two legitimate owners. Active playback belongs to the real
@@ -669,7 +677,7 @@
       ? { state: 'loading', reason: 'provider request pending' }
       : destinationLifecycle(view, list);
     drawWeatherLifecycle(lifecycle);
-    status.textContent = interrupted ? 'Household attention' : view === 'household' ? 'Household' : (view ? label(view) : 'Marquee · Auto') + (lifecycle.state === 'partial' ? ' · PARTIAL' : lifecycle.state === 'disconnected' ? ' · OFFLINE' : resourceNotice);
+    setDestinationStatus(lifecycle);
     const message = lifecycle.state === 'loading' ? `Loading ${label(view)}…` : lifecycle.state === 'error' ? `${label(view)} is unavailable` : lifecycle.state === 'stale' ? `${label(view)} is stale` : lifecycle.state === 'unavailable' ? `${label(view)} is unavailable` : lifecycle.state === 'disconnected' ? `${label(view)} is disconnected` : '';
     const feature = view === 'nhl' && list.length ? ordered(list)[0] : null;
     const headingName = feature ? nhlMatchupName(feature.left || {}, feature.right || {}) : label(view);

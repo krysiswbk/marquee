@@ -1,3 +1,9 @@
+# 2.12.96
+
+- Keep the full Calendar action visible on the 800×480 Home display when recent activity and upcoming events appear together.
+- Make populated Sky content reachable on short landscape displays, including the expanded aircraft list.
+- Update the destination status immediately when idle Plex is selected from Sky or Weather.
+
 # 2.12.95
 
 - Make empty, loading, and offline Home calendar states compact, with truthful context and a nearby Calendar link when fresh.

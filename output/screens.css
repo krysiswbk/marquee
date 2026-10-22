@@ -763,6 +763,18 @@ body.brain-live .kiosk-section[data-section=calendar] .kiosk-calendar-page .kios
 }
 @media(max-width:700px){body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda{grid-template-columns:minmax(0,1fr)}body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-feature h2{font-size:clamp(30px,6vw,42px)}body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-row{grid-template-columns:minmax(105px,.35fr) minmax(0,1fr)}}
 @media(max-width:480px){body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-feature{padding:24px}body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-feature h2{font-size:clamp(28px,8vw,36px)}body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-row{grid-template-columns:minmax(0,1fr)}body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-row :is(time,strong,small,.kiosk-birthday-rows){grid-column:1;grid-row:auto}}
+/* Populated Sky can exceed a short landscape stage. Keep its heading and
+   cards in document order, and scroll the Sky destination when expanded
+   aircraft need more height than the fixed feed/rail safe area allows. */
+@media(min-width:701px) and (min-aspect-ratio:4/3) and (max-height:1000px){
+ .kiosk-section[data-section=astronomy]{overflow-y:auto;overscroll-behavior:contain}
+ .kiosk-section[data-section=astronomy] .sky-destination{flex:0 0 auto;height:auto;max-height:none;min-height:0;grid-template-rows:auto auto;align-items:start;overflow:visible}
+ .kiosk-section[data-section=astronomy] .sky-destination-main{align-self:start;min-height:0}
+ .kiosk-section[data-section=astronomy] .sky-vista,.kiosk-section[data-section=astronomy] .sky-vista svg{height:auto;min-height:clamp(130px,22vh,260px)}
+ .kiosk-section[data-section=astronomy] .sky-moon-card{height:auto;min-height:96px;align-self:start}
+ .kiosk-section[data-section=astronomy] .sky-aircraft-panel{height:auto;min-height:64px;overflow:visible}
+ .kiosk-section[data-section=astronomy] .sky-aircraft-list.is-expanded{max-height:min(190px,30vh);overflow-y:auto}
+}
 /* Calendar content must remain reachable on shallow wall displays. The full
    agenda keeps its header and actions fixed while its event list scrolls. */
 .kiosk-section.calendar-detail-surface{display:flex;flex-direction:column;box-sizing:border-box}

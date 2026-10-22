@@ -221,3 +221,10 @@ body.brain-live #brain-activity-list{flex:1 1 auto;min-height:0}
   position:static;align-self:flex-start;margin:0
  }
 }
+/* On the 800×480 wired panel the 180px agenda minimum can exceed its grid
+   track when activity and dates are both present. Keep the action in the desk
+   and let only the date list use the remaining space. */
+@media(min-width:701px) and (max-width:999px) and (max-height:520px) and (min-aspect-ratio:3/2){
+ body.brain-live.idle:not(.kiosk-destination-active) #brain-agenda{min-height:0;max-height:100%;padding-block:1vh}
+ body.brain-live.idle:not(.kiosk-destination-active) #brain-agenda .brain-agenda-list{flex:1 1 auto;min-height:0}
+}
