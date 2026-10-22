@@ -791,7 +791,7 @@ body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface 
  body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .stage{
   --street-lane-width:48vw;
   display:grid!important;
-  grid-template-columns:minmax(0,20vw) minmax(0,28vw) minmax(0,1fr)!important;
+  grid-template-columns:max-content minmax(0,28vw) minmax(0,1fr)!important;
   grid-template-rows:auto auto auto auto minmax(0,1fr);
   grid-template-areas:"clock weather ." "category category ." "identity identity ." "meta meta ." "plot plot .";
   align-content:stretch;
@@ -804,11 +804,12 @@ body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface 
   position:relative!important;inset:auto!important;min-width:0;max-width:100%;
  }
  body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-clock{grid-area:clock;align-self:start}
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-clock .clock{white-space:nowrap}
  body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-weather{grid-area:weather;align-self:start;width:100%}
- body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-category{grid-area:category;width:100%}
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-category{grid-area:category;width:var(--street-lane-width)}
  body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .stage > :is(.b-identity,.b-meta,.b-plot){
   position:relative!important;inset:auto!important;transform:none!important;
-  min-width:0;width:100%;max-width:none;max-height:none;box-sizing:border-box;
+  min-width:0;width:var(--street-lane-width);max-width:none;max-height:none;box-sizing:border-box;
  }
  body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-identity{
   grid-area:identity;max-height:min(26vh,190px)!important;overflow:auto;row-gap:.6vh;

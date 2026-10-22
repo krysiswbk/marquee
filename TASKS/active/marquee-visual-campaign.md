@@ -1,5 +1,11 @@
 # Marquee visual campaign checkpoint
 
+## 2026-10-22 M-004 correction to rejected first candidate
+
+Surface independently rendered the first 2.12.97 candidate `783e4b6f91e26d756d8d74704bb52173c9f99cde` and rejected it at 800×480: the 160px `20vw` clock column wrapped localized `8:48 a.m.` onto two lines. Its measurements found the weather/genre collision resolved, with genre y115.5, but clock height 97.906px. No production deployment occurred. The follow-up candidate uses a max-content clock column and `white-space:nowrap` for the clock, while preserving a 28vw weather column and the original 48vw text lane. Surface must remeasure 800×480, 1024×600 and 1280×800 after fonts settle; source reasoning and passing nonbrowser tests alone cannot accept it.
+
+Surface restarted the same synthetic before/after fixture server; current loopback ports are 39715 (before, PID 3033077) and 35157 (after, PID 3033078), mapped in Surface's existing tunnel to local 43359/46339. Do not start duplicate fixture processes. The after server reads the current workspace assets. M-004 and M-001–M-003 remain open; do not deploy until a separate Surface release signal. Updated candidate details are in `/home/wbk/homelab-operator/REPORTS/20261022-marquee-m004-candidate.md`.
+
 ## 2026-10-22 M-004 Street overlap candidate — awaiting Surface rendered review
 
 Surface measured M-004 on deployed 2.12.96 active Street playback, not merely from the user's photograph: weather detail/genre vertical overlap was 1.39px at 1280×800, 4.78px at 1024×600 and 1.83px at 800×480. Surface's private before captures are under `REPORTS/20261020-independent-acceptance/m004-20261022/`; Linux did not receive or inspect pixels. Physical photo resolution is not the logical viewport. Home highlighting during automatic media is expected and outside this batch.

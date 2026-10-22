@@ -93,7 +93,9 @@ class KioskNowPlayingSurfaceContractTests(unittest.TestCase):
     def test_street_now_playing_has_one_bounded_screening_composition(self):
         self.assertEqual(SCREENS.count("/* Street playback reserves the full clock/weather height before genres."), 1)
         self.assertIn('grid-template-areas:"clock weather ." "category category ." "identity identity ." "meta meta ." "plot plot ."', SCREENS)
-        self.assertIn(".b-category{grid-area:category;width:100%}", SCREENS)
+        self.assertIn("grid-template-columns:max-content minmax(0,28vw) minmax(0,1fr)", SCREENS)
+        self.assertIn(".b-clock .clock{white-space:nowrap}", SCREENS)
+        self.assertIn(".b-category{grid-area:category;width:var(--street-lane-width)}", SCREENS)
         self.assertIn(".b-identity{\n  grid-area:identity;max-height:", SCREENS)
         self.assertIn(".b-plot{\n  grid-area:plot;min-height:0;height:auto!important;overflow-y:auto", SCREENS)
         self.assertIn(".b-streetframe{\n  display:block!important", SCREENS)
