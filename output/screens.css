@@ -791,7 +791,10 @@ body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface 
  body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .stage{
   --street-lane-width:48vw;
   display:grid!important;
-  grid-template-columns:max-content minmax(0,28vw) minmax(0,1fr)!important;
+  /* A fixed header track cannot grow to the spanning 48vw media lane's
+     max-content width. 30vw fits localized 12-hour time and leaves weather
+     clear of the right-side sign at the wired landscape sizes. */
+  grid-template-columns:minmax(0,30vw) minmax(0,28vw) minmax(0,1fr)!important;
   grid-template-rows:auto auto auto auto minmax(0,1fr);
   grid-template-areas:"clock weather ." "category category ." "identity identity ." "meta meta ." "plot plot .";
   align-content:stretch;

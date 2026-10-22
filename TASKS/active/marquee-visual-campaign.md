@@ -1,5 +1,9 @@
 # Marquee visual campaign checkpoint
 
+## 2026-10-22 M-004 second correction — header width pending Surface review
+
+Surface rejected follow-up candidate `d7cbe1aec5e77dadbfcf56a997249b904ba20dfc` at 800×480: the one-line clock was restored, but `max-content` made its grid track 384px (48vw) because the media lane spans it. Weather moved to x428–652 and overlapped the Now Playing sign at x548.81–760. The latest bounded candidate replaces that intrinsic track with 30vw, retains a 28vw weather track, 48vw media text lane and nonwrapping clock, and still places genres below the natural-height weather/clock row. At 800/1024/1280 landscape widths, the header's planned right edge is 63.5vw, leaving room before the sign's observed left edge of about 68vw; this is source geometry, **not rendered acceptance**. Surface must remeasure all three sizes, the longest localized 12-hour time, long weather/copy and poster/progress/rail before release. No production deployment, browser work by Linux, or new fixture server occurred. Existing loopback ports 39715/35157 (PIDs 3033077/3033078) continue to serve the unchanged baseline and current candidate workspace respectively. M-001–M-004 remain open.
+
 ## 2026-10-22 M-004 correction to rejected first candidate
 
 Surface independently rendered the first 2.12.97 candidate `783e4b6f91e26d756d8d74704bb52173c9f99cde` and rejected it at 800×480: the 160px `20vw` clock column wrapped localized `8:48 a.m.` onto two lines. Its measurements found the weather/genre collision resolved, with genre y115.5, but clock height 97.906px. No production deployment occurred. The follow-up candidate uses a max-content clock column and `white-space:nowrap` for the clock, while preserving a 28vw weather column and the original 48vw text lane. Surface must remeasure 800×480, 1024×600 and 1280×800 after fonts settle; source reasoning and passing nonbrowser tests alone cannot accept it.
