@@ -784,21 +784,28 @@ body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface{
 body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface :is(.kiosk-now-playing-head>p:first-child,.kiosk-weather-separator){color:#ff4fc8!important}
 body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface :is(.kiosk-now-playing-head h1,.kiosk-weather-context){color:#fff0fb}
 
-/* Street playback has one bounded text lane. Its rows grow with the title,
-   while the synopsis scrolls in the space left above the progress bar. */
+/* Street playback reserves the full clock/weather height before genres.
+   Weather can wrap as its condition and detail change; a fixed genre top
+   otherwise lets those lines paint across the genre row. */
 @media (min-width:481px){
  body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .stage{
   --street-lane-width:48vw;
   display:grid!important;
-  grid-template-columns:var(--street-lane-width) minmax(0,1fr)!important;
-  grid-template-rows:auto auto minmax(0,1fr);
-  grid-template-areas:"identity ." "meta ." "plot .";
+  grid-template-columns:minmax(0,20vw) minmax(0,28vw) minmax(0,1fr)!important;
+  grid-template-rows:auto auto auto auto minmax(0,1fr);
+  grid-template-areas:"clock weather ." "category category ." "identity identity ." "meta meta ." "plot plot .";
   align-content:stretch;
   gap:clamp(8px,1.4vh,16px) 0;
   box-sizing:border-box;
   overflow:hidden;
-  padding:17vh 0 calc(var(--kiosk-lower-safe-area) + 20px) 5.5vw!important;
+  padding:2vh 0 calc(var(--kiosk-lower-safe-area) + 20px) 5.5vw!important;
  }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .stage > :is(.b-clock,.b-weather,.b-category){
+  position:relative!important;inset:auto!important;min-width:0;max-width:100%;
+ }
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-clock{grid-area:clock;align-self:start}
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-weather{grid-area:weather;align-self:start;width:100%}
+ body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .b-category{grid-area:category;width:100%}
  body.brain-live:is(.kiosk-now-playing,.kiosk-playback-active)[data-template=street] .stage > :is(.b-identity,.b-meta,.b-plot){
   position:relative!important;inset:auto!important;transform:none!important;
   min-width:0;width:100%;max-width:none;max-height:none;box-sizing:border-box;

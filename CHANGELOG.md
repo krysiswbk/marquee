@@ -1,3 +1,7 @@
+# 2.12.97
+
+- Keep the Street media clock, weather and genres in successive rows so longer weather details cannot cover genres on wired kiosks.
+
 # 2.12.96
 
 - Keep the full Calendar action visible on the 800×480 Home display when recent activity and upcoming events appear together.
