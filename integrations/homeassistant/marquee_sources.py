@@ -290,7 +290,7 @@ class MarqueeSources(hass.Hass):
                     initial_style="marquee-fullscreen", style_sequence=["marquee-fullscreen"],
                     popup_styles=[{"style": "marquee-fullscreen", "include_styles": ["fullscreen"],
                       "styles": "ha-dialog{--ha-dialog-surface-background:#000;--ha-dialog-border-radius:0!important;--dialog-content-padding:0;--padding-x:0;--padding-y:0}.container,.content,.content .container{margin:0!important;padding:0!important;height:100%!important;min-height:0!important}.header,ha-dialog-header{position:absolute!important;inset:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) auto auto!important;z-index:30;width:56px!important;height:56px!important;min-height:56px!important;padding:0!important;border-radius:50%;background:rgba(0,0,0,.68)!important;pointer-events:auto!important}.header button,ha-dialog-header button{width:56px!important;height:56px!important;min-width:56px!important;min-height:56px!important}.title{display:none!important}"}],
-                    content={"type": "iframe", "url": self.marquee + "/kiosk?v=household-desk-2.9.1",
+                    content={"type": "iframe", "url": self.marquee + "/kiosk?v=household-desk-2.12.80",
                              "card_mod": {"style":
                              "ha-card { border:0; box-shadow:none; }"}})
                 self.log(f"Marquee context {key} sent to kiosk")
