@@ -1,3 +1,8 @@
+# 2.12.98
+
+- Fill the physical Home Assistant kiosk popup with Marquee and place its close target over the display, removing the unused top strip and bottom gap.
+- Remove obsolete Marquee backup and rollback copies from the live installation while retaining one current recovery point.
+
 # 2.12.97
 
 - Keep the Street media clock, weather and genres in successive rows so longer weather details cannot cover genres on wired kiosks.

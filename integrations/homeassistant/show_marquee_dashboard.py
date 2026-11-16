@@ -12,10 +12,11 @@ import copy
 import hashlib
 import json
 import os
-from pathlib import Path
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 
+from marquee_popup_style import IFRAME_CARD_STYLE, POPUP_STYLE
 
 DASHBOARD = "dashboard-homepage"
 STORAGE = Path("/homeassistant/.storage/lovelace.dashboard_homepage")
@@ -23,7 +24,7 @@ BACKUP_ROOT = Path("/homeassistant/marquee-dashboard-rollback")
 BROWSER_ID = "a38e5c41-b99f0451"
 MARQUEE_URL = "http://10.10.9.37:8084/kiosk?v=household-desk-2.12.80"
 LEGACY_POPUP_STYLE = 'ha-dialog{--ha-dialog-surface-background:#000;--ha-dialog-border-radius:0!important;--dialog-content-padding:0;--padding-x:0;--padding-y:0}.container,.content,.content .container{margin:0!important;padding:0!important}.header,ha-dialog-header{position:absolute!important;top:10px;right:10px;z-index:30;width:44px!important;min-height:44px!important;padding:0!important;border-radius:50%;background:rgba(0,0,0,.55)!important}.title{display:none!important}'
-POPUP_STYLE = 'ha-dialog{--ha-dialog-surface-background:#000;--ha-dialog-border-radius:0!important;--dialog-content-padding:0;--padding-x:0;--padding-y:0}.container,.content,.content .container{margin:0!important;padding:0!important;height:100%!important;min-height:0!important}.header,ha-dialog-header{position:absolute!important;inset:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) auto auto!important;z-index:30;width:56px!important;height:56px!important;min-height:56px!important;padding:0!important;border-radius:50%;background:rgba(0,0,0,.68)!important;pointer-events:auto!important}.header button,ha-dialog-header button{width:56px!important;height:56px!important;min-width:56px!important;min-height:56px!important}.title{display:none!important}'
+PREVIOUS_POPUP_STYLE = 'ha-dialog{--ha-dialog-surface-background:#000;--ha-dialog-border-radius:0!important;--dialog-content-padding:0;--padding-x:0;--padding-y:0}.container,.content,.content .container{margin:0!important;padding:0!important;height:100%!important;min-height:0!important}.header,ha-dialog-header{position:absolute!important;inset:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) auto auto!important;z-index:30;width:56px!important;height:56px!important;min-height:56px!important;padding:0!important;border-radius:50%;background:rgba(0,0,0,.68)!important;pointer-events:auto!important}.header button,ha-dialog-header button{width:56px!important;height:56px!important;min-width:56px!important;min-height:56px!important}.title{display:none!important}'
 
 
 def canonical(value):
@@ -60,7 +61,7 @@ def card():
                 "content": {
                     "type": "iframe",
                     "url": MARQUEE_URL,
-                    "card_mod": {"style": "ha-card { border:0; box-shadow:none; }"},
+                    "card_mod": {"style": IFRAME_CARD_STYLE},
                 },
             },
         },
@@ -73,6 +74,15 @@ def legacy_card():
     content = previous["tap_action"]["data"]
     content["popup_styles"][0]["styles"] = LEGACY_POPUP_STYLE
     content["content"]["aspect_ratio"] = "57.27%"
+    content["content"]["card_mod"]["style"] = "ha-card { border:0; box-shadow:none; }"
+    return previous
+
+
+def previous_card():
+    previous = card()
+    content = previous["tap_action"]["data"]
+    content["popup_styles"][0]["styles"] = PREVIOUS_POPUP_STYLE
+    content["content"]["card_mod"]["style"] = "ha-card { border:0; box-shadow:none; }"
     return previous
 
 
@@ -118,7 +128,7 @@ def plan(config):
         if len(matches) > 1:
             raise ValueError(f"Duplicate Marquee controls on {label}; no edit made")
         if matches:
-            if children[matches[0]] not in (expected, legacy_card()):
+            if children[matches[0]] not in (expected, previous_card(), legacy_card()):
                 raise ValueError(f"Existing Marquee control differs on {label}; no edit made")
             action = "already present" if children[matches[0]] == expected else "update popup layout"
             children[matches[0]] = copy.deepcopy(expected)

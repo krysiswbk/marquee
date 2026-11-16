@@ -2,10 +2,12 @@
 import os
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
+
+import appdaemon.plugins.hass.hassapi as hass
 import requests
 from marquee_bridge import BridgeSession
 from marquee_kiosk import kiosk_awake
-import appdaemon.plugins.hass.hassapi as hass
+from marquee_popup_style import IFRAME_CARD_STYLE, POPUP_STYLE
 
 
 class MarqueeSources(hass.Hass):
@@ -289,10 +291,9 @@ class MarqueeSources(hass.Hass):
                     title="Marquee", dismissable=True, tag="marquee",
                     initial_style="marquee-fullscreen", style_sequence=["marquee-fullscreen"],
                     popup_styles=[{"style": "marquee-fullscreen", "include_styles": ["fullscreen"],
-                      "styles": "ha-dialog{--ha-dialog-surface-background:#000;--ha-dialog-border-radius:0!important;--dialog-content-padding:0;--padding-x:0;--padding-y:0}.container,.content,.content .container{margin:0!important;padding:0!important;height:100%!important;min-height:0!important}.header,ha-dialog-header{position:absolute!important;inset:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) auto auto!important;z-index:30;width:56px!important;height:56px!important;min-height:56px!important;padding:0!important;border-radius:50%;background:rgba(0,0,0,.68)!important;pointer-events:auto!important}.header button,ha-dialog-header button{width:56px!important;height:56px!important;min-width:56px!important;min-height:56px!important}.title{display:none!important}"}],
+                      "styles": POPUP_STYLE}],
                     content={"type": "iframe", "url": self.marquee + "/kiosk?v=household-desk-2.12.80",
-                             "card_mod": {"style":
-                             "ha-card { border:0; box-shadow:none; }"}})
+                             "card_mod": {"style": IFRAME_CARD_STYLE}})
                 self.log(f"Marquee context {key} sent to kiosk")
             self.last_kiosk_context = key
         except Exception as error:
