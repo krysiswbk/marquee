@@ -1,3 +1,8 @@
+# 2.12.99
+
+- Use a headerless Home Assistant popup with a separate accessible close button over the full-height Marquee iframe.
+- Correct the first 2.12.98 popup approach, which could leave the iframe blank on the physical kiosk.
+
 # 2.12.98
 
 - Fill the physical Home Assistant kiosk popup with Marquee and place its close target over the display, removing the unused top strip and bottom gap.
