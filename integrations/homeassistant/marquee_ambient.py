@@ -447,8 +447,7 @@ class MarqueeAmbient(hass.Hass):
                     "style": "marquee-fullscreen", "include_styles": ["fullscreen"],
                     "styles": POPUP_STYLE
                 }],
-                content=popup_content("http://10.10.9.37:8084/kiosk?v=household-desk-2.12.98",
-                                      self.KIOSK_BROWSER))
+                content=popup_content("http://10.10.9.37:8084/kiosk?v=household-desk-2.12.99-html"))
             self.log("Marquee sports popup sent to main-hall kiosk")
         except Exception as error:
             self.log(f"Marquee kiosk popup failed: {error}", level="WARNING")

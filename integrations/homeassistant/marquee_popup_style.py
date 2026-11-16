@@ -1,45 +1,32 @@
-"""Browser Mod popup styling shared by kiosk launch paths."""
+"""Browser Mod popup markup shared by the kiosk launch paths."""
+
+import json
+from html import escape
 
 POPUP_STYLE = (
     'ha-dialog{--ha-dialog-surface-background:#000;--ha-dialog-border-radius:0;'
     '--dialog-content-padding:0;--padding-x:0;--padding-y:0;'
     '--popup-min-height:100dvh;--popup-max-height:100dvh}'
-    'ha-dialog .content{height:100dvh!important;min-height:0!important;overflow:hidden!important}'
-    'ha-dialog .content .container{margin:0!important;padding:0!important;'
-    'height:100%!important}'
-)
-
-IFRAME_CARD_STYLE = (
-    'ha-card{border:0;box-shadow:none;height:100dvh!important}'
-    '#root{padding-top:0!important;height:100dvh!important}'
-    'iframe{height:100%!important}'
-)
-
-CLOSE_CARD_STYLE = (
-    'ha-card{position:fixed!important;top:max(10px,env(safe-area-inset-top))!important;'
-    'right:max(10px,env(safe-area-inset-right))!important;left:auto!important;'
-    'z-index:1000!important;width:56px!important;height:56px!important;'
-    'min-width:56px!important;min-height:56px!important;'
-    'border-radius:50%!important;background:rgba(0,0,0,.78)!important;'
-    'box-shadow:none!important;padding:0!important;display:flex;'
-    'align-items:center;justify-content:center;'
-    '--state-color:#fff!important;--state-icon-color:#fff!important}'
-    'ha-state-icon{width:28px!important;height:28px!important;color:#fff!important}'
+    'ha-dialog .content,ha-dialog .content .container{'
+    'margin:0!important;padding:0!important}'
 )
 
 
-def popup_content(url: str, browser_id: str) -> dict:
-    """Give the iframe viewport height and a separate close target over it."""
-    return {
-        "type": "vertical-stack",
-        "cards": [
-            {"type": "iframe", "url": url, "aspect_ratio": "66.67%",
-             "card_mod": {"style": IFRAME_CARD_STYLE}},
-            {"type": "button", "name": "Close Marquee", "icon": "mdi:close",
-             "show_name": False,
-             "tap_action": {"action": "perform-action",
-                            "perform_action": "browser_mod.close_popup",
-                            "data": {"browser_id": [browser_id], "tag": "marquee"}},
-             "card_mod": {"style": CLOSE_CARD_STYLE}},
-        ],
-    }
+def popup_content(url: str) -> str:
+    """Fill the viewport and load a fresh iframe when Firefox reopens the popup."""
+    onload = (
+        "if(!this.dataset.marqueeLoaded){this.dataset.marqueeLoaded='1';"
+        f"this.src={json.dumps(url + ('&' if '?' in url else '?') + 'open=')}+Date.now()}}"
+    )
+    return (
+        '<iframe title="Marquee" src="about:blank" '
+        f'onload="{escape(onload, quote=True)}" '
+        'style="display:block;position:fixed;inset:0;width:100vw;'
+        'height:100dvh;border:0;z-index:1"></iframe>'
+        '<button type="button" aria-label="Close Marquee" title="Close Marquee" '
+        'style="position:fixed;top:10px;right:10px;width:56px;height:56px;'
+        'border:0;border-radius:50%;background:rgba(0,0,0,.78);'
+        'color:#fff;font-size:32px;z-index:1000" '
+        'onclick="window.browser_mod.closePopup({tag:\'marquee\'})">'
+        '&times;</button>'
+    )

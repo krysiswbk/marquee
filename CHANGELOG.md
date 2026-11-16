@@ -2,7 +2,7 @@
 
 - Use a headerless Home Assistant popup with a separate accessible close button over the full-height Marquee iframe.
 - Correct the first 2.12.98 popup approach, which could leave the iframe blank on the physical kiosk.
-- Keep the kiosk popup on its verified page URL while serving the current release; a fresh iframe URL was blank on the physical kiosk.
+- Use a native full-screen iframe with a close button over Marquee. Give each opening a fresh URL so the physical Firefox kiosk paints it reliably after closing and reopening.
 
 # 2.12.98
 

@@ -22,10 +22,7 @@ DASHBOARD = "dashboard-homepage"
 STORAGE = Path("/homeassistant/.storage/lovelace.dashboard_homepage")
 BACKUP_ROOT = Path("/homeassistant/marquee-dashboard-rollback")
 BROWSER_ID = "a38e5c41-b99f0451"
-MARQUEE_URL = "http://10.10.9.37:8084/kiosk?v=household-desk-2.12.98"
-PREVIOUS_MARQUEE_URL = "http://10.10.9.37:8084/kiosk?v=household-desk-2.12.80"
-LEGACY_POPUP_STYLE = 'ha-dialog{--ha-dialog-surface-background:#000;--ha-dialog-border-radius:0!important;--dialog-content-padding:0;--padding-x:0;--padding-y:0}.container,.content,.content .container{margin:0!important;padding:0!important}.header,ha-dialog-header{position:absolute!important;top:10px;right:10px;z-index:30;width:44px!important;min-height:44px!important;padding:0!important;border-radius:50%;background:rgba(0,0,0,.55)!important}.title{display:none!important}'
-PREVIOUS_POPUP_STYLE = 'ha-dialog{--ha-dialog-surface-background:#000;--ha-dialog-border-radius:0!important;--dialog-content-padding:0;--padding-x:0;--padding-y:0}.container,.content,.content .container{margin:0!important;padding:0!important;height:100%!important;min-height:0!important}.header,ha-dialog-header{position:absolute!important;inset:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) auto auto!important;z-index:30;width:56px!important;height:56px!important;min-height:56px!important;padding:0!important;border-radius:50%;background:rgba(0,0,0,.68)!important;pointer-events:auto!important}.header button,ha-dialog-header button{width:56px!important;height:56px!important;min-width:56px!important;min-height:56px!important}.title{display:none!important}'
+MARQUEE_URL = "http://10.10.9.37:8084/kiosk?v=household-desk-2.12.99-html"
 
 
 def canonical(value):
@@ -58,40 +55,11 @@ def card():
                     "include_styles": ["fullscreen"],
                     "styles": POPUP_STYLE,
                 }],
-                "content": popup_content(MARQUEE_URL, BROWSER_ID),
+                "content": popup_content(MARQUEE_URL),
             },
         },
         "card_mod": {"style": "ha-card { background: transparent !important; box-shadow: none; border: none; }"},
     }
-
-
-def legacy_card():
-    previous = card()
-    content = previous["tap_action"]["data"]
-    content["title"] = "Marquee"
-    content["popup_styles"][0]["styles"] = LEGACY_POPUP_STYLE
-    content["content"] = {"type": "iframe", "url": PREVIOUS_MARQUEE_URL,
-                          "aspect_ratio": "57.27%",
-                          "card_mod": {"style": "ha-card { border:0; box-shadow:none; }"}}
-    return previous
-
-
-def previous_card():
-    previous = card()
-    content = previous["tap_action"]["data"]
-    content["title"] = "Marquee"
-    content["popup_styles"][0]["styles"] = PREVIOUS_POPUP_STYLE
-    content["content"] = {"type": "iframe", "url": PREVIOUS_MARQUEE_URL,
-                          "card_mod": {"style": "ha-card { border:0; box-shadow:none; }"}}
-    return previous
-
-
-def prior_release_card():
-    previous = card()
-    previous["tap_action"]["data"]["content"]["cards"][0]["url"] = (
-        "http://10.10.9.37:8084/kiosk?v=household-desk-2.12.99"
-    )
-    return previous
 
 
 def locate_stacks(config):
@@ -136,9 +104,11 @@ def plan(config):
         if len(matches) > 1:
             raise ValueError(f"Duplicate Marquee controls on {label}; no edit made")
         if matches:
-            if children[matches[0]] not in (
-                expected, prior_release_card(), previous_card(), legacy_card()
-            ):
+            existing = children[matches[0]].get("tap_action", {})
+            popup = existing.get("data", {})
+            if (existing.get("perform_action") != "browser_mod.popup"
+                    or popup.get("browser_id") != [BROWSER_ID]
+                    or popup.get("tag") != "marquee"):
                 raise ValueError(f"Existing Marquee control differs on {label}; no edit made")
             action = "already present" if children[matches[0]] == expected else "update popup layout"
             children[matches[0]] = copy.deepcopy(expected)

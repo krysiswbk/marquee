@@ -98,7 +98,7 @@ class HomeAssistantBridgeTests(unittest.TestCase):
             app.check_kiosk({})
             app.check_kiosk({})
             self.assertEqual(len(calls), 1)
-            self.assertIn("/kiosk?v=household-desk-", calls[0][1]["content"]["cards"][0]["url"])
+            self.assertIn("/kiosk?v=household-desk-", calls[0][1]["content"])
             response.value = {"playing": False, "householdFocus": {"key": "door:open"}}
             app.check_kiosk({})
             self.assertEqual(len(calls), 2)
