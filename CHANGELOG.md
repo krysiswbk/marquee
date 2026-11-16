@@ -2,6 +2,7 @@
 
 - Use a headerless Home Assistant popup with a separate accessible close button over the full-height Marquee iframe.
 - Correct the first 2.12.98 popup approach, which could leave the iframe blank on the physical kiosk.
+- Keep the kiosk popup on its verified page URL while serving the current release; a fresh iframe URL was blank on the physical kiosk.
 
 # 2.12.98
 

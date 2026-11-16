@@ -292,7 +292,7 @@ class MarqueeSources(hass.Hass):
                     initial_style="marquee-fullscreen", style_sequence=["marquee-fullscreen"],
                     popup_styles=[{"style": "marquee-fullscreen", "include_styles": ["fullscreen"],
                       "styles": POPUP_STYLE}],
-                    content=popup_content(self.marquee + "/kiosk?v=household-desk-2.12.99",
+                    content=popup_content(self.marquee + "/kiosk?v=household-desk-2.12.98",
                                           self.kiosk_browser))
                 self.log(f"Marquee context {key} sent to kiosk")
             self.last_kiosk_context = key
