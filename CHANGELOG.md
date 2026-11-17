@@ -1,3 +1,8 @@
+# 2.13.3
+
+- Keep Movie and TV release posters mounted across Cast payload and settings refreshes instead of reloading the same image URL.
+- Preserve the no-art fallback after a failed poster request.
+
 # 2.13.2
 
 - Enlarge the Cast quiet-screen four-day forecast and keep it clear of current conditions on shorter displays.
