@@ -1,3 +1,9 @@
+# 2.13.0
+
+- Add a live next-hours forecast to Home, including a compact layout when household activity is present.
+- Make Home temperatures and weather facts easier to read, with proper units and clearer spacing.
+- Increase card insets and visual separation across destination pages; fix Home masthead overlap on phones.
+
 # 2.12.99
 
 - Use a headerless Home Assistant popup with a separate accessible close button over the full-height Marquee iframe.

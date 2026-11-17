@@ -710,13 +710,13 @@
   body.live-editing [data-layout] { outline:none; }
   body.live-editing .screen-controls, body.live-editing nav { display:none !important; }
 </style>
-<link rel="stylesheet" href="/brain.css?v=2.12.99">
-<link rel="stylesheet" href="/screens.css?v=2.12.99">
-<link rel="stylesheet" href="/weather-channel.css?v=2.12.99">
+<link rel="stylesheet" href="/brain.css?v=2.13.0">
+<link rel="stylesheet" href="/screens.css?v=2.13.0">
+<link rel="stylesheet" href="/weather-channel.css?v=2.13.0">
 <link rel="stylesheet" href="/scene-themes.css?v=2.9.7">
-<link rel="stylesheet" href="/sky-ambient.css?v=2.12.99">
-<link rel="stylesheet" href="/cast-weather-house.css?v=2.12.99">
-<link rel="stylesheet" href="/cast-media-sports.css?v=2.12.99">
+<link rel="stylesheet" href="/sky-ambient.css?v=2.13.0">
+<link rel="stylesheet" href="/cast-weather-house.css?v=2.13.0">
+<link rel="stylesheet" href="/cast-media-sports.css?v=2.13.0">
 <body data-template="spotlight">
 <img class="bg" id="bg" alt="">
 <img class="fa" id="fa1" alt=""><img class="fa" id="fa2" alt="">
@@ -815,15 +815,15 @@
   </div>
 </div>
 <time class="cast-clock-overlay" id="cast-clock-overlay"></time>
-<div class="idle-screen"><div class="idle-house"><div class="idle-kicker" id="idle-kicker">Home</div><div class="idle-greeting" id="idle-greeting"></div><div class="idle-state" id="idle-state" hidden></div><div class="idle-note" id="idle-note" hidden></div><time class="idle-clock" id="idle-clock"></time><div class="idle-date" id="idle-date"></div><div class="idle-weather" id="idle-weather" aria-label="Current weather"><div class="idle-weather-primary"><span class="idle-weather-icon" id="idle-weather-icon" aria-hidden="true"></span><strong id="idle-weather-temp"></strong><span id="idle-weather-condition"></span></div><div class="idle-weather-secondary"><span id="idle-weather-feels"></span><span id="idle-weather-range"></span><span id="idle-weather-rain"></span></div><div class="idle-weather-status" id="idle-weather-status"></div></div></div></div>
+<div class="idle-screen"><div class="idle-house"><div class="idle-kicker" id="idle-kicker">Home</div><div class="idle-greeting" id="idle-greeting"></div><div class="idle-state" id="idle-state" hidden></div><div class="idle-note" id="idle-note" hidden></div><time class="idle-clock" id="idle-clock"></time><div class="idle-date" id="idle-date"></div><div class="idle-weather" id="idle-weather" aria-label="Current weather"><div class="idle-weather-primary"><span class="idle-weather-icon" id="idle-weather-icon" aria-hidden="true"></span><strong id="idle-weather-temp"></strong><span id="idle-weather-condition"></span></div><div class="idle-weather-secondary"><span id="idle-weather-feels"></span><span id="idle-weather-range"></span><span id="idle-weather-rain"></span></div><div class="idle-weather-status" id="idle-weather-status"></div></div></div><section class="home-outlook" id="home-outlook" aria-label="Weather outlook" hidden><div class="home-outlook-head"><span>NEXT HOURS</span><span id="home-outlook-summary"></span></div><div class="home-outlook-hours" id="home-outlook-hours"></div><div class="home-outlook-next" id="home-outlook-next" hidden></div></section></div>
 <div class="ambient-veil" aria-hidden="true"></div>
-<script src="/lifecycle.js?v=2.12.99"></script>
-<script src="/state-contract.js?v=2.12.99"></script>
-<script src="/weather-channel.js?v=2.12.99"></script>
-<script src="/sky-ambient.js?v=2.12.99"></script>
-<script src="/weather-summary.js?v=2.12.99"></script>
-<script src="/now-playing-progress.js?v=2.12.99"></script>
-<script src="/brain.js?v=2.12.99"></script>
+<script src="/lifecycle.js?v=2.13.0"></script>
+<script src="/state-contract.js?v=2.13.0"></script>
+<script src="/weather-channel.js?v=2.13.0"></script>
+<script src="/sky-ambient.js?v=2.13.0"></script>
+<script src="/weather-summary.js?v=2.13.0"></script>
+<script src="/now-playing-progress.js?v=2.13.0"></script>
+<script src="/brain.js?v=2.13.0"></script>
 <script>
 
   const $ = id => document.getElementById(id);
@@ -2375,7 +2375,9 @@ ${chase.join('')}
       const nextRain = forecast.find(row => Number.isFinite(row.precipitation_probability) && row.precipitation_probability >= 30);
       const rain = window.MarqueeWeatherSummary?.nearTermRainSummary(forecast)
         || (nextRain ? `Rain ${Math.round(nextRain.precipitation_probability)}%` : '');
-      $('idle-weather-temp').textContent = `${Math.round(lastWx.temp)}°C`;
+      $('idle-weather-temp').replaceChildren(document.createTextNode(`${Math.round(lastWx.temp)}`));
+      const homeUnit = document.createElement('span'); homeUnit.className = 'idle-weather-unit'; homeUnit.textContent = '°C';
+      $('idle-weather-temp').append(homeUnit);
       $('idle-weather-condition').textContent = readableCondition(lastWx.condition, lastWx.code);
       $('idle-weather-icon').innerHTML = weatherIconSvg(lastWx);
       $('idle-weather-feels').textContent = hasApparentTemperature
@@ -2388,6 +2390,27 @@ ${chase.join('')}
       $('idle-weather-status').textContent = weatherFetchState === 'error' ? 'Weather source unavailable · Try again'
         : currentStale ? 'Last observation is stale'
         : !forecastFresh ? (observationAge == null ? 'Freshness unknown' : 'Current conditions · forecast unavailable') : '';
+      const outlook = $('home-outlook');
+      const comingHours = forecast.filter(row => typeof row.temperature === 'number' && Number.isFinite(row.temperature) && Date.parse(row.datetime) > Date.now() - 30 * 60 * 1000).slice(0, 4);
+      outlook.hidden = !showHomeWeather || currentStale || comingHours.length < 2;
+      if (!outlook.hidden) {
+        const rainChances = comingHours.map(row => row.precipitation_probability).filter(value => typeof value === 'number' && Number.isFinite(value));
+        const peakRainChance = rainChances.length ? Math.max(...rainChances) : null;
+        $('home-outlook-summary').textContent = rain || (peakRainChance == null ? '' : peakRainChance <= 10 ? 'Dry for now' : `Rain chance up to ${Math.round(peakRainChance)}%`);
+        $('home-outlook-hours').replaceChildren(...comingHours.map(row => {
+          const cell = document.createElement('div'); cell.className = 'home-outlook-hour';
+          const time = document.createElement('time'); time.dateTime = row.datetime;
+          time.textContent = new Date(row.datetime).toLocaleTimeString('en-CA', {hour:'numeric',hour12:true});
+          const temperature = document.createElement('strong'); temperature.textContent = `${Math.round(Number(row.temperature))}°`;
+          const condition = document.createElement('span'); condition.textContent = readableCondition(row.condition);
+          cell.append(time, temperature, condition);
+          return cell;
+        }));
+        const tomorrow = days.find(day => Date.parse(day.datetime) > Date.now() + 12 * 60 * 60 * 1000 && typeof day.temperature === 'number' && Number.isFinite(day.temperature));
+        const next = $('home-outlook-next');
+        next.hidden = !tomorrow;
+        if (tomorrow) next.textContent = `Tomorrow · ${readableCondition(tomorrow.condition)} · High ${Math.round(tomorrow.temperature)}°${typeof tomorrow.templow === 'number' && Number.isFinite(tomorrow.templow) ? ` / Low ${Math.round(tomorrow.templow)}°` : ''}`;
+      }
       homeWeather.hidden = !showHomeWeather;
     } else {
       $('wx').textContent = '';
@@ -2399,6 +2422,7 @@ ${chase.join('')}
       $('idle-weather-range').textContent = '';
       $('idle-weather-rain').textContent = '';
       $('idle-weather-status').textContent = weatherFetchState === 'error' ? 'Weather source unavailable · Try again' : 'Weather unavailable';
+      $('home-outlook').hidden = true;
       homeWeather.hidden = !showHomeWeather;
     }
     applyStreetWeather();
@@ -2904,5 +2928,5 @@ ${chase.join('')}
   window.MarqueeLifecycle.register('surface-animation', {interval: 1000, refresh: () => paint()});
 </script>
 
-<script src="/kiosk-menu.js?v=2.12.99"></script>
-<script src="/kiosk-update.js?v=2.12.99"></script>
+<script src="/kiosk-menu.js?v=2.13.0"></script>
+<script src="/kiosk-update.js?v=2.13.0"></script>
