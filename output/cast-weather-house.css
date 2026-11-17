@@ -42,22 +42,23 @@ body.cast-display .idle-weather-secondary > span:not(:empty) + span:not(:empty):
 /* Quiet Cast keeps the clock clear and reads the coming days at the foot. */
 body.cast-display .home-outlook {
   position:absolute;left:5vw;right:5vw;top:auto;bottom:3vh;width:auto;height:auto;
-  min-height:19vh;box-sizing:border-box;display:flex;flex-direction:column;
-  justify-content:center;gap:1.5vh;padding:2vh 2.5vw;
+  min-height:23vh;box-sizing:border-box;display:flex;flex-direction:column;
+  justify-content:center;gap:1.8vh;padding:2.4vh 2.5vw;
   border:1px solid var(--cast-line);border-top:3px solid var(--cast-accent);
   border-radius:8px;background:#241434f2;color:#fff0fb;z-index:2;
   font-family:'Space Grotesk',system-ui,sans-serif;
 }
-body.cast-display .home-outlook-head{color:#fff0fb;font-size:clamp(16px,1.4vw,22px);letter-spacing:.1em}
-body.cast-display .home-outlook-head span:last-child{color:#ead7f0;font-size:clamp(14px,1.2vw,18px)}
+body.cast-display .home-outlook-head{color:#fff0fb;font-size:clamp(18px,1.7vw,25px);letter-spacing:.1em}
+body.cast-display .home-outlook-head span:last-child{color:#ead7f0;font-size:clamp(16px,1.4vw,21px)}
 body.cast-display .home-outlook-hours,body.cast-display .home-outlook-next{display:none}
 body.cast-display .home-outlook-days{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0}
-body.cast-display .home-outlook-day{display:grid;grid-template-columns:auto auto;align-content:center;align-items:baseline;gap:.2vh .8vw;min-width:0;padding:.4vh 1.4vw;border-left:1px solid var(--cast-line)}
+body.cast-display .home-outlook-day{display:grid;grid-template-columns:auto auto;align-content:center;align-items:baseline;gap:.45vh .8vw;min-width:0;padding:.5vh 1.4vw;border-left:1px solid var(--cast-line)}
 body.cast-display .home-outlook-day:first-child{border-left:0;padding-left:0}
-body.cast-display .home-outlook-day time{grid-column:1/-1;color:#fff0fb;font-size:clamp(17px,1.6vw,24px);font-weight:700}
-body.cast-display .home-outlook-day strong{font-size:clamp(30px,3vw,44px);line-height:1.05}
-body.cast-display .home-outlook-low{color:#f2d3f4;font-size:clamp(16px,1.5vw,22px)}
-body.cast-display .home-outlook-condition{grid-column:1/-1;color:#ead7f0;font-size:clamp(15px,1.25vw,19px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.cast-display .home-outlook-day time{grid-column:1/-1;color:#fff0fb;font-size:clamp(20px,1.9vw,28px);font-weight:700}
+body.cast-display .home-outlook-day strong{font-size:clamp(36px,3.5vw,50px);line-height:1.05}
+body.cast-display .home-outlook-low{color:#f2d3f4;font-size:clamp(18px,1.7vw,24px)}
+body.cast-display .home-outlook-condition{grid-column:1/-1;color:#ead7f0;font-size:clamp(17px,1.5vw,22px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-height:700px){body.cast-display.idle .idle-house{transform:translateY(-13vh)}}
 @media(max-width:700px){body.cast-display .home-outlook{left:3vw;right:3vw;padding:1.5vh 2vw}body.cast-display .home-outlook-day{padding-inline:.7vw}body.cast-display .home-outlook-day time{font-size:clamp(12px,2vw,16px)}body.cast-display .home-outlook-day strong{font-size:clamp(20px,3vw,28px)}body.cast-display .home-outlook-low,body.cast-display .home-outlook-condition{font-size:clamp(11px,1.6vw,14px)}}
 body.cast-display .idle-wx-svg .wx-cloud { fill: #e9d8f1; stroke: #c9a8dd; }
 body.cast-display .idle-wx-svg .wx-moon { fill: #e9d8f1; }

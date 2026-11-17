@@ -1,3 +1,7 @@
+# 2.13.2
+
+- Enlarge the Cast quiet-screen four-day forecast and keep it clear of current conditions on shorter displays.
+
 # 2.13.1
 
 - Put a bright four-day forecast along the bottom of the Cast quiet screen, clear of the clock and current weather.
