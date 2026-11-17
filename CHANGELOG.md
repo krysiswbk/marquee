@@ -1,3 +1,7 @@
+# 2.13.1
+
+- Put a bright four-day forecast along the bottom of the Cast quiet screen, clear of the clock and current weather.
+
 # 2.13.0
 
 - Add a live next-hours forecast to Home, including a compact layout when household activity is present.

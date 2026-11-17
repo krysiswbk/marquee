@@ -241,6 +241,7 @@ body.brain-live .home-outlook{position:absolute;left:4vw;top:52vh;bottom:calc(10
 .home-outlook-head{display:flex;justify-content:space-between;gap:16px;align-items:baseline;color:var(--desk-accent);font-size:clamp(13px,.9vw,16px);font-weight:700;letter-spacing:.15em}
 .home-outlook-head span:last-child{color:var(--desk-muted);text-align:right;letter-spacing:0;font-size:clamp(13px,.9vw,16px);font-weight:500}
 .home-outlook-hours{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0}
+.home-outlook-days{display:none}
 .home-outlook-hour{display:flex;flex-direction:column;gap:clamp(5px,.9vh,10px);min-width:0;padding:clamp(10px,1.3vw,20px) clamp(8px,1vw,16px);border-left:1px solid var(--desk-line)}
 .home-outlook-hour:first-child{border-left:0;padding-left:0}
 .home-outlook-hour time{font-size:clamp(13px,.9vw,16px);color:var(--desk-muted);white-space:nowrap}
