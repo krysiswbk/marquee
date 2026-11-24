@@ -54,6 +54,31 @@ def test_sleep_skips_all_popup_and_context_requests_and_reopens_after_wake():
     app.call_service.assert_called_once()
 
 
+def test_browser_refresh_does_not_launch_same_context_again():
+    module = load_bridge()
+    app = module.MarqueeSources()
+    app.args = {}
+    app.marquee = "https://marquee"
+    app.kiosk_idle_entity = ""
+    app.kiosk_browser = "test"
+    app.last_kiosk_context = "same-house"
+    app.log = Mock()
+    app.call_service = Mock()
+    app.bridge = Mock()
+    app.bridge.get.return_value.json.return_value = {"householdFocus": {"key": "same-house"}}
+    state = {"state": "unavailable", "attributes": {}}
+    app.get_state = lambda *a, **k: state
+    app.kiosk_display_changed(None, None, None, state, {})
+    app.check_kiosk({})
+    assert app.last_kiosk_context == "same-house"
+    state.update(state="on", attributes={"brightness": 255})
+    app.check_kiosk({})
+    app.call_service.assert_not_called()
+    state.update(state="off", attributes={"brightness": 0})
+    app.kiosk_display_changed(None, None, None, state, {})
+    assert app.last_kiosk_context is None
+
+
 def test_sports_popup_also_respects_sleep_and_uses_shared_launch():
     from test_mma_bridge import load_bridge as load_sports
 

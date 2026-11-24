@@ -267,13 +267,15 @@ class MarqueeSources(hass.Hass):
             self.log(f"Marquee kiosk activity signal failed: {error}", level="WARNING")
 
     def kiosk_display_changed(self, entity, attribute, old, new, kwargs):
-        if not kiosk_awake(self):
+        if isinstance(new, dict) and new.get("state") == "off":
             self.last_kiosk_context = None
 
     def check_kiosk(self, kwargs):
         """Open the desk only while HA considers the kiosk screen visible."""
         if not kiosk_awake(self):
-            self.last_kiosk_context = None
+            screen = self.get_state(self.args.get("kiosk_screen_entity", "light.sb2_kiosk_screen"), attribute="all")
+            if isinstance(screen, dict) and screen.get("state") == "off":
+                self.last_kiosk_context = None
             return
         try:
             if self.kiosk_idle_entity:
