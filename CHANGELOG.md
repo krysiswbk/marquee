@@ -1,3 +1,7 @@
+# 2.14.1
+
+- Show the brighter game header artwork on Gaming cards, with a text-safe overlay.
+
 # 2.14.0
 
 - Find Steam artwork for calendar game releases only when the store title matches the release title exactly; cache matches and retain the text card if lookup fails.

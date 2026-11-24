@@ -601,6 +601,7 @@ html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :is(.kiosk-editorial-feature,.kiosk-sport-feature,.kiosk-agenda-feature,.kiosk-calendar-detail,.kiosk-state){border-color:#53316e;background-color:#1b1233;background-image:linear-gradient(135deg,#291542,#17102b 72%)}
 /* The theme rule above must preserve provider imagery on media cards. */
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .kiosk-editorial-feature.has-art{background-image:linear-gradient(90deg,#100b22dd 4%,#100b2255 80%),var(--kiosk-art);background-position:center;background-size:cover}
+html[data-kiosk-theme=synthwave] body .kiosk-section[data-section=gaming] .kiosk-editorial-feature.has-art{background-image:linear-gradient(90deg,#100b22ee 0%,#100b22bb 40%,#100b2200 100%),var(--kiosk-art)}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .kiosk-editorial-feature:not(.has-art){background-image:radial-gradient(ellipse at 82% 24%,#ff4fc825,transparent 47%),linear-gradient(135deg,#291542,#17102b 72%)}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :is(.kiosk-queue-row,.kiosk-agenda-row,.kiosk-support){border-color:#53316e}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .kiosk-section-head h1:focus-visible{text-decoration-color:#ff4fc8}

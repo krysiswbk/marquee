@@ -454,7 +454,7 @@
   function renderMedia(list) {
     const [feature, ...queue] = ordered(list);
     if (!feature) return sharedState(`${label(view)} is quiet right now.`, 'Return to Home', false, 'empty');
-    const art = view === 'gaming' ? feature.background || feature.artwork || '' : feature.artwork || feature.background || '';
+    const art = feature.artwork || feature.background || '';
     const featureDetail = feature.detail || safeRows(feature, 1)[0] || '';
     const queueRows = queue.map((c, index) => `<div class="kiosk-queue-row"><p class="kiosk-queue-label">${index === 0 ? 'Up next' : 'Later'}</p><strong>${titleMarkup(c.title || 'Untitled')}</strong><span>${esc(c.subtitle || c.detail || stateCopy(c) || '')}</span></div>`).join('');
     return `<div class="kiosk-editorial"><article class="kiosk-editorial-feature${art ? ' has-art' : ''}"${art ? ` style="--kiosk-art:url('${esc(art)}')"` : ''}><div><p class="kiosk-kicker">${esc(stateCopy(feature))} · ${esc(label(view))}</p><h2>${titleMarkup(feature.title || 'Untitled')}</h2><p class="kiosk-lede">${esc(feature.subtitle || featureDetail || '')}</p>${featureDetail ? `<p class="kiosk-meta">${esc(featureDetail)}</p>` : ''}</div></article><aside class="kiosk-support" aria-label="${esc(label(view))} queue"><p class="kiosk-kicker">${queue.length ? 'QUEUE' : 'UP NEXT'}</p>${queueRows || '<p class="kiosk-empty">No supporting items.</p>'}</aside></div>`;
