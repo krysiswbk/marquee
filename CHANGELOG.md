@@ -1,3 +1,7 @@
+# 2.14.0
+
+- Find Steam artwork for calendar game releases only when the store title matches the release title exactly; cache matches and retain the text card if lookup fails.
+
 # 2.13.9
 
 - Give Home a stable household briefing with current people, door lock, modes, and configured indoor climate readings; hide these facts when the HA feed is stale.

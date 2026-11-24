@@ -1,17 +1,97 @@
 """Gaming signals: claimed free games and curated HA game-release calendars."""
 import json
 import os
+import re
+import unicodedata
+import urllib.parse
 from datetime import datetime, time, timedelta, timezone
+from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
 from .model import Context, EventState, parse_time
-from .provider import Provider
+from .provider import Provider, atomic_json
+
+
+def store_title(title):
+    """Calendar labels may add a platform list that is not part of the name."""
+    return re.sub(r"\s*\((?=[^)]*(?:PS[45]|Xbox|Switch|PC))[^)]*\)\s*$", "", title, flags=re.I).strip()
+
+
+def title_key(title):
+    folded = unicodedata.normalize("NFKD", title).casefold()
+    return re.sub(r"[^a-z0-9]+", " ", "".join(c for c in folded if not unicodedata.combining(c))).strip()
+
+
+def steam_image(value):
+    """Only accept HTTPS artwork from Steam's own image hosts."""
+    if not isinstance(value, str):
+        return ""
+    parts = urlsplit(value)
+    host = parts.hostname or ""
+    return value if parts.scheme == "https" and host.endswith(".steamstatic.com") else ""
 
 
 class GamingProvider(Provider):
     name = "gaming"
     refresh_seconds = 600
     stale_seconds = 7200
+
+    def release_artwork(self, title):
+        search = "https://store.steampowered.com/api/storesearch/?" + urllib.parse.urlencode(
+            {"term": store_title(title), "l": "en", "cc": "ca"})
+        matches = self.client.json(search, timeout=4).get("items", [])
+        expected = title_key(store_title(title))
+        exact = next((item for item in matches if title_key(str(item.get("name", ""))) == expected), None)
+        if not exact or not str(exact.get("id", "")).isdigit():
+            return {"artwork": "", "background": ""}
+        app_id = str(exact["id"])
+        detail_url = "https://store.steampowered.com/api/appdetails?" + urllib.parse.urlencode(
+            {"appids": app_id, "cc": "ca", "l": "en"})
+        detail = self.client.json(detail_url, timeout=4).get(app_id, {})
+        data = detail.get("data", {}) if detail.get("success") else {}
+        if title_key(str(data.get("name", ""))) != expected:
+            return {"artwork": "", "background": ""}
+        return {"artwork": steam_image(data.get("header_image")),
+                "background": steam_image(data.get("background_raw"))}
+
+    def enrich_releases(self, releases):
+        """Cache exact matches; a failed lookup must never suppress a release."""
+        path = os.path.join(self.data_dir, "provider-cache", "gaming-artwork.json")
+        try:
+            with open(path, encoding="utf-8") as handle:
+                cache = json.load(handle)
+            if not isinstance(cache, dict):
+                cache = {}
+        except (OSError, ValueError, TypeError):
+            cache = {}
+        now = self.clock()
+        limit = max(0, min(10, int(self.config.get("max_releases", 3))))
+        for item in sorted((event for event in releases if isinstance(event, dict)),
+                           key=lambda event: str(event.get("start", "")))[:limit]:
+            title = str(item.get("summary") or "").strip()
+            if not title or item.get("artwork"):
+                continue
+            key = title_key(store_title(title))
+            if not key:
+                continue
+            cached = cache.get(key, {})
+            try:
+                age = now - float(cached.get("at", 0)) if isinstance(cached, dict) else float("inf")
+            except (ValueError, TypeError):
+                age = float("inf")
+            image = cached if 0 <= age < (86400 * 30 if cached.get("artwork") else 21600) else None
+            if image is None:
+                try:
+                    image = self.release_artwork(title)
+                except (OSError, ValueError, TypeError, KeyError):
+                    continue
+                cache[key] = {"at": now, **image}
+            item["artwork"] = steam_image(image.get("artwork"))
+            item["background"] = steam_image(image.get("background"))
+        try:
+            atomic_json(path, cache)
+        except OSError:
+            pass
 
     def fetch(self):
         payload = {"claims": [], "releases": []}
@@ -30,6 +110,9 @@ class GamingProvider(Provider):
                 payload["releases"] = release_feed.get("events", [])
         except (OSError, ValueError, TypeError):
             pass
+
+        if isinstance(payload["releases"], list):
+            self.enrich_releases(payload["releases"])
 
         return payload
 
@@ -107,6 +190,8 @@ class GamingProvider(Provider):
                 priority=int(self.config.get("release_priority", self.config.get("priority", 45))),
                 relevance=70 if days <= 7 else 55, urgency=70 if days <= 1 else 40,
                 freshness=75, significance=50, icon="calendar-star", accent="#8b5cf6",
+                artwork_url=str(item.get("artwork") or ""),
+                background_url=str(item.get("background") or item.get("artwork") or ""),
                 expires_at=ends or starts + timedelta(days=1),
                 source_url=str(item.get("url", "")),
                 targets=["kiosk"], stats=[when]))

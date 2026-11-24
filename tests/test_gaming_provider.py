@@ -1,4 +1,6 @@
+import json
 from datetime import datetime, timezone
+from urllib.parse import parse_qs, urlsplit
 
 from cast.marquee.providers.gaming import GamingProvider
 
@@ -50,13 +52,71 @@ def test_game_release_feed_becomes_upcoming_context(tmp_path):
         '"start": "2026-09-10T14:00:00+00:00"}]}')
     provider = GamingProvider({"enabled": True, "priority": 45,
                                "release_lookahead_days": 30, "max_releases": 3},
-                              str(tmp_path), clock=lambda: 1788912000)
+                              str(tmp_path), client=ArtworkClient(), clock=lambda: 1788912000)
     contexts = provider.contexts(provider.fetch(),
                                  datetime(2026, 9, 9, tzinfo=timezone.utc))
     assert len(contexts) == 1
     assert contexts[0].subtype == "game_release"
     assert contexts[0].title == "Hollow Knight: Silksong"
     assert contexts[0].targets == ["kiosk"]
+    assert contexts[0].artwork_url.endswith("/silksong/header.jpg")
+    assert contexts[0].background_url.endswith("/silksong/background.jpg")
+
+
+class ArtworkClient:
+    def __init__(self, store_name="Hollow Knight: Silksong", detail_name=None):
+        self.store_name = store_name
+        self.detail_name = detail_name or store_name
+        self.calls = []
+
+    def json(self, url, timeout=8):
+        self.calls.append(url)
+        if urlsplit(url).path.endswith("storesearch/"):
+            assert parse_qs(urlsplit(url).query)["term"] == ["Hollow Knight: Silksong"]
+            return {"items": [{"id": 103030, "name": self.store_name}]}
+        if urlsplit(url).path.endswith("appdetails"):
+            return {"103030": {"success": True, "data": {
+                "name": self.detail_name,
+                "header_image": "https://shared.steamstatic.com/silksong/header.jpg",
+                "background_raw": "https://shared.steamstatic.com/silksong/background.jpg"}}}
+        raise AssertionError(url)
+
+
+def test_release_artwork_strips_platforms_and_uses_cache(tmp_path):
+    client = ArtworkClient()
+    provider = GamingProvider({"max_releases": 3}, str(tmp_path), client=client,
+                              clock=lambda: 1788912000)
+    releases = [{"summary": "Hollow Knight: Silksong (PS5/Xbox/PC)", "start": "2026-09-10"}]
+    provider.enrich_releases(releases)
+    assert releases[0]["artwork"].endswith("/silksong/header.jpg")
+    assert len(client.calls) == 2
+    provider.enrich_releases(releases)
+    assert len(client.calls) == 2
+    cached = json.loads((tmp_path / "provider-cache" / "gaming-artwork.json").read_text())
+    assert "hollow knight silksong" in cached
+
+
+def test_release_artwork_rejects_nonmatching_store_entry(tmp_path):
+    client = ArtworkClient(store_name="Hollow Knight: Silksong Soundtrack")
+    provider = GamingProvider({"max_releases": 3}, str(tmp_path), client=client,
+                              clock=lambda: 1788912000)
+    releases = [{"summary": "Hollow Knight: Silksong", "start": "2026-09-10"}]
+    provider.enrich_releases(releases)
+    assert releases[0]["artwork"] == ""
+    assert len(client.calls) == 1
+
+
+def test_release_artwork_failure_preserves_event(tmp_path):
+    class OfflineClient:
+        def json(self, url, timeout=8):
+            raise OSError("store unavailable")
+
+    provider = GamingProvider({"max_releases": 3}, str(tmp_path), client=OfflineClient(),
+                              clock=lambda: 1788912000)
+    releases = [{"summary": "Hollow Knight: Silksong", "start": "2026-09-10T14:00:00+00:00"}]
+    provider.enrich_releases(releases)
+    assert provider.contexts({"claims": [], "releases": releases},
+                             datetime(2026, 9, 9, tzinfo=timezone.utc))[0].artwork_url == ""
 
 
 def test_stale_game_release_feed_is_ignored(tmp_path):
