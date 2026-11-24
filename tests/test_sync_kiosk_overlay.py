@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 
-def test_recovery_popup_fills_viewport_without_browser_refresh():
+def test_recovery_popup_fills_viewport_with_refresh_fallback():
     integration = Path(__file__).parents[1] / "integrations/homeassistant"
     sys.path.insert(0, str(integration))
     try:
@@ -21,6 +21,8 @@ def test_recovery_popup_fills_viewport_without_browser_refresh():
             {"id": "plex_playing", "trigger": "state", "entity_id": "media_player.shield_2"},
         ],
         "actions": [{"choose": [{"sequence": [
+            {"action": "browser_mod.refresh", "data": {"browser_id": ["kiosk"]}},
+            {"delay": "00:00:08"},
             {"action": "browser_mod.popup", "data": {"tag": "marquee", "content": {
                 "type": "iframe", "aspect_ratio": "62%", "url": "http://marquee/kiosk"
             }}},
@@ -31,9 +33,9 @@ def test_recovery_popup_fills_viewport_without_browser_refresh():
     sequence = updated["actions"][0]["choose"][0]["sequence"]
     assert json.dumps(current, sort_keys=True) == original
     assert [trigger["id"] for trigger in updated["triggers"]] == ["manual_launch", "plex_playing"]
-    assert len(sequence) == 1
-    assert sequence[0]["action"] == "browser_mod.popup"
-    content = sequence[0]["data"]["content"]
+    assert sequence[:2] == current["actions"][0]["choose"][0]["sequence"][:2]
+    assert sequence[2]["action"] == "browser_mod.popup"
+    content = sequence[2]["data"]["content"]
     assert isinstance(content, str)
     assert all(part in content for part in ("position:fixed", "inset:0", "width:100vw", "height:100dvh"))
-    assert "aspect_ratio" not in json.dumps(sequence[0])
+    assert "aspect_ratio" not in json.dumps(sequence[2])
