@@ -1,4 +1,4 @@
-# 2.13.6
+# 2.13.7
 
 - Give Home a stable household briefing with current people, door lock, modes, and configured indoor climate readings; hide these facts when the HA feed is stale.
 - Keep the Sky summary, moon, and aircraft control within the kiosk viewport, with scrolling confined to an expanded aircraft list.
