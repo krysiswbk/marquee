@@ -93,18 +93,18 @@ with sync_playwright() as playwright:
                         assert "Alex home" in state.inner_text()
                         assert "Front door locked" in state.inner_text()
                     else:
-                        if kind in ("alert", "multiple_openings"):
+                        if kind in ("alert", "multiple_openings") or (kind == "activity" and height <= 750):
                             assert not state.is_visible()
                         else:
                             assert "Alex home" in state.inner_text()
                             assert "Someone sleeping" in state.inner_text()
                             assert "Guests expected" in state.inner_text()
                             assert "Garage occupied" in state.inner_text()
-                    if kind not in ("alert", "multiple_openings"):
+                    if kind not in ("alert", "multiple_openings") and not (kind == "activity" and height <= 750):
                         assert "Inside 23°C" in state.inner_text()
                         assert "Humidity 40%" in state.inner_text()
                         assert "Nursery 23°C" in state.inner_text()
-                        if width >= 1280 and kind == "quiet":
+                        if width >= 1280 and kind in ("quiet", "activity"):
                             assert state.locator("li").last.evaluate("el => el.getBoundingClientRect().bottom <= document.querySelector('#brain-house').getBoundingClientRect().bottom + 1")
                     assert "Jamie · Away" in page.locator("#brain-people").inner_text()
                     assert "front door" in page.locator("#brain-house").inner_text().lower()
@@ -128,7 +128,7 @@ with sync_playwright() as playwright:
                             .every(node => node.getBoundingClientRect().bottom + 4 <= top);
                         }"""), (width, height, "activity overlaps the clock or weather")
                     visible = page.locator("#brain-agenda .brain-agenda-item:visible")
-                    minimum = 6 if width == 1500 else (5 if width == 1280 else 3)
+                    minimum = 6 if width == 1500 else (4 if width == 1280 and kind == "activity" else 5 if width == 1280 else 3)
                     if kind == "multiple_openings":
                         minimum -= 1  # A second opening takes priority over one agenda row.
                     assert visible.count() >= minimum, (kind, width, visible.count())

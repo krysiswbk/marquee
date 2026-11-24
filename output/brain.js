@@ -118,7 +118,7 @@
       if(humidity!==null)facts.push(`Humidity ${humidity}%`);
       if(nursery!==null)facts.push(`Nursery ${nursery}°C`);
     }
-    const visibleFacts=primary||serious||deviceHealth.length?[]:facts.slice(0,8);
+    const visibleFacts=primary||serious||deviceHealth.length||(events.length&&window.matchMedia('(max-height: 750px)').matches)?[]:facts.slice(0,8);
     $('brain-household-state').hidden=!visibleFacts.length;
     $('brain-household-state').innerHTML=visibleFacts.map(fact=>`<li>${esc(fact)}</li>`).join('');
     $('brain-openings').innerHTML=opening.filter(o=>o!==primary).map(o=>`<span class="brain-tag warm">${esc(o.name)} <small>${esc(o.state)} · ${elapsed(Math.max(o.duration||0,now-o.since))}</small></span>`).join('');
@@ -130,6 +130,7 @@
     if(events.length>3) $('brain-activity-open').onclick=()=>openActivity(events,false,$('brain-activity-open'));
     shell.classList.toggle('brain-no-activity',fresh&&!events.length);
     shell.classList.toggle('brain-quiet',fresh&&!events.length&&!primary&&!serious&&!deviceHealth.length);
+    shell.classList.toggle('brain-recent',fresh&&events.length&&!primary&&!serious&&!deviceHealth.length);
     shell.classList.toggle('brain-multiple-openings',opening.length>1);
     renderActivity(events, fresh);
     reconcileActivityHash(events, fresh);

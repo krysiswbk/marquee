@@ -276,6 +276,12 @@ body.brain-live .home-outlook{position:absolute;left:4vw;top:52vh;bottom:calc(10
 }
 /* Give live household status more room, without stretching an empty card. */
 @media(min-width:701px) and (min-height:750px) and (min-aspect-ratio:1/1){
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-recent{grid-template-rows:auto clamp(220px,25vh,260px) minmax(0,1fr)}
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-recent #brain-house{overflow:auto;padding:1.25vh 1.8vw}
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-recent #brain-house .brain-eyebrow{margin-bottom:.5vh}
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-recent #brain-house .brain-headline{font-size:clamp(25px,2.2vw,34px);line-height:1.1;margin-bottom:.4vh}
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-recent #brain-house .brain-summary{font-size:clamp(14px,1.05vw,17px);line-height:1.3}
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-recent #brain-house .brain-orbit{width:3.5vw;height:3.5vw;font-size:2vw}
  body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-quiet:not(.brain-no-agenda){
   grid-template-rows:auto clamp(220px,25vh,270px) minmax(0,1fr)
  }
