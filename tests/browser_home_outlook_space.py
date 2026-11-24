@@ -29,8 +29,8 @@ BRAIN = {"fresh": True, "people": [{"name": "Kris", "state": "Home"}],
 with sync_playwright() as playwright:
     browser = playwright.chromium.launch(
         executable_path=os.environ.get("MARQUEE_CHROMIUM"), args=["--no-sandbox"])
-    for width, height, expected in ((320, 720, 4), (1500, 1000, 4), (3000, 2000, 8)):
-        page = browser.new_page(viewport={"width": width, "height": height})
+    for width, height, scale, expected in ((320, 720, 1, 4), (1500, 1000, 2, 8), (3000, 2000, 1, 8)):
+        page = browser.new_page(viewport={"width": width, "height": height}, device_scale_factor=scale)
         errors = []
         page.on("pageerror", lambda error: errors.append(str(error)))
 
@@ -54,8 +54,13 @@ with sync_playwright() as playwright:
         page.wait_for_function("!document.querySelector('#home-outlook').hidden")
         count = page.locator("#home-outlook-hours .home-outlook-hour").count()
         assert count == expected, (width, height, count)
-        if width == 3000:
+        if expected == 8:
             visible = "Array.from(document.querySelectorAll('#home-outlook-hours .home-outlook-hour')).filter(cell => getComputedStyle(cell).display !== 'none').length"
+            assert page.evaluate("""() => {
+              const panel = document.querySelector('#home-outlook').getBoundingClientRect();
+              const last = document.querySelector('#home-outlook-hours .home-outlook-hour:last-child').getBoundingClientRect();
+              return last.bottom <= panel.bottom;
+            }""")
             page.evaluate("document.querySelector('.brain-shell').classList.remove('brain-no-activity')")
             assert page.evaluate(visible) == 4
             assert page.evaluate("""() => {
@@ -68,7 +73,7 @@ with sync_playwright() as playwright:
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         assert page.evaluate("document.documentElement.scrollHeight <= innerHeight")
         assert not errors, errors
-        page.screenshot(path=str(EVIDENCE / f"home-{width}x{height}.png"))
+        page.screenshot(path=str(EVIDENCE / f"home-{width}x{height}-dpr{scale}.png"))
         page.close()
     browser.close()
 

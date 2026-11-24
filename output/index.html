@@ -2405,7 +2405,7 @@ ${chase.join('')}
         : currentStale ? 'Last observation is stale'
         : !forecastFresh ? (observationAge == null ? 'Freshness unknown' : 'Current conditions · forecast unavailable') : '';
       const outlook = $('home-outlook');
-      const expandedHomeOutlook = !CAST_DISPLAY && matchMedia('(min-width: 2200px) and (min-height: 1400px)').matches;
+      const expandedHomeOutlook = !CAST_DISPLAY && matchMedia('(min-width: 1400px) and (min-height: 900px)').matches;
       const comingHours = forecast.filter(row => typeof row.temperature === 'number' && Number.isFinite(row.temperature) && Date.parse(row.datetime) > Date.now() - 30 * 60 * 1000).slice(0, expandedHomeOutlook ? 8 : 4);
       const comingDays = days.filter(day => Date.parse(day.datetime) > Date.now() + 6 * 60 * 60 * 1000 && typeof day.temperature === 'number' && Number.isFinite(day.temperature)).slice(0, 4);
       outlook.hidden = !showHomeWeather || currentStale || (CAST_DISPLAY ? comingDays.length === 0 : comingHours.length < 2);
