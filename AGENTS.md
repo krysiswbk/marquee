@@ -22,7 +22,8 @@
 
 ## Verification and reporting
 
-- Inspect project guidance, available tools, and the relevant test/build commands before changing code. Use the shared toolchain at `C:\Dev\CodexBuildTools` before concluding that a tool is unavailable.
+- Inspect project guidance, available tools, and the relevant test/build commands before changing code. Use the checkout's `.venv/bin` tools on Linux; on Windows, check the shared toolchain at `C:\Dev\CodexBuildTools` before concluding that a tool is unavailable.
 - Run focused verification for the change and the normal project checks when practical. Report exact commands and results, including platform-specific failures; do not convert a failed or skipped check into a pass.
+- Write browser screenshots and release evidence under `/home/wbk/REPORTS`, outside the checkout. Browser tests that capture evidence should allow an override path and must not leave ignored `REPORTS/` directories in the source tree.
 - After verification, remove task-created `/tmp` files, abandoned Playwright profiles, pytest/mypy/Ruff/bytecode caches, and test build leftovers. Keep the working `.venv` and release evidence. Confirm both local and CT127 Git trees are clean, Docker has one Marquee image with 0 B build cache, and the service remains healthy. Scope deletion to known generated files; inspect old backups or other projects' files before removal.
 - Keep changes scoped to the request. Preserve unrelated local files and existing host state, and never expose secrets in logs, commits, or reports.

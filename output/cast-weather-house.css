@@ -39,6 +39,25 @@ html[data-theme="synthwave"] body.cast-display.sky-day .idle-weather-status { co
 body.cast-display .idle-weather-secondary > span:not(:empty) + span:not(:empty)::before {
   color: var(--cast-accent);
 }
+body.cast-display .cast-house-status {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: .5vh 1.4vw;
+  max-width: 90vw;
+  color: #f2dff4;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: clamp(16px, 1.6vw, 22px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: .01em;
+}
+body.cast-display .cast-house-status[hidden] { display: none; }
+body.cast-display .cast-house-status span + span::before {
+  content: '·';
+  color: var(--cast-accent);
+  margin-right: 1.4vw;
+}
 /* Quiet Cast keeps the clock clear and reads the coming days at the foot. */
 body.cast-display .home-outlook {
   position:absolute;left:5vw;right:5vw;top:auto;bottom:3vh;width:auto;height:auto;

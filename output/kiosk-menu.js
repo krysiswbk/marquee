@@ -81,8 +81,14 @@
   };
   function hasSkyScene() {
     const sky = resources.sky.snapshot?.sky || resources.sky.snapshot || {};
-    return Boolean(sky.sun || sky.moon || sky.condition || sky.weather || sky.cloud_cover !== undefined
-      || sky.visibility !== undefined || sky.aircraft?.length);
+    const hasReading = value => {
+      if (Array.isArray(value)) return value.some(hasReading);
+      if (value && typeof value === 'object') return Object.values(value).some(hasReading);
+      return value !== null && value !== undefined && value !== ''
+        && value !== 'unknown' && value !== 'unavailable';
+    };
+    return ['sun', 'moon', 'condition', 'weather', 'cloud_cover', 'visibility', 'aircraft']
+      .some(key => hasReading(sky[key]));
   }
   function updateVisibleSections() {
     // A failed refresh keeps the last known navigation. A successful empty

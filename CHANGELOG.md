@@ -1,3 +1,11 @@
+# 2.15.6
+
+- Use more of the kiosk stage for Movies, TV, and Gaming, keep their queues above the house feed, and bring the UFC event switcher into view.
+- Hide the Sky destination when Home Assistant supplies only empty sky objects.
+- Keep Home rendering when a person state is unknown and voice a large indoor–outdoor temperature gap only from fresh readings.
+- Show a compact, current house status on idle Cast displays, prioritizing open doors and important alerts and clearing stale information.
+- Keep browser test evidence outside the source checkout and use the local Linux toolchain in agent instructions.
+
 # 2.15.5
 
 - Keep active house alerts in the feed, and use a fresh Today event when the house has no active observation; make the 320px Home agenda fit above the dock.

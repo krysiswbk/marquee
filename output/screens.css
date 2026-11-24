@@ -930,3 +930,43 @@ body.brain-live:not(.kiosk-xbox-now-playing) .kiosk-section.now-playing-surface 
  body.brain-live .kiosk-section[data-section=nhl] .kiosk-broadcast-layout .kiosk-sport-eyebrow{font-size:clamp(17px,.8vw,22px)}
  body.brain-live .kiosk-section[data-section=nhl] .kiosk-broadcast-layout .kiosk-sport-context{font-size:clamp(18px,.85vw,24px)}
 }
+
+/* Keep the editorial card and its complete queue above the house feed. On
+   shorter landscape stages, the queue itself scrolls if it has extra items. */
+@media (min-width:1000px) and (min-height:700px) and (max-height:1100px){
+ body.brain-live .kiosk-section:is([data-section=movies],[data-section=tv],[data-section=gaming]){display:flex;flex-direction:column;overflow:hidden}
+ body.brain-live .kiosk-section:is([data-section=movies],[data-section=tv],[data-section=gaming]) .kiosk-section-head{flex:0 0 auto}
+ body.brain-live .kiosk-section:is([data-section=movies],[data-section=tv],[data-section=gaming]) .kiosk-editorial{flex:1 1 auto;min-height:0;grid-template-rows:minmax(0,1fr)}
+ body.brain-live .kiosk-section:is([data-section=movies],[data-section=tv],[data-section=gaming]) .kiosk-editorial-feature{box-sizing:border-box;height:100%;min-height:0}
+ body.brain-live .kiosk-section:is([data-section=movies],[data-section=tv],[data-section=gaming]) .kiosk-support{min-height:0;max-height:100%;overflow-y:auto;overscroll-behavior:contain;padding:26px clamp(24px,2.5vw,38px)}
+ body.brain-live .kiosk-section:is([data-section=movies],[data-section=tv],[data-section=gaming]) .kiosk-queue-row{padding:10px 0}
+ body.brain-live .kiosk-section:is([data-section=movies],[data-section=tv],[data-section=gaming]) .kiosk-support .kiosk-queue-row:first-of-type{padding-top:10px}
+}
+
+/* On a large wall display, use the actual viewport for editorial imagery and
+   spread the existing queue through its card instead of leaving half a screen blank. */
+@media (min-width:1800px) and (min-height:1101px) and (min-aspect-ratio:4/3){
+ body.brain-live .kiosk-section:is([data-section=movies],[data-section=tv],[data-section=gaming]){display:flex;flex-direction:column;overflow:hidden}
+ body.brain-live .kiosk-section:is([data-section=movies],[data-section=tv],[data-section=gaming]) .kiosk-section-head{flex:0 0 auto}
+ body.brain-live .kiosk-section:is([data-section=movies],[data-section=tv],[data-section=gaming]) .kiosk-editorial{
+  box-sizing:border-box;flex:1 1 auto;align-self:center;width:min(100%,2200px);max-width:2200px;
+  max-height:1250px;min-height:0;grid-template-rows:minmax(0,1fr)
+ }
+ body.brain-live .kiosk-section:is([data-section=movies],[data-section=tv],[data-section=gaming]) .kiosk-editorial-feature{box-sizing:border-box;height:100%;min-height:0}
+ body.brain-live .kiosk-section:is([data-section=movies],[data-section=tv],[data-section=gaming]) .kiosk-support{display:flex;flex-direction:column;justify-content:space-between;min-height:0;max-height:100%;overflow-y:auto}
+}
+
+/* The UFC event switcher must remain above the feed on a landscape kiosk. */
+@media (min-width:1000px) and (min-height:700px) and (max-height:1100px){
+ body.brain-live .kiosk-section[data-section=ufc] .kiosk-broadcast-layout{transform:none;min-height:0}
+ body.brain-live .kiosk-section[data-section=ufc] .kiosk-broadcast-layout h2{font-size:clamp(38px,2.9vw,48px);margin-top:14px}
+ body.brain-live .kiosk-section[data-section=ufc] .kiosk-broadcast-matchup{margin:16px 0}
+ body.brain-live .kiosk-section[data-section=ufc] .kiosk-broadcast-layout .kiosk-team-logo,
+ body.brain-live .kiosk-section[data-section=ufc] .kiosk-broadcast-layout .kiosk-team-mark{width:clamp(120px,10vw,160px);height:clamp(120px,15vh,160px)}
+ body.brain-live .kiosk-section[data-section=ufc] .kiosk-sport-eyebrow{padding-bottom:10px}
+ body.brain-live .kiosk-section[data-section=ufc] .kiosk-sport-context{padding-top:10px}
+ body.brain-live .kiosk-section[data-section=ufc] .kiosk-sports-disclosure{margin-top:10px}
+}
+@media (min-width:1000px) and (min-height:700px) and (max-height:850px){
+ body.brain-live .kiosk-section[data-section=ufc]{padding-bottom:36px!important}
+}

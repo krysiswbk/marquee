@@ -41,6 +41,9 @@ def snapshot(kind):
         state["house_activity"] = {"living_room_occupied": True,
                                    "bedroom_occupied": True, "nursery_motion": True,
                                    "laundry_vibration": True}
+    if kind == "unknown_people":
+        state["people"] = [None, {"name": "Alex", "state": None},
+                           {"name": "Jamie", "state": "Away"}]
     if kind in ("alert", "multiple_openings"):
         state["openings"] = [{"id": "fixture:front", "name": "Front door", "category": "exterior_door",
                               "state": "open", "since": now.timestamp() - 120, "duration": 120}]
@@ -248,5 +251,21 @@ with sync_playwright() as playwright:
         page.get_by_role("heading", name="Home Assistant controls").wait_for()
         assert page.url.startswith("http://10.10.9.5:8123/dashboard-homepage/0?BrowserID=")
         page.close()
+    unknown_people = browser.new_page(viewport={"width": 1500, "height": 971})
+    errors = []
+    unknown_people.on("pageerror", lambda error: errors.append(str(error)))
+
+    def route_unknown_people(request):
+        if request.request.url.split("?", 1)[0].endswith("/api/brain"):
+            return request.fulfill(json=snapshot("unknown_people"))
+        return route(request)
+
+    unknown_people.route("**/*", route_unknown_people)
+    unknown_people.goto("http://marquee.test/kiosk", wait_until="domcontentloaded")
+    unknown_people.locator("#brain-house[data-state=ready]").wait_for()
+    assert "Alex · Unknown" in unknown_people.locator("#brain-people").inner_text()
+    assert "Alex home" not in unknown_people.locator("#brain-household-state").inner_text()
+    assert not errors, errors
+    unknown_people.close()
     browser.close()
     print("PASS: household facts, agenda, stale truth and HA return at display sizes")

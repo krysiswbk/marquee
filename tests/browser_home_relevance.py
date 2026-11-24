@@ -5,9 +5,8 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
-
 ROOT = Path(__file__).resolve().parents[1]
-state = {"cards": [], "contexts": []}
+state = {"cards": [], "contexts": [], "sky": {}}
 
 
 def route(request):
@@ -17,13 +16,15 @@ def route(request):
     if path == "/api/config":
         return request.fulfill(json={"providers": {
             key: {"enabled": key != "music", "targets": ["kiosk"]}
-            for key in ("plex", "weather", "tv", "music", "calendar")
+            for key in ("plex", "weather", "tv", "music", "calendar", "astronomy")
         }, "fallback": {}})
     if path == "/contexts":
         return request.fulfill(json={"contexts": state["contexts"]})
     if path == "/api/brain":
         return request.fulfill(json={"fresh": True, "openings": [], "events": [],
                                      "alerts": [], "people": [], "cards": state["cards"]})
+    if path == "/ha-weather.json":
+        return request.fulfill(json=state["sky"])
     if path == "/now-playing.json":
         return request.fulfill(json={"playing": False, "state": "idle", "availability": "idle"})
     if path in ("/settings.json", "/live-settings.json"):
@@ -72,5 +73,18 @@ with sync_playwright() as playwright:
     page.wait_for_function("document.querySelector('.kiosk-primary a[data-view=plex]') === null")
     assert not errors, errors
     page.close()
+    state.update(cards=[], contexts=[], sky={"sky": {"sun": {}, "moon": {}, "aircraft": []}})
+    sky_page = browser.new_page(viewport={"width": 1500, "height": 900})
+    sky_page.route("**/*", route)
+    sky_page.goto("http://marquee.test/kiosk", wait_until="domcontentloaded")
+    sky_page.wait_for_function("document.querySelector('.kiosk-primary')?.dataset.signature === ''")
+    assert sky_page.locator('.kiosk-primary a[data-view="astronomy"]').count() == 0
+    state["sky"] = {"sky": {"sun": {"is_day": False, "elevation": 0}}}
+    sky_page.evaluate("window.MarqueeNavigation.refresh()")
+    sky_page.wait_for_function("document.querySelector('.kiosk-primary a[data-view=astronomy]') !== null")
+    state["sky"] = {"sky": {"sun": {}, "moon": {}, "aircraft": []}}
+    sky_page.evaluate("window.MarqueeNavigation.refresh()")
+    sky_page.wait_for_function("document.querySelector('.kiosk-primary a[data-view=astronomy]') === null")
+    sky_page.close()
     browser.close()
     print("PASS: Home hides empty destinations and agenda, then reveals live content")

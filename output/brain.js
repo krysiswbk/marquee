@@ -99,7 +99,8 @@
     set('brain-house-label',!fresh?'SIGNAL LOST':serious||deviceHealth.length?'NEEDS ATTENTION':primary?'HOUSE IN MOTION':'LIVE AT HOME');
     set('brain-symbol',!fresh?'?':serious||deviceHealth.length?'!':primary?'↗':'⌂');
     const duration=primary?Math.max(primary.duration||0,now-primary.since):0;
-    const peopleHome=fresh?(state.people||[]).filter(p=>p.name&&String(p.state||'').toLowerCase()==='home').map(p=>p.name):[];
+    const people=Array.isArray(state.people)?state.people.filter(p=>p&&p.name):[];
+    const peopleHome=fresh?people.filter(p=>String(p.state||'').toLowerCase()==='home').map(p=>p.name):[];
     const homeHeadline=peopleHome.length===1?`${peopleHome[0]} is home.`:peopleHome.length===2?`${peopleHome.join(' and ')} are home.`:'Home';
     set('brain-headline',!fresh?'The house feed went quiet.':primary?`${primary.name} ${primary.state}.`:serious?serious.title:deviceHealth.length?'Nursery devices are offline.':event&&now-event.at<120?event.title:homeHeadline);
     let summary=!fresh?'Live states are unavailable. The last report is not a current all-clear.':primary?`${duration<60?`Just observed ${primary.state}.`:`Observed ${primary.state} for ${elapsed(duration)}.`} ${serious?'Worth checking before you settle in.':state.weather_state&&/rain|snow/.test(state.weather_state)?'Wet weather outside — worth a look.':''}`:serious?serious.summary:state.lock==='locked'?'Front door locked.':state.lock==='unlocked'?'Front door unlocked.':'';
@@ -180,7 +181,7 @@
     if(!fresh){
       $('brain-agenda-list').innerHTML='<p class="brain-empty">Calendar context unavailable while the house feed is offline.</p>';
     }
-    $('brain-people').innerHTML=(state.people||[]).map(p=>`<span class="brain-person" data-home="${fresh&&p.state.toLowerCase()==='home'}">${esc(p.name)} · ${esc(fresh?p.state:'Unknown')}</span>`).join('');
+    $('brain-people').innerHTML=people.map(p=>{const personState=fresh?String(p.state||'Unknown'):'Unknown';return `<span class="brain-person" data-home="${personState.toLowerCase()==='home'}">${esc(p.name)} · ${esc(personState)}</span>`}).join('');
     let feed=[];
     let pinnedFeed=null;
     if(!fresh)feed=[feedEntry('Household connection lost · Current door and lock states are unknown','Household connection lost · Current states unavailable')];
@@ -196,6 +197,15 @@
       if(activity.bedroom_occupied===true)feed.push(feedEntry('Bedroom occupied','Bedroom occupied'));
       if(activity.nursery_motion===true)feed.push(feedEntry('Nursery motion detected','Nursery motion detected'));
       if(activity.laundry_vibration===true)feed.push(feedEntry('Laundry vibration detected','Laundry vibration detected'));
+      const insideValue=state.climate?.house_temperature,outsideValue=wx?.temp;
+      const inside=insideValue==null||insideValue===''?null:Number(insideValue);
+      const outside=outsideValue==null||outsideValue===''?null:Number(outsideValue);
+      const outsideAge=now-Number(wx?.updated);
+      if(Number.isFinite(inside)&&inside>=-30&&inside<=50&&Number.isFinite(outside)&&outside>=-70&&outside<=60&&
+         Number.isFinite(outsideAge)&&outsideAge>=0&&outsideAge<1800&&Math.abs(inside-outside)>=10){
+        const difference=Math.round(Math.abs(inside-outside)),direction=inside>outside?'warmer':'cooler';
+        feed.push(feedEntry(`Inside is ${difference}°C ${direction} than outside`,`Inside ${difference}° ${direction} than outside`));
+      }
       if(feed.length&&state.network==='online')feed.push(feedEntry('House network online'));
       if(!feed.length){
         const next=agendaItems[0];

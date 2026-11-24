@@ -1,14 +1,13 @@
 """Deterministic UFC/PFL lifecycle and responsive kiosk contracts."""
 
-import json
 import os
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
-
 ROOT = Path(__file__).resolve().parents[1]
-VIEWPORTS = [(393, 852), (430, 852), (700, 900), (1024, 600), (1500, 900)]
+VIEWPORTS = [(393, 852), (430, 852), (700, 900), (1024, 600),
+             (1280, 800), (1500, 900), (1500, 1000)]
 
 
 def event(promotion, state="UPCOMING", suffix="1"):
@@ -56,6 +55,14 @@ def run():
                             return route.fulfill(json={"providers": providers})
                         if path == "/contexts":
                             values = [] if lifecycle != "populated" else [event(promotion), event(promotion, suffix="2")]
+                            if lifecycle == "populated" and promotion == "ufc" and width >= 1000:
+                                values[0]["title"] = "UFC Fight Night: Israel Adesanya vs Shara Magomedov"
+                                values[0]["left"]["name"] = "Israel Adesanya"
+                                values[0]["right"]["name"] = "Shara Magomedov"
+                                values[0]["rows"] = [
+                                    "CARD · Israel Adesanya vs. Shara Magomedov · Middleweight",
+                                    "CARD · Yaroslav Amosov vs. Ian Machado Garry · Welterweight",
+                                ]
                             browse = {promotion: [event(promotion, suffix="future")]} if lifecycle == "future" else {}
                             return route.fulfill(json={"contexts": values, "browse": browse})
                         if path == "/providers":
@@ -94,6 +101,15 @@ def run():
                     else:
                         assert page.locator(".kiosk-broadcast-layout").is_visible()
                         assert page.locator(".kiosk-broadcast-matchup").is_visible()
+                        if promotion == "ufc" and 700 <= height <= 1100 and width >= 1000:
+                            geometry = page.locator('.kiosk-section[data-section="ufc"]').evaluate("""section => {
+                                const disclosure = section.querySelector('.kiosk-sports-disclosure');
+                                return {scroll: section.scrollHeight - section.clientHeight,
+                                    disclosureBottom: disclosure.getBoundingClientRect().bottom,
+                                    sectionBottom: section.getBoundingClientRect().bottom};
+                            }""")
+                            assert geometry["scroll"] <= 1, (width, height, geometry)
+                            assert geometry["disclosureBottom"] <= geometry["sectionBottom"] - 20, (width, height, geometry)
                         disclosure = page.get_by_role("button", name=f"View all 2 {promotion.upper()} events")
                         assert disclosure.is_visible()
                         disclosure.click()
@@ -115,9 +131,11 @@ def run():
                         assert page.evaluate("document.activeElement?.matches('[data-sports-disclosure]')"), page.evaluate("() => ({tag:document.activeElement?.tagName, cls:document.activeElement?.className, text:document.activeElement?.textContent})")
                         page.get_by_role("button", name=f"View all 2 {promotion.upper()} events").click()
                         page.wait_for_function("new URL(location.href).searchParams.get('mode') === 'all'")
-                        page.go_back(); page.wait_for_function("!new URL(location.href).searchParams.has('mode')")
+                        page.go_back()
+                        page.wait_for_function("!new URL(location.href).searchParams.has('mode')")
                         assert page.evaluate("document.activeElement?.matches('[data-sports-disclosure]')")
-                        page.go_forward(); page.wait_for_function("new URL(location.href).searchParams.get('mode') === 'all'")
+                        page.go_forward()
+                        page.wait_for_function("new URL(location.href).searchParams.get('mode') === 'all'")
                         assert page.evaluate("document.activeElement?.id === 'kiosk-section-title'")
                         assert page.locator('.kiosk-rail a[data-view="' + promotion + '"][aria-current="page"]').count() == 1
                         panel_before_return = page.locator(".kiosk-section").bounding_box()
