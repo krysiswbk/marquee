@@ -1,3 +1,7 @@
+# 2.15.7
+
+- Use the tall Home forecast card for up to eight existing hourly readings, and return to four immediately when a recent house activity needs the compact layout.
+
 # 2.15.6
 
 - Use more of the kiosk stage for Movies, TV, and Gaming, keep their queues above the house feed, and bring the UFC event switcher into view.
