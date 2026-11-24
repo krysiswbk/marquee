@@ -86,7 +86,7 @@ def test_release_artwork_strips_platforms_and_uses_cache(tmp_path):
     client = ArtworkClient()
     provider = GamingProvider({"max_releases": 3}, str(tmp_path), client=client,
                               clock=lambda: 1788912000)
-    releases = [{"summary": "Hollow Knight: Silksong (PS5/Xbox/PC)", "start": "2026-09-10"}]
+    releases = [{"summary": "Hollow Knight: Silksong (PC)", "start": "2026-09-10"}]
     provider.enrich_releases(releases)
     assert releases[0]["artwork"].endswith("/silksong/header.jpg")
     assert len(client.calls) == 2
@@ -141,6 +141,62 @@ def test_duplicate_calendar_entries_do_not_consume_artwork_slots(tmp_path):
     provider.enrich_releases(releases)
     assert releases[0]["artwork"]
     assert releases[2]["artwork"]
+
+
+class ConsoleClient:
+    def __init__(self, wrong_title=False):
+        self.wrong_title = wrong_title
+        self.calls = []
+
+    def json(self, url, headers=None, timeout=8):
+        self.calls.append(url)
+        path = urlsplit(url).path
+        if "graphql" in path:
+            assert headers == {"Content-Type": "application/json"}
+            title = "Different Game" if self.wrong_title else "Hela: of Mice & Magic"
+            return {"data": {"universalSearch": {"results": [{"name": title, "media": [
+                {"type": "IMAGE", "role": "SIXTEEN_BY_NINE_BANNER",
+                 "url": "https://image.api.playstation.com/hela.jpg"}]}]}}}
+        if path.endswith("autosuggest"):
+            return {"Results": [{"Products": [
+                {"Title": "Arkheron Friend Pass", "Type": "Game", "ProductId": "wrong"},
+                {"Title": "Arkheron (Game Preview)", "Type": "Game", "ProductId": "right"}]}]}
+        if path.endswith("products"):
+            return {"Products": [{"ProductId": "right", "LocalizedProperties": [{
+                "ProductTitle": "Arkheron (Game Preview)", "Images": [
+                    {"ImagePurpose": "SuperHeroArt", "Width": 1920, "Height": 1080,
+                     "Uri": "//store-images.s-microsoft.com/arkheron.jpg"}]}]}]}
+        if path.endswith("storesearch/"):
+            return {"items": []}
+        raise AssertionError(url)
+
+
+def test_ps5_release_prefers_exact_playstation_banner(tmp_path):
+    client = ConsoleClient()
+    provider = GamingProvider({"max_releases": 1}, str(tmp_path), client=client,
+                              clock=lambda: 1788912000)
+    releases = [{"summary": "Hela: Of Mice & Magic (PS5/Xbox/PC)", "start": "2026-09-10"}]
+    provider.enrich_releases(releases)
+    assert releases[0]["artwork"] == "https://image.api.playstation.com/hela.jpg"
+    assert len(client.calls) == 1
+
+
+def test_xbox_release_uses_game_preview_hero_not_friend_pass(tmp_path):
+    client = ConsoleClient()
+    provider = GamingProvider({"max_releases": 1}, str(tmp_path), client=client,
+                              clock=lambda: 1788912000)
+    releases = [{"summary": "Arkheron (Xbox/PC)", "start": "2026-09-10"}]
+    provider.enrich_releases(releases)
+    assert releases[0]["artwork"] == "https://store-images.s-microsoft.com/arkheron.jpg"
+    assert len(client.calls) == 2
+
+
+def test_console_title_mismatch_keeps_text_card(tmp_path):
+    provider = GamingProvider({"max_releases": 1}, str(tmp_path), client=ConsoleClient(wrong_title=True),
+                              clock=lambda: 1788912000)
+    releases = [{"summary": "Hela: Of Mice & Magic (PS5)", "start": "2026-09-10"}]
+    provider.enrich_releases(releases)
+    assert releases[0]["artwork"] == ""
 
 
 def test_stale_game_release_feed_is_ignored(tmp_path):

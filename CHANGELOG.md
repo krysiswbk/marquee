@@ -1,3 +1,8 @@
+# 2.15.0
+
+- Match PS5 calendar releases to PlayStation Store banner art and Xbox releases to Microsoft Store hero art, then use Steam artwork when a console store has no exact match.
+- Refresh older Steam artwork cache entries so console releases can gain native store images; retry Steam fallback matches after six hours.
+
 # 2.14.2
 
 - Deduplicate calendar game titles before the artwork lookup limit so every visible release gets a chance at imagery.

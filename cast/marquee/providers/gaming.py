@@ -31,12 +31,85 @@ def steam_image(value):
     return value if parts.scheme == "https" and host.endswith(".steamstatic.com") else ""
 
 
+def console_image(value, host):
+    if not isinstance(value, str):
+        return ""
+    url = "https:" + value if value.startswith("//") else value
+    parts = urlsplit(url)
+    return url if parts.scheme == "https" and parts.hostname == host else ""
+
+
+def xbox_title(title):
+    return re.sub(r"\s*\(Game Preview\)$", "", title, flags=re.I).strip()
+
+
 class GamingProvider(Provider):
     name = "gaming"
     refresh_seconds = 600
     stale_seconds = 7200
 
+    def playstation_artwork(self, title):
+        query = urllib.parse.urlencode({
+            "operationName": "getSearchResults",
+            "variables": json.dumps({"countryCode": "CA", "languageCode": "en", "nextCursor": "",
+                                     "pageOffset": 0, "pageSize": 24, "searchTerm": store_title(title)},
+                                    separators=(",", ":")),
+            "extensions": json.dumps({"persistedQuery": {"version": 1, "sha256Hash":
+                                       "4df6284f982e57bec70f23c77e2c219dc792eb19af7fb3d3a81767aa3f1958aa"}},
+                                      separators=(",", ":")),
+        })
+        url = "https://web.np.playstation.com/api/graphql/v1//op?" + query
+        response = self.client.json(url, headers={"Content-Type": "application/json"}, timeout=4)
+        results = response.get("data", {}).get("universalSearch", {}).get("results", [])
+        expected = title_key(store_title(title))
+        exact = next((item for item in results if title_key(str(item.get("name", ""))) == expected), None)
+        if not exact:
+            return {"artwork": "", "background": ""}
+        media = exact.get("media", [])
+        image = next((item.get("url") for purpose in ("SIXTEEN_BY_NINE_BANNER", "FOUR_BY_THREE_BANNER")
+                      for item in media if item.get("type") == "IMAGE" and item.get("role") == purpose), "")
+        return {"artwork": console_image(image, "image.api.playstation.com"), "background": ""}
+
+    def xbox_artwork(self, title):
+        query = urllib.parse.urlencode({"languages": "en-ca", "market": "CA",
+                                      "platformdependencyname": "windows.xbox",
+                                      "productFamilyNames": "Games,Apps", "query": store_title(title),
+                                      "topProducts": 10})
+        search = self.client.json("https://displaycatalog.mp.microsoft.com/v7.0/"
+                                  "productFamilies/autosuggest?" + query, timeout=4)
+        expected = title_key(store_title(title))
+        products = (product for group in search.get("Results", []) for product in group.get("Products", []))
+        exact = next((product for product in products if product.get("Type") == "Game" and
+                      title_key(xbox_title(str(product.get("Title", "")))) == expected), None)
+        if not exact or not exact.get("ProductId"):
+            return {"artwork": "", "background": ""}
+        detail_query = urllib.parse.urlencode({"actionFilter": "Browse", "bigIds": exact["ProductId"],
+                                               "fieldsTemplate": "Details", "languages": "en-ca",
+                                               "market": "CA"})
+        details = self.client.json("https://displaycatalog.mp.microsoft.com/v7.0/products?" +
+                                   detail_query, timeout=4).get("Products", [])
+        product = next((item for item in details if item.get("ProductId") == exact["ProductId"]), None)
+        properties = (product or {}).get("LocalizedProperties", [])
+        localized = properties[0] if properties else {}
+        if title_key(xbox_title(str(localized.get("ProductTitle", "")))) != expected:
+            return {"artwork": "", "background": ""}
+        images = localized.get("Images", [])
+        hero = next((item.get("Uri") for purpose in ("SuperHeroArt", "TitledHeroArt")
+                     for item in images if item.get("ImagePurpose") == purpose and
+                     int(item.get("Width") or 0) > int(item.get("Height") or 0)), "")
+        return {"artwork": console_image(hero, "store-images.s-microsoft.com"), "background": ""}
+
     def release_artwork(self, title):
+        platforms = re.search(r"\(([^)]*)\)\s*$", title)
+        names = platforms.group(1).casefold() if platforms else ""
+        for console, lookup in (("ps5", self.playstation_artwork), ("xbox", self.xbox_artwork)):
+            if console in names:
+                try:
+                    image = lookup(title)
+                    if image.get("artwork"):
+                        return image
+                except (OSError, ValueError, TypeError, KeyError):
+                    pass
         search = "https://store.steampowered.com/api/storesearch/?" + urllib.parse.urlencode(
             {"term": store_title(title), "l": "en", "cc": "ca"})
         matches = self.client.json(search, timeout=4).get("items", [])
@@ -83,18 +156,25 @@ class GamingProvider(Provider):
             if item.get("artwork"):
                 continue
             cached = cache.get(key, {})
+            if not isinstance(cached, dict):
+                cached = {}
             try:
-                age = now - float(cached.get("at", 0)) if isinstance(cached, dict) else float("inf")
+                age = now - float(cached.get("at", 0))
             except (ValueError, TypeError):
                 age = float("inf")
-            image = cached if 0 <= age < (86400 * 30 if cached.get("artwork") else 21600) else None
+            console_release = bool(re.search(r"\([^)]*(?:PS5|Xbox)[^)]*\)\s*$", title, flags=re.I))
+            steam_fallback = console_release and bool(steam_image(cached.get("artwork")))
+            image = cached if cached.get("schema") == 2 and 0 <= age < (
+                21600 if steam_fallback or not cached.get("artwork") else 86400 * 30) else None
             if image is None:
                 try:
                     image = self.release_artwork(title)
                 except (OSError, ValueError, TypeError, KeyError):
                     continue
-                cache[key] = {"at": now, **image}
-            item["artwork"] = steam_image(image.get("artwork"))
+                cache[key] = {"schema": 2, "at": now, **image}
+            item["artwork"] = (console_image(image.get("artwork"), "image.api.playstation.com") or
+                               console_image(image.get("artwork"), "store-images.s-microsoft.com") or
+                               steam_image(image.get("artwork")))
             item["background"] = steam_image(image.get("background"))
         try:
             atomic_json(path, cache)
