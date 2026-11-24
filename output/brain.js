@@ -118,7 +118,7 @@
       if(humidity!==null)facts.push(`Humidity ${humidity}%`);
       if(nursery!==null)facts.push(`Nursery ${nursery}°C`);
     }
-    const visibleFacts=facts.slice(0,primary||serious||deviceHealth.length?2:8);
+    const visibleFacts=primary||serious||deviceHealth.length?[]:facts.slice(0,8);
     $('brain-household-state').hidden=!visibleFacts.length;
     $('brain-household-state').innerHTML=visibleFacts.map(fact=>`<li>${esc(fact)}</li>`).join('');
     $('brain-openings').innerHTML=opening.filter(o=>o!==primary).map(o=>`<span class="brain-tag warm">${esc(o.name)} <small>${esc(o.state)} · ${elapsed(Math.max(o.duration||0,now-o.since))}</small></span>`).join('');

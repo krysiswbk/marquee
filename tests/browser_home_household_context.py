@@ -93,8 +93,10 @@ with sync_playwright() as playwright:
                         assert "Alex home" in state.inner_text()
                         assert "Front door locked" in state.inner_text()
                     else:
-                        assert "Alex home" in state.inner_text()
-                        if kind not in ("alert", "multiple_openings"):
+                        if kind in ("alert", "multiple_openings"):
+                            assert not state.is_visible()
+                        else:
+                            assert "Alex home" in state.inner_text()
                             assert "Someone sleeping" in state.inner_text()
                             assert "Guests expected" in state.inner_text()
                             assert "Garage occupied" in state.inner_text()
