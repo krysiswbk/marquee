@@ -2,7 +2,8 @@
 """Keep the HA kiosk recovery automation's popup aligned with Marquee source.
 
 Dry-run reads the automation without writing. Apply saves a private rollback
-copy, replaces only the popup payload, and reloads HA automations.
+copy, removes the obsolete motion-idle close trigger, updates the popup payload,
+and reloads HA automations.
 """
 
 import argparse
@@ -20,6 +21,10 @@ AUTOMATION_ID = "kiosk_marquee_plex_overlay"
 
 def plan(current):
     updated = copy.deepcopy(current)
+    triggers = updated.get("triggers")
+    if not isinstance(triggers, list) or not all(isinstance(trigger, dict) for trigger in triggers):
+        raise ValueError("Kiosk automation triggers changed")
+    updated["triggers"] = [trigger for trigger in triggers if trigger.get("id") != "kiosk_idle"]
     try:
         sequence = updated["actions"][0]["choose"][0]["sequence"]
     except (KeyError, IndexError, TypeError) as error:

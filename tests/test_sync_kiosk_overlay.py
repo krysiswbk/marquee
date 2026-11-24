@@ -15,6 +15,11 @@ def test_recovery_popup_fills_viewport_without_browser_refresh():
         sys.path.pop(0)
     current = {
         "id": "kiosk_marquee_plex_overlay",
+        "triggers": [
+            {"id": "manual_launch", "trigger": "state", "entity_id": "input_button.marquee_show_kiosk_overlay"},
+            {"id": "kiosk_idle", "trigger": "state", "entity_id": "binary_sensor.sb2_kiosk"},
+            {"id": "plex_playing", "trigger": "state", "entity_id": "media_player.shield_2"},
+        ],
         "actions": [{"choose": [{"sequence": [
             {"action": "browser_mod.popup", "data": {"tag": "marquee", "content": {
                 "type": "iframe", "aspect_ratio": "62%", "url": "http://marquee/kiosk"
@@ -25,6 +30,7 @@ def test_recovery_popup_fills_viewport_without_browser_refresh():
     updated = plan(current)
     sequence = updated["actions"][0]["choose"][0]["sequence"]
     assert json.dumps(current, sort_keys=True) == original
+    assert [trigger["id"] for trigger in updated["triggers"]] == ["manual_launch", "plex_playing"]
     assert len(sequence) == 1
     assert sequence[0]["action"] == "browser_mod.popup"
     content = sequence[0]["data"]["content"]
