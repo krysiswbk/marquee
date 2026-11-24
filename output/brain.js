@@ -99,16 +99,26 @@
     set('brain-house-label',!fresh?'SIGNAL LOST':serious||deviceHealth.length?'NEEDS ATTENTION':primary?'HOUSE IN MOTION':'LIVE AT HOME');
     set('brain-symbol',!fresh?'?':serious||deviceHealth.length?'!':primary?'↗':'⌂');
     const duration=primary?Math.max(primary.duration||0,now-primary.since):0;
-    set('brain-headline',!fresh?'The house feed went quiet.':primary?`${primary.name} ${primary.state}.`:serious?serious.title:deviceHealth.length?'Nursery devices are offline.':event&&now-event.at<120?event.title:'Home');
+    const peopleHome=fresh?(state.people||[]).filter(p=>p.name&&String(p.state||'').toLowerCase()==='home').map(p=>p.name):[];
+    const homeHeadline=peopleHome.length===1?`${peopleHome[0]} is home.`:peopleHome.length===2?`${peopleHome.join(' and ')} are home.`:'Home';
+    set('brain-headline',!fresh?'The house feed went quiet.':primary?`${primary.name} ${primary.state}.`:serious?serious.title:deviceHealth.length?'Nursery devices are offline.':event&&now-event.at<120?event.title:homeHeadline);
     let summary=!fresh?'Live states are unavailable. The last report is not a current all-clear.':primary?`${duration<60?`Just observed ${primary.state}.`:`Observed ${primary.state} for ${elapsed(duration)}.`} ${serious?'Worth checking before you settle in.':state.weather_state&&/rain|snow/.test(state.weather_state)?'Wet weather outside — worth a look.':''}`:serious?serious.summary:state.lock==='locked'?'Front door locked.':state.lock==='unlocked'?'Front door unlocked.':'';
     if(deviceHealth.length)summary='Device status needs attention.';
+    const activity=fresh?(state.house_activity||{}):{};
+    if(fresh&&!primary&&!serious&&!deviceHealth.length){
+      const observations=[];
+      if(activity.living_room_occupied===true)observations.push('Living room occupied');
+      if(activity.bedroom_occupied===true)observations.push('Bedroom occupied');
+      if(activity.laundry_vibration===true)observations.push('Laundry vibration detected');
+      if(state.network==='degraded')observations.unshift('Network connection needs attention');
+      if(observations.length)summary=[summary.replace(/\.$/,''),...observations.slice(0,2)].filter(Boolean).join(' · ')+'.';
+    }
     set('brain-summary',summary);
     // Show only facts in the current briefing. A stale snapshot must never
     // appear to certify a lock, person or mode as current.
     const facts=[];
     if(fresh){
-      const home=(state.people||[]).filter(p=>p.name&&String(p.state||'').toLowerCase()==='home').map(p=>p.name);
-      if(home.length)facts.push(`${home.join(', ')} home`);
+      if(peopleHome.length)facts.push(`${peopleHome.join(', ')} home`);
       if(state.lock==='locked')facts.push('Front door locked');
       if(state.sleeping)facts.push('Someone sleeping');
       if(state.guests)facts.push('Guests expected');
@@ -119,6 +129,9 @@
       if(temp!==null)facts.push(`Inside ${temp}°C`);
       if(humidity!==null)facts.push(`Humidity ${humidity}%`);
       if(nursery!==null)facts.push(`Nursery ${nursery}°C`);
+      if(activity.living_room_occupied===true)facts.push('Living room occupied');
+      if(activity.bedroom_occupied===true)facts.push('Bedroom occupied');
+      if(activity.laundry_vibration===true)facts.push('Laundry vibration detected');
     }
     const visibleFacts=alertHasSpace?facts.filter(fact=>/ home$|^Inside |^Humidity |^Nursery /.test(fact)).slice(0,4):
       primary||serious||deviceHealth.length||(events.length&&window.matchMedia('(max-height: 750px)').matches)?[]:facts.slice(0,8);
@@ -173,6 +186,7 @@
       if(state.guests)feed.push(feedEntry('Guest mode is on · The house is expecting company','Guest mode is on'));
       if(state.sleeping)feed.push(feedEntry('Someone is sleeping · Keep it low-key','Someone is sleeping · Keep it low-key'));
       if(state.garage_occupied)feed.push(feedEntry('Garage occupied · Someone’s out in the workshop','Garage occupied · Someone’s out in the workshop'));
+      if(activity.laundry_vibration===true)feed.push(feedEntry('Laundry vibration detected','Laundry vibration detected'));
       if(state.network==='online')feed.push(feedEntry('House network online','House network online'));
       if(!feed.length)feed=[feedEntry('The house is listening for its next real update')];
     }

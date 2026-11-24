@@ -25,9 +25,13 @@ def publish(service: AttentionService, lock: str = "locked", door: str = "off") 
 
 
 def test_briefing_exposes_configured_climate_without_inventing_missing_values() -> None:
-    snapshot = build({}, {"house_temperature": "22.7", "house_humidity": "39.8"}, [], 100, 100, 90)
+    snapshot = build({}, {"house_temperature": "22.7", "house_humidity": "39.8",
+                          "living_room_occupied": True, "laundry_vibration": False}, [], 100, 100, 90)
     assert snapshot["climate"] == {
         "house_temperature": "22.7", "house_humidity": "39.8", "nursery_temperature": None
+    }
+    assert snapshot["house_activity"] == {
+        "living_room_occupied": True, "bedroom_occupied": None, "laundry_vibration": False
     }
 
 

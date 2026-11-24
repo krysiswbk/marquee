@@ -1,3 +1,8 @@
+# 2.15.3
+
+- Bring living room and bedroom occupancy plus laundry vibration from Home Assistant into the household briefing, with unknown values kept unknown.
+- Turn the quiet Home headline and summary into a concise report of who is home and what the sensors currently observe; leave urgent door, device, and attention copy in charge.
+
 # 2.15.2
 
 - Keep fresh household and climate facts visible beneath a single active Home alert when the kiosk has room, while preserving the alert headline and agenda.
