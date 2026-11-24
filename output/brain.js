@@ -82,6 +82,8 @@
     const serious=alerts.find(a=>['CRITICAL','IMPORTANT','ACTIONABLE'].includes(a.urgency));
     const primary=serious?opening.find(o=>o.id===serious.signal_id):(opening.find(o=>o.category!=='window')||opening[0]);
     const deviceHealth=fresh?(state.device_health||[]):[];
+    const alertHasSpace=fresh&&Boolean(primary||serious||deviceHealth.length)&&opening.length<=1&&
+      window.matchMedia('(min-width: 1100px) and (min-height: 850px)').matches;
     const healthNames=deviceHealth.map(d=>d.name).filter(Boolean);
     const healthText=deviceHealth.length?`Offline: ${deviceHealth.map(d=>d.name).join(', ')}. Check batteries or connection.`:'';
     $('brain-device-health').hidden=!deviceHealth.length;
@@ -118,7 +120,8 @@
       if(humidity!==null)facts.push(`Humidity ${humidity}%`);
       if(nursery!==null)facts.push(`Nursery ${nursery}°C`);
     }
-    const visibleFacts=primary||serious||deviceHealth.length||(events.length&&window.matchMedia('(max-height: 750px)').matches)?[]:facts.slice(0,8);
+    const visibleFacts=alertHasSpace?facts.filter(fact=>/ home$|^Inside |^Humidity |^Nursery /.test(fact)).slice(0,4):
+      primary||serious||deviceHealth.length||(events.length&&window.matchMedia('(max-height: 750px)').matches)?[]:facts.slice(0,8);
     $('brain-household-state').hidden=!visibleFacts.length;
     $('brain-household-state').innerHTML=visibleFacts.map(fact=>`<li>${esc(fact)}</li>`).join('');
     $('brain-openings').innerHTML=opening.filter(o=>o!==primary).map(o=>`<span class="brain-tag warm">${esc(o.name)} <small>${esc(o.state)} · ${elapsed(Math.max(o.duration||0,now-o.since))}</small></span>`).join('');
@@ -129,6 +132,7 @@
     if(!activityOpenerFocused)$('brain-events').innerHTML=events.length?eventRows.join(''):`<p class="brain-empty">${fresh?'No new door or lock activity in the last 15 minutes.':'Activity feed reconnecting; recent activity is unavailable.'}</p>`;
     if(events.length>3) $('brain-activity-open').onclick=()=>openActivity(events,false,$('brain-activity-open'));
     shell.classList.toggle('brain-no-activity',fresh&&!events.length);
+    shell.classList.toggle('brain-alert-with-context',alertHasSpace);
     shell.classList.toggle('brain-quiet',fresh&&!events.length&&!primary&&!serious&&!deviceHealth.length);
     shell.classList.toggle('brain-recent',fresh&&events.length&&!primary&&!serious&&!deviceHealth.length);
     shell.classList.toggle('brain-multiple-openings',opening.length>1);

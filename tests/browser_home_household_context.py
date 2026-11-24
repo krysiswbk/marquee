@@ -93,7 +93,12 @@ with sync_playwright() as playwright:
                         assert "Alex home" in state.inner_text()
                         assert "Front door locked" in state.inner_text()
                     else:
-                        if kind in ("alert", "multiple_openings") or (kind == "activity" and height <= 750):
+                        if kind == "alert" and width >= 1100 and height >= 850:
+                            assert "Alex home" in state.inner_text()
+                            assert "Inside 23°C" in state.inner_text()
+                            assert "Humidity 40%" in state.inner_text()
+                            assert state.locator("li").last.evaluate("el => el.getBoundingClientRect().bottom <= document.querySelector('#brain-house').getBoundingClientRect().bottom + 1")
+                        elif kind in ("alert", "multiple_openings") or (kind == "activity" and height <= 750):
                             assert not state.is_visible()
                         else:
                             assert "Alex home" in state.inner_text()

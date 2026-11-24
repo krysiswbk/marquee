@@ -1,3 +1,8 @@
+# 2.15.2
+
+- Keep fresh household and climate facts visible beneath a single active Home alert when the kiosk has room, while preserving the alert headline and agenda.
+- Record one-branch, revision-stamped deployment and post-test cleanup rules for future agents.
+
 # 2.15.1
 
 - Consolidate Xbox and PlayStation game art with the kiosk display agent on one source revision.
