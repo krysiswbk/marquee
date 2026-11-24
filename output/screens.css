@@ -534,6 +534,11 @@ body.kiosk-now-playing .b-device *,body.kiosk-playback-active .b-device *{max-wi
 .kiosk-team-mark{display:grid;place-items:center;border:2px solid #ffffff3b;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffffff22,#ffffff08 55%,#0005);color:#eef2ff;font-size:clamp(28px,4vw,68px);font-weight:900;letter-spacing:-.04em}
 .kiosk-broadcast-center{text-align:center;min-width:0}.kiosk-broadcast-state{display:block;color:#eef2ff;font-size:clamp(27px,4.2vw,72px);font-weight:950;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}.kiosk-broadcast-state:not(.is-live):not(.is-final){color:#b6f378;font-size:clamp(24px,2vw,34px);letter-spacing:.18em}.kiosk-broadcast-state.is-live{color:#ffcf70}.kiosk-broadcast-state.is-final{color:#eef2ff}.kiosk-broadcast-center span{display:block;margin-top:12px;color:#b6f378;font-size:clamp(14px,1.35vw,22px);font-weight:850;letter-spacing:.1em;text-transform:uppercase}
 .kiosk-broadcast-state span{display:inline!important;margin:0!important;color:inherit!important;font-size:inherit!important;letter-spacing:normal!important}
+/* Release feeds often carry no usable image. Let the existing title own the
+   feature card instead of leaving a poster-sized void above it. */
+body.brain-live .kiosk-editorial-feature:not(.has-art){justify-content:center;align-items:flex-start;background:radial-gradient(ellipse at 82% 24%,#ff4fc825,transparent 47%),linear-gradient(135deg,#291542,#17102b 72%)}
+body.brain-live .kiosk-editorial-feature:not(.has-art)>div{max-width:90%}
+body.brain-live .kiosk-editorial-feature:not(.has-art) h2{font-size:clamp(48px,6vw,100px)}
 .kiosk-sport-context{display:flex;justify-content:center;flex-wrap:wrap;gap:8px 24px;border-top:1px solid #71809955;padding-top:18px;color:#c2cfdd;font-size:clamp(13px,1.15vw,18px);text-align:center}.kiosk-sport-context span{overflow-wrap:anywhere}
 .kiosk-sport-score-details{flex:1 0 100%;text-align:center}.kiosk-sport-score-details summary{display:inline-block;min-height:36px;padding:7px 14px;border:1px solid #71809999;border-radius:20px;color:#e6edf5;font-size:.92em;font-weight:700;cursor:pointer;list-style:none}.kiosk-sport-score-details summary::-webkit-details-marker{display:none}.kiosk-sport-score-details summary::after{content:' +'}.kiosk-sport-score-details[open] summary::after{content:' −'}.kiosk-sport-score-details summary:focus-visible{outline:3px solid #b6f378;outline-offset:3px}.kiosk-sport-score-details ul{display:grid;gap:7px;margin:10px auto 0;padding:0;list-style:none;max-width:900px}.kiosk-sport-score-details li{padding:7px 10px;border-radius:5px;background:#71809922;color:#e6edf5}
 @media(min-width:1000px) and (max-height:700px) and (min-aspect-ratio: 3/2){.kiosk-broadcast-layout{min-height:0}.kiosk-broadcast-layout h2{margin-top:16px}.kiosk-broadcast-matchup{margin:22px 0}.kiosk-team-logo,.kiosk-team-mark{width:clamp(82px,10vw,150px);height:clamp(82px,17vh,150px)}}
@@ -594,6 +599,9 @@ html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :is(a,button):is(:hover,:focus-visible){background:#ff4fc8;color:#100b22}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :is(:focus-visible,.kiosk-calendar-page:focus-visible,.kiosk-sports-content:focus-visible){outline-color:#ff4fc8}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :is(.kiosk-editorial-feature,.kiosk-sport-feature,.kiosk-agenda-feature,.kiosk-calendar-detail,.kiosk-state){border-color:#53316e;background-color:#1b1233;background-image:linear-gradient(135deg,#291542,#17102b 72%)}
+/* The theme rule above must preserve provider imagery on media cards. */
+html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .kiosk-editorial-feature.has-art{background-image:linear-gradient(90deg,#100b22dd 4%,#100b2255 80%),var(--kiosk-art);background-position:center;background-size:cover}
+html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .kiosk-editorial-feature:not(.has-art){background-image:radial-gradient(ellipse at 82% 24%,#ff4fc825,transparent 47%),linear-gradient(135deg,#291542,#17102b 72%)}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) :is(.kiosk-queue-row,.kiosk-agenda-row,.kiosk-support){border-color:#53316e}
 html[data-kiosk-theme=synthwave] body .kiosk-section:not(.now-playing-surface) .kiosk-section-head h1:focus-visible{text-decoration-color:#ff4fc8}
 html[data-kiosk-theme=plex] body .now-playing-surface .kiosk-now-playing-head h1:focus-visible{text-decoration-color:#ffe278}
@@ -763,17 +771,11 @@ body.brain-live .kiosk-section[data-section=calendar] .kiosk-calendar-page .kios
 }
 @media(max-width:700px){body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda{grid-template-columns:minmax(0,1fr)}body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-feature h2{font-size:clamp(30px,6vw,42px)}body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-row{grid-template-columns:minmax(105px,.35fr) minmax(0,1fr)}}
 @media(max-width:480px){body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-feature{padding:24px}body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-feature h2{font-size:clamp(28px,8vw,36px)}body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-row{grid-template-columns:minmax(0,1fr)}body.brain-live .kiosk-section[data-section=calendar] .kiosk-agenda-row :is(time,strong,small,.kiosk-birthday-rows){grid-column:1;grid-row:auto}}
-/* Populated Sky can exceed a short landscape stage. Keep its heading and
-   cards in document order, and scroll the Sky destination when expanded
-   aircraft need more height than the fixed feed/rail safe area allows. */
+/* Sky uses the available stage height. Only the optional aircraft list
+   scrolls when opened; its summary and the moon remain in view. */
 @media(min-width:701px) and (min-aspect-ratio:4/3) and (max-height:1000px){
- .kiosk-section[data-section=astronomy]{overflow-y:auto;overscroll-behavior:contain}
- .kiosk-section[data-section=astronomy] .sky-destination{flex:0 0 auto;height:auto;max-height:none;min-height:0;grid-template-rows:auto auto;align-items:start;overflow:visible}
- .kiosk-section[data-section=astronomy] .sky-destination-main{align-self:start;min-height:0}
- .kiosk-section[data-section=astronomy] .sky-vista,.kiosk-section[data-section=astronomy] .sky-vista svg{height:auto;min-height:clamp(130px,22vh,260px)}
- .kiosk-section[data-section=astronomy] .sky-moon-card{height:auto;min-height:96px;align-self:start}
- .kiosk-section[data-section=astronomy] .sky-aircraft-panel{height:auto;min-height:64px;overflow:visible}
- .kiosk-section[data-section=astronomy] .sky-aircraft-list.is-expanded{max-height:min(190px,30vh);overflow-y:auto}
+ .kiosk-section[data-section=astronomy]{overflow:hidden}
+ .kiosk-section[data-section=astronomy] .sky-aircraft-list.is-expanded{max-height:min(150px,22vh);overflow-y:auto}
 }
 /* Calendar content must remain reachable on shallow wall displays. The full
    agenda keeps its header and actions fixed while its event list scrolls. */

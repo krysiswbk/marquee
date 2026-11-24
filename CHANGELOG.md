@@ -1,3 +1,9 @@
+# 2.13.6
+
+- Give Home a stable household briefing with current people, door lock, modes, and configured indoor climate readings; hide these facts when the HA feed is stale.
+- Keep the Sky summary, moon, and aircraft control within the kiosk viewport, with scrolling confined to an expanded aircraft list.
+- Restore provider artwork on synthwave media cards, center release text when artwork is absent, and bring Cast matchup cards inward on large screens.
+
 # 2.13.5
 
 - Keep empty or unconfigured sections off the Home navigation until they have current content; retain direct links and the selected section.

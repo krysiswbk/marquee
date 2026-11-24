@@ -105,13 +105,20 @@
     // appear to certify a lock, person or mode as current.
     const facts=[];
     if(fresh){
+      const home=(state.people||[]).filter(p=>p.name&&String(p.state||'').toLowerCase()==='home').map(p=>p.name);
+      if(home.length)facts.push(`${home.join(', ')} home`);
+      if(state.lock==='locked')facts.push('Front door locked');
       if(state.sleeping)facts.push('Someone sleeping');
       if(state.guests)facts.push('Guests expected');
       if(state.garage_occupied)facts.push('Garage occupied');
-      (state.people||[]).filter(p=>p.name&&String(p.state||'').toLowerCase()==='home')
-        .slice(0,1).forEach(p=>facts.push(`${p.name} home`));
+      const climate=state.climate||{};
+      const numeric=(value,min,max)=>value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value))&&Number(value)>=min&&Number(value)<=max?Math.round(Number(value)):null;
+      const temp=numeric(climate.house_temperature,-30,50),humidity=numeric(climate.house_humidity,0,100),nursery=numeric(climate.nursery_temperature,-30,50);
+      if(temp!==null)facts.push(`Inside ${temp}°C`);
+      if(humidity!==null)facts.push(`Humidity ${humidity}%`);
+      if(nursery!==null)facts.push(`Nursery ${nursery}°C`);
     }
-    const visibleFacts=facts.slice(0,3);
+    const visibleFacts=facts.slice(0,primary||serious||deviceHealth.length?2:8);
     $('brain-household-state').hidden=!visibleFacts.length;
     $('brain-household-state').innerHTML=visibleFacts.map(fact=>`<li>${esc(fact)}</li>`).join('');
     $('brain-openings').innerHTML=opening.filter(o=>o!==primary).map(o=>`<span class="brain-tag warm">${esc(o.name)} <small>${esc(o.state)} · ${elapsed(Math.max(o.duration||0,now-o.since))}</small></span>`).join('');

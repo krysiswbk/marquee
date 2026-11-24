@@ -75,6 +75,17 @@ body.cast-display .sports-card .sport-date { font-size: clamp(12px, 1.15vw, 18px
 body.cast-display .sports-card :is(.sport-status, .sport-vs) { color: #ff88df; }
 body.cast-display .sports-card .sport-status { font-size: clamp(18px, 2vw, 30px); }
 body.cast-display .sports-card .sport-footer { border-top: 1px solid var(--cast-line); }
+/* A large receiver needs a readable center field, not team cards pinned to
+   opposite edges of the canvas. */
+@media (min-width: 1100px) {
+  body.cast-display .sports-card .sport-matchup {
+    width: min(100%, 1700px);
+    margin-inline: auto;
+    grid-template-columns: minmax(0, 1fr) minmax(140px, .48fr) minmax(0, 1fr);
+    gap: clamp(28px, 3vw, 80px);
+  }
+  body.cast-display .sports-card .sport-side { width: 100%; }
+}
 
 body.cast-display .stage.contextual .context-card:not(:is(.calendar-scene,[data-kind="ambient_agenda"],[data-kind="calendar_event"],[data-kind="birthday_rollup"])) {
   padding: clamp(22px, 4vh, 48px) clamp(28px, 5vw, 78px);

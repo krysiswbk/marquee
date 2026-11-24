@@ -174,6 +174,10 @@ body.brain-live #brain-activity-list{flex:1 1 auto;min-height:0}
 .brain-household-state li{min-width:0;overflow-wrap:anywhere}
 .brain-household-state li:before{content:'·';margin-right:.45em;color:var(--desk-cyan);font-weight:700}
 @media(min-width:701px) and (min-aspect-ratio:1/1){
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-household-state{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.45em 1em;margin-top:1.4vh;padding-top:1.2vh;border-top:1px solid var(--desk-line);font-size:clamp(16px,1.15vw,21px)}
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-quiet #brain-house{overflow:auto}
+}
+@media(min-width:701px) and (min-aspect-ratio:1/1){
  body.brain-live.idle:not(.kiosk-destination-active) .brain-shell:not(.brain-quiet){grid-template-rows:auto 160px minmax(0,1fr)}
  body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-multiple-openings{grid-template-rows:auto 205px minmax(0,1fr)}
  body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-quiet{grid-template-rows:auto clamp(145px,15vh,155px) minmax(0,1fr)}
@@ -273,7 +277,7 @@ body.brain-live .home-outlook{position:absolute;left:4vw;top:52vh;bottom:calc(10
 /* Give live household status more room, without stretching an empty card. */
 @media(min-width:701px) and (min-height:750px) and (min-aspect-ratio:1/1){
  body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-quiet:not(.brain-no-agenda){
-  grid-template-rows:auto clamp(180px,19vh,210px) minmax(0,1fr)
+  grid-template-rows:auto clamp(220px,25vh,270px) minmax(0,1fr)
  }
  body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-quiet:not(.brain-no-agenda) #brain-house{
   height:auto

@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+from cast.marquee.attention.briefing import build
 from cast.marquee.attention.service import AttentionService
 
 
@@ -21,6 +22,13 @@ def publish(service: AttentionService, lock: str = "locked", door: str = "off") 
     service.ingest({"full": True, "states": [
         {"entity_id": "lock.front", "state": lock},
         {"entity_id": "binary_sensor.balcony", "state": door, "attributes": {"friendly_name": "Balcony door"}}]})
+
+
+def test_briefing_exposes_configured_climate_without_inventing_missing_values() -> None:
+    snapshot = build({}, {"house_temperature": "22.7", "house_humidity": "39.8"}, [], 100, 100, 90)
+    assert snapshot["climate"] == {
+        "house_temperature": "22.7", "house_humidity": "39.8", "nursery_temperature": None
+    }
 
 
 def test_startup_and_reconnect_do_not_invent_unlock(tmp_path: Any) -> None:
