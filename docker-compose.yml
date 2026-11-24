@@ -1,6 +1,9 @@
 services:
   marquee:
-    build: .
+    build:
+      context: .
+      args:
+        MARQUEE_REVISION: ${MARQUEE_REVISION:-unknown}
     image: marquee:local
     container_name: marquee
     network_mode: host

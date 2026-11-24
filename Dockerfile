@@ -1,7 +1,11 @@
 FROM python:3.13-alpine
 
+ARG MARQUEE_REVISION=unknown
+LABEL org.opencontainers.image.revision=$MARQUEE_REVISION
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    MARQUEE_REVISION=$MARQUEE_REVISION \
     REPO_DIR=/app \
     DATA_DIR=/config
 

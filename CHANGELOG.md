@@ -1,3 +1,8 @@
+# 2.15.1
+
+- Consolidate Xbox and PlayStation game art with the kiosk display agent on one source revision.
+- Stamp the source commit in published and local container images and report it from `/healthz` for release parity checks.
+
 # 2.15.0
 
 - Match PS5 calendar releases to PlayStation Store banner art and Xbox releases to Microsoft Store hero art, then use Steam artwork when a console store has no exact match.

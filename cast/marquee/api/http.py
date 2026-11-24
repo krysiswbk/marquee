@@ -255,7 +255,7 @@ class WebHandler(BaseHTTPRequestHandler):
         elif path == "/healthz":
             last, now = main_card_poll(), time.time()
             self._send(json.dumps({
-                "ok": True, "version": VERSION,
+                "ok": True, "version": VERSION, "revision": BUILD_REVISION,
                 "mediaPollAgo": (round(time.time() - CURRENT_PLEX["last_attempt"], 1)
                                  if CURRENT_PLEX.get("last_attempt") else None),
                 "mediaStale": CURRENT_PLEX.get("stale", False),

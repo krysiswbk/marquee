@@ -62,6 +62,7 @@ from marquee.services import media
 from marquee import __version__
 
 VERSION = __version__
+BUILD_REVISION = os.environ.get("MARQUEE_REVISION", "")
 HUB_IP = os.environ.get("HUB_IP", "")
 GARAGE_HUB_IP = os.environ.get("GARAGE_HUB_IP", "")
 BEDROOM_HUB_IP = os.environ.get("BEDROOM_HUB_IP", "10.10.3.81")
