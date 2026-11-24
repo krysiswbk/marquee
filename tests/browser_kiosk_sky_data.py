@@ -5,7 +5,6 @@ from urllib.parse import urlsplit
 
 from playwright.sync_api import sync_playwright
 
-
 ROOT = Path(__file__).resolve().parents[1]
 SKY = {
     "condition": "partlycloudy",
@@ -89,6 +88,19 @@ def test_kiosk_sky_page_shows_available_sensor_facts_without_aurora_alert():
             "cloud": "rgb(195, 169, 212)",
             "aircraft": "rgb(255, 112, 210)",
         }, panorama_palette
+        for width, height, minimum_width in ((1920, 1080, 1700), (3000, 2000, 2100)):
+            page.set_viewport_size({"width": width, "height": height})
+            page.wait_for_timeout(100)
+            fit = page.locator("#kiosk-panel").evaluate("""panel => {
+                const sky = panel.querySelector('.sky-destination');
+                return {scroll: panel.scrollHeight - panel.clientHeight,
+                        skyWidth: sky.getBoundingClientRect().width,
+                        skyBottom: sky.getBoundingClientRect().bottom,
+                        panelBottom: panel.getBoundingClientRect().bottom};
+            }""")
+            assert fit["scroll"] == 0, (width, height, fit)
+            assert fit["skyBottom"] <= fit["panelBottom"], (width, height, fit)
+            assert fit["skyWidth"] >= minimum_width, (width, height, fit)
         page.set_viewport_size({"width": 1024, "height": 600})
         page.wait_for_timeout(100)
         compact_fit = page.locator("#kiosk-panel").evaluate("""panel => {

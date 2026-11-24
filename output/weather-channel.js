@@ -13,7 +13,7 @@
   const heading=document.createElement('header');heading.className='wx-heading';
   heading.innerHTML='<div><p>YOUR LOCAL WEATHER</p><h1 id="wx-segment-title" tabindex="-1">Current conditions</h1><small id="wx-retained-context"></small></div><span id="wx-data-status"></span>';
   const main=document.createElement('div');main.className='wx-main';
-  main.innerHTML=`<section id="weather-conditions" class="wx-panel channel-current" aria-label="Current conditions"><div class="wx-observation"><div id="channel-icon" class="channel-icon"></div><div id="channel-temp" class="channel-temp"></div><div id="channel-condition" class="channel-condition"></div><span id="wx-observation-source"></span></div><div class="wx-readings"><div class="channel-metrics" id="channel-metrics"></div><p id="channel-outlook" class="channel-outlook"></p></div></section>
+  main.innerHTML=`<section id="weather-conditions" class="wx-panel channel-current" aria-label="Current conditions"><div class="wx-observation"><div id="channel-icon" class="channel-icon"></div><div id="channel-temp" class="channel-temp"></div><div id="channel-condition" class="channel-condition"></div><span id="wx-observation-source"></span></div><div class="wx-readings"><div class="channel-metrics" id="channel-metrics"></div><p id="channel-outlook" class="channel-outlook"></p><small id="channel-sky-source" hidden>Cloud and visibility · HA sky sensors</small></div></section>
   <section id="weather-hours" class="wx-panel channel-hours" aria-label="Hourly outlook" hidden><div id="channel-hours"></div></section>
   <section id="weather-days" class="wx-panel channel-days" aria-label="Five-day forecast" hidden><div id="channel-days"></div></section>
   <section id="wx-radar-panel" class="wx-panel" aria-label="Local radar" hidden><div class="wx-radar-frame"><p id="wx-radar-status">Radar is loading…</p></div><aside class="wx-radar-copy"><p>PRECIPITATION RADAR</p><h2 id="wx-radar-title">Around home</h2><div id="wx-radar-detail"></div><small>Environment Canada<br>Original radar product</small></aside></section>`;
@@ -72,6 +72,16 @@
         ? window.MarqueeApparentTemperature(model)
         : model.apparent_temperature == null || model.apparent_temperature === '' ? null : Number(model.apparent_temperature);
       const metrics=[['Feels like',Number.isFinite(apparentTemperature)?rounded(apparentTemperature)+'°C':'—'],['Humidity',Number.isFinite(humidity)?rounded(humidity)+'%':'—'],['Wind',Number.isFinite(wind)?rounded(wind)+' km/h':'—'],['Pressure',freshObservation&&Number.isFinite(observed.pressure)?rounded(observed.pressure)+' hPa':'—']];
+      const sky=freshObservation?observed.sky||{}:{};
+      const cloud=sky.cloud_cover==null||sky.cloud_cover===''?null:Number(sky.cloud_cover);
+      if(Number.isFinite(cloud)&&cloud>=0&&cloud<=100)metrics.push(['Cloud cover',rounded(cloud)+'%']);
+      const skyVisibility=sky.visibility==null||sky.visibility===''?null:Number(sky.visibility);
+      const visibilityUnit=String(sky.visibility_unit||'').trim().toLowerCase();
+      const visibilityKm=visibilityUnit==='m'?skyVisibility/1000:visibilityUnit==='km'?skyVisibility:null;
+      if(Number.isFinite(visibilityKm)&&visibilityKm>=0&&visibilityKm<=200)
+        metrics.push(['Visibility',`${visibilityKm<10?(Math.round(visibilityKm*10)/10).toFixed(1):rounded(visibilityKm)} km`]);
+      $('channel-metrics').classList.toggle('sky-metrics',metrics.length>4);
+      $('channel-sky-source').hidden=metrics.length<=4;
       const today=(data.days||[]).find(d=>d.date===new Intl.DateTimeFormat('en-CA',{timeZone:raw.timezone||'America/Toronto'}).format(new Date()));
       if(Number.isFinite(today?.uv))metrics.push(['UV high today',String(rounded(today.uv))]);
       if(today?.sunset)metrics.push(['Sunset',time(today.sunset)]);

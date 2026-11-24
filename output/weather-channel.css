@@ -130,3 +130,11 @@ body .wx-broadcast [hidden]{display:none!important}
 @keyframes wx-bolt-glow{from{filter:drop-shadow(0 0 0 transparent)}to{filter:drop-shadow(0 0 3px #ffe36e)}}
 /* Freeze artwork off-screen; reduced-motion clients receive static icons. */
 body.idle .wx-icon *, .stage:not(.weather-context) .wx-icon *{animation-play-state:paused!important}
+
+/* Keep HA sky readings beside the core observation when the wide card has room. */
+body .wx-broadcast #channel-sky-source{display:block;margin-top:1vh;color:var(--wx-muted);font:400 clamp(11px,.9vw,16px) var(--wx-font)}
+@media(min-width:1100px) and (min-aspect-ratio:1/1){
+ body .wx-broadcast .channel-metrics.sky-metrics{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:1.5vw}
+ body .wx-broadcast .channel-metrics.sky-metrics span{font-size:clamp(14px,1.25vw,21px)}
+ body .wx-broadcast .channel-metrics.sky-metrics strong{font-size:clamp(16px,1.5vw,25px)}
+}

@@ -191,6 +191,35 @@ def test_xbox_release_uses_game_preview_hero_not_friend_pass(tmp_path):
     assert len(client.calls) == 2
 
 
+def test_same_title_ps5_and_xbox_releases_keep_platform_art_separate(tmp_path):
+    class PlatformClient:
+        def json(self, url, headers=None, timeout=8):
+            path = urlsplit(url).path
+            if "graphql" in path:
+                return {"data": {"universalSearch": {"results": [{"name": "Shared Game", "media": [
+                    {"type": "IMAGE", "role": "SIXTEEN_BY_NINE_BANNER",
+                     "url": "https://image.api.playstation.com/shared-ps5.jpg"}]}]}}}
+            if path.endswith("autosuggest"):
+                return {"Results": [{"Products": [{"Title": "Shared Game", "Type": "Game",
+                                                     "ProductId": "shared-xbox"}]}]}
+            if path.endswith("products"):
+                return {"Products": [{"ProductId": "shared-xbox", "LocalizedProperties": [{
+                    "ProductTitle": "Shared Game", "Images": [
+                        {"ImagePurpose": "SuperHeroArt", "Width": 1920, "Height": 1080,
+                         "Uri": "https://store-images.s-microsoft.com/shared-xbox.jpg"}]}]}]}
+            raise AssertionError(url)
+
+    provider = GamingProvider({"max_releases": 2}, str(tmp_path), client=PlatformClient(),
+                              clock=lambda: 1788912000)
+    releases = [{"summary": "Shared Game (PS5)", "start": "2026-09-10"},
+                {"summary": "Shared Game (Xbox)", "start": "2026-09-11"}]
+    provider.enrich_releases(releases)
+    assert releases[0]["artwork"].endswith("shared-ps5.jpg")
+    assert releases[1]["artwork"].endswith("shared-xbox.jpg")
+    cached = json.loads((tmp_path / "provider-cache" / "gaming-artwork.json").read_text())
+    assert set(cached) == {"shared game:ps5", "shared game:xbox"}
+
+
 def test_console_title_mismatch_keeps_text_card(tmp_path):
     provider = GamingProvider({"max_releases": 1}, str(tmp_path), client=ConsoleClient(wrong_title=True),
                               clock=lambda: 1788912000)

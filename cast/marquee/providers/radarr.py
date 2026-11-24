@@ -1,10 +1,31 @@
 """Upcoming movie releases from the household's Radarr calendar."""
 import urllib.parse
 from datetime import datetime, timedelta, timezone
+from urllib.parse import urlsplit
 
 from .model import Context, EventState, parse_time
 from .provider import Provider
 from .sonarr import placeholder
+
+
+def movie_artwork(images):
+    """Prefer wide fanart, then a poster, skipping empty or local Radarr URLs."""
+    for cover_type in ("fanart", "poster"):
+        for image in images:
+            if image.get("coverType") != cover_type:
+                continue
+            remote = str(image.get("remoteUrl") or "").strip()
+            parts = urlsplit(remote)
+            if parts.scheme == "https" and parts.hostname:
+                return remote
+            if parts.scheme == "http" and parts.hostname == "image.tmdb.org":
+                return parts._replace(scheme="https").geturl()
+            # Radarr's local /MediaCover path cannot be read by a kiosk browser.
+            fallback = str(image.get("url") or "").strip()
+            parts = urlsplit(fallback)
+            if parts.hostname == "image.tmdb.org" and parts.scheme in ("http", "https"):
+                return parts._replace(scheme="https").geturl()
+    return ""
 
 
 class RadarrProvider(Provider):
@@ -48,8 +69,7 @@ class RadarrProvider(Provider):
                 rejected += 1
                 continue
             images = movie.get("images") or []
-            image = next((item.get("remoteUrl", "") for item in images
-                          if item.get("coverType") in ("fanart", "poster")), "")
+            image = movie_artwork(images)
             tmdb_id = movie.get("tmdbId")
             contexts.append(Context(
                 id=f"radarr:{movie.get('id')}", provider=self.name, type="movie_release",

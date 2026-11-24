@@ -1,6 +1,5 @@
 """Deterministic contract for the dedicated weather surface hierarchy."""
 
-import json
 import os
 from datetime import datetime, timezone
 from pathlib import Path
@@ -294,6 +293,28 @@ with sync_playwright() as playwright:
     metric_text = night_fails_like.locator("#channel-metrics").inner_text()
     assert "13°C" in metric_text and "25" not in metric_text, metric_text
     night_fails_like.close()
+    sky_page = browser.new_page(viewport={"width": 1500, "height": 1000})
+    sky_page.route("**/*", route_for)
+    sky_page.goto("http://marquee.test/kiosk?view=weather", wait_until="domcontentloaded")
+    sky_page.wait_for_selector(".stage.weather-context .wx-broadcast")
+    sky_page.evaluate("""() => window.MarqueeWeather.observation({
+      temp: 3, condition: 'sunny', wind: 6, humidity: 41, pressure: 1034,
+      updated: Date.now()/1000, observed_at: new Date().toISOString(),
+      sky: {cloud_cover: 33, visibility: 43.6, visibility_unit: 'km'}
+    })""")
+    assert "Cloud cover\n33%" in sky_page.locator("#channel-metrics").inner_text()
+    assert "Visibility\n44 km" in sky_page.locator("#channel-metrics").inner_text()
+    assert sky_page.locator("#channel-sky-source").is_visible()
+    assert sky_page.locator(".wx-readings").evaluate(
+        "el => el.getBoundingClientRect().bottom <= el.closest('.wx-main').getBoundingClientRect().bottom + 1")
+    sky_page.screenshot(path="/tmp/marquee-weather-sky-1500.png")
+    sky_page.evaluate("""() => window.MarqueeWeather.observation({
+      temp: 3, condition: 'sunny', wind: 6, humidity: 41, pressure: 1034,
+      updated: 1, sky: {cloud_cover: 33, visibility: 43.6, visibility_unit: 'km'}
+    })""")
+    assert "Cloud cover" not in sky_page.locator("#channel-metrics").inner_text()
+    assert sky_page.locator("#channel-sky-source").is_hidden()
+    sky_page.close()
     browser.close()
 
 print("PASS: weather hierarchy has no clipping/overlap, horizontal overflow, or undersized controls across target viewports")

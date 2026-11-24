@@ -418,7 +418,10 @@
     const days = Math.round((new Date(date.getFullYear(), date.getMonth(), date.getDate()) - start) / 86400000);
     return days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : days < 7 ? 'This week' : 'Later';
   }
-  const agendaLimit = () => window.matchMedia?.('(max-width: 480px)').matches || window.matchMedia?.('(min-width: 1000px) and (max-height: 700px) and (min-aspect-ratio: 3/2)').matches ? 2 : 3;
+  const agendaLimit = () => window.matchMedia?.('(max-width: 480px)').matches || window.matchMedia?.('(min-width: 1000px) and (max-height: 700px) and (min-aspect-ratio: 3/2)').matches ? 2 :
+    window.matchMedia?.('(min-width: 1000px) and (min-height: 1600px)').matches ? 8 :
+    window.matchMedia?.('(min-width: 1000px) and (min-height: 1200px)').matches ? 5 :
+    window.matchMedia?.('(min-width: 1000px) and (min-height: 850px)').matches ? 4 : 3;
   function calendarRow(c) {
     const birthday = c.subtype === 'birthday_rollup';
     const birthdayRows = birthday ? (c.rows || []).filter(Boolean) : [];
@@ -447,9 +450,12 @@
     const grouped = upcoming.reduce((map, c) => { const key = agendaGroup(dateOf(c)); (map[key] ||= []).push(c); return map; }, {});
     const fullValues = view === 'calendar' ? calendarEntries(values) : values;
     const remaining = Math.max(0, fullValues.length - 1 - upcoming.length);
-    const remainder = remaining ? `<button type="button" class="kiosk-agenda-more" data-calendar-disclosure aria-label="View all ${fullValues.length} events">View all ${fullValues.length} events</button>` : '';
-    const featureSource = feature.location || sourceLabel(feature);
-    return `<div class="kiosk-agenda"><article class="kiosk-agenda-feature"><p class="kiosk-kicker">UP NEXT</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || feature.detail || '')}</p><p class="kiosk-meta">${esc(featureSource)}</p></article><div class="kiosk-agenda-groups">${Object.entries(grouped).map(([group, entries]) => `<section><h3>${esc(group)}</h3>${entries.map(calendarRow).join('')}</section>`).join('') || '<p class="kiosk-empty">No later events in view.</p>'}${remainder}</div></div>`;
+    const remainder = remaining || (view === 'calendar' && String(feature.title || '').length > 100)
+      ? `<button type="button" class="kiosk-agenda-more" data-calendar-disclosure aria-label="View all ${fullValues.length} events">View all ${fullValues.length} events</button>` : '';
+    const featureSource = feature.subtype === 'birthday_rollup' ? 'Birthday reminders' : feature.location || sourceLabel(feature);
+    const featureNext=feature.subtype==='birthday_rollup'&&Array.isArray(feature.rows)?feature.rows.filter(Boolean).slice(0,3):[];
+    const featureExtra=featureNext.length?`<div class="kiosk-agenda-feature-next"><p>OTHER BIRTHDAYS</p><ul>${featureNext.map(row=>`<li>${esc(row)}</li>`).join('')}</ul></div>`:'';
+    return `<div class="kiosk-agenda"><article class="kiosk-agenda-feature"><p class="kiosk-kicker">UP NEXT</p><h2>${esc(feature.title)}</h2><p class="kiosk-lede">${esc(feature.subtitle || feature.detail || '')}</p><p class="kiosk-meta">${esc(featureSource)}</p>${featureExtra}</article><div class="kiosk-agenda-groups">${Object.entries(grouped).map(([group, entries]) => `<section><h3>${esc(group)}</h3>${entries.map(calendarRow).join('')}</section>`).join('') || '<p class="kiosk-empty">No later events in view.</p>'}${remainder}</div></div>`;
   }
   function renderMedia(list) {
     const [feature, ...queue] = ordered(list);

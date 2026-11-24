@@ -1,10 +1,10 @@
 """The physical kiosk rotates its feed; Cast kiosk receivers hold one item."""
 
 import os
+import time
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
-
 
 root = Path(__file__).resolve().parents[1]
 brain = {"fresh": True, "openings": [], "events": [], "cards": [], "alerts": [],
@@ -45,6 +45,59 @@ with sync_playwright() as playwright:
         assert (first != second) is rotates, (suffix, first, second)
         assert not errors, errors
         page.close()
+    # Attention stays on screen while routine status would otherwise rotate.
+    brain.update(guests=True, openings=[{"id": "door:front", "name": "Front door",
+                                        "category": "exterior_door", "state": "open",
+                                        "since": time.time() - 120, "duration": 120}])
+    page = browser.new_page(viewport={"width": 1500, "height": 1000})
+    page.route("**/*", route)
+    page.goto("http://marquee.test/kiosk", wait_until="domcontentloaded")
+    page.wait_for_function("document.querySelector('#brain-dock-copy')?.dataset.fullText")
+    assert "Front door open" in page.locator("#brain-dock-copy").get_attribute("data-full-text")
+    page.evaluate("""() => {
+      const original = Date.now;
+      Date.now = () => original() + 12000;
+      window.MarqueeBrain.configure({}, {screen:'clock_weather'});
+    }""")
+    assert "Front door open" in page.locator("#brain-dock-copy").get_attribute("data-full-text")
+    page.close()
+    brain.update(openings=[], alerts=[{"urgency": "IMPORTANT", "title": "Weather warning active"}])
+    page = browser.new_page(viewport={"width": 1500, "height": 1000})
+    page.route("**/*", route)
+    page.goto("http://marquee.test/kiosk", wait_until="domcontentloaded")
+    page.wait_for_function("document.querySelector('#brain-dock-copy')?.dataset.fullText")
+    assert page.locator("#brain-dock-copy").get_attribute("data-full-text") == "Weather warning active"
+    page.close()
+    brain.update(alerts=[], device_health=[{"name": "Nursery motion sensor"}])
+    page = browser.new_page(viewport={"width": 1500, "height": 1000})
+    page.route("**/*", route)
+    page.goto("http://marquee.test/kiosk", wait_until="domcontentloaded")
+    page.wait_for_function("document.querySelector('#brain-dock-copy')?.dataset.fullText")
+    assert page.locator("#brain-dock-copy").get_attribute("data-full-text").startswith("Offline: Nursery motion sensor")
+    page.close()
+    brain.update(device_health=[], guests=False, garage_occupied=False, network="online",
+                 cards=[{"type": "calendar_event", "subtype": "birthday_rollup",
+                         "title": "Casey's birthday", "subtitle": "Today · Nov 24"}])
+    page = browser.new_page(viewport={"width": 1500, "height": 1000})
+    page.route("**/*", route)
+    page.goto("http://marquee.test/kiosk", wait_until="domcontentloaded")
+    page.wait_for_function("document.querySelector('#brain-dock-copy')?.dataset.fullText")
+    assert page.locator("#brain-dock-copy").get_attribute("data-full-text") == "Today · Casey's birthday"
+    page.close()
+    brain.update(cards=[])
+    page = browser.new_page(viewport={"width": 1500, "height": 1000})
+    page.route("**/*", route)
+    page.goto("http://marquee.test/kiosk", wait_until="domcontentloaded")
+    page.wait_for_function("document.querySelector('#brain-dock-copy')?.dataset.fullText")
+    assert page.locator("#brain-dock-copy").get_attribute("data-full-text") == "House network online"
+    page.close()
+    brain.update(network=None)
+    page = browser.new_page(viewport={"width": 1500, "height": 1000})
+    page.route("**/*", route)
+    page.goto("http://marquee.test/kiosk", wait_until="domcontentloaded")
+    page.wait_for_function("document.querySelector('#brain-dock-copy')?.dataset.fullText")
+    assert page.locator("#brain-dock-copy").get_attribute("data-full-text") == "The house is listening for its next real update"
+    page.close()
     browser.close()
 
-print("PASS: kiosk feed rotates while Hub and garage Cast receivers stay still")
+print("PASS: routine feed rotates on kiosk, Cast stays still, and attention stays pinned")

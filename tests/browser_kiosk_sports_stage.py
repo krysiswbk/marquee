@@ -1,14 +1,12 @@
 """Deterministic direct-kiosk sports stage contracts and screenshot fixtures."""
 
-import json
 import os
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
-
 ROOT = Path(__file__).resolve().parents[1]
-VIEWPORTS = [(1500, 900), (1920, 1080), (1920, 540), (700, 900), (430, 852), (320, 720)]
+VIEWPORTS = [(1500, 900), (1920, 1080), (3000, 2000), (1920, 540), (700, 900), (430, 852), (320, 720)]
 SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='42' fill='%23b6f378'/%3E%3C/svg%3E"
 
 
@@ -75,6 +73,23 @@ def run():
                             assert layout["x"] >= 120 and layout["width"] <= 1240, layout
                             name = page.locator(".kiosk-sport-side strong").first
                             assert name.evaluate("el => el.getBoundingClientRect().height <= parseFloat(getComputedStyle(el).lineHeight) + 1")
+                        if width == 3000:
+                            layout = page.locator(".kiosk-broadcast-layout").bounding_box()
+                            assert 1800 <= layout["width"] <= 2200, layout
+                            assert layout["x"] >= 350 and layout["x"] + layout["width"] <= 2650, layout
+                            spread = page.locator(".kiosk-broadcast-layout").evaluate("""el => {
+                                const rect = node => node.getBoundingClientRect();
+                                const feature = el.querySelector('.kiosk-sport-feature');
+                                return {layoutTop: rect(el).top, layoutBottom: rect(el).bottom,
+                                        featureHeight: rect(feature).height,
+                                        eyebrowTop: rect(el.querySelector('.kiosk-sport-eyebrow')).top,
+                                        contextBottom: rect(el.querySelector('.kiosk-sport-context')).bottom,
+                                        panelScroll: el.closest('.kiosk-section').scrollHeight - el.closest('.kiosk-section').clientHeight};
+                            }""")
+                            assert spread["featureHeight"] >= 1000, spread
+                            assert spread["eyebrowTop"] <= spread["layoutTop"] + 1, spread
+                            assert spread["contextBottom"] >= spread["layoutBottom"] - 1, spread
+                            assert spread["panelScroll"] == 0, spread
                         page.wait_for_timeout(250)
                         assert page.locator(".kiosk-broadcast-layout h2").count() == 0, page.evaluate("() => document.querySelector('.kiosk-broadcast-layout h2')?.parentElement?.outerHTML")
                     elif fixture == "distinct":

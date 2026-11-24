@@ -1,3 +1,11 @@
+# 2.15.5
+
+- Keep active house alerts in the feed, and use a fresh Today event when the house has no active observation; make the 320px Home agenda fit above the dock.
+- Show validated HA cloud cover and visibility on the Weather page, with source attribution.
+- Fit Sky without page scroll at 1920×1080 and use the larger kiosk stage for Sky and NHL.
+- Use tall Calendar screens for more agenda rows and upcoming birthdays while containing long titles.
+- Keep same-title Xbox and PS5 artwork caches separate and skip unusable Radarr image entries when choosing movie art.
+
 # 2.15.4
 
 - Include available nursery motion in the observed Home briefing and keep the bottom house feed aligned with active room observations.

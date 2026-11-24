@@ -135,8 +135,10 @@
       if(activity.nursery_motion===true)facts.push('Nursery motion detected');
       if(activity.laundry_vibration===true)facts.push('Laundry vibration detected');
     }
+    const phoneBrief=window.matchMedia('(max-width: 360px) and (max-height: 760px)').matches;
     const visibleFacts=alertHasSpace?facts.filter(fact=>/ home$|^Inside |^Humidity |^Nursery /.test(fact)).slice(0,4):
-      primary||serious||deviceHealth.length||(events.length&&window.matchMedia('(max-height: 750px)').matches)?[]:facts.slice(0,8);
+      primary||serious||deviceHealth.length||(events.length&&window.matchMedia('(max-height: 750px)').matches)?[]:
+      phoneBrief?facts.filter(fact=>/ home$|^Inside /.test(fact)).slice(0,2):facts.slice(0,8);
     $('brain-household-state').hidden=!visibleFacts.length;
     $('brain-household-state').innerHTML=visibleFacts.map(fact=>`<li>${esc(fact)}</li>`).join('');
     $('brain-openings').innerHTML=opening.filter(o=>o!==primary).map(o=>`<span class="brain-tag warm">${esc(o.name)} <small>${esc(o.state)} · ${elapsed(Math.max(o.duration||0,now-o.since))}</small></span>`).join('');
@@ -180,10 +182,12 @@
     }
     $('brain-people').innerHTML=(state.people||[]).map(p=>`<span class="brain-person" data-home="${fresh&&p.state.toLowerCase()==='home'}">${esc(p.name)} · ${esc(fresh?p.state:'Unknown')}</span>`).join('');
     let feed=[];
+    let pinnedFeed=null;
     if(!fresh)feed=[feedEntry('Household connection lost · Current door and lock states are unknown','Household connection lost · Current states unavailable')];
     else {
-      if(healthText)feed.push(deviceHealthFeedEntry(healthText,healthNames));
-      if(primary)feed.push(feedEntry(`${primary.name} ${primary.state} · observed for ${elapsed(duration)}`,`${primary.name} ${primary.state} · ${elapsed(duration)}`));
+      if(healthText){pinnedFeed=deviceHealthFeedEntry(healthText,healthNames);feed.push(pinnedFeed)}
+      if(serious&&!primary){pinnedFeed=feedEntry(serious.title||serious.summary||'Attention needed at home');feed.push(pinnedFeed)}
+      if(primary){pinnedFeed=feedEntry(`${primary.name} ${primary.state} · observed for ${elapsed(duration)}`,`${primary.name} ${primary.state} · ${elapsed(duration)}`);feed.push(pinnedFeed)}
       if(event)feed.push(feedEntry(`${event.title} · ${elapsed(now-event.at)}${now-event.at>=60?' ago':''}`,`Recent event: ${narrowLabel(event.title)} · ${elapsed(now-event.at)}`));
       if(state.guests)feed.push(feedEntry('Guest mode is on · The house is expecting company','Guest mode is on'));
       if(state.sleeping)feed.push(feedEntry('Someone is sleeping · Keep it low-key','Someone is sleeping · Keep it low-key'));
@@ -192,10 +196,20 @@
       if(activity.bedroom_occupied===true)feed.push(feedEntry('Bedroom occupied','Bedroom occupied'));
       if(activity.nursery_motion===true)feed.push(feedEntry('Nursery motion detected','Nursery motion detected'));
       if(activity.laundry_vibration===true)feed.push(feedEntry('Laundry vibration detected','Laundry vibration detected'));
-      if(state.network==='online')feed.push(feedEntry('House network online','House network online'));
-      if(!feed.length)feed=[feedEntry('The house is listening for its next real update')];
+      if(feed.length&&state.network==='online')feed.push(feedEntry('House network online'));
+      if(!feed.length){
+        const next=agendaItems[0];
+        if(next?.title&&next?.subtitle){
+          const today=/^Today\b/i.test(next.subtitle);
+          if(today)feed=[feedEntry(`Today · ${next.title}`,`Today · ${narrowLabel(next.title,32)}`)];
+          else if(state.network==='online')feed=[feedEntry('House network online')];
+          else feed=[feedEntry(`Coming up · ${next.title} · ${next.subtitle}`,`${narrowLabel(next.title,26)} · ${narrowLabel(next.subtitle,22)}`)];
+        }else feed=[feedEntry(state.network==='online'?'House network online':'The house is listening for its next real update')];
+      }
     }
-    renderFeedEntry(feed[castReceiver ? 0 : Math.floor(now/12)%feed.length]);
+    // Keep live attention visible. Routine observations may rotate, but an
+    // opening, serious alert, or offline nursery device must not disappear.
+    renderFeedEntry(pinnedFeed||feed[castReceiver ? 0 : Math.floor(now/12)%feed.length]);
     if(event&&now-event.at<45&&event.id!==lastToast&&!demo){lastToast=event.id;toastUntil=now+12;toast.innerHTML=`<span aria-hidden="true">↗</span><div>${esc(event.title)}<small>Just happened at home</small></div>`}
     toast.classList.toggle('show',now<toastUntil);
     for(const [block,id]of [['house','brain-house'],['activity','brain-activity'],['agenda','brain-agenda']])

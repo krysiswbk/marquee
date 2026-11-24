@@ -1,11 +1,9 @@
 from datetime import datetime, timedelta, timezone
 
 import pytest
-
-from marquee.config import ConfigRepository, DEFAULT_CONFIG
-from marquee.providers.radarr import RadarrProvider
+from marquee.config import DEFAULT_CONFIG, ConfigRepository
+from marquee.providers.radarr import RadarrProvider, movie_artwork
 from marquee.providers.registry import create_providers
-
 
 NOW = datetime(2026, 10, 7, 12, tzinfo=timezone.utc)
 
@@ -52,6 +50,19 @@ def test_radarr_builds_upcoming_movie_context_and_filters_invalid_items(tmp_path
     assert card["artwork"] == "https://art/poster.jpg"
     assert card["sourceUrl"] == "https://www.themoviedb.org/movie/123"
     assert card["targets"] == ["kiosk"]
+
+
+def test_movie_artwork_skips_empty_first_image_and_prefers_wide_fanart():
+    images = [
+        {"coverType": "poster", "remoteUrl": "https://image.tmdb.org/t/p/original/poster.jpg"},
+        {"coverType": "fanart", "remoteUrl": "", "url": "/MediaCover/12/fanart.jpg"},
+        {"coverType": "fanart", "remoteUrl": "http://image.tmdb.org/t/p/original/wide.jpg"},
+    ]
+    assert movie_artwork(images) == "https://image.tmdb.org/t/p/original/wide.jpg"
+    assert movie_artwork([{"coverType": "poster", "remoteUrl": "",
+                          "url": "https://image.tmdb.org/t/p/original/fallback.jpg"}]) == (
+                              "https://image.tmdb.org/t/p/original/fallback.jpg")
+    assert movie_artwork([{"coverType": "poster", "url": "/MediaCover/12/poster.jpg"}]) == ""
 
 
 def test_movies_provider_is_registered_and_secret_is_write_only(tmp_path):

@@ -43,6 +43,15 @@ def xbox_title(title):
     return re.sub(r"\s*\(Game Preview\)$", "", title, flags=re.I).strip()
 
 
+def artwork_cache_key(title):
+    """A console release must not inherit another platform's cached cover."""
+    key = title_key(store_title(title))
+    platforms = re.search(r"\(([^)]*)\)\s*$", title)
+    names = platforms.group(1).casefold() if platforms else ""
+    platform = "ps5" if "ps5" in names else "xbox" if "xbox" in names else ""
+    return f"{key}:{platform}" if platform else key
+
+
 class GamingProvider(Provider):
     name = "gaming"
     refresh_seconds = 600
@@ -146,7 +155,7 @@ class GamingProvider(Provider):
             title = str(item.get("summary") or "").strip()
             if not title:
                 continue
-            key = title_key(store_title(title))
+            key = artwork_cache_key(title)
             if not key or key in seen:
                 continue
             seen.add(key)
