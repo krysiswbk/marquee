@@ -3,6 +3,7 @@ import json
 import os
 import threading
 import time
+
 try:  # The container imports this package as ``marquee``; tests use ``cast.marquee``.
     from marquee.core.presence import PresenceGate
 except ModuleNotFoundError:
@@ -26,6 +27,8 @@ class Runtime:
         self._last_media_success = None
         self._presence_gates = {ip: PresenceGate()
                                 for ip in getattr(self.s, "PRESENCE_TARGETS", {})}
+        self._presence_retry_at = {}
+        self._presence_cast_grace = {}
 
     def initialize(self):
         s = self.s
@@ -193,8 +196,34 @@ class Runtime:
                 continue
             protected = bool(playing or (info and
                 info.get("attention", {}).get("urgency") == "CRITICAL"))
-            if wanted[ip] and not last_wanted.get(ip, False):
+            main_target = (callable(getattr(s, "hub_ip", None)) and
+                           ip == s.hub_ip())
+            # The main media reconciler already owns this receiver while a
+            # context plays. Avoid a second simultaneous launch from presence.
+            presence_owns = not (main_target and playing)
+            if wanted[ip] and not last_wanted.get(ip, False) and presence_owns:
                 s.cast_card(ip)
+                self._presence_cast_grace[ip] = now + getattr(s, "CARD_TIMEOUT", 45)
+                self._presence_retry_at[ip] = self._presence_cast_grace[ip]
+            elif wanted[ip] and presence_owns and now >= self._presence_retry_at.get(ip, 0):
+                timeout = getattr(s, "CARD_TIMEOUT", 45)
+                self._presence_retry_at[ip] = now + max(30, timeout)
+                if not s.dashcast_active_for(ip):
+                    # Presence may stay eligible for hours. Recover a receiver
+                    # that dropped DashCast without waiting for a room transition.
+                    s.cast_card(ip)
+                    self._presence_cast_grace[ip] = now + timeout
+                else:
+                    heartbeat = getattr(s, "LAST_CARD_POLL", None)
+                    clients = heartbeat.get("clients", {}) if heartbeat else {}
+                    poll = clients.get(ip, 0)
+                    if (heartbeat is not None and now >= self._presence_cast_grace.get(ip, 0) and
+                            (not poll or now - poll >= timeout)):
+                        # An active DashCast app can still show a dead document.
+                        # A fresh cast replaces that session, as the manual
+                        # recast path does.
+                        s.cast_card(ip, True)
+                        self._presence_cast_grace[ip] = now + timeout
             elif (not wanted[ip] and not held and not protected and
                   (last_wanted.get(ip, False) or
                    getattr(s, "dashcast_active_for", lambda _target: False)(ip))):

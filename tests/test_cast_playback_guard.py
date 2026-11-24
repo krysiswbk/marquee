@@ -59,3 +59,50 @@ def test_garage_receiver_suppresses_automatic_cast_and_stop():
     s.cast_card.assert_not_called()
     s.catt_for.assert_not_called()
     s.garage_dashcast_active.assert_not_called()
+
+
+def test_presence_recovers_dropped_cast_without_room_transition():
+    active = {"value": True}
+    s = SimpleNamespace(PRESENCE_TARGETS={"hub": "living_room"},
+                        PRESENCE_STATE={"rooms": {"hub": {"eligible": True}}},
+                        cast_external_playback=lambda _: False,
+                        dashcast_active_for=lambda _: active["value"],
+                        cast_card=Mock(), catt_for=Mock(), CARD_TIMEOUT=45,
+                        LAST_CARD_POLL={"clients": {"hub": 110}})
+    guard = Runtime(s)
+    guard._presence_gates["hub"].activation_seconds = 0
+    assert guard._reconcile_presence_targets(None, False, 100, {"hub": False}) == {"hub": True}
+    s.cast_card.assert_called_once_with("hub")
+    s.cast_card.reset_mock()
+    active["value"] = False
+    guard._reconcile_presence_targets(None, False, 130, {"hub": True})
+    s.cast_card.assert_not_called()  # the first launch is still settling
+    guard._reconcile_presence_targets(None, False, 145, {"hub": True})
+    s.cast_card.assert_called_once_with("hub")
+
+
+def test_presence_replaces_unresponsive_dashcast_document():
+    s = SimpleNamespace(PRESENCE_TARGETS={"hub": "garage"},
+                        PRESENCE_STATE={"rooms": {"hub": {"eligible": True}}},
+                        cast_external_playback=lambda _: False,
+                        dashcast_active_for=lambda _: True,
+                        cast_card=Mock(), catt_for=Mock(), CARD_TIMEOUT=45,
+                        LAST_CARD_POLL={"clients": {"hub": 100}})
+    guard = Runtime(s)
+    guard._presence_gates["hub"].wanted = True
+    guard._reconcile_presence_targets(None, False, 150, {"hub": True})
+    s.cast_card.assert_called_once_with("hub", True)
+    s.cast_card.reset_mock()
+    guard._reconcile_presence_targets(None, False, 151, {"hub": True})
+    s.cast_card.assert_not_called()
+
+
+def test_presence_does_not_double_cast_main_during_media():
+    s = SimpleNamespace(PRESENCE_TARGETS={"hub": "living_room"},
+                        PRESENCE_STATE={"rooms": {"hub": {"eligible": True}}},
+                        hub_ip=lambda: "hub", cast_external_playback=lambda _: False,
+                        cast_card=Mock(), catt_for=Mock())
+    guard = Runtime(s)
+    guard._presence_gates["hub"].activation_seconds = 0
+    guard._reconcile_presence_targets(None, True, 100, {"hub": False})
+    s.cast_card.assert_not_called()
