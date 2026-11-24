@@ -7,7 +7,6 @@ import appdaemon.plugins.hass.hassapi as hass
 import requests
 from marquee_bridge import BridgeSession
 from marquee_kiosk import kiosk_awake
-from marquee_popup_style import POPUP_STYLE, popup_content
 
 
 class MarqueeSources(hass.Hass):
@@ -287,12 +286,8 @@ class MarqueeSources(hass.Hass):
             focus = data.get("householdFocus") or {}
             key = focus.get("key") or (data.get("key") if data.get("type") == "media_context" else None) or "household-desk"
             if key and key != self.last_kiosk_context:
-                self.call_service("browser_mod/popup", browser_id=[self.kiosk_browser],
-                    dismissable=True, tag="marquee",
-                    initial_style="marquee-fullscreen", style_sequence=["marquee-fullscreen"],
-                    popup_styles=[{"style": "marquee-fullscreen", "include_styles": ["fullscreen"],
-                      "styles": POPUP_STYLE}],
-                    content=popup_content(self.marquee + "/kiosk?v=household-desk-2.12.99-html"))
+                self.call_service("input_button/press",
+                    entity_id="input_button.marquee_show_kiosk_overlay")
                 self.log(f"Marquee context {key} sent to kiosk")
             self.last_kiosk_context = key
         except Exception as error:

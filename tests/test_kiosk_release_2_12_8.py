@@ -21,10 +21,10 @@ def test_context_replacement_is_committed_before_any_transition_timer():
     assert "stage.classList.add('fade');" not in INDEX[INDEX.index("if (key !== shownKey)") : INDEX.index("shownKey = key")]
 
 
-def test_browser_mod_popup_does_not_reserve_a_close_row():
+def test_kiosk_launch_uses_ha_recovery_automation():
     assert 'title="Marquee"' not in SOURCES
-    assert SOURCES.count('"styles": POPUP_STYLE') == 2
-    assert SOURCES.count("popup_content(") == 2
+    assert SOURCES.count('"input_button/press"') == 2
+    assert SOURCES.count('entity_id="input_button.marquee_show_kiosk_overlay"') == 2
     assert "--popup-min-height:100dvh" in POPUP_STYLE
     content = popup_content("http://marquee/kiosk?v=release")
     assert '<iframe title="Marquee" src="about:blank"' in content
