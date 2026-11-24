@@ -66,13 +66,21 @@ class GamingProvider(Provider):
             cache = {}
         now = self.clock()
         limit = max(0, min(10, int(self.config.get("max_releases", 3))))
+        seen = set()
+        matched = 0
         for item in sorted((event for event in releases if isinstance(event, dict)),
-                           key=lambda event: str(event.get("start", "")))[:limit]:
+                           key=lambda event: str(event.get("start", ""))):
             title = str(item.get("summary") or "").strip()
-            if not title or item.get("artwork"):
+            if not title:
                 continue
             key = title_key(store_title(title))
-            if not key:
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            if matched >= limit:
+                break
+            matched += 1
+            if item.get("artwork"):
                 continue
             cached = cache.get(key, {})
             try:

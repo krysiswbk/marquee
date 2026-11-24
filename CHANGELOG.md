@@ -1,3 +1,7 @@
+# 2.14.2
+
+- Deduplicate calendar game titles before the artwork lookup limit so every visible release gets a chance at imagery.
+
 # 2.14.1
 
 - Show the brighter game header artwork on Gaming cards, with a text-safe overlay.

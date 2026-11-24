@@ -119,6 +119,30 @@ def test_release_artwork_failure_preserves_event(tmp_path):
                              datetime(2026, 9, 9, tzinfo=timezone.utc))[0].artwork_url == ""
 
 
+def test_duplicate_calendar_entries_do_not_consume_artwork_slots(tmp_path):
+    class TwoGames(ArtworkClient):
+        def json(self, url, timeout=8):
+            if urlsplit(url).path.endswith("storesearch/"):
+                title = parse_qs(urlsplit(url).query)["term"][0]
+                return {"items": [{"id": 103030 if title == "Hollow Knight: Silksong" else 103031,
+                                   "name": title}]}
+            title = "Hollow Knight: Silksong" if "103030" in url else "Second Game"
+            app_id = "103030" if title == "Hollow Knight: Silksong" else "103031"
+            return {app_id: {"success": True, "data": {
+                "name": title, "header_image": "https://shared.steamstatic.com/game/header.jpg"}}}
+
+    provider = GamingProvider({"max_releases": 2}, str(tmp_path), client=TwoGames(),
+                              clock=lambda: 1788912000)
+    releases = [
+        {"summary": "Hollow Knight: Silksong", "start": "2026-09-10"},
+        {"summary": "Hollow Knight: Silksong", "start": "2026-09-10"},
+        {"summary": "Second Game", "start": "2026-09-11"},
+    ]
+    provider.enrich_releases(releases)
+    assert releases[0]["artwork"]
+    assert releases[2]["artwork"]
+
+
 def test_stale_game_release_feed_is_ignored(tmp_path):
     (tmp_path / "ha-gaming-releases.json").write_text(
         '{"updated": 1, "events": [{"summary": "Old feed", '
