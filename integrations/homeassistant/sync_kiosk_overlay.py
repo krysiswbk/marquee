@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Keep the HA kiosk recovery automation's popup aligned with Marquee source.
+"""Keep the HA kiosk launch automation aligned with its top-level wrapper.
 
 Dry-run reads the automation without writing. Apply saves a private rollback
-copy, removes the obsolete motion-idle close trigger, updates the popup payload,
-and reloads HA automations.
+copy, checks the installed wrapper, updates the launch action, and reloads HA
+automations.
 """
 
 import argparse
@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.request import Request, urlopen
 
-from show_marquee_dashboard import card
+from kiosk_wrapper import WRAPPER_PATH, WRAPPER_SOURCE, redirect_popup_data
 
 AUTOMATION_ID = "kiosk_marquee_plex_overlay"
 
@@ -29,14 +29,28 @@ def plan(current):
         sequence = updated["actions"][0]["choose"][0]["sequence"]
     except (KeyError, IndexError, TypeError) as error:
         raise ValueError("Kiosk automation layout changed") from error
-    if len(sequence) != 3 or sequence[0].get("action") != "browser_mod.refresh":
-        raise ValueError("Expected browser refresh before popup")
-    if sequence[1].get("delay") != "00:00:08":
-        raise ValueError("Expected eight-second refresh delay")
-    popup = sequence[2]
+    if len(sequence) == 3:
+        if sequence[0].get("action") != "browser_mod.refresh" or sequence[1].get("delay") != "00:00:08":
+            raise ValueError("Unexpected kiosk launch sequence")
+    elif len(sequence) != 1:
+        raise ValueError("Unexpected kiosk launch sequence")
+    popup = sequence[-1]
     if popup.get("action") != "browser_mod.popup" or popup.get("data", {}).get("tag") != "marquee":
         raise ValueError("Expected tagged Marquee popup")
-    popup["data"] = card()["tap_action"]["data"]
+    updated["actions"][0]["choose"][0]["sequence"] = [
+        {"action": "browser_mod.popup", "data": redirect_popup_data()}
+    ]
+    guard = {
+        "condition": "not",
+        "conditions": [{
+            "condition": "state",
+            "entity_id": "sensor.sb2_kiosk_browser_path",
+            "state": "/browser-mod",
+        }],
+    }
+    conditions = updated["actions"][0]["choose"][0]["conditions"]
+    if guard not in conditions:
+        conditions.append(guard)
     return updated
 
 
@@ -71,6 +85,10 @@ def main():
     if args.mode == "dry-run":
         print("Kiosk popup differs from Marquee source")
         return
+    wrapper_url = args.base_url.rstrip("/") + WRAPPER_PATH
+    with urlopen(wrapper_url, timeout=20) as response:
+        if response.read() != WRAPPER_SOURCE.read_bytes():
+            raise RuntimeError("Installed kiosk wrapper does not match source; no automation write made")
     if request(args.base_url, token, "GET", path) != current:
         raise RuntimeError("Automation changed during review; no write made")
     args.backup_dir.mkdir(mode=0o700, parents=True, exist_ok=True)

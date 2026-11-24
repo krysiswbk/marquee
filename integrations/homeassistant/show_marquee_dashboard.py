@@ -16,13 +16,10 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from marquee_popup_style import POPUP_STYLE, popup_content
-
 DASHBOARD = "dashboard-homepage"
 STORAGE = Path("/homeassistant/.storage/lovelace.dashboard_homepage")
 BACKUP_ROOT = Path("/homeassistant/marquee-dashboard-rollback")
 BROWSER_ID = "a38e5c41-b99f0451"
-MARQUEE_URL = "http://10.10.9.37:8084/kiosk?v=household-desk-2.12.99-html"
 
 
 def canonical(value):
@@ -43,20 +40,8 @@ def card():
         "layout": "horizontal",
         "tap_action": {
             "action": "perform-action",
-            "perform_action": "browser_mod.popup",
-            "data": {
-                "browser_id": [BROWSER_ID],
-                "dismissable": True,
-                "tag": "marquee",
-                "initial_style": "marquee-fullscreen",
-                "style_sequence": ["marquee-fullscreen"],
-                "popup_styles": [{
-                    "style": "marquee-fullscreen",
-                    "include_styles": ["fullscreen"],
-                    "styles": POPUP_STYLE,
-                }],
-                "content": popup_content(MARQUEE_URL),
-            },
+            "perform_action": "input_button.press",
+            "data": {"entity_id": "input_button.marquee_show_kiosk_overlay"},
         },
         "card_mod": {"style": "ha-card { background: transparent !important; box-shadow: none; border: none; }"},
     }
@@ -106,11 +91,17 @@ def plan(config):
         if matches:
             existing = children[matches[0]].get("tap_action", {})
             popup = existing.get("data", {})
-            if (existing.get("perform_action") != "browser_mod.popup"
-                    or popup.get("browser_id") != [BROWSER_ID]
-                    or popup.get("tag") != "marquee"):
+            current_action = existing.get("perform_action")
+            if not (
+                current_action == "input_button.press"
+                and popup.get("entity_id") == "input_button.marquee_show_kiosk_overlay"
+            ) and not (
+                current_action == "browser_mod.popup"
+                and popup.get("browser_id") == [BROWSER_ID]
+                and popup.get("tag") == "marquee"
+            ):
                 raise ValueError(f"Existing Marquee control differs on {label}; no edit made")
-            action = "already present" if children[matches[0]] == expected else "update popup layout"
+            action = "already present" if children[matches[0]] == expected else "route through kiosk launcher"
             children[matches[0]] = copy.deepcopy(expected)
             changes.append({"view": label, "action": action, "index": matches[0]})
         else:
