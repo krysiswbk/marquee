@@ -24,11 +24,9 @@ def plan(current):
         sequence = updated["actions"][0]["choose"][0]["sequence"]
     except (KeyError, IndexError, TypeError) as error:
         raise ValueError("Kiosk automation layout changed") from error
-    if len(sequence) != 3 or sequence[0].get("action") != "browser_mod.refresh":
-        raise ValueError("Expected browser refresh before popup")
-    if sequence[1].get("delay") != "00:00:08":
-        raise ValueError("Expected eight-second refresh delay")
-    popup = sequence[2]
+    if len(sequence) != 1:
+        raise ValueError("Expected a single direct popup action")
+    popup = sequence[0]
     if popup.get("action") != "browser_mod.popup" or popup.get("data", {}).get("tag") != "marquee":
         raise ValueError("Expected tagged Marquee popup")
     popup["data"] = card()["tap_action"]["data"]
