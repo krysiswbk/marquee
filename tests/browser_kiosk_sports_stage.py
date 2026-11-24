@@ -70,6 +70,11 @@ def run():
                     assert geometry["ok"], (width, height, fixture, geometry)
                     if fixture == "scheduled":
                         assert page.locator(".kiosk-broadcast-state").inner_text() == "VS"
+                        if width == 1500:
+                            layout = page.locator(".kiosk-broadcast-layout").bounding_box()
+                            assert layout["x"] >= 120 and layout["width"] <= 1240, layout
+                            name = page.locator(".kiosk-sport-side strong").first
+                            assert name.evaluate("el => el.getBoundingClientRect().height <= parseFloat(getComputedStyle(el).lineHeight) + 1")
                         page.wait_for_timeout(250)
                         assert page.locator(".kiosk-broadcast-layout h2").count() == 0, page.evaluate("() => document.querySelector('.kiosk-broadcast-layout h2')?.parentElement?.outerHTML")
                     elif fixture == "distinct":

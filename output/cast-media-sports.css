@@ -79,7 +79,7 @@ body.cast-display .sports-card .sport-footer { border-top: 1px solid var(--cast-
    opposite edges of the canvas. */
 @media (min-width: 1100px) {
   body.cast-display .sports-card .sport-matchup {
-    width: min(100%, 1700px);
+    width: min(100%, 1200px);
     margin-inline: auto;
     grid-template-columns: minmax(0, 1fr) minmax(140px, .48fr) minmax(0, 1fr);
     gap: clamp(28px, 3vw, 80px);
