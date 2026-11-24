@@ -33,7 +33,10 @@
       const response = await fetch('/healthz', {cache: 'no-store'});
       if (!response.ok) return;
       const health = await response.json();
-      if (health.version && health.version !== version) location.reload();
+      // Input may arrive while the request is in flight. Let the next check
+      // handle the new release after the household has stopped interacting.
+      if (health.version && health.version !== version &&
+          Date.now() - lastInteraction >= 60000) location.reload();
     } catch (_) {
       // Keep the current display during a temporary server outage.
     } finally {

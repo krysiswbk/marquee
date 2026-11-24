@@ -53,6 +53,21 @@ with sync_playwright() as playwright:
     assert len(navigations) == initial, "same release reloaded the kiosk"
 
     health["version"] = "new-release"
+    page.evaluate("""() => {
+      const originalFetch = window.fetch;
+      window.fetch = (url, options) => String(url) === '/healthz'
+        ? new Promise(resolve => { window.finishHealthCheck = () => resolve({
+            ok: true, json: async () => ({version: 'new-release'})
+          }); })
+        : originalFetch(url, options);
+      runKioskUpdateCheck();
+    }""")
+    page.wait_for_function("typeof window.finishHealthCheck === 'function'")
+    page.evaluate("() => window.dispatchEvent(new KeyboardEvent('keydown', {key: 'Tab'}))")
+    page.evaluate("() => finishHealthCheck()")
+    page.wait_for_timeout(100)
+    assert len(navigations) == initial, "input during a pending update check was interrupted"
+    page.evaluate("() => { window.fetch = (url, options) => Promise.resolve({ok: true, json: async () => ({version: 'new-release'})}); }")
     page.evaluate("() => window.dispatchEvent(new KeyboardEvent('keydown', {key: 'Tab'}))")
     page.evaluate("() => runKioskUpdateCheck()")
     assert len(navigations) == initial, "active household interaction was interrupted"

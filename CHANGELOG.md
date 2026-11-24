@@ -1,3 +1,7 @@
+# 2.13.4
+
+- Wait for kiosk interaction to settle when it occurs during a pending release check, so a delayed server response cannot interrupt touch or keyboard use.
+
 # 2.13.3
 
 - Keep Movie and TV release posters mounted across Cast payload and settings refreshes instead of reloading the same image URL.
