@@ -109,6 +109,7 @@
       const observations=[];
       if(activity.living_room_occupied===true)observations.push('Living room occupied');
       if(activity.bedroom_occupied===true)observations.push('Bedroom occupied');
+      if(activity.nursery_motion===true)observations.push('Nursery motion detected');
       if(activity.laundry_vibration===true)observations.push('Laundry vibration detected');
       if(state.network==='degraded')observations.unshift('Network connection needs attention');
       if(observations.length)summary=[summary.replace(/\.$/,''),...observations.slice(0,2)].filter(Boolean).join(' · ')+'.';
@@ -131,6 +132,7 @@
       if(nursery!==null)facts.push(`Nursery ${nursery}°C`);
       if(activity.living_room_occupied===true)facts.push('Living room occupied');
       if(activity.bedroom_occupied===true)facts.push('Bedroom occupied');
+      if(activity.nursery_motion===true)facts.push('Nursery motion detected');
       if(activity.laundry_vibration===true)facts.push('Laundry vibration detected');
     }
     const visibleFacts=alertHasSpace?facts.filter(fact=>/ home$|^Inside |^Humidity |^Nursery /.test(fact)).slice(0,4):
@@ -186,6 +188,9 @@
       if(state.guests)feed.push(feedEntry('Guest mode is on · The house is expecting company','Guest mode is on'));
       if(state.sleeping)feed.push(feedEntry('Someone is sleeping · Keep it low-key','Someone is sleeping · Keep it low-key'));
       if(state.garage_occupied)feed.push(feedEntry('Garage occupied · Someone’s out in the workshop','Garage occupied · Someone’s out in the workshop'));
+      if(activity.living_room_occupied===true)feed.push(feedEntry('Living room occupied','Living room occupied'));
+      if(activity.bedroom_occupied===true)feed.push(feedEntry('Bedroom occupied','Bedroom occupied'));
+      if(activity.nursery_motion===true)feed.push(feedEntry('Nursery motion detected','Nursery motion detected'));
       if(activity.laundry_vibration===true)feed.push(feedEntry('Laundry vibration detected','Laundry vibration detected'));
       if(state.network==='online')feed.push(feedEntry('House network online','House network online'));
       if(!feed.length)feed=[feedEntry('The house is listening for its next real update')];

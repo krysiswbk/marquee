@@ -1,3 +1,7 @@
+# 2.15.4
+
+- Include available nursery motion in the observed Home briefing and keep the bottom house feed aligned with active room observations.
+
 # 2.15.3
 
 - Bring living room and bedroom occupancy plus laundry vibration from Home Assistant into the household briefing, with unknown values kept unknown.

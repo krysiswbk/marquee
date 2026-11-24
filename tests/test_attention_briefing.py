@@ -31,7 +31,8 @@ def test_briefing_exposes_configured_climate_without_inventing_missing_values() 
         "house_temperature": "22.7", "house_humidity": "39.8", "nursery_temperature": None
     }
     assert snapshot["house_activity"] == {
-        "living_room_occupied": True, "bedroom_occupied": None, "laundry_vibration": False
+        "living_room_occupied": True, "bedroom_occupied": None,
+        "nursery_motion": None, "laundry_vibration": False
     }
 
 

@@ -81,7 +81,8 @@ def build(store: dict[str, Signal], house: dict[str, Any], events: Iterable[dict
             "sleeping": house.get("someone_sleeping"), "guests": house.get("guests"),
             "garage_occupied": house.get("garage_occupied"), "weather_state": house.get("weather_state"),
             "house_activity": {key: house.get(key) for key in
-                               ("living_room_occupied", "bedroom_occupied", "laundry_vibration")},
+                               ("living_room_occupied", "bedroom_occupied", "nursery_motion",
+                                "laundry_vibration")},
             "climate": {key: house.get(key) for key in
                         ("house_temperature", "house_humidity", "nursery_temperature")},
             "lock": next((s.state for s in signals if s.category == "door_lock" and s.expires_at > now), None)}

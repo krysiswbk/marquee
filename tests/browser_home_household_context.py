@@ -31,12 +31,16 @@ def snapshot(kind):
     }
     if kind == "people":
         state.update(sleeping=False, guests=False, garage_occupied=False)
+        state["house_activity"] = {"living_room_occupied": True,
+                                   "bedroom_occupied": False, "nursery_motion": False,
+                                   "laundry_vibration": False}
     if kind == "quiet":
         state["house_activity"] = {"living_room_occupied": True,
                                    "bedroom_occupied": False, "laundry_vibration": True}
     if kind == "offline":
         state["house_activity"] = {"living_room_occupied": True,
-                                   "bedroom_occupied": True, "laundry_vibration": True}
+                                   "bedroom_occupied": True, "nursery_motion": True,
+                                   "laundry_vibration": True}
     if kind in ("alert", "multiple_openings"):
         state["openings"] = [{"id": "fixture:front", "name": "Front door", "category": "exterior_door",
                               "state": "open", "since": now.timestamp() - 120, "duration": 120}]
@@ -103,6 +107,7 @@ with sync_playwright() as playwright:
                     if kind == "people":
                         assert "Alex home" in state.inner_text()
                         assert "Front door locked" in state.inner_text()
+                        assert "Living room occupied" in page.locator("#brain-dock-copy").inner_text()
                     else:
                         if kind == "alert" and width >= 1100 and height >= 850:
                             assert "Alex home" in state.inner_text()

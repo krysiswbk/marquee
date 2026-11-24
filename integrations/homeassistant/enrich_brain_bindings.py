@@ -11,6 +11,7 @@ from urllib.request import Request, urlopen
 BINDINGS = {
     "living_room_occupied": "binary_sensor.living_room_occupancy",
     "bedroom_occupied": "binary_sensor.bedroom_occupancy",
+    "nursery_motion": "binary_sensor.nursery_motion_sensor_motion",
     "laundry_vibration": "binary_sensor.laundry_vibration_sensor_vibration",
 }
 
