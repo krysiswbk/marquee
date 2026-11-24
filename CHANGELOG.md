@@ -1,3 +1,8 @@
+# 2.15.8
+
+- Recover eligible Cast displays when a receiver loses DashCast or its document stops reporting, while respecting room presence and manual holds.
+- Show eight hourly forecast readings on the physical kiosk's scaled Home viewport when the house is quiet; return to four when recent activity needs space.
+
 # 2.15.7
 
 - Use the tall Home forecast card for up to eight existing hourly readings, and return to four immediately when a recent house activity needs the compact layout.

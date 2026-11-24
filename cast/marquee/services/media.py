@@ -1362,5 +1362,5 @@ def bind(application_services):
                       for name in dir(application_services) if not name.startswith("__")})
 
 def exports():
-    return {name: value for name, value in globals().items()
+    return {name: value for name, value in tuple(globals().items())
             if (callable(value) or name.isupper()) and not name.startswith("_")}
