@@ -147,6 +147,7 @@
     $('brain-agenda-link').hidden=!fresh;
     const agendaState=!fresh?'stale':(agendaItems.length?'ready':'empty');
     $('brain-agenda').dataset.agendaState=agendaState;
+    shell.classList.toggle('brain-no-agenda',!agendaItems.length);
     if(!fresh){
       $('brain-agenda-list').innerHTML='<p class="brain-empty">Calendar context unavailable while the house feed is offline.</p>';
     }
@@ -166,7 +167,8 @@
     renderFeedEntry(feed[castReceiver ? 0 : Math.floor(now/12)%feed.length]);
     if(event&&now-event.at<45&&event.id!==lastToast&&!demo){lastToast=event.id;toastUntil=now+12;toast.innerHTML=`<span aria-hidden="true">↗</span><div>${esc(event.title)}<small>Just happened at home</small></div>`}
     toast.classList.toggle('show',now<toastUntil);
-    for(const [block,id]of [['house','brain-house'],['activity','brain-activity'],['agenda','brain-agenda']])$(id).hidden=visibility[block]===false;
+    for(const [block,id]of [['house','brain-house'],['activity','brain-activity'],['agenda','brain-agenda']])
+      $(id).hidden=visibility[block]===false||(block==='agenda'&&!agendaItems.length);
     shell.hidden=hiddenByBlank;dock.hidden=hiddenByBlank;
     fitHousePanel();
     fitAgenda();

@@ -61,7 +61,7 @@ with sync_playwright() as playwright:
 
             page.route("**/*", route)
             page.goto("http://marquee.test/kiosk", wait_until="domcontentloaded")
-            page.locator("#brain-agenda").wait_for()
+            page.locator("#brain-agenda").wait_for(state="attached")
             if kind != "loading":
                 page.wait_for_function("document.querySelector('#brain-agenda')?.dataset.agendaState")
             page.wait_for_timeout(600)
@@ -97,20 +97,12 @@ with sync_playwright() as playwright:
                     assert link.is_visible()
                 else:
                     assert metrics["state"] == ("empty" if kind == "empty" else "stale" if kind == "offline" else "loading")
-                    assert metrics["panel"]["height"] <= (200 if width == 1500 else 180 if width == 1280 else 170), metrics
-                    assert metrics["copy"] and metrics["copy"]["bottom"] <= metrics["panel"]["bottom"] + 1, metrics
-                    if kind == "empty":
-                        assert "No birthdays or events" in agenda.inner_text()
-                        assert link.is_visible()
-                        assert metrics["link"]["top"] - metrics["copy"]["bottom"] <= 32, metrics
-                        link.focus()
-                        assert link.evaluate("el => el === document.activeElement")
-                        assert link.get_attribute("href") == "/kiosk?view=calendar&mode=all"
-                        link.press("Enter")
-                        page.wait_for_url("**/kiosk?view=calendar&mode=all")
+                    if kind == "loading":
+                        assert agenda.is_visible()
+                        assert "loading" in agenda.inner_text().lower()
                     else:
+                        assert agenda.is_hidden()
                         assert not link.is_visible()
-                        assert "unavailable" in agenda.inner_text().lower() if kind == "offline" else "loading" in agenda.inner_text().lower()
                     if kind == "offline":
                         assert metrics["retryVisible"]
                         assert metrics["retry"]["bottom"] <= metrics["house"]["bottom"] - 8, metrics

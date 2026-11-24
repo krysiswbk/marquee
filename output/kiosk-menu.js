@@ -26,10 +26,8 @@
   const destinationPriority = { plex:100, weather:95, nhl:85, ufc:75, pfl:65,
     calendar:55, tv:50, astronomy:45, gaming:40, music:35, movies:30,
     trailers:25, major_events:20 };
-  // Mount the known product topology before remote configuration resolves.
-  // Provider configuration may later remove destinations, but a cold direct
-  // load must never collapse the rail to Home while that decision is pending.
   let sections = Object.keys(destinations), contexts = [], browseContexts = [], health = {}, selected = '', offline = false;
+  let visibleSections = new Set();
   // These are independent authoritative resources. A failed refresh retains
   // the last committed snapshot and reports degradation for that resource;
   // it never invalidates a sibling resource.
@@ -81,6 +79,19 @@
     return [...new Map(sources.flat().filter(c => (c.provider || c.source) === key && fresh(c))
       .map(context => [context.id, context])).values()];
   };
+  function hasSkyScene() {
+    const sky = resources.sky.snapshot?.sky || resources.sky.snapshot || {};
+    return Boolean(sky.sun || sky.moon || sky.condition || sky.weather || sky.cloud_cover !== undefined
+      || sky.visibility !== undefined || sky.aircraft?.length);
+  }
+  function updateVisibleSections() {
+    // A failed refresh keeps the last known navigation. A successful empty
+    // response removes the destination until there is something to read.
+    if (resources.contexts.phase !== 'ready') return;
+    visibleSections = new Set(sections.filter(key => key === 'astronomy'
+      ? hasSkyScene() || items(key).length > 0 : key === 'plex' ? nowPlaying?.playing === true || nowPlaying?.xbox?.active === true
+        : items(key).length > 0));
+  }
   document.body.classList.add('browser-controls');
   const rail = document.createElement('div'); rail.className = 'screen-controls kiosk-rail';
   rail.setAttribute('data-kiosk-navigation', 'true');
@@ -179,7 +190,8 @@
     if (initialAgenda || initialSports) history.pushState({marqueeDetail: true}, '', href(view, true, sportsPage));
   }
   function allDestinations() {
-    return [['', 'Home', homeIcon], ...sections.map((key, index) => [key, label(key), icon(key), index])]
+    return [['', 'Home', homeIcon], ...sections.filter(key => visibleSections.has(key) || key === view)
+      .map((key, index) => [key, label(key), icon(key), index])]
       .sort((a, b) => a[0] === '' ? -1 : b[0] === '' ? 1
         : (destinationPriority[b[0]] ?? 0) - (destinationPriority[a[0]] ?? 0) || a[3] - b[3])
       .map(([key, title, glyph]) => [key, title, glyph]);
@@ -274,9 +286,7 @@
     // Sky is composed from several independent Home Assistant entities. A
     // single unavailable sensor must not invalidate the complete scene.
     if (key === 'astronomy') {
-      const sky = resources.sky.snapshot?.sky || resources.sky.snapshot || {};
-      const hasScene = Boolean(sky.sun || sky.moon || sky.condition || sky.weather || sky.cloud_cover !== undefined
-        || sky.visibility !== undefined || sky.aircraft?.length);
+      const hasScene = hasSkyScene();
       if (resources.sky.phase === 'loading' && !hasScene) return { state: 'loading', reason: 'Sky data request pending' };
       if (resources.sky.phase === 'disconnected' && !hasScene) return { state: 'disconnected', reason: 'Sky source cannot be reached' };
       if (resources.sky.phase === 'stale' && !hasScene) return { state: 'stale', reason: 'Sky source has no retained scene data' };
@@ -806,7 +816,7 @@
   window.addEventListener('popstate', () => { const overlayOwnsFocus = historyFocusOwned; historyFocusOwned = false; const wasCalendarDetail = view === 'calendar' && calendarMode === 'all'; const wasSportsDetail = ['ufc', 'pfl'].includes(view) && sportsMode === 'all'; const next = new URLSearchParams(location.search); const nextView = canonicalView(next.get('view') || ''); const activityHash = location.hash === '#activity'; view = nextView; calendarMode = view === 'calendar' && next.get('mode') === 'all' ? 'all' : ''; sportsMode = ['ufc', 'pfl'].includes(view) && next.get('mode') === 'all' ? 'all' : ''; if (wasCalendarDetail && view === 'calendar' && !calendarMode) calendarFocusDisclosurePending = true; if (!(view === 'calendar' && !calendarMode)) calendarFocusDisclosurePending = false; if (wasSportsDetail && !sportsMode && ['ufc', 'pfl'].includes(view)) sportsFocusDisclosurePending = true; sportsFocusHeadingPending = Boolean(sportsMode); sportsPage = Math.max(1, Number.parseInt(next.get('page') || '1', 10) || 1); calendarFocusHeadingPending = Boolean(calendarMode || sportsMode); selected = ''; drawNavigation(false); drawMenu(); drawPanel(); if (!overlayOwnsFocus && !calendarMode && !sportsMode && !activityHash) { if (view !== 'calendar' && !(['ufc', 'pfl'].includes(view))) focusNavigation(view); } window.dispatchEvent(new Event('marquee-navigation')); historyFocusDestination = overlayOwnsFocus || view === 'calendar' || sportsMode || activityHash || (['ufc', 'pfl'].includes(view) && !sportsMode) ? null : view; if (['ufc', 'pfl'].includes(view) && !sportsMode && wasSportsDetail) setTimeout(() => panel.querySelector('[data-sports-disclosure]')?.focus({preventScroll: true}), 0); });
   window.addEventListener('pageshow', restoreHistoryDestinationFocus);
   window.addEventListener('marquee-surface-rendered', drawPanel);
-  window.MarqueeNavigation = { resolve(payload) { nowPlaying = payload || {playing:false, state:'idle', availability:'idle'}; const wasInterrupted = interrupted; interrupted = Boolean(payload?.attention || payload?.householdFocus); if (interrupted && !wasInterrupted && menu.open) closeMenu(false); drawPanel(); if (interrupted || !view || view === 'plex') return payload; const c = !offline && sections.includes(view) && items(view).find(item => item.id === selected); return c ? c.payload || {playing:true,type:'media_context',key:'browse:'+c.id,context:c} : {playing:false}; }, refresh };
+  window.MarqueeNavigation = { resolve(payload) { const wasPlaying = nowPlaying?.playing === true || nowPlaying?.xbox?.active === true; nowPlaying = payload || {playing:false, state:'idle', availability:'idle'}; const isPlaying = nowPlaying?.playing === true || nowPlaying?.xbox?.active === true; if (wasPlaying !== isPlaying) { updateVisibleSections(); if (!menu.open) { drawNavigation(); drawMenu(); } } const wasInterrupted = interrupted; interrupted = Boolean(payload?.attention || payload?.householdFocus); if (interrupted && !wasInterrupted && menu.open) closeMenu(false); drawPanel(); if (interrupted || !view || view === 'plex') return payload; const c = !offline && sections.includes(view) && items(view).find(item => item.id === selected); return c ? c.payload || {playing:true,type:'media_context',key:'browse:'+c.id,context:c} : {playing:false}; }, refresh };
   async function refresh(lifecycle = {}) {
     if (refreshInFlight) return;
     refreshInFlight = true;
@@ -857,6 +867,7 @@
         contexts = clean(snapshot.contexts);
         browseContexts = clean(['nhl', 'ufc', 'pfl'].flatMap(name => snapshot.browse?.[name] || []));
       }
+      updateVisibleSections();
       // Plex remains exclusively authoritative through now-playing.json. The
       // provider diagnostics payload must not manufacture a second Plex item.
       offline = !resourceHasSnapshot();

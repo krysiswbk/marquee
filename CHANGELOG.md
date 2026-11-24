@@ -1,3 +1,8 @@
+# 2.13.5
+
+- Keep empty or unconfigured sections off the Home navigation until they have current content; retain direct links and the selected section.
+- Hide an empty Home agenda and give its space to the household briefing.
+
 # 2.13.4
 
 - Wait for kiosk interaction to settle when it occurs during a pending release check, so a delayed server response cannot interrupt touch or keyboard use.

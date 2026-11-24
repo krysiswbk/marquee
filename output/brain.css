@@ -270,3 +270,23 @@ body.brain-live .home-outlook{position:absolute;left:4vw;top:52vh;bottom:calc(10
  body.brain-live.idle:not(.kiosk-destination-active) #brain-activity{min-height:80px;padding:10px 14px}
  body.brain-live.idle:not(.kiosk-destination-active) #brain-agenda{min-height:120px;padding:10px 14px}
 }
+/* Give live household status more room, without stretching an empty card. */
+@media(min-width:701px) and (min-height:750px) and (min-aspect-ratio:1/1){
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-quiet:not(.brain-no-agenda){
+  grid-template-rows:auto clamp(180px,19vh,210px) minmax(0,1fr)
+ }
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-quiet:not(.brain-no-agenda) #brain-house{
+  height:auto
+ }
+}
+@media(min-width:701px) and (min-aspect-ratio:1/1){
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-no-agenda #brain-house{
+  grid-row:2 / 4;align-self:start;height:auto;min-height:clamp(180px,27vh,270px);max-height:100%
+ }
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-no-agenda #brain-house .brain-headline{
+  max-width:38vw;font-size:clamp(30px,3vw,48px)
+ }
+ body.brain-live.idle:not(.kiosk-destination-active) .brain-shell.brain-no-agenda #brain-house .brain-summary{
+  max-width:38vw;font-size:clamp(16px,1.2vw,20px)
+ }
+}
